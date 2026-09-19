@@ -258,7 +258,7 @@ class ProductResource extends Resource
                                             ->outlined()
                                             ->size(ActionSize::Small)
                                             ->extraAttributes(['class' => 'flex-1'])
-                                            ->action(function ($record) {
+                                            ->action(function ($record, Component $livewire): void {
                                                 $inbox = ChatService::getOrCreateInboxWithAdmin(auth()->id());
                                                 ChatService::sendReportMessage(
                                                     $inbox,
@@ -276,7 +276,16 @@ class ProductResource extends Resource
                                                     ]
                                                 );
 
-                                                return redirect(MessagesPage::getUrl(['id' => $inbox->id]));
+                                                Notification::make()
+                                                    ->title(__('Laporan berhasil dikirim'))
+                                                    ->body(__('Anda akan diarahkan ke Messages untuk melanjutkan percakapan dengan admin dan bot.'))
+                                                    ->success()
+                                                    ->send();
+
+                                                $livewire->redirect(
+                                                    MessagesPage::getUrl(['id' => $inbox->id]),
+                                                    navigate: true,
+                                                );
                                             }),
                                     ])->fullWidth()->extraAttributes(['class' => '!mb-3']),
 
