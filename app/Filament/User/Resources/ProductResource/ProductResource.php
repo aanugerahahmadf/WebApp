@@ -205,16 +205,13 @@ class ProductResource extends Resource
                     ->schema([
                         Infolists\Components\Grid::make(12)
                             ->schema([
-                                // LEFT: PRODUCT IMAGE
+                                // LEFT: IMAGE GALLERY (matches the mobile detail slider)
                                 Group::make([
-                                    Infolists\Components\ImageEntry::make('image_url')
+                                    Infolists\Components\ViewEntry::make('image_gallery')
                                         ->label('')
                                         ->hiddenLabel()
-                                        ->alignCenter()
-                                        ->height('18rem')
-                                        ->extraAttributes(['class' => 'flex products-center justify-center bg-white/5 rounded-3xl overflow-hidden border border-white/10 shadow-inner'])
-                                        ->extraImgAttributes([
-                                            'class' => 'max-w-full max-h-full object-contain mx-auto transition-transform hover:scale-105 duration-500 p-2',
+                                        ->view('User.components.catalog-image-gallery.catalog-image-gallery', [
+                                            'mediaCollection' => 'product_image',
                                         ]),
                                 ])->columnSpan([
                                     'default' => 12,
