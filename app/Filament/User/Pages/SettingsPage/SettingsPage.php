@@ -2,7 +2,6 @@
 
 namespace App\Filament\User\Pages\SettingsPage;
 
-use App\Livewire\Shared\BrowserSessionsComponent\BrowserSessionsComponent;
 use App\Livewire\Shared\DeleteAccountComponent\DeleteAccountComponent;
 use Filament\Pages\Page;
 
@@ -30,7 +29,6 @@ class SettingsPage extends Page
     public function getRegisteredCustomProfileComponents(): array
     {
         return [
-            BrowserSessionsComponent::class,
             DeleteAccountComponent::class,
         ];
     }

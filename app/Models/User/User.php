@@ -279,6 +279,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName, 
         'app_lock_face_reference',
         'app_lock_face_enrolled_at',
         'app_lock_last_unlock_at',
+        'notification_preferences',
     ];
 
     /**
@@ -333,6 +334,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName, 
             'app_lock_face_enrolled' => 'boolean',
             'app_lock_face_enrolled_at' => 'datetime',
             'app_lock_last_unlock_at' => 'datetime',
+            'notification_preferences' => 'array',
         ];
     }
 

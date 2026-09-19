@@ -353,6 +353,29 @@
                                     <p class="text-sm leading-relaxed">{!! nl2br(e($displayMessage)) !!}</p>
                                 @endif
 
+                                {{-- Tampilkan formulir pada semua balasan bot, termasuk pesan bot yang
+                                     sudah tersimpan sebelum fitur formulir ditambahkan. --}}
+                                @if (!empty($meta['is_bot']))
+                                    @php
+                                        $consultationForms = $selectedConversation->meta['consultation_forms'] ?? [];
+                                        $hasConsultationForm = !empty($consultationForms[(string) auth()->id()]);
+                                    @endphp
+                                    <div class="mt-3 flex flex-wrap gap-2">
+                                        <button type="button" wire:click="mountAction('weddingConsultationForm')"
+                                            class="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-primary-500">
+                                            <x-filament::icon icon="heroicon-o-clipboard-document-list" class="h-4 w-4" />
+                                            {{ $hasConsultationForm ? __('Ubah Formulir') : __('Isi Formulir') }}
+                                        </button>
+                                        @if ($hasConsultationForm)
+                                            <a href="{{ route('messages.consultation-form.pdf', $selectedConversation) }}"
+                                                class="inline-flex items-center gap-1.5 rounded-lg border border-primary-500 px-3 py-2 text-xs font-semibold text-primary-700 transition hover:bg-primary-50 dark:text-primary-300 dark:hover:bg-primary-900/30">
+                                                <x-filament::icon icon="heroicon-o-arrow-down-tray" class="h-4 w-4" />
+                                                {{ __('Unduh PDF') }}
+                                            </a>
+                                        @endif
+                                    </div>
+                                @endif
+
                                 @if ($hasMedia)
                                     @foreach ($message->getMedia(MediaCollectionType::FILAMENT_MESSAGES->value) as $media)
                                         @php $isImage = $this->validateImage($media->file_name); @endphp
@@ -701,6 +724,10 @@
 
             target.classList.add('chat-msg-flash');
             setTimeout(() => target.classList.remove('chat-msg-flash'), 2000);
+        });
+
+        $wire.on('download-consultation-pdf', ({ url }) => {
+            if (url) window.location.assign(url);
         });
 
 

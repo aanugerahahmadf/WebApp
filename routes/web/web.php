@@ -6,6 +6,7 @@ use App\Http\Controllers\LanguageController\LanguageController;
 use App\Http\Controllers\LegalWebController\LegalWebController;
 use App\Http\Middleware\SetLocale\SetLocale;
 use App\Models\Order\Order;
+use App\Models\Inbox\Inbox;
 use App\Models\User\User;
 use Dompdf\Dompdf;
 use Illuminate\Http\Request;
@@ -128,3 +129,28 @@ Route::get('/invoice/{order}/pdf', function (Order $order) {
         'Content-Disposition' => "{$inline}; filename=\"{$filename}\"",
     ]);
 })->middleware(['auth'])->name('invoice.pdf');
+
+// Downloadable summary of the event-needs form shown after a bot reply.
+Route::get('/messages/{inbox}/consultation-form.pdf', function (Inbox $inbox) {
+    $userId = auth()->id();
+    if (! in_array($userId, $inbox->user_ids ?? []) && ! auth()->user()?->hasRole('super_admin')) {
+        abort(403);
+    }
+
+    $forms = $inbox->meta['consultation_forms'] ?? [];
+    $form = $forms[(string) $userId] ?? null;
+    if (! is_array($form)) {
+        abort(404, 'Formulir belum diisi.');
+    }
+
+    $html = view('User.pdf.consultation-form.consultation-form', compact('form', 'inbox'))->render();
+    $dompdf = new Dompdf;
+    $dompdf->loadHtml($html);
+    $dompdf->setPaper('A4', 'portrait');
+    $dompdf->render();
+
+    return response($dompdf->output(), 200, [
+        'Content-Type' => 'application/pdf',
+        'Content-Disposition' => 'attachment; filename="formulir-kebutuhan-acara-'.$inbox->id.'.pdf"',
+    ]);
+})->middleware(['auth'])->name('messages.consultation-form.pdf');

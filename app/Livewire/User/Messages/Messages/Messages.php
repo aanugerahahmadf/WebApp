@@ -733,6 +733,59 @@ class Messages extends Component implements HasActions, HasForms
             });
     }
 
+    /** Form kebutuhan acara yang dibuka dari tombol pada balasan bot. */
+    public function weddingConsultationFormAction(): Action
+    {
+        return Action::make('weddingConsultationForm')
+            ->label(__('Isi Formulir Kebutuhan Acara'))
+            ->slideOver()
+            ->modalWidth('xl')
+            ->modalHeading(__('Formulir Kebutuhan Acara'))
+            ->modalDescription(__('Lengkapi data berikut agar kami dapat menyiapkan rekomendasi yang sesuai.'))
+            ->modalSubmitActionLabel(__('Simpan & Unduh PDF'))
+            ->form([
+                Section::make(__('Data Pemesan'))->schema([
+                    Forms\Components\TextInput::make('customer_name')->label(__('Nama Lengkap'))->required()->maxLength(120),
+                    Forms\Components\TextInput::make('phone')->label(__('Nomor WhatsApp'))->tel()->required()->maxLength(30),
+                    Forms\Components\TextInput::make('email')->label(__('Email'))->email()->maxLength(120),
+                ])->columns(2),
+                Section::make(__('Detail Acara'))->schema([
+                    DatePicker::make('event_date')->label(__('Tanggal Acara'))->native(false)->required(),
+                    Forms\Components\TextInput::make('guest_count')->label(__('Perkiraan Jumlah Tamu'))->numeric()->minValue(1)->required(),
+                    Forms\Components\TextInput::make('venue')->label(__('Lokasi / Venue Acara'))->required()->maxLength(200)->columnSpanFull(),
+                    Forms\Components\TextInput::make('theme')->label(__('Tema Pernikahan'))->placeholder(__('Contoh: Rustic, Modern, Adat Sunda'))->required()->maxLength(120),
+                    Forms\Components\TextInput::make('dominant_colors')->label(__('Warna Dominan'))->placeholder(__('Contoh: Putih, sage green, emas'))->maxLength(120),
+                    Forms\Components\TextInput::make('budget')->label(__('Perkiraan Anggaran (Rp)'))->numeric()->minValue(0)->prefix('Rp'),
+                    Textarea::make('notes')->label(__('Catatan / Permintaan Khusus'))->rows(4)->maxLength(1000)->columnSpanFull(),
+                ])->columns(2),
+            ])
+            ->fillForm(function (): array {
+                $forms = $this->selectedConversation?->meta['consultation_forms'] ?? [];
+                $saved = $forms[(string) auth()->id()] ?? [];
+
+                return array_merge([
+                    'customer_name' => auth()->user()?->name,
+                    'phone' => auth()->user()?->phone,
+                    'email' => auth()->user()?->email,
+                ], is_array($saved) ? $saved : []);
+            })
+            ->action(function (array $data): void {
+                if (! $this->selectedConversation) {
+                    return;
+                }
+
+                $meta = $this->selectedConversation->meta ?? [];
+                $forms = is_array($meta['consultation_forms'] ?? null) ? $meta['consultation_forms'] : [];
+                $forms[(string) auth()->id()] = array_merge($data, ['submitted_at' => now()->toIso8601String()]);
+                $meta['consultation_forms'] = $forms;
+                $this->selectedConversation->meta = $meta;
+                $this->selectedConversation->save();
+
+                Notification::make()->title(__('Formulir berhasil disimpan'))->body(__('PDF ringkasan akan segera diunduh.'))->success()->send();
+                $this->dispatch('download-consultation-pdf', url: route('messages.consultation-form.pdf', $this->selectedConversation));
+            });
+    }
+
     public function shareCatalogAction(): Action
     {
         return Action::make('shareCatalog')

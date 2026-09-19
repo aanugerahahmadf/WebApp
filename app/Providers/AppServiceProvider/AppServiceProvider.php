@@ -29,6 +29,7 @@ use App\Livewire\User\Messages\Inbox\Inbox as UserMessagesInbox;
 use App\Livewire\User\Messages\Messages\Messages as UserMessagesContent;
 use App\Livewire\User\Messages\Search\Search as UserMessagesSearch;
 use App\Livewire\User\NotificationSettingsComponent\NotificationSettingsComponent;
+use App\Livewire\User\SecuritySettingsComponent\SecuritySettingsComponent;
 use App\Models\BackupCode\BackupCode;
 use App\Models\Bank\Bank;
 use App\Models\Cart\Cart;
@@ -393,6 +394,7 @@ class AppServiceProvider extends ServiceProvider
         Livewire::component('edit-password-component', EditPasswordComponent::class);
         Livewire::component('mobile-settings-component', MobileSettingsComponent::class);
         Livewire::component('notification-settings-component', NotificationSettingsComponent::class);
+        Livewire::component('security-settings-component', SecuritySettingsComponent::class);
         Livewire::component('app-lock-component', AppLockComponent::class);
         Livewire::component('complete-profile-component', CompleteProfileComponent::class);
         Livewire::component('username-component', UsernameComponent::class);
