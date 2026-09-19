@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\User;
+use App\Models\User\User;
 
 test('it can get the filament name', function (): void {
     $user = User::factory()->make([

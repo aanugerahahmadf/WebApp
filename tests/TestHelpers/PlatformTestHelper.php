@@ -2,9 +2,9 @@
 
 namespace Tests\TestHelpers;
 
-use App\Enums\PlatformMode;
-use App\Enums\RuntimePlatform;
-use App\Support\Platform\PlatformFeatureRegistry;
+use App\Enums\PlatformMode\PlatformMode;
+use App\Enums\RuntimePlatform\RuntimePlatform;
+use App\Support\Platform\PlatformFeatureRegistry\PlatformFeatureRegistry;
 use PHPUnit\Framework\Assert;
 
 /**

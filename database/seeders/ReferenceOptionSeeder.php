@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\ReferenceOption;
+use App\Models\ReferenceOption\ReferenceOption;
 use Illuminate\Database\Seeder;
 
 class ReferenceOptionSeeder extends Seeder

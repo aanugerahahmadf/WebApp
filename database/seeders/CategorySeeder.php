@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\Category;
-use App\Traits\TranslatesContent;
+use App\Models\Category\Category;
+use App\Traits\TranslatesContent\TranslatesContent;
 use Illuminate\Database\Seeder;
 
 class CategorySeeder extends Seeder

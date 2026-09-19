@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Enums\RuntimePlatform;
+use App\Enums\RuntimePlatform\RuntimePlatform;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
@@ -21,6 +21,32 @@ class RuntimePlatformCategoryMethodsTest extends TestCase
         return array_map(fn ($case) => [$case], RuntimePlatform::cases());
     }
 
+    public static function websiteCases(): array
+    {
+        return array_map(fn ($case) => [$case], [
+            RuntimePlatform::WebsiteWindows,
+            RuntimePlatform::WebsiteMacOS,
+            RuntimePlatform::WebsiteAndroid,
+            RuntimePlatform::WebsiteIos,
+        ]);
+    }
+
+    public static function desktopCases(): array
+    {
+        return array_map(fn ($case) => [$case], [
+            RuntimePlatform::DesktopAppWindows,
+            RuntimePlatform::DesktopAppMacOS,
+        ]);
+    }
+
+    public static function mobileCases(): array
+    {
+        return array_map(fn ($case) => [$case], [
+            RuntimePlatform::MobileAppAndroid,
+            RuntimePlatform::MobileAppIos,
+        ]);
+    }
+
     #[DataProvider('allPlatformCases')]
     public function test_exactly_one_category_method_returns_true(RuntimePlatform $platform): void
     {
@@ -37,7 +63,7 @@ class RuntimePlatformCategoryMethodsTest extends TestCase
         );
     }
 
-    #[DataProvider('allPlatformCases')]
+    #[DataProvider('websiteCases')]
     public function test_website_cases_have_is_website_true(RuntimePlatform $platform): void
     {
         $websiteCases = [
@@ -54,7 +80,7 @@ class RuntimePlatformCategoryMethodsTest extends TestCase
         }
     }
 
-    #[DataProvider('allPlatformCases')]
+    #[DataProvider('desktopCases')]
     public function test_desktop_cases_have_is_desktop_app_true(RuntimePlatform $platform): void
     {
         $desktopCases = [
@@ -69,7 +95,7 @@ class RuntimePlatformCategoryMethodsTest extends TestCase
         }
     }
 
-    #[DataProvider('allPlatformCases')]
+    #[DataProvider('mobileCases')]
     public function test_mobile_cases_have_is_mobile_app_true(RuntimePlatform $platform): void
     {
         $mobileCases = [

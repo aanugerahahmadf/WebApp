@@ -137,12 +137,27 @@ jobs:
       - name: Install PHP dependencies (production)
         run: composer install --no-dev --optimize-autoloader --no-progress --no-scripts --ignore-platform-reqs
 
-      # Replace the deploy step below with your actual deployment mechanism
-      # (Envoyer, Deployer, rsync, Laravel Forge webhook, etc.)
-      - name: Deploy to server
+      - name: Prepare production artifact
         run: |
-          echo "Deploy to your server here."
-          echo "Example: php artisan deploy (using Deployer or Envoyer webhook)"
-        env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          mkdir -p dist
+          # Salin seluruh aplikasi + aset web yang sudah dibuild
+          rsync -a --exclude='.git' --exclude='node_modules' --exclude='vendor' --exclude='storage/logs/*' \
+            ./ dist/ || cp -r . dist/
+          # Hapus file yang tidak dibutuhkan di production
+          rm -rf dist/.github dist/tests dist/database/migrations 2>/dev/null || true
+          echo "✅ Production artifact siap di dist/"
+
+      - name: Upload production artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-production
+          path: dist/
+          retention-days: 7
+
+      # Deploy aktual ke server kamu — isi mekanisme di bawah
+      # (rsync / Deployer / Envoyer / Forge webhook) saat punya server.
+      - name: Deploy to server (placeholder)
+        run: |
+          echo "🔧 Deploy aktual belum dikonfigurasi."
+          echo "Artifact web-production siap diunduh dari Actions."
+          echo "Contoh mekanisme: rsync -az --delete dist/ user@server:/var/www/html"

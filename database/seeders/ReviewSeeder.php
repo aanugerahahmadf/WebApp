@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\Package;
-use App\Models\Product;
-use App\Models\Review;
-use App\Models\User;
+use App\Models\Package\Package;
+use App\Models\Product\Product;
+use App\Models\Review\Review;
+use App\Models\User\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;

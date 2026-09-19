@@ -1,7 +1,7 @@
 <?php
 
-use App\Enums\RuntimePlatform;
-use App\Support\Platform\PlatformFeatureRegistry;
+use App\Enums\RuntimePlatform\RuntimePlatform;
+use App\Support\Platform\PlatformFeatureRegistry\PlatformFeatureRegistry;
 
 describe('RuntimePlatform Feature Integration', function () {
     beforeEach(function () {

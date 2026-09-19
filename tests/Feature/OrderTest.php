@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\Order;
-use App\Models\Package;
-use App\Models\User;
+use App\Models\Order\Order;
+use App\Models\Package\Package;
+use App\Models\User\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;

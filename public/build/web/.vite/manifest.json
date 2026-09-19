@@ -3,29 +3,38 @@
     "file": "assets/popper-BwhhPXy0.js",
     "name": "popper"
   },
-  "resources/css/app.css": {
-    "file": "assets/app-CW_elVAK.css",
-    "src": "resources/css/app.css",
+  "resources/css/Admin/Admin.css": {
+    "file": "assets/Admin-C-S8ALEX.css",
+    "src": "resources/css/Admin/Admin.css",
     "isEntry": true,
-    "name": "app",
+    "name": "Admin",
     "names": [
-      "app.css"
+      "Admin.css"
     ]
   },
-  "resources/js/app-web.js": {
-    "file": "assets/app-web-CEtlkDB8.js",
+  "resources/css/User/User.css": {
+    "file": "assets/User-5BwuOU2f.css",
+    "src": "resources/css/User/User.css",
+    "isEntry": true,
+    "name": "User",
+    "names": [
+      "User.css"
+    ]
+  },
+  "resources/js/app-web/app-web.js": {
+    "file": "assets/app-web-FpxjQ11a.js",
     "name": "app-web",
-    "src": "resources/js/app-web.js",
+    "src": "resources/js/app-web/app-web.js",
     "isEntry": true,
     "imports": [
-      "resources/js/echo.js",
+      "resources/js/echo/echo.js",
       "_popper-BwhhPXy0.js"
     ]
   },
-  "resources/js/echo.js": {
+  "resources/js/echo/echo.js": {
     "file": "assets/echo-BXRmpxmk.js",
     "name": "echo",
-    "src": "resources/js/echo.js",
+    "src": "resources/js/echo/echo.js",
     "isEntry": true
   },
   "vendor/tangodev-it/filament-emoji-picker/resources/js/index.js": {

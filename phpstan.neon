@@ -20,6 +20,6 @@ parameters:
         - .phpstorm.meta.php (?)
         - database/migrations/*
         - database/seeders/*
-        - routes/ai.php
+        - routes/ai/ai.php
 
 

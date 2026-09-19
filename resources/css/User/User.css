@@ -1,0 +1,716 @@
+@import "tailwindcss";
+@import "../../../vendor/livewire/flux/dist/flux.css";
+@import "../Shared/Shared.css";
+
+@source '../../views';
+
+@source '../../../app/**/*.php';
+
+@source '../../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+
+@source '../../../vendor/livewire/flux-pro/stubs/**/*.blade.php';
+
+@source '../../../vendor/livewire/flux/stubs/**/*.blade.php';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    --color-zinc-50: #fafafa;
+    --color-zinc-100: #f5f5f5;
+    --color-zinc-200: #e5e5e5;
+    --color-zinc-300: #d4d4d4;
+    --color-zinc-400: #a3a3a3;
+    --color-zinc-500: #737373;
+    --color-zinc-600: #525252;
+    --color-zinc-700: #404040;
+    --color-zinc-800: #262626;
+    --color-zinc-900: #171717;
+    --color-zinc-950: #0a0a0a;
+
+    --color-accent: var(--color-neutral-800);
+    --color-accent-content: var(--color-neutral-800);
+    --color-accent-foreground: var(--color-white);
+}
+
+@layer theme {
+    .dark {
+        --color-accent: var(--color-white);
+        --color-accent-content: var(--color-white);
+        --color-accent-foreground: var(--color-neutral-800);
+    }
+}
+
+/* Sembunyikan scrollbar pada elemen scrollable secara selektif — bukan * (semua elemen) */
+.fi-panel-user *:not(html):not(body) {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.fi-panel-user *::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+    background: transparent;
+}
+
+
+.fi-panel-user *::-webkit-scrollbar-thumb {
+    background: transparent;
+}
+
+
+.fi-panel-user *::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+
+/* ─── NativePHP Mobile Safe Area for Filament ─── */
+
+/* Top navigation bar — fixed on all sizes (user panel)
+ *
+ * WHY fixed instead of sticky:
+ * Filament's .fi-layout has overflow-x:clip (or we override to visible for the
+ * sidebar drawer), both of which create a new scroll/stacking context and silently
+ * break position:sticky.  position:fixed is immune to ancestor overflow values and
+ * guarantees the bar never scrolls away on any platform (web, Android, iOS).
+ */
+.fi-panel-user .fi-topbar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    z-index: 40 !important;
+    overflow: visible !important;
+    overflow-x: visible !important;
+}
+
+
+/* Push the page body down so content doesn't hide under the fixed topbar.
+ * Filament renders .fi-layout as the direct sibling of .fi-topbar inside
+ * .fi-panel — give it top-padding equal to the topbar height (≈ 3.5rem / 56px).
+ */
+.fi-panel-user .fi-layout {
+    padding-top: 3.5rem !important;
+}
+
+
+/* Clip hanya nav-nya pada desktop — pada mobile JANGAN clip agar ikon tidak terpotong */
+.fi-panel-user .fi-topbar > nav {
+    overflow: hidden;
+    overflow-x: clip;
+}
+
+
+/* Mobile: hapus overflow clip agar ikon Cart & Bell tidak terpotong di layar sempit */
+
+@media (max-width: 1023px) {
+    .fi-panel-user .fi-topbar > nav {
+        overflow: visible !important;
+        overflow-x: visible !important;
+    }
+}
+
+
+/* Mobile: tambahkan safe area padding untuk notch/status bar */
+
+@media (max-width: 768px) {
+    .fi-panel-user .fi-topbar {
+        padding-top: var(--inset-top, env(safe-area-inset-top, 0px)) !important;
+    }
+}
+
+
+/* Topbar database notification bell + badge (user panel) */
+.fi-panel-user .fi-topbar-notif-wrap,
+.fi-panel-user .fi-topbar-database-notifications-btn {
+    overflow: visible !important;
+    flex-shrink: 0;
+}
+
+
+.fi-panel-user .fi-topbar-database-notifications-btn .fi-icon-btn-icon {
+    display: block;
+}
+
+
+.fi-panel-user .fi-topbar-database-notifications-btn .fi-icon-btn-badge-ctn {
+    display: none !important;
+}
+
+
+/* Topbar right section: ikon Bell + Cart + User — tidak boleh shrink/terpotong (user panel) */
+.fi-panel-user .fi-topbar > nav .ms-auto {
+    flex-shrink: 0;
+    align-items: center;
+    display: flex;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+
+/* Mobile: kurangi gap & padding agar semua ikon muat di layar sempit */
+
+@media (max-width: 640px) {
+    .fi-panel-user .fi-topbar > nav {
+        gap: 0.375rem !important;
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+    }
+
+
+    .fi-panel-user .fi-topbar > nav .ms-auto {
+        gap: 0.25rem !important;
+    }
+}
+
+
+/* Cegah elemen topbar bertumpuk (overlap) atau pecah/bug di layar mobile/responsive */
+
+@media (max-width: 1023px) {
+    .fi-panel-user .fi-topbar > nav .ms-auto {
+        flex: 1 !important;
+        min-width: 0 !important;
+        justify-content: flex-end !important;
+    }
+}
+
+
+/* Pastikan ikon Cart & Bell TIDAK pernah mengecil/hilang pada mobile (user panel) */
+.fi-panel-user .fi-topbar .fi-topbar-cart-btn,
+.fi-panel-user .fi-topbar .fi-topbar-notif-wrap,
+.fi-panel-user .fi-topbar .fi-topbar-database-notifications-btn {
+    flex-shrink: 0 !important;
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+}
+
+
+/* Cart & Notification icon: warna aktif (primary yellow) — user panel */
+.fi-panel-user .fi-topbar .fi-topbar-cart-active,
+.fi-panel-user .fi-topbar .fi-topbar-cart-active .fi-icon-btn-icon,
+.fi-panel-user .fi-topbar .fi-topbar-notif-active,
+.fi-panel-user .fi-topbar .fi-topbar-notif-active .fi-icon-btn-icon {
+    color: #ca8a04 !important;
+}
+
+
+.dark .fi-panel-user .fi-topbar .fi-topbar-cart-active,
+.dark .fi-panel-user .fi-topbar .fi-topbar-cart-active .fi-icon-btn-icon,
+.dark .fi-panel-user .fi-topbar .fi-topbar-notif-active,
+.dark .fi-panel-user .fi-topbar .fi-topbar-notif-active .fi-icon-btn-icon {
+    color: #facc15 !important;
+}
+
+
+/* Cart icon: warna default (inactive) — user panel */
+.fi-panel-user .fi-topbar .fi-topbar-cart-btn {
+    color: rgb(156 163 175); /* gray-400 */
+}
+
+
+.dark .fi-panel-user .fi-topbar .fi-topbar-cart-btn {
+    color: rgb(107 114 128); /* gray-500 */
+}
+
+
+.fi-panel-user .fi-topbar .fi-topbar-cart-btn:hover {
+    color: rgb(107 114 128);
+}
+
+
+.dark .fi-panel-user .fi-topbar .fi-topbar-cart-btn:hover {
+    color: rgb(156 163 175);
+}
+
+
+/* Konten utama: padding bawah agar tidak tertutup bottom-nav.
+   HANYA user panel yang punya bottom-nav — admin panel tidak perlu.
+   Mobile: padding-bottom TIADA di sini — di-scroll oleh .fi-main-ctn yang jadi
+   scroll container (mobile-bottom-nav). Menerapkan di dua tempat akan membuat
+   double padding → pita kosong besar di bawah grid. */
+
+@media (max-width: 1023px) {
+    .fi-panel-user .fi-main {
+        padding-bottom: 0 !important;
+        /* Pastikan area konten utama bisa di-scroll di mobile */
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+}
+
+
+
+@media (min-width: 1024px) {
+    .fi-panel-user .fi-main {
+        padding-bottom: 1.5rem !important;
+    }
+}
+
+
+/* ─── Hilangkan garis border di atas filter AboveContent (user panel) ─── */
+.fi-panel-user .fi-ta-filters-above-content-ctn {
+    border-top: none !important;
+    border-bottom: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+
+.fi-panel-user .fi-ta-filters-above-content-ctn,
+.fi-panel-user .fi-ta-filters-above-content-ctn > div,
+.fi-panel-user .fi-ta-filters-above-content-ctn > * {
+    border-top: none !important;
+    border-bottom: none !important;
+    border: none !important;
+}
+
+
+.fi-panel-user .fi-ta-filter-indicators {
+    margin-bottom: 1rem !important;
+    padding-top: 0.5rem !important;
+}
+
+
+.fi-panel-user .fi-ta-ctn {
+    overflow: visible !important;
+}
+
+
+/* ── Scroll container & background (user panel) ──
+ *
+ * 1. Jadikan .fi-main-ctn scroll container di semua ukuran (tidak hanya mobile).
+ *    Dengan begini scrollbar dan background konsisten antara desktop & mobile.
+ * 2. Beri background agar padding-bottom dari footer tidak tembus ke body.
+ */
+.fi-panel-user .fi-main-ctn {
+    scroll-behavior: smooth !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    background-color: #f9fafb; /* bg-gray-50 — agar padding-bottom tidak transparan */
+}
+
+
+.dark .fi-panel-user .fi-main-ctn {
+    background-color: #030712; /* dark:bg-gray-950 */
+}
+
+
+/* Desktop: constrain .fi-layout height agar overflow-y di .fi-main-ctn berfungsi
+ * (tanpa parent height tetap, overflow-y:auto tidak aktif) */
+
+@media (min-width: 1024px) {
+    .fi-panel-user .fi-layout {
+        height: 100dvh !important;
+        overflow: hidden !important;
+    }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   FILAMENT TABLE & FILTERS OVERRIDES
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Hide default search inputs and pagination — hanya di user panel */
+.fi-panel-user .fi-ta-header-toolbar .fi-input-wrp,
+.fi-panel-user .fi-ta-header-toolbar form[wire\:submit],
+.fi-panel-user .fi-ta-search,
+.fi-panel-user .fi-ta-pagination { 
+    display: none !important; 
+}
+
+
+/* Flex layout for header actions (user panel) */
+.fi-panel-user .fi-ta-header-toolbar { 
+    display: flex !important; 
+    flex-direction: row !important; 
+    align-items: center !important; 
+    gap: 0.5rem !important; 
+    flex-wrap: wrap !important; 
+}
+
+.fi-panel-user .fi-ta-header-toolbar > * { flex-shrink: 0; }
+
+.fi-panel-user .fi-ta-header-actions {
+    display: flex !important; 
+    flex-wrap: wrap !important; 
+    gap: 0.5rem !important; 
+}
+
+.fi-panel-user .fi-ta-header-actions .fi-btn {
+    font-size: 0.75rem !important; 
+    padding: 0.4rem 0.75rem !important; 
+}
+
+
+/* Horizontal Scrollable Filters on Mobile */
+
+@media (max-width: 768px) {
+    .fi-panel-user .fi-ta-filters-above-content-ctn form > div.grid,
+.fi-panel-user .fi-ta-filters-above-content form > div.grid {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        gap: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+        scrollbar-width: none;
+    }
+
+    .fi-panel-user .fi-ta-filters-above-content-ctn form > div.grid::-webkit-scrollbar,
+.fi-panel-user .fi-ta-filters-above-content form > div.grid::-webkit-scrollbar {
+        display: none;
+    }
+
+    .fi-panel-user .fi-ta-filters-above-content-ctn form > div.grid > *,
+.fi-panel-user .fi-ta-filters-above-content form > div.grid > * {
+        flex: 0 0 auto !important;
+        min-width: 130px !important;
+        width: 130px !important;
+    }
+}
+
+
+
+
+/* Hilangkan semua background & garis table di user panel (web, mobile, desktop) */
+.fi-panel-user .fi-ta-ctn,
+.fi-panel-user .fi-ta-content,
+.fi-panel-user .fi-wi-table .fi-ta-ctn,
+.fi-panel-user .fi-wi-table .fi-ta-content {
+    background-color: transparent !important;
+    border: none !important;
+    border-top: none !important;
+    box-shadow: none !important;
+}
+
+.fi-panel-user .fi-ta-header-toolbar {
+    border: none !important;
+    border-top: none !important;
+    border-bottom: none !important;
+}
+
+.fi-panel-user .fi-ta-cell,
+.fi-panel-user .fi-ta-header-cell,
+.fi-panel-user .fi-wi-table .fi-ta-cell,
+.fi-panel-user .fi-wi-table .fi-ta-header-cell {
+    border: none !important;
+    border-bottom: none !important;
+}
+
+.fi-panel-user .fi-ta-header,
+.fi-panel-user .fi-wi-table .fi-ta-header {
+    border-bottom: none !important;
+    border-top: none !important;
+}
+
+.fi-panel-user table,
+.fi-panel-user tr,
+.fi-panel-user td,
+.fi-panel-user th {
+    border: none !important;
+}
+
+.fi-panel-user thead,
+.fi-panel-user tbody,
+.fi-panel-user thead > tr,
+.fi-panel-user tbody > tr,
+.fi-panel-user .fi-ta-header-row {
+    border: none !important;
+    border-bottom: none !important;
+}
+
+.fi-panel-user .fi-ta-header-row .fi-ta-header-cell:last-child,
+.fi-panel-user thead > tr > th:last-child {
+    border-right: none !important;
+}
+
+.fi-panel-user [class*="divide-"],
+.fi-panel-user [class*="divide-"] > :not([hidden]) ~ :not([hidden]),
+.fi-panel-user [class*="border-t"],
+.fi-panel-user [class*="border-b"] {
+    border: none !important;
+    border-top: none !important;
+}
+
+
+.fi-panel-user .fi-wi-stats-overview-stat {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+}
+
+
+.fi-panel-user .fi-wi-stats-overview-stat > div.grid {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    height: 100% !important;
+    width: 100% !important;
+}
+
+
+.fi-panel-user .fi-wi-stats-overview-stat .flex.items-center {
+    justify-content: center !important;
+}
+
+
+
+/* ─── Full-Width Mobile Sidebar & Navigation (USER PANEL ONLY) ─── */
+/* Admin panel menggunakan sidebar bawaan Filament — tidak di-override di sini */
+
+@media (max-width: 1024px) {
+    /* Sidebar drawer user panel: full width, slide-in from left */
+    .fi-panel-user .fi-sidebar {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        --tw-translate-x: -100% !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s ease-in-out !important;
+        z-index: 40 !important;
+    }
+
+
+    .fi-panel-user .fi-sidebar.fi-sidebar-open {
+        --tw-translate-x: 0 !important;
+        transform: translateX(0) !important;
+    }
+
+
+    /* Overlay user panel */
+    .fi-panel-user .fi-sidebar-close-overlay {
+        z-index: 35 !important;
+    }
+
+
+    /*
+     * Fix: overflow-x-clip on .fi-layout creates a new stacking context
+     * that clips fixed-position children (like the overlay) on some browsers.
+     * Only apply to user panel — admin panel uses Filament default.
+     * Note: overflow:visible is removed here because the topbar now uses
+     * position:fixed which is immune to ancestor overflow values.
+     */
+    .fi-panel-user .fi-layout {
+        overflow-x: visible !important;
+    }
+
+
+    /* Remove horizontal margins from navigation items (user panel) */
+    .fi-panel-user .fi-sidebar-nav-item > a,
+.fi-panel-user .fi-sidebar-group {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        border-radius: 0 !important;
+    }
+
+
+    /* Make navigation group headers full width (user panel) */
+    .fi-panel-user .fi-sidebar-group-button {
+        padding-left: 1.5rem !important;
+        padding-right: 1.5rem !important;
+        width: 100% !important;
+    }
+
+
+    /* Active item full width (user panel) */
+    .fi-panel-user .fi-sidebar-nav-item > a.fi-active {
+        border-radius: 0 !important;
+    }
+
+
+    /* Show close button in sidebar header on mobile (user panel) */
+    .fi-panel-user .fi-sidebar-header .fi-sidebar-mobile-close-btn {
+        display: flex !important;
+    }
+}
+
+
+/* --- Sidebar Navigation Group Chevron Rotation Animation (user panel) --- */
+.fi-panel-user .fi-sidebar-group-button svg,
+.fi-panel-user .fi-sidebar-group-button > *:last-child {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transform: rotate(0deg);
+}
+
+
+.fi-panel-user .fi-sidebar-group[aria-expanded='true'] .fi-sidebar-group-button svg,
+.fi-panel-user .fi-sidebar-group[aria-expanded='true'] .fi-sidebar-group-button > *:last-child,
+.fi-panel-user .fi-sidebar-group-button[aria-expanded='true'] svg,
+.fi-panel-user .fi-sidebar-group-button[aria-expanded='true'] > *:last-child {
+    transform: rotate(180deg) !important;
+}
+
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   AUTH PAGE — User Panel
+   - Background halaman (body/layout) tetap seperti Filament default
+   - Background FORM CARD (fi-simple-main) dihapus via published view + CSS
+   - Mobile: scrollable, flush ke tepi tanpa card
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════
+   AUTH PAGE — User Panel ONLY
+   - Hanya berlaku di .fi-panel-user (user panel), tidak menyentuh admin
+   - Hapus background fi-simple-main + fi-fo-wizard di auth page user
+   - Collapse wizard header (step indicator) agar tidak menyumbang gap
+   - Mobile: scrollable, flush ke tepi layar
+   ═══════════════════════════════════════════════════════════════════ */
+
+/*
+ * Center label "Foto Profil" di halaman register user panel
+ */
+.fi-panel-user .avatar-upload-centered,
+.fi-panel-user .avatar-upload-centered > .fi-fo-field-wrp-label {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    width: 100% !important;
+}
+
+
+.fi-panel-user .avatar-upload-centered > .fi-fo-field-wrp-label label {
+    text-align: center !important;
+    width: 100% !important;
+}
+
+
+
+.fi-panel-user .fi-simple-main {
+    margin-top: 1rem !important;
+    margin-bottom: 1rem !important;
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+}
+
+
+/*
+ * Collapse wizard step header sepenuhnya — height 0, tidak ada padding.
+ * List item di dalamnya juga di-collapse.
+ * Hanya user panel — admin tidak terpengaruh.
+ */
+.fi-panel-user .fi-fo-wizard-header,
+.fi-panel-user .fi-fo-wizard-header > li,
+.fi-panel-user .fi-fo-wizard-header > li * {
+    display: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
+}
+
+
+/*
+ * Kurangi gap section di simple page
+ */
+.fi-panel-user .fi-simple-page > section {
+    gap: 0.5rem !important;
+}
+
+
+/*
+ * Hapus background & shadow dari fi-simple-main dan wizard container
+ */
+.fi-panel-user .fi-simple-main,
+.fi-panel-user main.fi-simple-main,
+.fi-panel-user .fi-fo-wizard.fi-contained {
+    background-color: transparent !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    --tw-shadow: 0 0 #0000 !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+    border: none !important;
+}
+
+
+/*
+ * ALL SIZES — user panel auth pages must be scrollable.
+ * Filament's default simple layout uses items-center + justify-center which
+ * vertically centers content and silently clips it on short viewports.
+ * We override to flex-start so the page scrolls naturally on all screen sizes.
+ */
+.fi-panel-user .fi-simple-layout {
+    min-height: 100dvh !important;
+    height: auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+}
+
+
+.fi-panel-user .fi-simple-main-ctn {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    overflow: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding-top: max(2rem, env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: max(2rem, env(safe-area-inset-bottom, 0px)) !important;
+}
+
+/* Messages page: keep this outside the SPA-morphed page markup. */
+.fi-panel-user .messages-container {
+    height: calc(100dvh - 13rem);
+    min-height: 300px;
+}
+
+.chat-msg-flash {
+    animation: chatMsgFlash 1.2s ease-in-out;
+}
+
+@keyframes chatMsgFlash {
+    0%, 100% { background-color: transparent; }
+    30% { background-color: rgba(250, 204, 21, 0.25); border-radius: 12px; }
+}
+
+@media (max-width: 1023px) {
+    .fi-panel-user .messages-container {
+        height: calc(100dvh - 10rem);
+    }
+
+    .fi-panel-user .fi-main:has(#messages-container),
+    .fi-panel-user .fi-main-ctn:has(#messages-container) {
+        padding-bottom: 0 !important;
+    }
+}
+
+@media (max-width: 639px) {
+    .fi-panel-user .messages-container {
+        height: calc(100dvh - 8rem);
+    }
+}
+
+
+/*
+ * MOBILE (< 640px) — flush ke tepi layar, tanpa card rounding
+ */
+
+@media (max-width: 639px) {
+    .fi-panel-user .fi-simple-main-ctn {
+        align-items: stretch !important;
+        padding-top: max(1rem, env(safe-area-inset-top, 0px)) !important;
+        padding-bottom: max(2rem, env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+
+    .fi-panel-user .fi-simple-main {
+        border-radius: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding-left: max(1.25rem, env(safe-area-inset-left, 0px)) !important;
+        padding-right: max(1.25rem, env(safe-area-inset-right, 0px)) !important;
+        padding-top: 1.5rem !important;
+        padding-bottom: 1.5rem !important;
+    }
+}

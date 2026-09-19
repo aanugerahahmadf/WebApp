@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\History;
-use App\Models\User;
+use App\Models\History\History;
+use App\Models\User\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 

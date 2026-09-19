@@ -2,11 +2,11 @@
 
 namespace Database\Factories;
 
-use App\Enums\PaymentStatus;
-use App\Enums\TransactionType;
-use App\Models\Order;
-use App\Models\Transaction;
-use App\Models\User;
+use App\Enums\PaymentStatus\PaymentStatus;
+use App\Enums\TransactionType\TransactionType;
+use App\Models\Order\Order;
+use App\Models\Transaction\Transaction;
+use App\Models\User\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 

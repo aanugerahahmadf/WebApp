@@ -59,10 +59,11 @@ export default defineConfig(({ mode }) => {
     const platformConfigs = {
         web: {
             input: [
-                'resources/css/app.css',
-                'resources/js/app-web.js',
+                'resources/css/User/User.css',
+                'resources/css/Admin/Admin.css',
+                'resources/js/app-web/app-web.js',
                 './vendor/tangodev-it/filament-emoji-picker/resources/js/index.js',
-                'resources/js/echo.js',
+                'resources/js/echo/echo.js',
             ],
             buildDir:    'build/web',
             publicBuild: 'public/build/web',
@@ -71,11 +72,12 @@ export default defineConfig(({ mode }) => {
         },
         mobile: {
             input: [
-                'resources/css/app.css',
-                'resources/js/app-mobile.js',
+                'resources/css/User/User.css',
+                'resources/css/Admin/Admin.css',
+                'resources/js/app-mobile/app-mobile.js',
                 './vendor/nativephp/mobile/resources/js/phpProtocolAdapter.js',
                 './vendor/tangodev-it/filament-emoji-picker/resources/js/index.js',
-                'resources/js/echo.js',
+                'resources/js/echo/echo.js',
             ],
             buildDir:    'build/mobile',
             publicBuild: 'public/build/mobile',
@@ -86,10 +88,11 @@ export default defineConfig(({ mode }) => {
         },
         desktop: {
             input: [
-                'resources/css/app.css',
-                'resources/js/app-desktop.js',
+                'resources/css/User/User.css',
+                'resources/css/Admin/Admin.css',
+                'resources/js/app-desktop/app-desktop.js',
                 './vendor/tangodev-it/filament-emoji-picker/resources/js/index.js',
-                'resources/js/echo.js',
+                'resources/js/echo/echo.js',
             ],
             buildDir:    'build/desktop',
             publicBuild: 'public/build/desktop',

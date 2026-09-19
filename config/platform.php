@@ -2,7 +2,7 @@
 
 return [
     /*
-    | Supported runtime targets (see App\Enums\RuntimePlatform):
+    | Supported runtime targets (see App\Enums\RuntimePlatform\RuntimePlatform):
     | - website_windows, website_macos, website_android, website_ios
     | - desktop_app_windows, desktop_app_macos (PWA standalone / NativePHP Desktop)
     | - mobile_app_android, mobile_app_ios (NativePHP Mobile)

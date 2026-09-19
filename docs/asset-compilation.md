@@ -49,29 +49,29 @@ At build time, four constants are injected into the client bundle and tree-shake
 
 Each platform has a dedicated JavaScript entry point in `resources/js/`. The entry points share common dependencies but diverge on platform-specific APIs.
 
-### `resources/js/app-web.js`
+### `resources/js/app-web/app-web.js`
 
 Used for web browser deployments (`php artisan serve`).
 
-- Imports `./bootstrap`, shared UI components, and Firebase client
+- Imports `../bootstrap/bootstrap`, shared UI components, and Firebase client
 - Uses the **WebRTC `getUserMedia` API** for camera access (CBIR feature)
 - Does **not** import `phpProtocolAdapter` (mobile-only)
 - Exposes `window.__PLATFORM__` with `type: 'web'` and `supportsWebRTC: true`
 
-### `resources/js/app-mobile.js`
+### `resources/js/app-mobile/app-mobile.js`
 
 Used for NativePHP Mobile (Android / iOS) (`php artisan native:run`).
 
-- Imports `./bootstrap`, shared UI components, and Firebase client
-- Imports `./phpProtocolAdapter` — required for the iOS `php://` protocol bridge
+- Imports `../bootstrap/bootstrap`, shared UI components, and Firebase client
+- Imports `../phpProtocolAdapter/phpProtocolAdapter` — required for the iOS `php://` protocol bridge
 - Uses the **NativePHP Mobile Camera API** instead of WebRTC
 - Exposes `window.__PLATFORM__` with `type: 'mobile'`, sub-platform detection (`isIOS`, `isAndroid`)
 
-### `resources/js/app-desktop.js`
+### `resources/js/app-desktop/app-desktop.js`
 
 Used for NativePHP Electron (Windows / macOS) (`php artisan native:serve`).
 
-- Imports `./bootstrap`, shared UI components, and Firebase client
+- Imports `../bootstrap/bootstrap`, shared UI components, and Firebase client
 - Does **not** import `phpProtocolAdapter`
 - Uses the **NativePHP Electron Camera API** instead of WebRTC
 - Exposes `window.__PLATFORM__` with `type: 'desktop'`, sub-platform detection (`isWindows`, `isMacOS`)
@@ -169,9 +169,9 @@ The `PlatformAssetManager` class reads the correct manifest at runtime based on 
 
 ```json
 {
-  "resources/js/app-web.js": {
+  "resources/js/app-web/app-web.js": {
     "file": "assets/app-web.a1b2c3d4.js",
-    "src": "resources/js/app-web.js",
+    "src": "resources/js/app-web/app-web.js",
     "isEntry": true,
     "css": ["assets/app-web.e5f6g7h8.css"]
   }
@@ -199,10 +199,11 @@ export default defineConfig(({ mode }) => {
     const platformConfigs = {
         web: {
             input: [
-                'resources/css/app.css',
-                'resources/js/app-web.js',
+                'resources/css/User/User.css',
+                'resources/css/Admin/Admin.css',
+                'resources/js/app-web/app-web.js',
                 './vendor/tangodev-it/filament-emoji-picker/resources/js/index.js',
-                'resources/js/echo.js',
+                'resources/js/echo/echo.js',
             ],
             buildDir: 'build/web',
             publicBuild: 'public/build/web',
@@ -211,11 +212,12 @@ export default defineConfig(({ mode }) => {
         },
         mobile: {
             input: [
-                'resources/css/app.css',
-                'resources/js/app-mobile.js',
+                'resources/css/User/User.css',
+                'resources/css/Admin/Admin.css',
+                'resources/js/app-mobile/app-mobile.js',
                 './vendor/nativephp/mobile/resources/js/phpProtocolAdapter.js',
                 './vendor/tangodev-it/filament-emoji-picker/resources/js/index.js',
-                'resources/js/echo.js',
+                'resources/js/echo/echo.js',
             ],
             buildDir: 'build/mobile',
             publicBuild: 'public/build/mobile',
@@ -224,10 +226,11 @@ export default defineConfig(({ mode }) => {
         },
         desktop: {
             input: [
-                'resources/css/app.css',
-                'resources/js/app-desktop.js',
+                'resources/css/User/User.css',
+                'resources/css/Admin/Admin.css',
+                'resources/js/app-desktop/app-desktop.js',
                 './vendor/tangodev-it/filament-emoji-picker/resources/js/index.js',
-                'resources/js/echo.js',
+                'resources/js/echo/echo.js',
             ],
             buildDir: 'build/desktop',
             publicBuild: 'public/build/desktop',

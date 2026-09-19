@@ -1,28 +1,25 @@
-# Jangan kirim folder besar ke build context Docker
-node_modules
-nativephp/android
-nativephp/ios
 .git
-.gitignore
-
-# Logs
-*.log
-storage/logs/*.log
-
-# Test artifacts
-.phpunit.result.cache
-tests/coverage
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# IDE
-.idea
 .vscode
-*.sublime-*
-
-# File temp
-test_boot.php
-grant_emulator_access.php
-logcat_output.txt
+.idea
+node_modules
+vendor
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/framework/testing/*
+.env
+.env.production
+*.log
+docker/8.0
+docker/8.1
+docker/8.2
+docker/8.3
+docker/8.4
+docker/8.5
+docker/mysql
+docker/pgsql
+docker/mariadb
+docker/nginx.conf
+docker/nginx.cloudrun.conf
+docker/start-cloudrun.sh

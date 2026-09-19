@@ -50,7 +50,7 @@
              cbir-camera-options (dropdown) & tombol galeri membuka
              cbir-browse-modal + cbir-browse-options langsung di tempat. --}}
         @if($isUserPanel)
-            @livewire(\App\Livewire\NativeCameraCbirButton::class)
+            @livewire(\App\Livewire\Shared\NativeCameraCbirButton\NativeCameraCbirButton::class)
         @endif
 
         {{-- Original suffix if any --}}

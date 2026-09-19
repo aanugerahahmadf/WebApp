@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\LegalPage;
-use App\Models\PrivacyPolicy;
-use App\Models\TermsOfService;
-use App\Models\WeddingDecorationPolicy;
+use App\Models\LegalPage\LegalPage;
+use App\Models\PrivacyPolicy\PrivacyPolicy;
+use App\Models\TermsOfService\TermsOfService;
+use App\Models\WeddingDecorationPolicy\WeddingDecorationPolicy;
 use Illuminate\Database\Seeder;
 
 class LegalSeeder extends Seeder

@@ -202,9 +202,9 @@ Resolves platform-specific Vite build output paths and manifest entries.
 
 | Platform Mode | Build directory | Vite entry point |
 |---|---|---|
-| Web | `public/build/web` | `resources/js/app-web.js` |
-| Mobile | `public/build/mobile` | `resources/js/app-mobile.js` |
-| Desktop | `public/build/desktop` | `resources/js/app-desktop.js` |
+| Web | `public/build/web` | `resources/js/app-web/app-web.js` |
+| Mobile | `public/build/mobile` | `resources/js/app-mobile/app-mobile.js` |
+| Desktop | `public/build/desktop` | `resources/js/app-desktop/app-desktop.js` |
 
 ```php
 $assetManager = app(PlatformAssetManager::class);
@@ -212,8 +212,8 @@ $assetManager->configure($mode);
 
 $assetManager->getBuildDirectory();  // e.g. "build/web"
 $assetManager->getManifestPath();    // absolute path to manifest.json
-$assetManager->getViteInput();       // e.g. "resources/js/app-web.js"
-$assetManager->asset('resources/js/app-web.js'); // versioned URL
+$assetManager->getViteInput();       // e.g. "resources/js/app-web/app-web.js"
+$assetManager->asset('resources/js/app-web/app-web.js'); // versioned URL
 $assetManager->manifestExists();     // bool
 ```
 

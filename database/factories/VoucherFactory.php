@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Enums\DiscountType;
-use App\Models\Voucher;
+use App\Enums\DiscountType\DiscountType;
+use App\Models\Voucher\Voucher;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 

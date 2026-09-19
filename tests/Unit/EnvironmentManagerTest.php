@@ -2,8 +2,8 @@
 
 namespace Tests\Unit;
 
-use App\Enums\PlatformMode;
-use App\Support\Platform\EnvironmentManager;
+use App\Enums\PlatformMode\PlatformMode;
+use App\Support\Platform\EnvironmentManager\EnvironmentManager;
 use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 

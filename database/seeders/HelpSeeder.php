@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\Help;
-use App\Traits\TranslatesContent;
+use App\Models\Help\Help;
+use App\Traits\TranslatesContent\TranslatesContent;
 use Illuminate\Database\Seeder;
 
 class HelpSeeder extends Seeder

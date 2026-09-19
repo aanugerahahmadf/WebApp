@@ -1,9 +1,9 @@
 <?php
 
-use App\Enums\RuntimePlatform;
-use App\Models\User;
-use App\Services\PlatformNotificationService;
-use App\Support\Platform\PlatformFeatureRegistry;
+use App\Enums\RuntimePlatform\RuntimePlatform;
+use App\Models\User\User;
+use App\Services\PlatformNotificationService\PlatformNotificationService;
+use App\Support\Platform\PlatformFeatureRegistry\PlatformFeatureRegistry;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
@@ -28,7 +28,10 @@ function makeUser(string $locale = 'en'): User
     // Eloquent internals used by the database notification channel
     $user->shouldReceive('routeNotificationFor')->andReturn([])->byDefault();
     $user->shouldReceive('getKey')->andReturn(1)->byDefault();
-    $user->shouldReceive('getMorphClass')->andReturn('App\Models\User')->byDefault();
+    // Service membaca $user->id (bukan getKey) saat event NotificationBroadcast;
+    // mock tanpa id mengakibatkan null → TypeError di constructor event.
+    $user->shouldReceive('getAttribute')->with('id')->andReturn(1)->byDefault();
+    $user->shouldReceive('getMorphClass')->andReturn('App\Models\User\User')->byDefault();
 
     return $user;
 }

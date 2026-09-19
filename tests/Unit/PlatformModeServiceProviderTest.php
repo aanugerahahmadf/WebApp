@@ -2,12 +2,12 @@
 
 namespace Tests\Unit;
 
-use App\Enums\PlatformMode;
-use App\Enums\RuntimePlatform;
-use App\Providers\PlatformModeServiceProvider;
-use App\Support\Platform\EnvironmentManager;
-use App\Support\Platform\PlatformAssetManager;
-use App\Support\Platform\RuntimePlatformDetector;
+use App\Enums\PlatformMode\PlatformMode;
+use App\Enums\RuntimePlatform\RuntimePlatform;
+use App\Providers\PlatformModeServiceProvider\PlatformModeServiceProvider;
+use App\Support\Platform\EnvironmentManager\EnvironmentManager;
+use App\Support\Platform\PlatformAssetManager\PlatformAssetManager;
+use App\Support\Platform\RuntimePlatformDetector\RuntimePlatformDetector;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Tests\TestCase;

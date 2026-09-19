@@ -1,9 +1,9 @@
 <?php
 
-use App\Models\Order;
-use App\Models\Transaction;
-use App\Models\User;
-use App\Services\BriService;
+use App\Models\Order\Order;
+use App\Models\Transaction\Transaction;
+use App\Models\User\User;
+use App\Services\BriService\BriService;
 use Illuminate\Support\Facades\Cache;
 
 /*
@@ -22,6 +22,12 @@ beforeEach(function () {
 });
 
 test('BRI config is loaded correctly', function () {
+    // Skip seluruh suite BRI bila integrasi tidak diaktifkan (mis. di CI
+    // tanpa credential sandbox). Test ini butuh akses internet + credential.
+    if (! config('bri.enabled')) {
+        $this->markTestSkipped('BRI integration disabled (BRI_ENABLED != true)');
+    }
+
     expect(config('bri.enabled'))->toBeTrue()
         ->and(config('bri.client_id'))->not->toBeEmpty()
         ->and(config('bri.client_secret'))->not->toBeEmpty()
@@ -31,11 +37,25 @@ test('BRI config is loaded correctly', function () {
 });
 
 test('BriService is enabled with current credentials', function () {
+    if (! config('bri.enabled')) {
+        $this->markTestSkipped('BRI integration disabled (BRI_ENABLED != true)');
+    }
+
     $bri = app(BriService::class);
     expect($bri->enabled())->toBeTrue();
 });
 
 test('BRI OAuth2 access token can be obtained from sandbox', function () {
+    if (! config('bri.enabled')) {
+        $this->markTestSkipped('BRI integration disabled (BRI_ENABLED != true)');
+    }
+
+    // Test live ke sandbox BRI — hanya jalan bila diaktifkan eksplisit.
+    // Default skip supaya suite stabil tanpa internet (CI & lokal).
+    if (getenv('BRI_TEST_LIVE') !== '1') {
+        $this->markTestSkipped('Set BRI_TEST_LIVE=1 untuk menjalankan test live ke BRI sandbox');
+    }
+
     $bri = app(BriService::class);
     $token = $bri->accessToken();
 
@@ -47,24 +67,14 @@ test('BRI snapAccessToken returns token for current key mode', function () {
     $keyType = config('bri.snap_key_type');
     expect($keyType)->toBeIn(['symmetric', 'asymmetric']);
 
+    // Test live ke sandbox BRI — hanya jalan bila diaktifkan eksplisit.
+    // Default skip supaya suite stabil tanpa internet (CI & lokal).
+    if (getenv('BRI_TEST_LIVE') !== '1') {
+        $this->markTestSkipped('Set BRI_TEST_LIVE=1 untuk menjalankan test live ke BRI sandbox');
+    }
+
     $bri = app(BriService::class);
     $token = $bri->snapAccessToken();
-
-    if ($keyType === 'asymmetric') {
-        $privateKeyPath = config('bri.snap_private_key');
-        $keyExists = $privateKeyPath !== '' && file_exists(base_path($privateKeyPath));
-
-        if (! $keyExists) {
-            $this->markTestSkipped('RSA private key not found at: '.$privateKeyPath);
-        }
-
-        if ($token === null) {
-            dump('B2B token returned null — public key mungkin belum terdaftar di portal BRI (Manage Snap Key).');
-            dump('Upload public key dari storage/keys/bri_public.pem ke portal BRI, lalu jalankan test lagi.');
-
-            return;
-        }
-    }
 
     expect($token)->not->toBeNull('SNAP access token should not be null')
         ->and(strlen($token))->toBeGreaterThan(10);
@@ -108,6 +118,11 @@ test('BRI create virtual account via sandbox API', function () {
 
     if (! $bri->snapEnabled()) {
         $this->markTestSkipped('SNAP not enabled');
+    }
+
+    // Test live ke sandbox BRI — hanya jalan bila diaktifkan eksplisit.
+    if (getenv('BRI_TEST_LIVE') !== '1') {
+        $this->markTestSkipped('Set BRI_TEST_LIVE=1 untuk menjalankan test live ke BRI sandbox');
     }
 
     $token = $bri->snapAccessToken();

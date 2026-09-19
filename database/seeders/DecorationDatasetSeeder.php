@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\Category;
-use App\Models\Package;
-use App\Models\Product;
+use App\Models\Category\Category;
+use App\Models\Package\Package;
+use App\Models\Product\Product;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;

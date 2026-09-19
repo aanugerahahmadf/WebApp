@@ -6,7 +6,7 @@ This guide covers building, configuring, and deploying the Laravel Wedding Organ
 
 ## Production Build
 
-The web platform uses a dedicated npm script that sets `VITE_PLATFORM=web` before invoking Vite. This ensures only the web-specific JavaScript entry point (`resources/js/app-web.js`) is bundled, keeping the production asset as small as possible.
+The web platform uses a dedicated npm script that sets `VITE_PLATFORM=web` before invoking Vite. This ensures only the web-specific JavaScript entry point (`resources/js/app-web/app-web.js`) is bundled, keeping the production asset as small as possible.
 
 ```bash
 npm run build:web

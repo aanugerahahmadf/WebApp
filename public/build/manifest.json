@@ -3,35 +3,44 @@
     "file": "assets/popper-BwhhPXy0.js",
     "name": "popper"
   },
-  "resources/css/app.css": {
-    "file": "assets/app-CW_elVAK.css",
-    "src": "resources/css/app.css",
+  "resources/css/Admin/Admin.css": {
+    "file": "assets/Admin-BAgFVH4X.css",
+    "src": "resources/css/Admin/Admin.css",
     "isEntry": true,
-    "name": "app",
+    "name": "Admin",
     "names": [
-      "app.css"
+      "Admin.css"
     ]
   },
-  "resources/js/app.js": {
-    "file": "assets/app-Dgmu7BL7.js",
+  "resources/css/User/User.css": {
+    "file": "assets/User-DDcIb4Ja.css",
+    "src": "resources/css/User/User.css",
+    "isEntry": true,
+    "name": "User",
+    "names": [
+      "User.css"
+    ]
+  },
+  "resources/js/app/app.js": {
+    "file": "assets/app-DD_cqFJG.js",
     "name": "app",
-    "src": "resources/js/app.js",
+    "src": "resources/js/app/app.js",
     "isEntry": true,
     "imports": [
-      "resources/js/echo.js",
+      "resources/js/echo/echo.js",
       "_popper-BwhhPXy0.js"
     ]
   },
-  "resources/js/echo.js": {
+  "resources/js/echo/echo.js": {
     "file": "assets/echo-BXRmpxmk.js",
     "name": "echo",
-    "src": "resources/js/echo.js",
+    "src": "resources/js/echo/echo.js",
     "isEntry": true
   },
-  "resources/js/firebase-auth.js": {
+  "resources/js/firebase-auth/firebase-auth.js": {
     "file": "assets/firebase-auth-CBat9K1T.js",
     "name": "firebase-auth",
-    "src": "resources/js/firebase-auth.js",
+    "src": "resources/js/firebase-auth/firebase-auth.js",
     "isEntry": true
   },
   "vendor/nativephp/mobile/resources/js/phpProtocolAdapter.js": {

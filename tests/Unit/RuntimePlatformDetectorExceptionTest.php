@@ -2,9 +2,9 @@
 
 namespace Tests\Unit;
 
-use App\Enums\PlatformMode;
-use App\Enums\RuntimePlatform;
-use App\Support\Platform\RuntimePlatformDetector;
+use App\Enums\PlatformMode\PlatformMode;
+use App\Enums\RuntimePlatform\RuntimePlatform;
+use App\Support\Platform\RuntimePlatformDetector\RuntimePlatformDetector;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Tests\TestCase;

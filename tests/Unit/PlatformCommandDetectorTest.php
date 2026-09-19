@@ -1,9 +1,9 @@
 <?php
 
-use App\Enums\PlatformMode;
-use App\Enums\RuntimePlatform;
-use App\Support\Platform\PlatformCommandDetector;
-use App\Support\Platform\RuntimePlatformDetector;
+use App\Enums\PlatformMode\PlatformMode;
+use App\Enums\RuntimePlatform\RuntimePlatform;
+use App\Support\Platform\PlatformCommandDetector\PlatformCommandDetector;
+use App\Support\Platform\RuntimePlatformDetector\RuntimePlatformDetector;
 use Illuminate\Http\Request;
 
 describe('PlatformCommandDetector', function () {

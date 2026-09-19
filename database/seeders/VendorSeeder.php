@@ -2,10 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\Package;
-use App\Models\Product;
-use App\Models\User;
-use App\Models\Vendor;
+use App\Models\User\User;
+use App\Models\Vendor\Vendor;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -15,7 +13,13 @@ class VendorSeeder extends Seeder
     {
         $this->command->info('--- Seeding Vendors ---');
 
-        if ((bool) $this->command->confirm('Vendor nonaktif: semua item saat ini in-house tanpa vendor. Tetap buat akun vendor (untuk calon mitra)? [y/N]', false)) {
+        // Prompt interaktif hanya boleh muncul saat dijalankan manual dari CLI
+        // (bukan saat test). Saat testing, console di-mock tanpa askQuestion(),
+        // sehingga panggil confirm() akan crash. Gunakan default (false).
+        $confirmed = ! app()->environment('testing') &&
+            (bool) $this->command->confirm('Vendor nonaktif: semua item saat ini in-house tanpa vendor. Tetap buat akun vendor (untuk calon mitra)? [y/N]', false);
+
+        if ($confirmed) {
             $this->seedVendors();
         }
 

@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\PlatformMode;
+use App\Enums\PlatformMode\PlatformMode;
 
 describe('PlatformMode Enum', function () {
     test('has three cases with correct string values', function () {
@@ -28,9 +28,9 @@ describe('PlatformMode Enum', function () {
     });
 
     test('viteInput() returns correct Vite entry point paths', function () {
-        expect(PlatformMode::Web->viteInput())->toBe('resources/js/app-web.js');
-        expect(PlatformMode::Mobile->viteInput())->toBe('resources/js/app-mobile.js');
-        expect(PlatformMode::Desktop->viteInput())->toBe('resources/js/app-desktop.js');
+        expect(PlatformMode::Web->viteInput())->toBe('resources/js/app-web/app-web.js');
+        expect(PlatformMode::Mobile->viteInput())->toBe('resources/js/app-mobile/app-mobile.js');
+        expect(PlatformMode::Desktop->viteInput())->toBe('resources/js/app-desktop/app-desktop.js');
     });
 
     test('allowsCameraAccess() returns true for Mobile and Desktop', function () {

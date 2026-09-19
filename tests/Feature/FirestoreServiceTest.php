@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Services\FirestoreService;
+use App\Services\FirestoreService\FirestoreService;
 use Tests\TestCase;
 
 class FirestoreServiceTest extends TestCase

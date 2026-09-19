@@ -302,7 +302,7 @@ VITE_PLATFORM=desktop
 In Blade templates or JavaScript, you can read this value:
 
 ```js
-// resources/js/app.js
+// resources/js/app/app.js
 const platform = import.meta.env.VITE_PLATFORM ?? 'web';
 ```
 

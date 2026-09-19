@@ -2406,5 +2406,14 @@
     "Yang Termasuk dalam Paket": "Mit tartalmaz a csomag",
     "Yes": "Igen",
     "You are receiving this email because we received a password reset request for your account.": "Azért kapja ezt az üzenetet, mert a fiókjára jelszó helyreállítási kérés érkezett.",
-    "âœ¨ Hasil Mirip": "âœ¨ HasonlÃ³ eredmÃ©nyek"
+    "âœ¨ Hasil Mirip": "âœ¨ HasonlÃ³ eredmÃ©nyek",
+    "Masuk ke Akun": "Log in to Account",
+    "Masukkan KTP, Passport, SIM, NPWP, Username, atau Email serta Kata Sandi Anda.": "Enter your ID Card, Passport, Driver License, Tax ID, Username, or Email along with your Password.",
+    "Lupa Kata Sandi": "Forgot Password",
+    "Kirim Kode OTP": "Send OTP Code",
+    "Sudah ingat kata sandi Anda?": "Already remember your password?",
+    "Ingat kata sandi Anda?": "Remember your password?",
+    "Masukkan 6 digit kode OTP yang telah dikirimkan ke email Anda.": "Enter the 6-digit OTP code sent to your email.",
+    "Salah memasukkan email?": "Entered the wrong email?",
+    "Kirim Ulang": "Resend"
 }

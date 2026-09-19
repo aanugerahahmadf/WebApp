@@ -1,10 +1,15 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline (GCP — DISABLED)
 
 on:
-  push:
-    branches: [ "main", "develop" ]
-  pull_request:
-    branches: [ "main" ]
+  workflow_dispatch:
+  # push / pull_request sengaja dinonaktifkan:
+  # workflow ini butuh secret GCP (GCP_SERVICE_KEY, GCP_PROJECT_ID, dll)
+  # yang belum di-set. Aktifkan kembali dengan menambahkan trigger di atas
+  # SETELAH semua secret GCP tersedia di pengaturan repo.
+  # push:
+  #   branches: [ "main", "develop" ]
+  # pull_request:
+  #   branches: [ "main" ]
 
 env:
   PHP_VERSION: '8.4'

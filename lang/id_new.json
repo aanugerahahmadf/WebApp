@@ -2406,5 +2406,19 @@
     "text": "text",
     "to": "kepada",
     "total transaksi": "total transactions",
-    "âœ¨ Hasil Mirip": "âœ¨ Similar Results"
+    "âœ¨ Hasil Mirip": "âœ¨ Similar Results",
+    "Sudah memiliki akun?": "Sudah memiliki akun?",
+    "Sudah punya akun?": "Sudah memiliki akun?",
+    "Belum memiliki akun?": "Belum memiliki akun?",
+    "Belum punya akun?": "Belum memiliki akun?",
+    "Masuk": "Masuk",
+    "Masuk ke Akun": "Masuk ke Akun",
+    "Masukkan KTP, Passport, SIM, NPWP, Username, atau Email serta Kata Sandi Anda.": "Masukkan KTP, Passport, SIM, NPWP, Username, atau Email serta Kata Sandi Anda.",
+    "Lupa Kata Sandi": "Lupa Kata Sandi",
+    "Kirim Kode OTP": "Kirim Kode OTP",
+    "Sudah ingat kata sandi Anda?": "Sudah ingat kata sandi Anda?",
+    "Ingat kata sandi Anda?": "Ingat kata sandi Anda?",
+    "Masukkan 6 digit kode OTP yang telah dikirimkan ke email Anda.": "Masukkan 6 digit kode OTP yang telah dikirimkan ke email Anda.",
+    "Salah memasukkan email?": "Salah memasukkan email?",
+    "Kirim Ulang": "Kirim Ulang"
 }

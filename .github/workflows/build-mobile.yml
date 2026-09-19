@@ -157,7 +157,7 @@ jobs:
       - name: Write Android keystore
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android-release.jks
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE6 4 != '' }}
+        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
 
       - name: Build Android App Bundle
         run: |

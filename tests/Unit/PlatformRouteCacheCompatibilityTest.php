@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\PlatformMode;
+use App\Enums\PlatformMode\PlatformMode;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
 
@@ -41,16 +41,16 @@ function getPlatformSpecificUrisForMode(PlatformMode $mode): array
         ->all();
 
     // Register platform-specific routes using the same logic as bootstrap/app.php
-    if ($mode === PlatformMode::Mobile && file_exists(base_path('routes/mobile.php'))) {
+    if ($mode === PlatformMode::Mobile && file_exists(base_path('routes/mobile/mobile.php'))) {
         Route::middleware('api')
             ->prefix('api/mobile')
-            ->group(base_path('routes/mobile.php'));
+            ->group(base_path('routes/mobile/mobile.php'));
     }
 
-    if ($mode === PlatformMode::Desktop && file_exists(base_path('routes/desktop.php'))) {
+    if ($mode === PlatformMode::Desktop && file_exists(base_path('routes/desktop/desktop.php'))) {
         Route::middleware('api')
             ->prefix('api/desktop')
-            ->group(base_path('routes/desktop.php'));
+            ->group(base_path('routes/desktop/desktop.php'));
     }
 
     // Collect all URIs now (after potential additions)

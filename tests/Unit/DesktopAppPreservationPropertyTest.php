@@ -27,7 +27,7 @@
  * - Confirm behavior on UNFIXED code first
  */
 
-use App\Enums\PlatformMode;
+use App\Enums\PlatformMode\PlatformMode;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\File;

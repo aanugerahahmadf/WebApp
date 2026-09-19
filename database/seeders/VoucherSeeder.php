@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\Discount;
-use App\Models\User;
-use App\Models\Voucher;
-use App\Traits\TranslatesContent;
+use App\Models\Discount\Discount;
+use App\Models\User\User;
+use App\Models\Voucher\Voucher;
+use App\Traits\TranslatesContent\TranslatesContent;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 

@@ -1,0 +1,59 @@
+# Laravel 12 (PHP 8.3) + Nginx for local dev without Laragon
+# Runs the whole Laravel website + Filament admin + mobile REST API on port 80.
+
+FROM php:8.3-fpm-bookworm
+
+# --- System packages ---
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    zip \
+    unzip \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libzip-dev \
+    libicu-dev \
+    libfreetype6-dev \
+    libjpeg62-turbo-dev \
+    libwebp-dev \
+    nginx \
+    supervisor \
+    default-mysql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# --- PHP extensions (including gd for images) ---
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
+    && docker-php-ext-install -j"$(nproc)" \
+        pdo pdo_mysql mbstring exif pcntl bcmath gd intl zip opcache
+
+# --- Composer ---
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /var/www/html
+
+# Copy app source first for caching (vendor/ and .env excluded via .dockerignore)
+COPY . .
+
+# Install PHP deps (allow platform reqs to be ignored for smooth dev)
+RUN composer install --no-scripts --no-autoloader --ignore-platform-reqs \
+    && composer dump-autoload --optimize --ignore-platform-reqs
+
+# Storage bootstrap
+RUN mkdir -p storage/framework/{sessions,views,cache/data} bootstrap/cache storage/logs \
+    && chmod -R 775 storage bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache public
+
+# Nginx + PHP-FPM + supervisor configs
+COPY docker/supervisord.dev.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker/nginx.dev.conf /etc/nginx/sites-available/default
+COPY docker/fpm-pool.dev.conf /usr/local/etc/php-fpm.d/zz-docker.conf
+RUN ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default \
+    && echo "daemon off;" >> /etc/nginx/nginx.conf
+
+# Entrypoint: run migrations (optional) then start supervisor (nginx + php-fpm)
+COPY docker/entrypoint.dev.sh /usr/local/bin/entrypoint
+RUN chmod +x /usr/local/bin/entrypoint
+
+EXPOSE 80
+ENTRYPOINT ["entrypoint"]

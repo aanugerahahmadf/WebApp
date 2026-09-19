@@ -1,0 +1,150 @@
+@import "tailwindcss";
+@import "../../../vendor/livewire/flux/dist/flux.css";
+@import "../Shared/Shared.css";
+
+@source '../../views';
+
+@source '../../../app/**/*.php';
+
+@source '../../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+
+@source '../../../vendor/livewire/flux-pro/stubs/**/*.blade.php';
+
+@source '../../../vendor/livewire/flux/stubs/**/*.blade.php';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    --color-zinc-50: #fafafa;
+    --color-zinc-100: #f5f5f5;
+    --color-zinc-200: #e5e5e5;
+    --color-zinc-300: #d4d4d4;
+    --color-zinc-400: #a3a3a3;
+    --color-zinc-500: #737373;
+    --color-zinc-600: #525252;
+    --color-zinc-700: #404040;
+    --color-zinc-800: #262626;
+    --color-zinc-900: #171717;
+    --color-zinc-950: #0a0a0a;
+
+    --color-accent: var(--color-neutral-800);
+    --color-accent-content: var(--color-neutral-800);
+    --color-accent-foreground: var(--color-white);
+}
+
+@layer theme {
+    .dark {
+        --color-accent: var(--color-white);
+        --color-accent-content: var(--color-white);
+        --color-accent-foreground: var(--color-neutral-800);
+    }
+}
+
+.fi-panel-admin .fi-topbar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    z-index: 40 !important;
+    overflow: visible !important;
+    overflow-x: visible !important;
+}
+.fi-panel-admin .fi-layout {
+    padding-top: 3.5rem !important;
+}
+
+@media (max-width: 768px) {.fi-panel-admin .fi-topbar {
+        padding-top: var(--inset-top, env(safe-area-inset-top, 0px)) !important;
+    }
+}
+
+
+/* --- Sidebar Navigation Group Chevron Rotation Animation (admin panel) ---
+ * Filament uses heroicon-m-chevron-up + Alpine -rotate-180 when collapsed.
+ * Default (expanded):  rotate(0)   → ^ chevron up
+ * Collapsed:           rotate(180) → v chevron down  (via Alpine -rotate-180)
+ * We just ensure smooth transition and that the Alpine class works correctly.
+ */
+.fi-panel-admin .fi-sidebar-group-collapse-button {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+
+/* When Alpine adds -rotate-180 (group is collapsed): chevron points down */
+.fi-panel-admin .fi-sidebar-group-collapse-button.-rotate-180 {
+    transform: rotate(180deg) !important;
+}
+
+
+/* When not collapsed: chevron points up */
+.fi-panel-admin .fi-sidebar-group-collapse-button:not(.-rotate-180) {
+    transform: rotate(0deg) !important;
+}
+
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ADMIN PANEL — Mobile Sidebar Full Width + Scroll Fix
+   Sidebar admin: full width di mobile (Android/iOS app & mobile browser).
+   ═══════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1023px) {
+    /* Full width sidebar — sama seperti user panel */
+    .fi-panel-admin .fi-sidebar {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        --tw-translate-x: -100% !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s ease-in-out !important;
+        z-index: 40 !important;
+    }
+
+
+    .fi-panel-admin .fi-sidebar.fi-sidebar-open {
+        --tw-translate-x: 0 !important;
+        transform: translateX(0) !important;
+    }
+
+
+    /* Overlay admin panel */
+    .fi-panel-admin .fi-sidebar-close-overlay {
+        z-index: 35 !important;
+    }
+
+
+    /*
+     * Fix overflow-x-clip pada .fi-layout agar overlay fixed tidak terpotong.
+     */
+    .fi-panel-admin .fi-layout {
+        overflow-x: visible !important;
+        overflow: visible !important;
+    }
+
+
+    /* Nav items full width */
+    .fi-panel-admin .fi-sidebar-nav-item > a,
+.fi-panel-admin .fi-sidebar-group {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        border-radius: 0 !important;
+    }
+
+
+    .fi-panel-admin .fi-sidebar-group-button {
+        padding-left: 1.5rem !important;
+        padding-right: 1.5rem !important;
+        width: 100% !important;
+    }
+
+
+    .fi-panel-admin .fi-sidebar-nav-item > a.fi-active {
+        border-radius: 0 !important;
+    }
+
+
+    /* Padding bawah agar item terakhir tidak tertutup footer */
+    .fi-panel-admin .fi-sidebar-nav {
+        padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px)) !important;
+    }
+}

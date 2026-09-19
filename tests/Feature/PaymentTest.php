@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\Order;
-use App\Models\Transaction;
-use App\Models\User;
+use App\Models\Order\Order;
+use App\Models\Transaction\Transaction;
+use App\Models\User\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -38,9 +38,18 @@ class PaymentTest extends TestCase
 
     public function test_bri_va_webhook_handles_invalid_json(): void
     {
-        $response = $this->post('/api/webhooks/bri/va', null, [
-            'Content-Type' => 'application/json',
-        ]);
+        // Kirim body bukan-JSON (invalid) dengan Content-Type JSON.
+        // post() tidak menerima null sebagai data, jadi gunakan call()
+        // dengan raw content agar webhook benar-benar menerima payload invalid.
+        $response = $this->call(
+            'POST',
+            '/api/webhooks/bri/va',
+            [],
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            '{invalid-json'
+        );
 
         $response->assertOk()
             ->assertJson(['responseCode' => '2009700']);

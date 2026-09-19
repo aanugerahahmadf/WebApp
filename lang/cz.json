@@ -2680,5 +2680,14 @@
     "text": "text",
     "to": "to",
     "total transaksi": "total transactions",
-    "âœ¨ Hasil Mirip": "âœ¨ Similar Results"
+    "âœ¨ Hasil Mirip": "âœ¨ Similar Results",
+    "Masuk ke Akun": "Log in to Account",
+    "Masukkan KTP, Passport, SIM, NPWP, Username, atau Email serta Kata Sandi Anda.": "Enter your ID Card, Passport, Driver License, Tax ID, Username, or Email along with your Password.",
+    "Lupa Kata Sandi": "Forgot Password",
+    "Kirim Kode OTP": "Send OTP Code",
+    "Sudah ingat kata sandi Anda?": "Already remember your password?",
+    "Ingat kata sandi Anda?": "Remember your password?",
+    "Masukkan 6 digit kode OTP yang telah dikirimkan ke email Anda.": "Enter the 6-digit OTP code sent to your email.",
+    "Salah memasukkan email?": "Entered the wrong email?",
+    "Kirim Ulang": "Resend"
 }

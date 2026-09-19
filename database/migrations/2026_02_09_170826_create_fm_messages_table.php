@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\Inbox;
-use App\Models\User;
+use App\Models\Inbox\Inbox;
+use App\Models\User\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

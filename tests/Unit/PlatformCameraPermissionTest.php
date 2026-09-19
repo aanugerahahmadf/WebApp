@@ -1,7 +1,7 @@
 <?php
 
-use App\Enums\RuntimePlatform;
-use App\Http\Controllers\PlatformCameraController;
+use App\Enums\RuntimePlatform\RuntimePlatform;
+use App\Http\Controllers\PlatformCameraController\PlatformCameraController;
 
 /**
  * Property 8: Permission Denial Messages Are Platform-Aware

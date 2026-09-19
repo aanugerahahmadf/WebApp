@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\Help;
+use App\Models\Help\Help;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class HelpFactory extends Factory

@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\Category;
-use App\Models\Package;
-use App\Models\Vendor;
-use App\Traits\TranslatesContent;
+use App\Models\Category\Category;
+use App\Models\Package\Package;
+use App\Models\Vendor\Vendor;
+use App\Traits\TranslatesContent\TranslatesContent;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 

@@ -10,10 +10,11 @@ export default defineConfig({
     plugins: [
         laravel({
             input: [
-                'resources/css/app.css',
-                'resources/js/app.js',
-                'resources/js/firebase-auth.js',
-                'resources/js/echo.js',
+                'resources/css/User/User.css',
+                'resources/css/Admin/Admin.css',
+                'resources/js/app/app.js',
+                'resources/js/firebase-auth/firebase-auth.js',
+                'resources/js/echo/echo.js',
                 './vendor/nativephp/mobile/resources/js/phpProtocolAdapter.js',
                 './vendor/tangodev-it/filament-emoji-picker/resources/js/index.js',
             ],

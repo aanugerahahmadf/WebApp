@@ -1,9 +1,9 @@
 <?php
 
-use App\Enums\PlatformMode;
-use App\Http\Middleware\SetLocale;
-use App\Http\Middleware\VerifyCsrfToken;
-use App\Providers\AutoTranslationServiceProvider;
+use App\Enums\PlatformMode\PlatformMode;
+use App\Http\Middleware\SetLocale\SetLocale;
+use App\Http\Middleware\VerifyCsrfToken\VerifyCsrfToken;
+use App\Providers\AutoTranslationServiceProvider\AutoTranslationServiceProvider;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -26,10 +26,10 @@ $app = Application::configure(basePath: dirname(__DIR__))
         AutoTranslationServiceProvider::class,
     ])
     ->withRouting(
-        web: __DIR__.'/../routes/web.php',
-        api: __DIR__.'/../routes/api.php',
-        commands: __DIR__.'/../routes/console.php',
-        channels: __DIR__.'/../routes/channels.php',
+        web: __DIR__.'/../routes/web/web.php',
+        api: __DIR__.'/../routes/api/api.php',
+        commands: __DIR__.'/../routes/console/console.php',
+        channels: __DIR__.'/../routes/channels/channels.php',
         health: '/up',
         then: function (): void {
             // ── Platform-Specific Route Registration (Requirements 9.1–9.4, 9.6) ──────
@@ -37,18 +37,18 @@ $app = Application::configure(basePath: dirname(__DIR__))
             // These routes are prefixed with "api/mobile" and use the "api" middleware group.
             $mode = app('platform.mode');
 
-            if ($mode === PlatformMode::Mobile && file_exists(base_path('routes/mobile.php'))) {
+            if ($mode === PlatformMode::Mobile && file_exists(base_path('routes/mobile/mobile.php'))) {
                 Route::middleware('api')
                     ->prefix('api/mobile')
-                    ->group(base_path('routes/mobile.php'));
+                    ->group(base_path('routes/mobile/mobile.php'));
             }
 
             // Load desktop-specific routes only when running in Desktop App Mode.
             // These routes are prefixed with "api/desktop" and use the "api" middleware group.
-            if ($mode === PlatformMode::Desktop && file_exists(base_path('routes/desktop.php'))) {
+            if ($mode === PlatformMode::Desktop && file_exists(base_path('routes/desktop/desktop.php'))) {
                 Route::middleware('api')
                     ->prefix('api/desktop')
-                    ->group(base_path('routes/desktop.php'));
+                    ->group(base_path('routes/desktop/desktop.php'));
             }
         },
     )

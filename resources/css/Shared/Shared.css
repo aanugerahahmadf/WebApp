@@ -1,0 +1,889 @@
+/* Global Scrollbar Hiding & Performance Strategy
+ *
+ * PENTING: Hanya sembunyikan scrollbar secara visual — JANGAN set overflow:hidden
+ * pada html/body/*, karena itu akan memblokir touch scroll di Android/iOS WebView.
+ * scrollbar-width:none hanya menyembunyikan track scrollbar, scroll tetap berfungsi.
+ */
+html,
+body {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+}
+
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+    background: transparent;
+}
+
+
+/* Pastikan html dan body SELALU bisa di-scroll secara vertikal */
+html,
+body {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.nativephp-safe-area {
+    padding-top: calc(3rem + var(--inset-top, env(safe-area-inset-top, 0px))) !important;
+    padding-bottom: calc(1.5rem + var(--inset-bottom, env(safe-area-inset-bottom, 0px))) !important;
+    padding-left: calc(1.5rem + var(--inset-left, env(safe-area-inset-left, 0px))) !important;
+    padding-right: calc(1.5rem + var(--inset-right, env(safe-area-inset-right, 0px))) !important;
+}
+
+
+.fi-topbar-notif-badge {
+    position: absolute;
+    top: 0;
+    inset-inline-end: 0;
+    transform: translate(35%, -35%);
+    min-width: 1.125rem;
+    height: 1.125rem;
+    padding: 0 0.2rem;
+    border-radius: 9999px;
+    background-color: rgb(var(--primary-500, 234 179 8));
+    color: #fff;
+    font-size: 0.625rem;
+    font-weight: 700;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 2;
+    box-sizing: border-box;
+    white-space: nowrap;
+    border: 2px solid rgb(255 255 255);
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 0.06);
+}
+
+
+.dark .fi-topbar-notif-badge {
+    border-color: rgb(17 24 39);
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.08);
+}
+
+
+/*
+ * Modal notifikasi: overlay + panel harus satu lapisan z-index.
+ * Jangan naikkan overlay saja — akan menutupi tombol X dan blokir klik close.
+ */
+[data-fi-modal-id="database-notifications"] > div > .fixed.inset-0 {
+    z-index: 50 !important;
+}
+
+
+[data-fi-modal-id="database-notifications"] .fi-modal-close-btn {
+    position: relative;
+    z-index: 3;
+}
+
+
+@layer base {
+
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-gray-200, currentColor);
+    }
+}
+
+
+[data-flux-field]:not(ui-radio, ui-checkbox) {
+    @apply grid gap-2;
+}
+
+
+[data-flux-label] {
+    @apply  !mb-0 !leading-tight;
+}
+
+
+input:focus[data-flux-control],
+textarea:focus[data-flux-control],
+select:focus[data-flux-control] {
+    @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
+}
+
+
+/* \[:where(&)\]:size-4 {
+    @apply size-4;
+} */
+
+/* ═══════════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE — NativePHP Android/iOS + Web Mobile
+   Ukuran gambar kartu adaptif, tidak merusak layout Filament
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Gambar kartu: responsive via class fi-card-img / fi-card-img-wrap ── */
+/* Default desktop */
+.fi-card-img-wrap {
+    overflow: hidden;
+}
+
+/* ── Marketplace Style Cards (Layout only) ── */
+.fi-ta-record {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+}
+
+
+.fi-card-img {
+    width: 100% !important;
+    aspect-ratio: 1 / 1 !important;
+    object-fit: cover !important;
+    display: block !important;
+}
+
+
+/* Mobile < 480px (Extreme Compact Style) */
+
+@media (max-width: 479px) {
+    .fi-ta-content > div.grid { 
+        gap: 6px !important; 
+        padding: 6px !important; 
+    }
+
+    .fi-card-img-wrap { 
+        aspect-ratio: 16 / 10 !important; 
+        height: auto !important; 
+        width: 100% !important;
+        display: block !important;
+    }
+
+    .fi-card-img { 
+        aspect-ratio: 16 / 10 !important; 
+        height: 100% !important; 
+        width: 100% !important; 
+        object-fit: cover !important; 
+    }
+
+    .fi-ta-record .p-4,
+.fi-ta-record .p-6 { 
+        padding: 2px !important; 
+    }
+
+    .fi-ta-record .gap-y-4 { 
+        gap: 0px !important; 
+    }
+
+    /* Title: 11px, ultra compact */
+    .fi-ta-record h3,
+.fi-ta-record .text-lg,
+.fi-ta-record .text-xl { 
+        font-size: 11px !important; 
+        line-height: 1 !important;
+        font-weight: 500 !important;
+        display: -webkit-box !important;
+        -webkit-line-clamp: 2 !important;
+        -webkit-box-orient: vertical !important;
+        overflow: hidden !important;
+        margin-bottom: 0px !important;
+    }
+
+    /* Price: 12px Bold */
+    .fi-ta-record .text-primary-600,
+.fi-ta-record [style*="color"] {
+        font-size: 12px !important;
+        font-weight: 700 !important;
+    }
+}
+
+
+/* Tablet & Desktop */
+
+@media (min-width: 480px) {
+    .fi-card-img-wrap { aspect-ratio: 1 / 1 !important; height: auto !important; }
+}
+
+
+/* Desktop ≥ 1024px — biarkan nilai asli dari PHP */
+
+/* ── Artikel: class article-img-wrap ── */
+.article-img-wrap img {
+    width: 100% !important;
+    object-fit: cover !important;
+}
+
+
+@media (max-width: 479px) {
+    .article-img-wrap img { aspect-ratio: 4 / 3 !important; height: auto !important; width: 100% !important; object-fit: cover !important; }
+}
+
+
+@media (min-width: 480px) and (max-width: 639px) {
+    .article-img-wrap img { aspect-ratio: 4 / 3 !important; height: auto !important; width: 100% !important; object-fit: cover !important; }
+}
+
+
+@media (min-width: 640px) and (max-width: 1023px) {
+    .article-img-wrap img { aspect-ratio: 4 / 3 !important; height: auto !important; width: 100% !important; object-fit: cover !important; }
+}
+
+
+@media (min-width: 1024px) {
+    .article-img-wrap img { height: 220px !important; max-height: 220px !important; }
+}
+
+
+/* ── Kartu: cegah teks meluber keluar batas kartu ── */
+.fi-ta-record {
+    min-width: 0 !important;
+}
+
+
+/* ── Mobile: Header Actions (Kembali, Edit, dll) rata kanan di atas sebelah kanan ── */
+
+@media (max-width: 639px) {
+    .fi-header {
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        flex-wrap: nowrap !important;
+        gap: 1rem !important;
+    }
+
+    .fi-header > div:first-child {
+        flex-grow: 1 !important;
+        min-width: 0 !important;
+    }
+
+    .fi-header > div:last-child {
+        flex-shrink: 0 !important;
+        margin-top: 0 !important;
+        display: flex !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+    }
+}
+
+
+/* ── Touch optimizations ── */
+.fi-ta-record,
+.fi-ta-record * {
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   MESSAGES FORM ACTIONS — Ultra-Fast Button Response
+   Eliminasi 300ms tap delay + instant visual feedback untuk mobile
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Eliminasi 300ms tap delay pada tombol chat (messages form actions) */
+.fi-fo-actions .fi-btn,
+.fi-fo-actions button,
+.messages-form-actions .fi-btn,
+.messages-form-actions button,
+[x-on\:click*="cbir-browse-open"],
+[x-on\:click*="messages-camera-open"],
+.cbir-browse-modal-option,
+.messages-camera-modal button {
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+    cursor: pointer;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+}
+
+
+/* Instant visual feedback — scale transform dengan response 1ms */
+.fi-fo-actions .fi-btn:active,
+.messages-form-actions .fi-btn:active,
+[x-on\:click*="cbir-browse-open"]:active,
+[x-on\:click*="messages-camera-open"]:active {
+    transform: scale(0.93) !important;
+    transition: transform 1ms ease-out !important;
+}
+
+
+/* Pastikan Alpine.js event dispatching tidak delay */
+.fi-fo-actions,
+.messages-form-actions {
+    pointer-events: auto !important;
+}
+
+
+/* Optimasi modal backdrop performance */
+.cbir-browse-modal-backdrop,
+[class*="messages-camera"] [class*="modal"],
+[x-show="open"][role="dialog"] {
+    will-change: opacity;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+
+/* Optimasi modal panel performance */
+.cbir-browse-modal-panel,
+[x-show="open"][role="dialog"] > div {
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+}
+
+
+/* Hapus transition delay saat modal terbuka */
+[x-show="open"][x-transition\:enter] {
+    transition-delay: 0ms !important;
+}
+
+
+/* Stats Overview 5 columns on XL & Center Align */
+
+@media (min-width: 1280px) { 
+    .fi-wi-stats-overview-stats-ctn { 
+        grid-template-columns: repeat(5, minmax(0, 1fr)) !important; 
+    }
+}
+
+
+.fi-wi-stats-overview {
+    width: 100% !important;
+}
+
+
+.user-home-stats .fi-wi-stats-overview-stats-ctn,
+.fi-wi-stats-overview-stats-ctn:has(.home-stat-card),
+.fi-wi-stats-overview-stats-ctn:has(.home-stat-welcome) {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.875rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    align-items: stretch !important;
+    box-sizing: border-box !important;
+}
+
+
+
+@media (min-width: 768px) {
+    .user-home-stats .fi-wi-stats-overview-stats-ctn,
+.fi-wi-stats-overview-stats-ctn:has(.home-stat-card),
+.fi-wi-stats-overview-stats-ctn:has(.home-stat-welcome) {
+        width: 100% !important;
+        max-width: 100% !important;
+        gap: 1rem !important;
+    }
+}
+
+
+
+@media (min-width: 1280px) {
+    .user-home-stats .fi-wi-stats-overview-stats-ctn,
+.fi-wi-stats-overview-stats-ctn:has(.home-stat-card),
+.fi-wi-stats-overview-stats-ctn:has(.home-stat-welcome) {
+        width: 100% !important;
+        max-width: 100% !important;
+        gap: 1rem 1.25rem !important;
+    }
+}
+
+
+
+@media (min-width: 1536px) {
+    .user-home-stats .fi-wi-stats-overview-stats-ctn,
+.fi-wi-stats-overview-stats-ctn:has(.home-stat-card),
+.fi-wi-stats-overview-stats-ctn:has(.home-stat-welcome) {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}
+
+
+.user-home-stats .fi-wi-stats-overview-stat:first-child,
+.fi-wi-stats-overview-stats-ctn:has(.home-stat-card) .home-stat-welcome {
+    grid-column: 1 / -1 !important;
+}
+
+
+.home-stat-card {
+    border-radius: 12px !important;
+    min-height: 118px !important;
+    padding: 1rem !important;
+    /* Latar belakang solid — tidak transparan */
+    background-color: #ffffff !important;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1) !important;
+}
+
+
+.dark .home-stat-card {
+    background-color: #1f2937 !important;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.3) !important;
+}
+
+
+.home-stat-welcome {
+    min-height: 132px !important;
+}
+
+
+.home-stat-card > div.grid {
+    gap: 0.45rem !important;
+}
+
+
+.home-stat-card .fi-wi-stats-overview-stat-label {
+    color: rgb(203 213 225) !important;
+    font-size: 0.95rem !important;
+    line-height: 1.25rem !important;
+    white-space: nowrap !important;
+}
+
+
+.home-stat-card .fi-wi-stats-overview-stat-value {
+    font-size: 1.9rem !important;
+    line-height: 2.15rem !important;
+}
+
+
+.home-stat-welcome .fi-wi-stats-overview-stat-value {
+    font-size: 2.15rem !important;
+    line-height: 2.4rem !important;
+}
+
+
+.home-stat-card .fi-wi-stats-overview-stat-description {
+    font-size: 0.95rem !important;
+    line-height: 1.25rem !important;
+    white-space: nowrap !important;
+}
+
+
+.home-stat-card .fi-wi-stats-overview-stat-description-icon {
+    width: 1.1rem !important;
+    height: 1.1rem !important;
+    flex: none !important;
+}
+
+
+.fi-resource-home.fi-resource-list-records-page > section,
+.fi-resource-home.fi-resource-list-records-page > section > div.grid {
+    row-gap: 0.5rem !important;
+}
+
+
+.fi-resource-home .fi-page-header-widgets ~ .flex {
+    margin-top: 0 !important;
+}
+
+
+
+@media (max-width: 480px) {
+    .user-home-stats .fi-wi-stats-overview-stats-ctn,
+.fi-wi-stats-overview-stats-ctn:has(.home-stat-card),
+.fi-wi-stats-overview-stats-ctn:has(.home-stat-welcome) {
+        width: calc(100vw - 2rem) !important;
+        max-width: calc(100vw - 2rem) !important;
+        gap: 0.625rem !important;
+    }
+
+
+    .home-stat-card {
+        min-height: 118px !important;
+        padding: 0.8rem !important;
+    }
+
+
+    .home-stat-welcome {
+        min-height: 136px !important;
+    }
+
+
+    .home-stat-card .fi-wi-stats-overview-stat-label,
+.home-stat-card .fi-wi-stats-overview-stat-description {
+        font-size: 0.8rem !important;
+        line-height: 1rem !important;
+    }
+
+
+    .home-stat-card .fi-wi-stats-overview-stat-value {
+        font-size: 1.75rem !important;
+        line-height: 2rem !important;
+    }
+
+
+    .home-stat-welcome .fi-wi-stats-overview-stat-value {
+        font-size: 2rem !important;
+        line-height: 2.25rem !important;
+    }
+}
+
+
+
+
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   CBIR SEARCH BAR — tombol camera & upload menyatu di dalam search
+   */
+
+/* ═══════════════════════════════════════════════════════════════════
+   MESSAGES ATTACHMENT UPLOAD — sembunyikan FilePond drop zone
+   File diinject via cbir-browse-modal (paperclip) & avatar-browse-modal (camera).
+   FilePond tetap di DOM agar inject file & thumbnail preview berfungsi.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Sembunyikan drop zone label & panel background (area "Drag & Drop") */
+.messages-attachment-upload .filepond--drop-label,
+.messages-attachment-upload .filepond--panel-root,
+.messages-attachment-upload .filepond--panel {
+    display: none !important;
+}
+
+
+/* Collapse root height saat kosong (tidak ada file) */
+.messages-attachment-upload .filepond--root:not([data-has-items]) {
+    height: 0 !important;
+    min-height: 0 !important;
+}
+
+
+/* Saat ada file: tampilkan container item dengan padding minimal */
+.messages-attachment-upload .filepond--list-scroller {
+    margin-top: 0 !important;
+}
+
+
+.messages-attachment-upload .filepond--root {
+    min-height: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+
+/* Pastikan wrapper field tidak punya margin ekstra saat drop zone hidden */
+.messages-attachment-upload .fi-fo-field-wrp,
+.messages-attachment-upload ~ .fi-fo-field-wrp {
+    margin-top: 0 !important;
+}
+
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   PROFILE OVERVIEW STATS — ProfileOverview widget (profile page)
+   Grid 2 kolom, icon besar, label centered, warna dari ->color()
+   ═══════════════════════════════════════════════════════════════════ */
+
+.profile-overview-stats .fi-wi-stats-overview-stats-ctn,
+.fi-wi-stats-overview-stats-ctn:has(.profile-stat-card) {
+    display: grid !important;
+    /* 2 kolom: Katalog Paket | Katalog Bunga — full-width cards pakai grid-column: 1 / -1 */
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.875rem !important;
+    width: 100% !important;
+    align-items: stretch !important;
+}
+
+
+/* Override Filament's md: breakpoint classes — paksa tetap 2 kolom */
+.profile-overview-stats .fi-wi-stats-overview-stats-ctn.md\:grid-cols-3,
+.fi-wi-stats-overview-stats-ctn.md\:grid-cols-3:has(.profile-stat-card) {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+
+
+@media (min-width: 768px) {
+    .profile-overview-stats .fi-wi-stats-overview-stats-ctn,
+.fi-wi-stats-overview-stats-ctn:has(.profile-stat-card) {
+        gap: 1rem !important;
+    }
+}
+
+
+
+@media (max-width: 480px) {
+    .profile-overview-stats .fi-wi-stats-overview-stats-ctn,
+.fi-wi-stats-overview-stats-ctn:has(.profile-stat-card) {
+        gap: 0.5rem !important;
+    }
+}
+
+
+/* Profile stat card base */
+.profile-stat-card {
+    border-radius: 12px !important;
+    min-height: 100px !important;
+    /* Latar belakang solid — tidak transparan */
+    background-color: #ffffff !important;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1) !important;
+}
+
+
+.dark .profile-stat-card {
+    background-color: #1f2937 !important;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.3) !important;
+}
+
+
+/* Sembunyikan value kosong agar tidak ada gap */
+.profile-stat-card .fi-wi-stats-overview-stat-value:empty {
+    display: none !important;
+}
+
+
+
+@media (max-width: 480px) {
+    .profile-overview-stats .fi-wi-stats-overview-stats-ctn,
+.fi-wi-stats-overview-stats-ctn:has(.profile-stat-card) {
+        gap: 0.5rem !important;
+    }
+
+
+    /* Sembunyikan value kosong agar tidak ada gap */
+    .profile-stat-card .fi-wi-stats-overview-stat-value:empty {
+        display: none !important;
+    }
+}
+
+
+/* ── Profile Page: kurangi gap antara header dan widget ── */
+.fi-page:has(.profile-overview-stats) > section {
+    gap: 0.75rem !important;
+}
+
+
+/* ── CBIR: sembunyikan trigger default TakePicture (modal tetap via event) ── */
+.cbir-take-picture-hidden {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+    padding: 0 !important;
+    margin: -1px !important;
+}
+
+
+/* ─── CBIR browse modal (upload / Jelajahi) ─── */
+.cbir-browse-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10050;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0.75rem;
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    background-color: rgb(3 7 18 / 0.78);
+}
+
+
+
+@media (min-width: 640px) {
+    .cbir-browse-modal-backdrop {
+        align-items: center;
+        padding: 1rem;
+    }
+}
+
+
+.cbir-browse-modal-panel {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 28rem;
+    max-height: min(78dvh, calc(100dvh - 1.5rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)));
+    border-radius: 1rem;
+    border: 1px solid rgb(229 231 235);
+    background-color: rgb(255 255 255);
+    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.35);
+}
+
+
+.dark .cbir-browse-modal-panel {
+    border-color: rgb(255 255 255 / 0.1);
+    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.6);
+}
+
+
+.cbir-browse-modal-header {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgb(229 231 235);
+    padding: 0.75rem 1rem;
+}
+
+
+.dark .cbir-browse-modal-header {
+    border-bottom-color: rgb(255 255 255 / 0.1);
+}
+
+
+.cbir-browse-modal-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0.75rem 1rem 1rem;
+    -webkit-overflow-scrolling: touch;
+}
+
+
+.cbir-browse-modal-hint {
+    margin-bottom: 0.75rem;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: rgb(107 114 128);
+}
+
+
+.dark .cbir-browse-modal-hint {
+    color: rgb(156 163 175);
+}
+
+
+.cbir-browse-modal-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+
+.cbir-browse-modal-option {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 0.75rem;
+    border-radius: 0.75rem;
+    border: 1px solid rgb(229 231 235);
+    background-color: rgb(249 250 251);
+    padding: 0.625rem 0.75rem;
+    text-align: left;
+    transition: border-color 0.15s, background-color 0.15s;
+}
+
+
+.cbir-browse-modal-option:active {
+    transform: scale(0.99);
+}
+
+
+.cbir-browse-modal-option:hover {
+    border-color: rgb(245 158 11);
+    background-color: rgb(255 251 235);
+}
+
+
+.dark .cbir-browse-modal-option {
+    border-color: rgb(255 255 255 / 0.1);
+    background-color: rgb(255 255 255 / 0.05);
+}
+
+
+.dark .cbir-browse-modal-option:hover {
+    border-color: rgb(245 158 11);
+    background-color: rgb(245 158 11 / 0.1);
+}
+
+
+.cbir-browse-modal-option-icon {
+    display: flex;
+    height: 2.25rem;
+    width: 2.25rem;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    background-color: rgb(245 158 11 / 0.1);
+}
+
+
+.cbir-browse-modal-option-label {
+    min-width: 0;
+    flex: 1;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: rgb(17 24 39);
+}
+
+
+.dark .cbir-browse-modal-option-label {
+    color: rgb(255 255 255);
+}
+
+
+body.cbir-browse-modal-open .fi-bottom-nav {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+
+
+
+/* ─── NativePHP WebView: Fix Filament Wizard rendering ───────────────────────
+   Masalah: Alpine.js x-show di Wizard menyembunyikan semua steps saat
+   WebView belum selesai initialize Alpine. Fix: paksa step pertama tampil
+   sampai Alpine aktif, lalu Alpine mengambil kontrol.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* Wizard step container — pastikan tidak tersembunyi sebelum Alpine init */
+.fi-fo-wizard-step[x-show] {
+    display: block !important; /* Fallback sebelum Alpine */
+}
+
+
+/* Setelah Alpine init (x-cloak hilang), biarkan Alpine yang kontrol */
+.fi-fo-wizard-step[x-show][style*="display: none"] {
+    display: none !important;
+}
+
+
+/* Wizard header steps — paksa tampil */
+.fi-fo-wizard-header {
+    display: flex !important;
+}
+
+
+/* Paksa form content visible saat Alpine belum init */
+[wire\:id] .fi-fo-wizard-content,
+[wire\:id] .fi-fo-wizard-step {
+    visibility: visible;
+}
+
+
+
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   MESSAGES PAGE — fix bubble overlap on desktop
+   The flex chain must carry h-full + min-h-0 all the way down to
+   #chatContainer so overflow-y-auto works and bubbles don't overlap.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* messages-container → children must stretch fully */
+.messages-container > * {
+    height: 100% !important;
+    min-height: 0 !important;
+}
+
+
+/* Livewire component wrapper injected by Livewire (the [wire:id] div) */
+.messages-container [wire\:id] {
+    height: 100% !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Chat message flash highlight animation */
+.chat-msg-flash {
+    animation: chatMsgFlash 1.2s ease-in-out;
+}
+@keyframes chatMsgFlash {
+    0%, 100% { background-color: transparent; }
+    30% { background-color: rgba(250, 204, 21, 0.25); border-radius: 12px; }
+}

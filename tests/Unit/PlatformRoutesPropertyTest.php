@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\PlatformMode;
+use App\Enums\PlatformMode\PlatformMode;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
 
@@ -54,16 +54,16 @@ function getRegisteredUrisForMode(PlatformMode $mode): array
     Route::clearResolvedInstance('router');
 
     try {
-        if ($mode === PlatformMode::Mobile && file_exists(base_path('routes/mobile.php'))) {
+        if ($mode === PlatformMode::Mobile && file_exists(base_path('routes/mobile/mobile.php'))) {
             $freshRouter->middleware('api')
                 ->prefix('api/mobile')
-                ->group(base_path('routes/mobile.php'));
+                ->group(base_path('routes/mobile/mobile.php'));
         }
 
-        if ($mode === PlatformMode::Desktop && file_exists(base_path('routes/desktop.php'))) {
+        if ($mode === PlatformMode::Desktop && file_exists(base_path('routes/desktop/desktop.php'))) {
             $freshRouter->middleware('api')
                 ->prefix('api/desktop')
-                ->group(base_path('routes/desktop.php'));
+                ->group(base_path('routes/desktop/desktop.php'));
         }
     } finally {
         // Restore the original router and facade resolution

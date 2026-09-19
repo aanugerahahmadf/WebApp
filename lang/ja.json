@@ -3489,5 +3489,16 @@
     "æ—¥æœ¬èªž": "æ—¥æœ¬èªž",
     "í•œêµ­ì–´": "í•œêµ­ì–´",
     "Ð ÑƒÑÑÐºÐ¸Ð¹": "Ð ÑƒÑÑÐºÐ¸Ð¹",
-    "Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©": "ã‚ã‚"
+    "Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©": "ã‚ã‚",
+    "Sudah memiliki akun?": "ã™ã§ã«ã‚¢ã‚«ã‚¦ãƒ³ãƒˆã‚’ãŠæŒã¡ã§ã™ã‹?",
+    "Belum memiliki akun?": "ã¾ã ã‚¢ã‚«ã‚¦ãƒ³ãƒˆã‚’ãŠæŒã¡ã§ãªã„å ´åˆã¯ã€",
+    "Masuk ke Akun": "Log in to Account",
+    "Masukkan KTP, Passport, SIM, NPWP, Username, atau Email serta Kata Sandi Anda.": "Enter your ID Card, Passport, Driver License, Tax ID, Username, or Email along with your Password.",
+    "Lupa Kata Sandi": "Forgot Password",
+    "Kirim Kode OTP": "Send OTP Code",
+    "Sudah ingat kata sandi Anda?": "Already remember your password?",
+    "Ingat kata sandi Anda?": "Remember your password?",
+    "Masukkan 6 digit kode OTP yang telah dikirimkan ke email Anda.": "Enter the 6-digit OTP code sent to your email.",
+    "Salah memasukkan email?": "Entered the wrong email?",
+    "Kirim Ulang": "Resend"
 }

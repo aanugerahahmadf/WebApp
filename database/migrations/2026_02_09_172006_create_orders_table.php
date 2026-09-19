@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('order_number')->unique();
             $table->decimal('total_price', 15, 2);
             $table->enum('status', ['pending', 'confirmed', 'preparing', 'event_day', 'completed', 'cancelled'])->default('pending');
-            $table->enum('payment_status', ['unpaid', 'pending', 'partial', 'paid', 'failed', 'refunded'])->default('unpaid');
+            $table->enum('payment_status', ['unpaid', 'pending', 'partial', 'paid', 'failed', 'refunded', 'cancelled'])->default('unpaid');
             $table->date('booking_date');
             $table->text('notes')->nullable();
             $table->timestamps();

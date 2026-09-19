@@ -2,8 +2,8 @@
 
 namespace Tests\Unit;
 
-use App\Enums\PlatformMode;
-use App\Support\Platform\PlatformAssetManager;
+use App\Enums\PlatformMode\PlatformMode;
+use App\Support\Platform\PlatformAssetManager\PlatformAssetManager;
 use Tests\TestCase;
 
 /**
@@ -239,7 +239,7 @@ class PlatformAssetManagerTest extends TestCase
 
         $viteInput = $manager->getViteInput();
         $this->assertSame(
-            'resources/js/app-web.js',
+            'resources/js/app-web/app-web.js',
             $viteInput,
             'Vite input should default to web entry point when not configured'
         );
@@ -254,9 +254,9 @@ class PlatformAssetManagerTest extends TestCase
     public function test_vite_input_path_matches_platform_mode(): void
     {
         $testCases = [
-            ['mode' => PlatformMode::Web, 'expected' => 'resources/js/app-web.js'],
-            ['mode' => PlatformMode::Mobile, 'expected' => 'resources/js/app-mobile.js'],
-            ['mode' => PlatformMode::Desktop, 'expected' => 'resources/js/app-desktop.js'],
+            ['mode' => PlatformMode::Web, 'expected' => 'resources/js/app-web/app-web.js'],
+            ['mode' => PlatformMode::Mobile, 'expected' => 'resources/js/app-mobile/app-mobile.js'],
+            ['mode' => PlatformMode::Desktop, 'expected' => 'resources/js/app-desktop/app-desktop.js'],
         ];
 
         foreach ($testCases as $testCase) {
@@ -284,9 +284,9 @@ class PlatformAssetManagerTest extends TestCase
 
             // Verify the pattern
             $this->assertMatchesRegularExpression(
-                '/^resources\/js\/app-(web|mobile|desktop)\.js$/',
+                '/^resources\/js\/app-(web|mobile|desktop)\/app-\1\.js$/',
                 $viteInput,
-                "Vite input should follow pattern 'resources/js/app-{mode}.js'"
+                "Vite input should follow pattern 'resources/js/app-{mode}/app-{mode}.js'"
             );
         }
     }

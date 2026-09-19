@@ -1,7 +1,7 @@
 <?php
 
-use App\Enums\PlatformMode;
-use App\Support\Platform\PlatformDependencyValidator;
+use App\Enums\PlatformMode\PlatformMode;
+use App\Support\Platform\PlatformDependencyValidator\PlatformDependencyValidator;
 
 /**
  * Property 9: Missing Dependencies Are Fully Listed

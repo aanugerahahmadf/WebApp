@@ -2290,7 +2290,6 @@
     "Wawasan & Tips Terkait": "ç›¸å…³è§è§£å’ŒæŠ€å·§",
     "We take your privacy seriously. This document explains how your data is collected, used, and protected.": "æˆ‘ä»¬è®¤çœŸå¯¹å¾…æ‚¨çš„éšç§ã€‚æœ¬æ–‡æ¡£è§£é‡Šäº†å¦‚ä½•æ”¶é›†ã€ä½¿ç”¨å’Œä¿æŠ¤æ‚¨çš„æ•°æ®ã€‚",
     "Web Server is Down": "ç½‘ç»œæœåŠ¡å™¨å·²å…³é—­",
-    "Wedding Flowers Decorasi": "å©šç¤¼ç»„ç»‡è€…",
     "Wedding Flowers Decorasi": "å©šç¤¼ç»„ç»‡è€…å¾·ç»´",
     "Wedding Flowers Decorasi Logo": "å©šç¤¼ç»„ç»‡è€… Devi å¾½æ ‡",
     "Welcome To Admin Panel Dekorasi Bunga Pernikahan": "æ¬¢è¿Žæ¥åˆ°ç®¡ç†é¢æ¿ Dekorasi Bunga Pernikahan",
@@ -3489,5 +3488,16 @@
     "âœ¨ Hasil Mirip": "âœ¨ ç±»ä¼¼ç»“æžœ",
     "ä¸­æ–‡": "ä¸­æ–‡",
     "æ—¥æœ¬èªž": "æ—¥æœ¬è¯­",
-    "í•œêµ­ì–´": "í•œêµ­ì–´"
+    "í•œêµ­ì–´": "í•œêµ­ì–´",
+    "Sudah memiliki akun?": "å·²ç»æœ‰å¸æˆ·ï¼Ÿ",
+    "Belum memiliki akun?": "è¿˜æ²¡æœ‰å¸æˆ·ï¼Ÿ",
+    "Masuk ke Akun": "Log in to Account",
+    "Masukkan KTP, Passport, SIM, NPWP, Username, atau Email serta Kata Sandi Anda.": "Enter your ID Card, Passport, Driver License, Tax ID, Username, or Email along with your Password.",
+    "Lupa Kata Sandi": "Forgot Password",
+    "Kirim Kode OTP": "Send OTP Code",
+    "Sudah ingat kata sandi Anda?": "Already remember your password?",
+    "Ingat kata sandi Anda?": "Remember your password?",
+    "Masukkan 6 digit kode OTP yang telah dikirimkan ke email Anda.": "Enter the 6-digit OTP code sent to your email.",
+    "Salah memasukkan email?": "Entered the wrong email?",
+    "Kirim Ulang": "Resend"
 }

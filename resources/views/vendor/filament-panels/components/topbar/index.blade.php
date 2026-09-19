@@ -16,13 +16,10 @@
         {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::TOPBAR_START) }}
 
         @php
-            // Tombol sidebar:
-            // - Native mobile app (NativePHP Android/iOS): SEMBUNYIKAN — sudah ada bottom nav
-            // - Website di mobile browser (Android/iOS): TAMPILKAN
-            // - Admin panel di mobile browser: TAMPILKAN
-            // - Desktop (web/native): ikuti logika Filament default
-            $isNativeMobileApp = \App\Support\PlatformContext::isNativeMobile();
-            $showSidebarToggle = filament()->hasNavigation() && ! $isNativeMobileApp;
+            // Tombol sidebar: selalu tampilkan. Di mobile membuka drawer navigasi
+            // bawaan Filament; di desktop (top navigation) otomatis disembunyikan
+            // oleh class 'lg:hidden' di bawah.
+            $showSidebarToggle = filament()->hasNavigation();
         @endphp
 
         @if ($showSidebarToggle)
@@ -180,12 +177,6 @@
 
             @if (filament()->auth()->check())
                 @php
-                    $isMobileShell = \App\Support\PlatformContext::isAnyMobile();
-                    $isUserPanel = filament()->getId() === 'user';
-                    $showCartInTopbar = $isUserPanel;
-                    $showUserMenuInTopbar = ! ($isUserPanel && $isMobileShell);
-                    $inactiveClass = 'text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400';
-
                     // Unread count — direct query, no Livewire wrapper needed
                     $unreadCount = 0;
                     try {
@@ -230,11 +221,7 @@
                 @endif
 
 
-                @if ($showUserMenuInTopbar)
-                    <div @class(['hidden lg:block' => $isUserPanel && ! $isMobileShell])>
-                        <x-filament-panels::user-menu />
-                    </div>
-                @endif
+                <x-filament-panels::user-menu />
             @endif
         </div>
 
