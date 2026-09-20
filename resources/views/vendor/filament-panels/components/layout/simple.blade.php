@@ -2,6 +2,7 @@
     use Filament\Support\Enums\MaxWidth;
 
     $livewire ??= null;
+    $isAuthenticationPage = $livewire && str_contains($livewire::class, '\\Auth\\');
 @endphp
 
 <x-filament-panels::layout.base :livewire="$livewire">
@@ -12,21 +13,23 @@
     ])
 
     <div class="fi-simple-layout flex min-h-screen flex-col items-center">
-        <div
-            class="absolute end-0 top-0 flex h-16 items-center gap-x-4 pe-4 md:pe-6 lg:pe-8 z-20"
-        >
-            @include('User.filament-language-switcher.language-switcher.language-switcher')
+        @unless ($isAuthenticationPage)
+            <div
+                class="absolute end-0 top-0 flex h-16 items-center gap-x-4 pe-4 md:pe-6 lg:pe-8 z-20"
+            >
+                @include('User.filament-language-switcher.language-switcher.language-switcher')
 
-            @if (($hasTopbar ?? true) && filament()->auth()->check())
-                @if (filament()->hasDatabaseNotifications())
-                    @livewire(Filament\Livewire\DatabaseNotifications::class, [
-                        'lazy' => filament()->hasLazyLoadedDatabaseNotifications()
-                    ])
+                @if (($hasTopbar ?? true) && filament()->auth()->check())
+                    @if (filament()->hasDatabaseNotifications())
+                        @livewire(Filament\Livewire\DatabaseNotifications::class, [
+                            'lazy' => filament()->hasLazyLoadedDatabaseNotifications()
+                        ])
+                    @endif
+
+                    <x-filament-panels::user-menu />
                 @endif
-
-                <x-filament-panels::user-menu />
-            @endif
-        </div>
+            </div>
+        @endunless
 
         <div
             class="fi-simple-main-ctn flex w-full flex-grow items-center justify-center"

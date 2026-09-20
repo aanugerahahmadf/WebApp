@@ -47,6 +47,9 @@
         'am'    => ['flag' => 'et', 'label' => __('Amharic')],
     ];
 
+    // Only list locales the application can actually serve. The old hard-coded
+    // list linked to the legacy switch route and sent users through redirects.
+    $locals = config('filament-language-switcher.locals', $locals);
     $currentLocale = app()->getLocale();
     $currentFlagImage = $locals[$currentLocale]['flag'] ?? 'gb';
 @endphp
@@ -63,7 +66,7 @@
         },
     }">
 
-    <button
+    <button type="button"
         @class([
             'block hover:opacity-75',
         ])
@@ -95,7 +98,7 @@
                         'cursor-default' => $isCurrent,
                     ])
                     @if (!$isCurrent)
-                        href="{{ route('language.switch', ['locale' => $key]) }}"
+                        href="{{ request()->fullUrlWithQuery(['locale' => $key]) }}"
                     @endif
                 >
                     <span class="filament-dropdown-list-item-label truncate text-start flex justify-content-start gap-3 items-center">

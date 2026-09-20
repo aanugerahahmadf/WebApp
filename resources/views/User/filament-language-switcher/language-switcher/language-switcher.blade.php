@@ -36,11 +36,15 @@
         $activeColorClass = 'text-[#6366f1]';
     if ($isUser)
         $activeColorClass = 'text-[#fbbf24]';
+    $canReloadAfterLanguageChange = ! filament()->auth()->check() || filament()->auth()->user()?->hasVerifiedEmail();
 @endphp
 
 {{-- Rendered only for website and desktop app requests by UserPanelProvider. --}}
 <div x-data="{
         isLanguageSwitcherOpen: false,
+        currentLocale: @js($currentLocale),
+        localeFlags: @js(collect($locals)->mapWithKeys(fn (array $language, string $locale) => [$locale => $language['flag'] ?? 'gb'])),
+        canReloadAfterLanguageChange: @js($canReloadAfterLanguageChange),
         toggleDropdown() {
             this.isLanguageSwitcherOpen = !this.isLanguageSwitcherOpen;
             if (this.isLanguageSwitcherOpen) {
@@ -48,6 +52,34 @@
             }
         },
         closeDropdown() { this.isLanguageSwitcherOpen = false },
+        localeLabel(locale) { return locale === 'en' ? 'UK' : locale.toUpperCase() },
+        async changeLanguage(locale) {
+            if (locale === this.currentLocale) {
+                this.closeDropdown();
+                return;
+            }
+
+            try {
+                const response = await fetch(@js(route('language.update', ['locale' => '__locale__'])).replace('__locale__', locale), {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.getAttribute('content') ?? '',
+                    },
+                });
+
+                if (!response.ok) throw new Error('Locale request failed');
+
+                this.currentLocale = locale;
+                this.closeDropdown();
+
+                if (this.canReloadAfterLanguageChange) window.location.reload();
+            } catch (error) {
+                console.error('Unable to change language.', error);
+            }
+        },
         positionDropdown() {
             const btn = this.$refs.langButton;
             const panel = this.$refs.langPanel;
@@ -74,9 +106,9 @@
                 theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light'
             }">
         <div class="w-6 h-4 bg-cover bg-center rounded-sm shadow-sm border border-gray-200 dark:border-gray-700 shrink-0"
-            style="background-image: url('https://cdn.jsdelivr.net/gh/hampusborgos/country-flags@main/svg/{{ $locals[$currentLocale]['flag'] ?? 'gb' }}.svg')">
+            x-bind:style="`background-image: url('https://cdn.jsdelivr.net/gh/hampusborgos/country-flags@main/svg/${localeFlags[currentLocale] || 'gb'}.svg')`">
         </div>
-            <span @class(['text-xs font-bold uppercase tracking-wider', $activeColorClass])>
+            <span @class(['text-xs font-bold uppercase tracking-wider', $activeColorClass]) x-text="localeLabel(currentLocale)">
             {{ $currentLabel }}
         </span>
     </button>
@@ -104,16 +136,15 @@
                     $flag = $language['flag'] ?? 'gb';
                     $label = match ($key) { 'en_US' => 'US', 'en' => 'UK', default => strtoupper($key)};
                 @endphp
-                <a href="{{ $isCurrent ? 'javascript:void(0)' : NativeServiceProvider::normalizeUrl(route('language.switch', ['locale' => $key])) }}" @class([
+                <button type="button" x-on:click="changeLanguage('{{ $key }}')" @class([
                     'group flex items-center w-full justify-between gap-3 whitespace-nowrap rounded-md p-2 text-sm outline-none transition-all',
-                    'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5' => !$isCurrent,
-                        "$activeColorClass font-bold cursor-default" => $isCurrent,
+                    'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5',
                 ])>
-                    <span class="truncate flex-1 text-start">{{ __($language['label']) }}</span>
+                    <span class="truncate flex-1 text-start" x-bind:class="currentLocale === '{{ $key }}' ? '{{ $activeColorClass }} font-bold' : ''">{{ __($language['label']) }}</span>
                     <div class="w-6 h-4 shrink-0 bg-cover bg-center rounded-sm border border-gray-200 dark:border-gray-700 shadow-sm"
                         style="background-image: url('https://cdn.jsdelivr.net/gh/hampusborgos/country-flags@main/svg/{{ $flag }}.svg');">
                     </div>
-                </a>
+                </button>
             @endforeach
         </div>
         </div>

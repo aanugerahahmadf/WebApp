@@ -175,6 +175,15 @@ class OtpEmailVerificationPrompt extends EmailVerificationPrompt
             });
     }
 
+    public function logoutAndReturnToLogin(): void
+    {
+        Filament::auth()->logout();
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
+
+        $this->redirect(Filament::getLoginUrl());
+    }
+
     public function loginAction(): Action
     {
         return parent::loginAction()

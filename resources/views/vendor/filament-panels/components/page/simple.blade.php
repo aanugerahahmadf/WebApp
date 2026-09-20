@@ -6,15 +6,40 @@
 <div {{ $attributes->class(['fi-simple-page']) }}>
     {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::SIMPLE_PAGE_START, scopes: $this->getRenderHookScopes()) }}
 
-    <section class="grid auto-cols-fr gap-y-6">
-        <x-filament-panels::header.simple
-            :heading="$heading ??= $this->getHeading()"
-            :logo="$this->hasLogo()"
-            :subheading="$subheading ??= $this->getSubHeading()"
-        />
+    @php
+        $resolvedHeading = $heading ??= $this->getHeading();
+        $resolvedSubheading = $subheading ??= $this->getSubHeading();
+        $isAuthenticationPage = str_contains($this::class, '\\Auth\\');
+    @endphp
 
-        {{ $slot }}
-    </section>
+    @if ($isAuthenticationPage)
+        {{--
+            Keep the brand, page heading, supporting text, and authentication
+            form together. This uses Filament's native Section component so
+            every User and Admin authentication screen has one clear surface.
+        --}}
+        <x-filament::section>
+            <div class="grid auto-cols-fr gap-y-6">
+                <x-filament-panels::header.simple
+                    :heading="$resolvedHeading"
+                    :logo="$this->hasLogo()"
+                    :subheading="$resolvedSubheading"
+                />
+
+                {{ $slot }}
+            </div>
+        </x-filament::section>
+    @else
+        <section class="grid auto-cols-fr gap-y-6">
+            <x-filament-panels::header.simple
+                :heading="$resolvedHeading"
+                :logo="$this->hasLogo()"
+                :subheading="$resolvedSubheading"
+            />
+
+            {{ $slot }}
+        </section>
+    @endif
 
     @if (! $this instanceof \Filament\Tables\Contracts\HasTable)
         <x-filament-actions::modals />

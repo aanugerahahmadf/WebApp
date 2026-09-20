@@ -91,8 +91,8 @@ class SetLocale
                         ['model_id' => (string) $user->id, 'model_type' => get_class($user)],
                         ['lang' => $locale]
                     );
-                    if (method_exists($user, 'setRawAttributes')) {
-                        $user->setRawAttributes(['lang' => $locale], true);
+                    if (method_exists($user, 'unsetRelation')) {
+                        $user->unsetRelation('lang');
                     }
                 } catch (\Exception $e) {
                 }

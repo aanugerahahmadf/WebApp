@@ -7,12 +7,31 @@ use App\Http\Controllers\Controller;
 use App\Models\UserLanguage\UserLanguage;
 use App\Providers\NativeServiceProvider\NativeServiceProvider;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 
 class LanguageController extends Controller
 {
+    /**
+     * Persist a locale without navigating away from the current page.
+     * Used by the header switcher so unverified users are not redirected to
+     * the email-verification prompt while choosing a language.
+     */
+    public function update(Request $request, string $locale): JsonResponse
+    {
+        $locals = config('filament-language-switcher.locals', []);
+
+        if (! array_key_exists($locale, $locals)) {
+            return response()->json(['message' => __('Bahasa tidak didukung.')], 422);
+        }
+
+        $this->switch($request, $locale);
+
+        return response()->json(['locale' => $locale]);
+    }
+
     /**
      * Switch the application language.
      */

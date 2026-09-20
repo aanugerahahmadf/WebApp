@@ -2,7 +2,7 @@
     <x-filament::section aside icon="heroicon-o-language" :heading="__('Bahasa Aplikasi')" :description="__('Pilih bahasa yang ingin Anda gunakan di aplikasi ini.')">
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
             @foreach (config('filament-language-switcher.locals') as $key => $language)
-                <button wire:click="changeLanguage('{{ $key }}')" @class([
+                <button type="button" wire:click="changeLanguage('{{ $key }}')" @class([
                     'flex items-center gap-3 p-3 rounded-xl border transition-all duration-200',
                     'bg-primary-50 border-primary-200 ring-1 ring-primary-500' =>
                         $selectedLocale === $key,
@@ -24,5 +24,14 @@
         </div>
     </x-filament::section>
 
+    @once
+        @push('scripts')
+            <script>
+                document.addEventListener('livewire:init', () => {
+                    Livewire.on('locale-changed', () => window.location.reload());
+                });
+            </script>
+        @endpush
+    @endonce
 
 </div>

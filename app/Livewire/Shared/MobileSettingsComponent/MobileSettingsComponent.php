@@ -68,15 +68,13 @@ class MobileSettingsComponent extends Component implements HasForms
             }
 
             $this->selectedLocale = $locale;
-            $this->dispatch('refresh');
+            $this->dispatch('locale-changed');
 
             Notification::make()
                 ->title(__('Bahasa Berhasil Diubah'))
                 ->success()
                 ->send();
 
-            // Redirect to refresh the whole UI state
-            $this->redirect(request()->header('Referer'));
         }
     }
 

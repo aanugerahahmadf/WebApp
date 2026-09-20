@@ -53,5 +53,17 @@
         <div x-show="timeLeft <= 0">
             {{ $livewire->resendNotificationAction }}
         </div>
+
+        <div class="mt-4 flex justify-center">
+            <x-filament::button
+                type="button"
+                wire:click="logoutAndReturnToLogin"
+                wire:confirm="{{ __('Keluar dan kembali ke halaman login?') }}"
+                color="gray"
+                icon="heroicon-m-arrow-left-on-rectangle"
+            >
+                {{ __('Keluar dan Kembali ke Login') }}
+            </x-filament::button>
+        </div>
     </div>
 </div>

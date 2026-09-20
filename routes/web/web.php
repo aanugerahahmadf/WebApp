@@ -32,6 +32,8 @@ Route::get('/mobile/settings', function () {
 })->name('mobile.settings')->middleware(['auth']);
 Route::get('/language/switch/{locale}', [LanguageController::class, 'switch'])
     ->name('language.switch');
+Route::post('/language/locale/{locale}', [LanguageController::class, 'update'])
+    ->name('language.update');
 Route::get('/lang/switch/{locale}', [LanguageController::class, 'switch'])
     ->name('lang.switch');
 Route::get('/auth/{provider}/redirect', [SocialiteController::class, 'redirect'])
