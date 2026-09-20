@@ -2,7 +2,9 @@
 
 namespace App\Filament\User\Pages\MessagesPage;
 
+use App\Filament\User\Pages\SettingsPage\SettingsPage;
 use App\Models\Inbox\Inbox;
+use Filament\Actions\Action;
 use Filament\Pages\Page;
 use Filament\Support\Enums\MaxWidth;
 use Illuminate\Contracts\Support\Htmlable;
@@ -10,6 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Url;
 
 class MessagesPage extends Page
 {
@@ -20,6 +23,9 @@ class MessagesPage extends Page
     protected static ?int $navigationSort = 1;
 
     public ?Inbox $selectedConversation;
+
+    #[Url(as: 'returnTo')]
+    public ?string $returnTo = null;
 
     public static function getSlug(): string
     {
@@ -123,11 +129,42 @@ class MessagesPage extends Page
      */
     public function hasHeader(): bool
     {
+        if ($this->settingsReturnUrl()) {
+            return true;
+        }
+
         // Keep heading visible on mobile (â‰¤ 1023px) because the layout is single-column
         // and the user needs context. On desktop the topnav already shows the page name.
         return request()->header('X-Filament-Mobile', false) || (
             isset($_SERVER['HTTP_USER_AGENT']) &&
             preg_match('/Mobile|Android|iPhone|iPad/i', $_SERVER['HTTP_USER_AGENT'] ?? '')
         );
+    }
+
+    /**
+     * @return array<Action>
+     */
+    protected function getHeaderActions(): array
+    {
+        $settingsUrl = $this->settingsReturnUrl();
+
+        if (! $settingsUrl) {
+            return [];
+        }
+
+        return [
+            Action::make('backToSettings')
+                ->label(__('Kembali ke Pengaturan'))
+                ->icon('heroicon-m-arrow-left')
+                ->color('gray')
+                ->url($settingsUrl),
+        ];
+    }
+
+    private function settingsReturnUrl(): ?string
+    {
+        $settingsUrl = SettingsPage::getUrl(panel: 'user');
+
+        return $this->returnTo === $settingsUrl ? $settingsUrl : null;
     }
 }

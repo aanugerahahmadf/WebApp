@@ -9,9 +9,11 @@ use App\Services\GeoLocationService\GeoLocationService;
 use App\Services\GeoNamesService\GeoNamesService;
 use App\Services\PlatformNotificationService\PlatformNotificationService;
 use App\Services\WorldRegionService\WorldRegionService;
+use App\Support\Phone\CountryCallingCodeOptions;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Group;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Actions\Action as FormAction;
 use Filament\Forms\Components\DatePicker;
@@ -162,12 +164,26 @@ class Register extends BaseRegister
                     ->icon('heroicon-o-chat-bubble-left-ellipsis')
                     ->description(__('Untuk notifikasi pembayaran via WhatsApp.'))
                     ->schema([
-                        TextInput::make('whatsapp')
-                            ->label(__('Nomor WhatsApp'))
-                            ->tel()
-                            ->required()
-                            ->maxLength(255)
-                            ->prefix('+62'),
+                        Group::make([
+                            Select::make('whatsapp_country_code')
+                                ->label(__('Negara / Kode Negara'))
+                                ->options(CountryCallingCodeOptions::all())
+                                ->default(CountryCallingCodeOptions::defaultSelection())
+                                ->searchable()
+                                ->native(false)
+                                ->allowHtml()
+                                ->live()
+                                ->dehydrated(false)
+                                ->columnSpanFull(),
+                            TextInput::make('whatsapp')
+                                ->label(__('Nomor WhatsApp'))
+                                ->tel()
+                                ->required()
+                                ->prefix(fn (Get $get): string => explode('|', $get('whatsapp_country_code') ?: CountryCallingCodeOptions::defaultSelection())[0])
+                                ->placeholder(__('81234567890'))
+                                ->dehydrateStateUsing(fn ($state, Get $get): string => CountryCallingCodeOptions::toE164($get('whatsapp_country_code'), $state))
+                                ->columnSpanFull(),
+                        ])->columns(1)->columnSpanFull(),
                     ])
                     ->columns(1),
 

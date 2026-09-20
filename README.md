@@ -1,248 +1,325 @@
-# 💍 Weeding Organizer - AI-Powered Wedding Management Platform
+# 💍 Wedding Organizer — Wedding Flower Decorations
 
-<p align="center">
-  <img src="public/favicon.ico" width="400" high="300" alt="Weeding Organizer Logo">
-</p>
+Wedding Organizer is a multi-platform application for wedding planning and decoration commerce. It combines a customer catalogue, orders, payments, chat, notifications, account security, visual/CBIR search, and a Filament administration panel.
 
-<p align="center">
-  <a href="https://laravel.com"><img src="https://img.shields.io/badge/Laravel-12-FF2D20?style=for-the-badge&logo=laravel" alt="Laravel"></a>
-  <a href="https://nativephp.com"><img src="https://img.shields.io/badge/NativePHP-Mobile-4F46E5?style=for-the-badge&logo=php" alt="NativePHP"></a>
-  <a href="https://filamentphp.com"><img src="https://img.shields.io/badge/Filament-3.x-FDBE11?style=for-the-badge&logo=filament" alt="Filament"></a>
-  <a href="https://pestphp.com"><img src="https://img.shields.io/badge/Pest-Test-01BDC7?style=for-the-badge&logo=pest" alt="Pest"></a>
-  <a href="https://www.php.net"><img src="https://img.shields.io/badge/PHP-8.5-777BB4?style=for-the-badge&logo=php" alt="PHP 8.5"></a>
-</p>
+It runs as a Laravel web application and supports NativePHP Mobile (Android/iOS) and NativePHP Electron (Windows/macOS).
 
----
+> This is an application repository. Do not commit `.env`, production data, private keys, Firebase credentials, payment credentials, OAuth secrets, or generated local state.
 
-## 🚀 Visi & Misi
+## Contents
 
-**Weeding Organizer** adalah platform digital terintegrasi yang dirancang khusus untuk mempermudah calon pengantin merencanakan hari bahagia mereka. Dengan dukungan teknologi **AI (CBIR)** untuk pencarian gaya visual dan aplikasi mobile asli yang responsif, kami menghadirkan pengalaman Wedding Planning yang modern, aman, dan efisien.
+- Features
+- Technology
+- Requirements
+- Quick start
+- Configuration
+- Development and platform commands
+- Real-time services
+- Tests and quality checks
+- Project layout
+- Security, deployment, contributing, and license
 
----
+## Features
 
-## ✨ Fitur Lengkap Untuk User Pengantin
+### User application
 
-Aplikasi mobile berbasis **NativePHP** ini hadir sebagai asisten pribadi yang cerdas untuk memandu setiap tahap perencanaan pernikahan:
+- Browse products and wedding service packages.
+- Search the catalogue and use image-based/CBIR discovery when the configured AI service is available.
+- Save favourites, apply vouchers, manage a cart, create orders, and follow transaction activity.
+- Manage profile details, photo, address, preferred language, and WhatsApp number.
+- Choose an international calling code from a searchable Filament selector with ISO country code, country name, and calling code.
+- Use the message centre for conversations and attachments.
+- Receive database, broadcast, native, and Firebase notifications when the platform/service is configured.
+- Open an individual notification detail page. Security notifications can open sign-in activity while keeping contextual back navigation.
+- Use password change, email-change OTP confirmation, two-factor controls, trusted devices, saved sign-in preferences, backup codes, and account check-up tools.
+- Change language through the language switcher. User-facing static text must use Laravel translation helpers.
 
-- **🤵 Personal Wedding Planner**: Kelola **Wedding Date** dan detail acara pernikahan Anda secara personal.
-- **💰 Smart Budgeting Control**: Atur dan pantau **Budget Pernikahan** agar tetap sesuai dengan perencanaan keuangan.
-- **🔍 AI Style Discovery (CBIR)**: Temukan gaya dekorasi, makeup, atau venue impian hanya dengan mengunggah foto referensi melalui teknologi AI.
-- **📍 Location-Based Service**: Temukan detail lokasi acara dan integrasi alamat yang memudahkan koordinasi lapangan.
-- **💳 Integrated Wallet & Payments**: Sistem **Top-up Saldo** untuk kemudahan pembayaran DP atau pelunasan layanan secara instan dan aman.
-- **💬 Direct Real-time Chat**: Konsultasi langsung dengan tim kami melalui fitur pesan instan di dalam aplikasi.
-- **🛍️ Katalog Layanan Lengkap**: Pilih berbagai paket (Makeup, Venue, Catering, Dekorasi) dengan sistem **Wishlist & Voucher** promo eksklusif.
-- **⭐ Trusted Reviews**: Lihat testimoni dan berikan feedback untuk menjamin kualitas layanan kami.
+### Administration
 
----
+- Manage users, roles, permissions, products, packages, media, vouchers, banners, reviews, orders, and transactions.
+- Use Filament tables, forms, actions, filters, and dashboard widgets for daily operations.
+- Manage customer-facing catalogue and content data.
 
-## 🛠️ Fitur Admin Panel Management
+### Supported platforms
 
-Menggunakan **Filament v3**, memberikan kontrol mutlak bagi tim internal untuk mengelola operasional:
+| Platform | Capability |
+| --- | --- |
+| Web | Laravel browser app with Vite assets and browser APIs where supported |
+| Mobile | NativePHP Mobile with Android/iOS integration where configured |
+| Desktop | NativePHP Electron with Windows/macOS support where configured |
 
-- **📊 Business Analytics**: Pantau total pesanan, grafik pendapatan terbaru, dan statistik performa bulanan secara intuitif.
-- **📦 Service Package Manager**: Kelola seluruh paket layanan (galeri foto, spesifikasi, dan harga) dengan mudah.
-- **🧾 Lifecycle Order Processing**: Kelola seluruh tahap pesanan mulai dari booking awal hingga hari pelaksanaan acara.
-- **🏦 Ledger & Finance Control**: Verifikasi transaksi **Top-up** saldo pengguna dan kelola laporan keuangan secara internal.
-- **👥 Access Control**: Pengaturan hak akses tim khusus untuk manajemen data dan operasional aplikasi.
-- **📰 CRM & Content Manager**: Publikasikan tips pernikahan melalui artikel dan kelola banner promo untuk memanjakan pengguna.
+## Technology
 
----
+| Area | Main technology |
+| --- | --- |
+| Backend | PHP 8.3+, Laravel 12 |
+| User interface | Filament 3, Livewire 3, Blade, Tailwind CSS |
+| Front-end build | Vite 7 and Node.js |
+| Database | MySQL by default with Laravel migrations/seeders |
+| Real-time | Laravel Reverb, Echo, Pusher-compatible configuration |
+| API and authentication | Laravel sessions and Sanctum |
+| Native apps | NativePHP Mobile, NativePHP Electron, NativePHP Laravel |
+| Media/documents | Spatie Media Library, Dompdf, PhpSpreadsheet |
+| Integrations | Firebase, Midtrans, Google/Facebook OAuth, Fonnte/WhatsApp, CBIR/AI |
+| Quality tools | Pest, Laravel Pint, PHPStan, Rector |
 
-## 🏗️ Elite Tech Stack
+Dependency versions are defined by `composer.json`, `composer.lock`, `package.json`, and the lockfiles. Use them for audits and reproducible deployments.
 
-- **Framework**: [Laravel] https://laravel.com
-- **Mobile Runtime**: [NativePHP - Android & iOS] https://github.com/nativephp/mobile
-- **Dashboard Interface**: [Filament v3] https://filamentphp.com
-- **AI Core Engine**: Flask / Python with Content-Based Image Retrieval (CBIR) Algorithm https://www.python.org
-- **Messaging Engine**: Laravel Reverb (Real-time Communications) https://reverb.laravel.com
-- **Testing Standard**: [Pest PHP] https://pestphp.com
+## Requirements
 
----
+| Requirement | Purpose |
+| --- | --- |
+| PHP 8.3+ | Laravel runtime; Composer platform is set to PHP 8.4.99 |
+| Composer 2 | PHP dependency installation |
+| Node.js LTS + npm | Vite build tooling |
+| MySQL | Default local database |
+| Git | Clone, update, and contribute |
+| Redis (optional) | Redis-backed cache, queue, or realtime services |
+| Android SDK/JDK (mobile) | Android NativePHP development |
+| Xcode (iOS) | iOS development on macOS |
 
-## 📦 Instalasi & Setup Cepat
+External features require credentials from their providers. Values in `.env.example` are placeholders and not valid production secrets.
+
+## Quick start
+
+Run commands from the repository root:
 
 ```bash
-# Clone & Install
-git clone https://github.com/aanugerahahmadf/Admin-Panel-Mobile.git
-cd Admin-Panel-Mobile
-composer install && npm install && npm run build
+git clone https://github.com/aanugerahahmadf/Wedding-Organizer.git
+cd Wedding-Organizer
+composer install
+npm install
+```
 
-# Setup
-cp .env.example .env && php artisan key:generate
+Create the environment file and application key:
+
+```powershell
+# Windows PowerShell
+Copy-Item .env.example .env
+php artisan key:generate
+```
+
+```bash
+# macOS/Linux/Git Bash
+cp .env.example .env
+php artisan key:generate
+```
+
+Create the MySQL database named by `DB_DATABASE`, set its credentials in `.env`, then run:
+
+```bash
 php artisan migrate --seed
+npm run build:web
+php artisan serve --port=8000
 ```
 
-### Jalankan Mode Mobile (NativePHP)
-```bash
-# Ready your app to go native
-php artisan native:install
- 
-# Run your app on a mobile device
-php artisan native:run
-```
+Open `http://127.0.0.1:8000`. Use locally created accounts only; never publish or reuse production credentials.
 
----
-
-## 🖥️ Multi-Platform Support
-
-Aplikasi ini berjalan dalam **tiga mode platform** yang masing-masing dipicu oleh satu perintah Artisan. Platform mode ditentukan saat bootstrap — setiap mode memuat environment file tersendiri, bundle aset Vite tersendiri, dan route set tersendiri.
-
-| Mode | Perintah | Target | RuntimePlatform Cases |
-|------|----------|--------|-----------------------|
-| **Web** | `php artisan serve` | Browser (Windows, macOS, Android, iOS) | `WebsiteWindows`, `WebsiteMacOS`, `WebsiteAndroid`, `WebsiteIos` |
-| **Mobile Native** | `php artisan native:run` | Android & iOS via NativePHP Mobile | `MobileAppAndroid`, `MobileAppIos` |
-| **Desktop App** | `php artisan native:serve` | Windows & macOS via NativePHP Electron | `DesktopAppWindows`, `DesktopAppMacOS` |
-
-### Quick Start Per Platform
-
-**Web** — tidak memerlukan dependensi tambahan:
+For the standard local development stack (Laravel server, queue listener, Vite), run:
 
 ```bash
-# 1. (Opsional) buat file environment khusus web
-cp .env.web.example .env.web
-
-# 2. Build aset untuk web
-npx vite build -- --mode web
-
-# 3. Jalankan server
-php artisan serve
-# → http://localhost:8000
+composer dev
 ```
 
-**Mobile (Android / iOS)** — memerlukan paket `nativephp/mobile`:
+## Configuration
+
+### Environment files
+
+| File | Use |
+| --- | --- |
+| `.env` | Shared base configuration |
+| `.env.web` | Optional web-specific overrides |
+| `.env.mobile` | Optional NativePHP Mobile overrides |
+| `.env.desktop` | Optional NativePHP Electron overrides |
+
+Platform files are layered over `.env`; values in a platform file take precedence.
+
+At minimum configure URL, language, timezone, and database:
+
+```dotenv
+APP_URL=http://127.0.0.1:8000
+APP_LOCALE=id
+APP_FALLBACK_LOCALE=en
+APP_TIMEZONE=Asia/Jakarta
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=wedding_flowers_decorasi
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+After editing cached production configuration run:
 
 ```bash
-# 1. Install dependensi mobile
-composer require nativephp/mobile
-php artisan native:install
-
-# 2. (Opsional) buat file environment khusus mobile
-cp .env.mobile.example .env.mobile
-
-# 3. Build aset untuk mobile
-npx vite build -- --mode mobile
-
-# 4. Jalankan di perangkat / emulator
-php artisan native:run
+php artisan config:clear
 ```
 
-**Desktop (Windows / macOS)** — memerlukan paket `nativephp/electron` dan `nativephp/laravel`:
+### Optional integrations
+
+| Feature | Primary settings |
+| --- | --- |
+| Email and OTP | `MAIL_*` |
+| Reverb broadcasts | `REVERB_*`, `VITE_REVERB_*` |
+| Pusher-compatible broadcasts | `PUSHER_*` |
+| Firebase push | `FIREBASE_*`, `FIREBASE_CREDENTIALS_PATH` |
+| CBIR/AI image search | `AI_CORE_URL`, `CBIR_API_URL` |
+| Google/Facebook sign-in | `GOOGLE_*`, `FACEBOOK_*` |
+| Midtrans | `MIDTRANS_*` |
+| WhatsApp/Fonnte | `FONNTE_TOKEN` |
+| Android build/signing | `ANDROID_*`, `JAVA_HOME`, `NATIVEPHP_*` |
+
+## Development and platform commands
+
+### Web
+
+Start Vite HMR in one terminal:
 
 ```bash
-# 1. Install dependensi desktop
-composer require nativephp/electron nativephp/laravel
-php artisan native:install
-
-# 2. (Opsional) buat file environment khusus desktop
-cp .env.desktop.example .env.desktop
-
-# 3. Build aset untuk desktop
-npx vite build -- --mode desktop
-
-# 4. Jalankan sebagai aplikasi Electron
-php artisan native:serve
+npm run dev:web
 ```
 
-> Tidak yakin mana yang harus dipakai? Lihat **[docs/command-guide.md](docs/command-guide.md)** untuk decision tree lengkap dan panduan troubleshooting.
-
-### Platform Feature Overview
-
-Setiap platform mode mengaktifkan fitur yang berbeda. Tabel berikut merangkum ketersediaan fitur utama:
-
-| Fitur | Web | Mobile | Desktop |
-|-------|:---:|:------:|:-------:|
-| Native camera (CBIR) | ❌ | ✅ | ✅ |
-| WebRTC camera | ✅ | ❌ | ❌ |
-| File system access | ❌ | ✅ | ✅ |
-| Push notifications | ❌ | ✅ | ❌ |
-| Desktop notifications | ❌ | ❌ | ✅ |
-| Auto-updates | ❌ | ❌ | ✅ |
-| App badge | ❌ | ✅ | ❌ |
-
-Periksa ketersediaan fitur di kode PHP menggunakan helper yang sudah disediakan:
-
-```php
-// Cek fitur untuk platform aktif saat ini
-if (platform_feature('camera')) {
-    // gunakan NativePHP Camera API
-}
-
-// Cek mode platform
-if (is_mobile_mode()) { /* ... */ }
-if (is_desktop_mode()) { /* ... */ }
-if (is_web_mode()) { /* ... */ }
-```
-
-Untuk daftar lengkap fitur beserta cara menggunakannya di kode, lihat **[docs/platform-features.md](docs/platform-features.md)**.
-
-### Development Workflow
-
-**Menjalankan satu platform:**
+Start Laravel in another terminal:
 
 ```bash
-# Cek status platform yang aktif
+php artisan serve --port=8000
+```
+
+For a compiled local build:
+
+```bash
+npm run build:web
+php artisan serve --port=8000
+```
+
+### Assets
+
+| Command | Result |
+| --- | --- |
+| `npm run dev` | Default Vite server |
+| `npm run dev:web` | Web HMR |
+| `npm run dev:mobile` | Mobile HMR |
+| `npm run dev:desktop` | Desktop HMR |
+| `npm run build` | Default Vite build |
+| `npm run build:web` | Web bundle |
+| `npm run build:mobile` | Mobile bundle |
+| `npm run build:desktop` | Desktop bundle |
+| `npm run build:all` | Builds all target bundles |
+
+`public/build/` contains generated assets. Commit them only when the deployment workflow requires prebuilt assets.
+
+### Native targets
+
+| Target | Start command | Asset command | Notes |
+| --- | --- | --- | --- |
+| Web | `php artisan serve` | `npm run build:web` | Browser target |
+| Android/iOS | `php artisan native:run` | `npm run build:mobile` | Requires NativePHP Mobile and platform tools |
+| Windows/macOS | `php artisan native:serve` | `npm run build:desktop` | Requires NativePHP Electron |
+
+Check or reset platform state:
+
+```bash
 php artisan platform:status
-
-# Bersihkan cache saat ganti mode
 php artisan platform:clear
 ```
 
-**Menjalankan beberapa platform sekaligus** — gunakan terminal terpisah dengan port berbeda:
+Read [docs/command-guide.md](docs/command-guide.md) and [docs/command-decision-tree.md](docs/command-decision-tree.md) before setting up a native target.
+
+## Real-time, queues, and notifications
+
+Run a worker when `QUEUE_CONNECTION` is not `sync`:
 
 ```bash
-# Terminal 1 — Web di port 8000
-php artisan serve --port=8000
-
-# Terminal 2 — Mobile (port dikontrol NativePHP)
-php artisan native:run
-
-# Terminal 3 — Desktop (port dikontrol NativePHP Electron)
-php artisan native:serve
+php artisan queue:listen --tries=1
 ```
 
-Setiap mode memuat file environment-nya sendiri secara otomatis:
+Run Reverb when the broadcast connection uses it:
 
-| Mode | File Environment | Build Directory |
-|------|-----------------|-----------------|
-| Web | `.env.web` | `public/build/web` |
-| Mobile | `.env.mobile` | `public/build/mobile` |
-| Desktop | `.env.desktop` | `public/build/desktop` |
-
-File environment platform bersifat **opsional** — jika tidak ada, aplikasi menggunakan nilai dari `.env` utama. Nilai di file platform selalu menimpa nilai di `.env` utama bila ada konflik.
-
-### Dokumentasi Lengkap
-
-| Topik | Dokumen |
-|-------|---------|
-| Arsitektur & komponen | [docs/platform-support.md](docs/platform-support.md) |
-| Panduan perintah & decision tree | [docs/command-guide.md](docs/command-guide.md) |
-| Konfigurasi environment | [docs/environment-configuration.md](docs/environment-configuration.md) |
-| Kompilasi aset Vite | [docs/asset-compilation.md](docs/asset-compilation.md) |
-| Feature matrix lengkap | [docs/platform-features.md](docs/platform-features.md) |
-
----
-
-## 🔑 Akun Akses Default
-
-Gunakan kredensial berikut untuk masuk ke dashboard admin:
-- **Email**: `devimakeup.wo@gmail.com`
-- **Password**: `@Admin123`
-
----
-
-## 🧪 Automated Testing
-
-Menjamin keandalan fitur finansial dan pemrosesan data secara otomatis:
 ```bash
+php artisan reverb:start
+```
+
+Run scheduled tasks locally when enabled:
+
+```bash
+php artisan schedule:work
+```
+
+Notification flow:
+
+1. An application event creates a Filament database notification.
+2. The notification can broadcast to active clients.
+3. Native/Firebase delivery is attempted only if the active platform and service configuration allow it.
+4. A click opens `/user/notifications/{id}` for the selected item.
+5. Login activity can open the appropriate security page and retain a validated return link.
+
+## Tests and quality checks
+
+Run relevant checks before release:
+
+```bash
+composer test
 php artisan test
+./vendor/bin/pint --test
+./vendor/bin/pint
+./vendor/bin/phpstan analyse
+php artisan view:clear
+php artisan view:cache
+npm run build:web
 ```
 
----
+On Windows PowerShell, use `vendor\bin\pint.bat` and `vendor\bin\phpstan.bat` if Unix executable files are unavailable.
 
-<p align="center">
-  <b>Weeding Organizer</b> - Mewujudkan Pernikahan Impian Anda Menjadi Nyata.
-</p>
+## Project layout
 
-<p align="center">
-  Dibuat dengan oleh <b>Anugerah Ahmad Fachrurochim</b>
-</p>
+| Path | Purpose |
+| --- | --- |
+| `app/Filament/` | Admin/user pages, resources, widgets |
+| `app/Livewire/` | Interactive components |
+| `app/Models/` | Eloquent models |
+| `app/Services/` | Domain and integration services |
+| `app/Support/` | Shared helpers |
+| `config/` | Application configuration |
+| `database/` | Migrations, factories, seeders |
+| `docs/` | Platform and command guides |
+| `lang/` | Laravel JSON/package translations |
+| `public/` | Public entry point and built assets |
+| `resources/` | Blade, CSS, JavaScript |
+| `routes/` | Web, API, and platform routes |
+| `tests/` | Pest/Laravel tests |
+
+## Security and deployment
+
+- Set `APP_DEBUG=false`, use HTTPS, secure cookies, and a unique production `APP_KEY`.
+- Never commit environment files, Firebase credential files, keystores, SMTP passwords, OAuth secrets, payment keys, or database exports.
+- Review roles, permissions, policies, and admin access before deployment.
+- Supervise queue workers and scheduled tasks in production.
+- Back up database and media before migrations or releases.
+- Keep Composer/Node lockfiles committed for reproducible builds.
+- Build assets and run migrations through the deployment pipeline, then clear/rebuild Laravel caches as appropriate.
+
+## Documentation
+
+| Document | Description |
+| --- | --- |
+| [docs/command-guide.md](docs/command-guide.md) | Commands, prerequisites, troubleshooting |
+| [docs/command-decision-tree.md](docs/command-decision-tree.md) | Select web, mobile, or desktop mode |
+| [docs/environment-configuration.md](docs/environment-configuration.md) | Environment layering |
+| [docs/asset-compilation.md](docs/asset-compilation.md) | Vite build process |
+| [docs/platform-support.md](docs/platform-support.md) | Platform architecture |
+| [docs/platform-features.md](docs/platform-features.md) | Feature matrix by platform |
+
+## Contributing
+
+1. Create a focused branch from the default branch.
+2. Keep changes scoped and avoid unrelated generated files/formatting.
+3. Update tests for behaviour changes.
+4. Run relevant PHP, Blade, and asset checks.
+5. Keep secrets and personal data out of commits.
+6. Explain user-visible behaviour and verification in the pull request.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE). The complete legal terms are in the root [`LICENSE`](LICENSE) file.
+
+Copyright (c) 2026 Anugerah Ahmad.

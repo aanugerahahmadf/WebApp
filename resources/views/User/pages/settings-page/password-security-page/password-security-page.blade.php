@@ -1,22 +1,11 @@
 <x-filament-panels::page>
     @php
         $backUrl = \App\Filament\User\Pages\SettingsPage\SettingsPage::getUrl(panel: 'user');
-        $detailTitles = [
-            'change-password' => __('Ubah Kata Sandi'), 'two-factor' => __('Autentikasi Dua Faktor'), 'saved-login' => __('Sign In Tersimpan'),
-            'sign-in-activity' => __('Tempat Anda Sign In'), 'recent-emails' => __('Ubah Email'), 'checkup' => __('Pemeriksaan Keamanan'),
-        ];
-        $isDetail = $section !== 'index';
-        $title = $isDetail ? $detailTitles[$section] : __('Kata Sandi dan Keamanan');
         $passwordStrength = strlen($passwordData['password'] ?? '') >= 12 ? __('Kuat') : (strlen($passwordData['password'] ?? '') >= 8 ? __('Sedang') : __('Lemah'));
         $currentSessionId = request()->session()->getId();
     @endphp
 
-    <div class="mx-auto max-w-4xl space-y-6 pt-10">
-        <div class="flex items-center gap-3">
-            <a wire:navigate href="{{ $isDetail ? \App\Filament\User\Pages\SettingsPage\PasswordSecurityPage\PasswordSecurityPage::getUrl(panel: 'user') : $backUrl }}" class="rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-white/10 dark:hover:text-white" aria-label="{{ __('Kembali') }}"><x-filament::icon icon="heroicon-o-arrow-left" class="h-5 w-5" /></a>
-            <div><h1 class="text-xl font-bold text-gray-950 dark:text-white">{{ $title }}</h1>@if ($isDetail)<p class="text-sm text-gray-500">{{ __('Kelola pengaturan akun Anda dengan aman.') }}</p>@endif</div>
-        </div>
-
+    <div class="mx-auto max-w-4xl space-y-6">
         @if ($section === 'index')
             <section><h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">{{ __('Sign In dan Pemulihan') }}</h2><div class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/10 dark:bg-gray-900">
                 @foreach ([

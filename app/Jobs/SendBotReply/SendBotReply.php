@@ -4,7 +4,7 @@ namespace App\Jobs\SendBotReply;
 
 use App\Models\Message\Message;
 use App\Models\User\User;
-use App\Support\Chat\BotReplyLocalizer;
+use App\Support\Chat\BotReplyLocalizer\BotReplyLocalizer;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;

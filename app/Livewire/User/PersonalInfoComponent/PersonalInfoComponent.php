@@ -4,9 +4,12 @@ namespace App\Livewire\User\PersonalInfoComponent;
 
 use App\Models\WhatsappOtp\WhatsappOtp;
 use App\Providers\NativeServiceProvider\NativeServiceProvider;
+use App\Support\Phone\CountryCallingCodeOptions;
 use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Group;
 use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -39,6 +42,7 @@ class PersonalInfoComponent extends Component implements HasForms
         $user = Auth::user();
         if ($user) {
             $rawAvatar = $user->getRawOriginal('avatar_url');
+            $whatsapp = CountryCallingCodeOptions::split($user->whatsapp);
 
             $this->form->fill([
                 'avatar_url' => filter_var($rawAvatar, FILTER_VALIDATE_URL) ? null : $rawAvatar,
@@ -47,7 +51,8 @@ class PersonalInfoComponent extends Component implements HasForms
                 'last_name' => $user->last_name,
                 'full_name' => $this->buildFullName($user->first_name, $user->mid_name, $user->last_name),
                 'username' => $user->username,
-                'whatsapp' => $this->toLocalNumber($user->whatsapp),
+                'whatsapp_country_code' => $whatsapp['selection'],
+                'whatsapp' => $whatsapp['national'],
             ]);
         }
     }
@@ -118,21 +123,32 @@ class PersonalInfoComponent extends Component implements HasForms
                             ->maxLength(255)
                             ->unique(table: 'users', column: 'username', ignorable: $user)
                             ->autocomplete('username'),
-                        TextInput::make('whatsapp')
-                            ->label(__('Nomor WhatsApp'))
-                            ->tel()
-                            ->maxLength(255)
-                            ->prefixIcon('heroicon-o-chat-bubble-left-ellipsis')
-                            ->prefix('+62')
-                            ->placeholder(__('81234567890'))
-                            ->live(onBlur: true)
-                            ->suffixActions([
-                                Action::make('sendOtp')
-                                    ->label(__('Kirim Kode OTP'))
-                                    ->icon('heroicon-o-paper-airplane')
-                                    ->action('sendOtp'),
-                            ])
-                            ->helperText(__('Masukkan nomor dengan kode negara +62. Perubahan nomor wajib diverifikasi melalui kode OTP yang dikirim ke WhatsApp.')),
+                        Group::make([
+                            Select::make('whatsapp_country_code')
+                                ->label(__('Negara / Kode Negara'))
+                                ->options(CountryCallingCodeOptions::all())
+                                ->default(CountryCallingCodeOptions::defaultSelection())
+                                ->searchable()
+                                ->native(false)
+                                ->allowHtml()
+                                ->live()
+                                ->dehydrated(false)
+                                ->columnSpanFull(),
+                            TextInput::make('whatsapp')
+                                ->label(__('Nomor WhatsApp'))
+                                ->tel()
+                                ->prefix(fn (\Filament\Forms\Get $get): string => explode('|', $get('whatsapp_country_code') ?: CountryCallingCodeOptions::defaultSelection())[0])
+                                ->placeholder(__('81234567890'))
+                                ->live(onBlur: true)
+                                ->dehydrateStateUsing(fn ($state, \Filament\Forms\Get $get): string => CountryCallingCodeOptions::toE164($get('whatsapp_country_code'), $state))
+                                ->suffixActions([
+                                    Action::make('sendOtp')
+                                        ->label(__('Kirim Kode OTP'))
+                                        ->icon('heroicon-o-paper-airplane')
+                                        ->action('sendOtp'),
+                                ])
+                                ->columnSpanFull(),
+                        ])->columns(1)->columnSpanFull(),
                         TextInput::make('otp_code')
                             ->label(__('Kode Verifikasi OTP'))
                             ->numeric()
@@ -147,7 +163,10 @@ class PersonalInfoComponent extends Component implements HasForms
 
     public function sendOtp(): void
     {
-        $phone = $this->normalizeWhatsapp($this->data['whatsapp'] ?? '');
+        $phone = CountryCallingCodeOptions::toE164(
+            $this->data['whatsapp_country_code'] ?? null,
+            $this->data['whatsapp'] ?? null,
+        );
 
         if (strlen($phone) < 10) {
             Notification::make()
@@ -214,7 +233,7 @@ class PersonalInfoComponent extends Component implements HasForms
                 $data['whatsapp_verified_at'] = now();
             }
 
-            $data['whatsapp'] = '+62 '.ltrim($this->toLocalNumber($this->data['whatsapp'] ?? ''), '0');
+            $data['whatsapp'] = $newWhatsapp ?: null;
 
             // ── Simpan ────────────────────────────────────────────────────
             $user->update($data);
@@ -229,7 +248,8 @@ class PersonalInfoComponent extends Component implements HasForms
                 'last_name' => $user->last_name,
                 'full_name' => $this->buildFullName($user->first_name, $user->mid_name, $user->last_name),
                 'username' => $user->username,
-                'whatsapp' => $this->toLocalNumber($user->whatsapp),
+                'whatsapp_country_code' => CountryCallingCodeOptions::split($user->whatsapp)['selection'],
+                'whatsapp' => CountryCallingCodeOptions::split($user->whatsapp)['national'],
             ]);
 
             Notification::make()
@@ -282,36 +302,31 @@ class PersonalInfoComponent extends Component implements HasForms
         return trim(collect([$first, $mid, $last])->filter()->implode(' '));
     }
 
-    private function toLocalNumber(?string $whatsapp): string
+    private function normalizeWhatsapp(string $phone): string
     {
-        if (blank($whatsapp)) {
+        $phone = trim($phone);
+
+        if ($phone === '') {
             return '';
         }
 
-        $strip = preg_replace('/[\s\-\(\)\+]/', '', $whatsapp);
+        // PhoneInput menyimpan nomor baru dalam E.164. Fallback ini menjaga
+        // nomor Indonesia lama yang mungkin tersimpan tanpa tanda "+".
+        $digits = preg_replace('/\D/', '', $phone);
 
-        if (str_starts_with((string) $strip, '62')) {
-            return ltrim(substr((string) $strip, 2), '0');
+        if (str_starts_with($phone, '+')) {
+            return '+'.$digits;
         }
 
-        if (str_starts_with((string) $strip, '0')) {
-            return ltrim(substr((string) $strip, 1), '0');
+        if (str_starts_with($digits, '00')) {
+            return '+'.substr($digits, 2);
         }
 
-        return (string) $strip;
-    }
-
-    private function normalizeWhatsapp(string $phone): string
-    {
-        $phone = $this->toLocalNumber($phone);
-
-        if (str_starts_with($phone, '0')) {
-            $phone = '62'.substr($phone, 1);
-        } elseif (! str_starts_with($phone, '62')) {
-            $phone = '62'.$phone;
+        if (str_starts_with($digits, '0')) {
+            return '+62'.substr($digits, 1);
         }
 
-        return $phone;
+        return '+'.(str_starts_with($digits, '62') ? $digits : '62'.$digits);
     }
 
     private function sendWhatsappOtp(string $phone, string $otp): void

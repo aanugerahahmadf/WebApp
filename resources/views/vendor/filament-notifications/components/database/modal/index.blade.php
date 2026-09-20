@@ -45,12 +45,21 @@
             ])
         >
             @foreach ($notifications as $notification)
+                @php
+                    $filamentNotification = $this->getNotification($notification);
+                    $detailUrl = \App\Filament\User\Pages\NotificationDetailPage\NotificationDetailPage::getUrl(['id' => $notification->getKey()], panel: 'user');
+                @endphp
                 <div
                     @class([
                         'relative before:absolute before:start-0 before:h-full before:w-0.5 before:bg-primary-600 dark:before:bg-primary-500' => $notification->unread(),
+                        'cursor-pointer transition hover:bg-gray-50 dark:hover:bg-white/5',
                     ])
+                    x-on:click="if (! $event.target.closest('button, a')) window.location.assign(@js($detailUrl))"
+                    role="link"
+                    tabindex="0"
+                    x-on:keydown.enter.prevent="window.location.assign(@js($detailUrl))"
                 >
-                    {{ $this->getNotification($notification)->inline() }}
+                    {{ $filamentNotification->inline() }}
                 </div>
             @endforeach
         </div>

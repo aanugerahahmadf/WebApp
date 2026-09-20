@@ -26,7 +26,9 @@
             <div class="flex items-center justify-end">
                 <x-filament::button
                     tag="a"
-                    :href="route('filament.user.pages.messages.{id?}')"
+                    :href="\App\Filament\User\Pages\MessagesPage\MessagesPage::getUrl([
+                        'returnTo' => \App\Filament\User\Pages\SettingsPage\SettingsPage::getUrl(panel: 'user'),
+                    ], panel: 'user')"
                     icon="heroicon-m-chevron-right"
                     icon-position="after"
                     color="primary"

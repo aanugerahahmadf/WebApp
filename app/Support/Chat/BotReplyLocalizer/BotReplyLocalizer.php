@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support\Chat;
+namespace App\Support\Chat\BotReplyLocalizer;
 
 use App\Models\Message\Message;
 

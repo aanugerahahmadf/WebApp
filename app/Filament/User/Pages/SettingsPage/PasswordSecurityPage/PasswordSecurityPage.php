@@ -2,9 +2,11 @@
 
 namespace App\Filament\User\Pages\SettingsPage\PasswordSecurityPage;
 
+use App\Filament\User\Pages\SettingsPage\SettingsPage;
 use App\Models\BackupCode\BackupCode;
 use App\Models\SecurityEmail\SecurityEmail;
 use App\Models\TrustedDevice\TrustedDevice;
+use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Forms\Components\Checkbox;
@@ -30,6 +32,9 @@ class PasswordSecurityPage extends Page
     #[Url(as: 'section')]
     public string $section = 'index';
 
+    #[Url(as: 'returnTo')]
+    public ?string $returnTo = null;
+
     public array $passwordData = ['logout_others' => false];
 
     public array $emailData = [];
@@ -50,7 +55,12 @@ class PasswordSecurityPage extends Page
         $this->requestSignInEnabled = (bool) session('security_request_sign_in_'.Auth::id(), false);
         $this->form->fill(['logout_others' => false]);
         $this->emailOtpSent = Cache::has('change_email_otp_'.Auth::id());
-        $this->changeEmailForm->fill(['email' => Cache::get('change_email_pending_'.Auth::id())]);
+        $pendingEmail = Cache::get('change_email_pending_'.Auth::id());
+        $this->changeEmailForm->fill([
+            'current_email' => Auth::user()?->email,
+            'email' => $pendingEmail,
+            'email_confirmation' => $pendingEmail,
+        ]);
     }
 
     public static function getSlug(): string
@@ -60,13 +70,76 @@ class PasswordSecurityPage extends Page
 
     public function getTitle(): string
     {
-        return __('Kata Sandi dan Keamanan');
+        return $this->getHeading();
     }
 
-    /** The Blade view supplies a compact header with its own Back button. */
-    public function hasHeader(): bool
+    public function getHeading(): string
     {
-        return false;
+        return match ($this->section) {
+            'change-password' => __('Ubah Kata Sandi'),
+            'two-factor' => __('Autentikasi Dua Faktor'),
+            'saved-login' => __('Sign In Tersimpan'),
+            'sign-in-activity' => __('Tempat Anda Sign In'),
+            'recent-emails' => __('Ubah Email'),
+            'checkup' => __('Pemeriksaan Keamanan'),
+            default => __('Kata Sandi dan Keamanan'),
+        };
+    }
+
+    public function getSubheading(): ?string
+    {
+        return $this->section === 'index'
+            ? null
+            : __('Kelola pengaturan akun Anda dengan aman.');
+    }
+
+    /**
+     * @return array<Action>
+     */
+    protected function getHeaderActions(): array
+    {
+        if ($this->section === 'index') {
+            return [
+                Action::make('backToSettings')
+                    ->label(__('Kembali ke Pengaturan'))
+                    ->icon('heroicon-m-arrow-left')
+                    ->color('gray')
+                    ->url(SettingsPage::getUrl(panel: 'user')),
+            ];
+        }
+
+        $notificationDetailUrl = $this->notificationDetailReturnUrl();
+
+        if ($notificationDetailUrl) {
+            return [
+                Action::make('backToNotificationDetail')
+                    ->label(__('Kembali ke Detail Notifikasi'))
+                    ->icon('heroicon-m-arrow-left')
+                    ->color('gray')
+                    ->url($notificationDetailUrl),
+            ];
+        }
+
+        return [
+            Action::make('backToPasswordSecurity')
+                ->label(__('Kembali ke Kata Sandi dan Keamanan'))
+                ->icon('heroicon-m-arrow-left')
+                ->color('gray')
+                ->url(static::getUrl(panel: 'user')),
+        ];
+    }
+
+    private function notificationDetailReturnUrl(): ?string
+    {
+        if (blank($this->returnTo)) {
+            return null;
+        }
+
+        $notificationUrlPrefix = url('/user/notifications/');
+
+        return str_starts_with($this->returnTo, $notificationUrlPrefix)
+            ? $this->returnTo
+            : null;
     }
 
     public function goTo(string $section): void
@@ -139,12 +212,26 @@ class PasswordSecurityPage extends Page
                 Section::make(__('Ubah Email'))
                     ->description(__('Masukkan alamat email baru. Kami akan mengirim kode OTP untuk memastikan email tersebut milik Anda.'))
                     ->schema([
+                        TextInput::make('current_email')
+                            ->label(__('Email Saat Ini'))
+                            ->email()
+                            ->readOnly()
+                            ->dehydrated(false)
+                            ->helperText(__('Email yang saat ini terhubung ke akun Anda.')),
                         TextInput::make('email')
                             ->label(__('Email Baru'))
                             ->email()
                             ->required()
                             ->autocomplete('email')
                             ->disabled(fn (): bool => $this->emailOtpSent),
+                        TextInput::make('email_confirmation')
+                            ->label(__('Konfirmasi Email Baru'))
+                            ->email()
+                            ->required()
+                            ->autocomplete('email')
+                            ->same('email')
+                            ->disabled(fn (): bool => $this->emailOtpSent)
+                            ->helperText(__('Masukkan kembali email baru Anda untuk memastikan tidak ada salah ketik.')),
                         TextInput::make('otp')
                             ->label(__('Kode OTP'))
                             ->numeric()
@@ -165,6 +252,7 @@ class PasswordSecurityPage extends Page
 
         $this->validate([
             'emailData.email' => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
+            'emailData.email_confirmation' => ['required', 'same:emailData.email'],
         ]);
 
         $otp = (string) random_int(100000, 999999);
@@ -215,7 +303,9 @@ class PasswordSecurityPage extends Page
         Cache::forget('change_email_pending_'.$user->id);
         $this->emailOtpSent = false;
         $this->emailData = [];
-        $this->changeEmailForm->fill();
+        $this->changeEmailForm->fill([
+            'current_email' => $user->email,
+        ]);
         Notification::make()->title(__('Email berhasil diubah dan diverifikasi.'))->success()->send();
     }
 

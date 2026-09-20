@@ -15,6 +15,7 @@ use App\Filament\User\Auth\OtpRequestPasswordReset\OtpRequestPasswordReset as Us
 use App\Filament\User\Auth\OtpResetPassword\OtpResetPassword as UserOtpResetPassword;
 use App\Filament\User\Auth\Register\Register as UserRegister;
 use App\Filament\User\Auth\VerifyOtp\VerifyOtp as UserVerifyOtp;
+use App\Filament\User\Pages\SettingsPage\PasswordSecurityPage\PasswordSecurityPage;
 use App\Livewire\Admin\Messages\Inbox\Inbox as AdminMessagesInbox;
 use App\Livewire\Admin\Messages\Messages\Messages as AdminMessagesContent;
 use App\Livewire\Admin\Messages\Search\Search as AdminMessagesSearch;
@@ -382,7 +383,9 @@ class AppServiceProvider extends ServiceProvider
                             'ip' => $ip,
                             'location' => $locationText,
                             'time' => now()->format('d M Y H:i:s'),
-                        ])
+                        ]),
+                        PasswordSecurityPage::getUrl(['section' => 'sign-in-activity'], panel: 'user'),
+                        __('Lihat aktivitas Sign In'),
                     );
                 }
             }

@@ -87,7 +87,7 @@
                     $meta = $message->meta ?? [];
                     // Normalize legacy messages that stored "\\n" as text, then
                     // let nl2br() below render the resulting line breaks safely.
-                    $displayMessage = \App\Support\Chat\BotReplyLocalizer::display($message);
+                    $displayMessage = \App\Support\Chat\BotReplyLocalizer\BotReplyLocalizer::display($message);
                     $displayMessage = str_replace(['\\r\\n', '\\n', '\\r'], ["\r\n", "\n", "\r"], $displayMessage);
                     if ($hasText && is_array($meta) && isset($meta['type'], $meta['name']) && !isset($meta['is_order']) && !isset($meta['is_report'])) {
                         $displayMessage = __('Saya menanyakan tentang :itemType ini: :name', [

@@ -577,6 +577,19 @@
     width: 100% !important;
 }
 
+/* Kode ISO pada daftar negara: gaya ringkas seperti "AF", "ID", dan "AL". */
+.fi-panel-user .country-iso-code {
+    display: inline-block;
+    min-width: 1.35rem;
+    font-size: 0.5625rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    line-height: 1;
+    vertical-align: 0.05em;
+}
+
+
+
 
 
 .fi-panel-user .fi-simple-main {

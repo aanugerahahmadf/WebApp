@@ -48,8 +48,8 @@ class StatsOverview extends BaseWidget
         $isMobile = PlatformContext::isAnyMobile(); // Android / iOS (native app & mobile browser)
 
         $stats = [
-            Stat::make('Welcome', $name)
-                ->description('Make your special moment today')
+            Stat::make(__('filament-panels::widgets/account-widget.welcome'), $name)
+                ->description(__('Make your special moment today'))
                 ->descriptionIcon('heroicon-m-sparkles')
                 ->color('primary')
                 ->extraAttributes([
@@ -60,8 +60,8 @@ class StatsOverview extends BaseWidget
 
         // My Orders (Transactions) — disembunyikan di mobile Android/iOS
         if (! $isMobile) {
-            $stats[] = Stat::make('My Orders', Order::query()->where('user_id', $user->id)->count('id'))
-                ->description('Transactions')
+            $stats[] = Stat::make(__('Pesanan Saya'), Order::query()->where('user_id', $user->id)->count('id'))
+                ->description(__('Transaksi'))
                 ->descriptionIcon('heroicon-m-shopping-bag', IconPosition::Before)
                 ->color('info')
                 ->extraAttributes([
@@ -70,8 +70,8 @@ class StatsOverview extends BaseWidget
                 ]);
         }
 
-        $stats[] = Stat::make('Favorite', Wishlist::query()->where('user_id', $user->id)->count('id'))
-            ->description('Saved')
+        $stats[] = Stat::make(__('Favorit'), Wishlist::query()->where('user_id', $user->id)->count('id'))
+            ->description(__('Tersimpan'))
             ->descriptionIcon('heroicon-m-heart', IconPosition::Before)
             ->color('danger')
             ->extraAttributes([
@@ -79,8 +79,8 @@ class StatsOverview extends BaseWidget
                 'onclick' => "window.location.href='".route('filament.user.resources.wishlists.index')."'",
             ]);
 
-        $stats[] = Stat::make('Active Voucher', $user->vouchers()->whereNull('user_vouchers.used_at')->count())
-            ->description('Discounts')
+        $stats[] = Stat::make(__('Voucher Aktif'), $user->vouchers()->whereNull('user_vouchers.used_at')->count())
+            ->description(__('Diskon'))
             ->descriptionIcon('heroicon-m-ticket', IconPosition::Before)
             ->color('warning')
             ->extraAttributes([
@@ -90,8 +90,8 @@ class StatsOverview extends BaseWidget
 
         // Cart (Checkout) — disembunyikan di mobile Android/iOS
         if (! $isMobile) {
-            $stats[] = Stat::make('Cart', Cart::query()->where('user_id', $user->id)->count())
-                ->description('Checkout')
+            $stats[] = Stat::make(__('Keranjang'), Cart::query()->where('user_id', $user->id)->count())
+                ->description(__('Checkout'))
                 ->descriptionIcon('heroicon-m-shopping-cart', IconPosition::Before)
                 ->color('success')
                 ->extraAttributes([

@@ -9,6 +9,7 @@ use App\Enums\RuntimePlatform\RuntimePlatform;
 use App\Events\NotificationBroadcast\NotificationBroadcast;
 use App\Models\User\User;
 use App\Support\Platform\PlatformFeatureRegistry\PlatformFeatureRegistry;
+use Filament\Notifications\Actions\Action;
 use Filament\Notifications\Notification as FilamentNotification;
 use Illuminate\Support\Facades\Log;
 use Native\Laravel\Notification;
@@ -27,14 +28,24 @@ class PlatformNotificationService
      * attempting the NativePHP API calls.  When the binding is absent the
      * service falls back to the original behavior (attempt anyway).
      */
-    public static function send(User $user, string $title, string $body): void
+    public static function send(User $user, string $title, string $body, ?string $actionUrl = null, ?string $actionLabel = null): void
     {
         // 1. Filament database notification (website — all browsers)
-        FilamentNotification::make()
+        $notification = FilamentNotification::make()
             ->title($title)
             ->body($body)
-            ->warning()
-            ->sendToDatabase($user);
+            ->warning();
+
+        if ($actionUrl) {
+            $notification->actions([
+                Action::make('open')
+                    ->label($actionLabel ?: __('Lihat detail'))
+                    ->url($actionUrl)
+                    ->markAsRead(),
+            ]);
+        }
+
+        $notification->sendToDatabase($user);
 
         // 2. Broadcast via WebSocket (real-time push to connected clients)
         event(new NotificationBroadcast([
