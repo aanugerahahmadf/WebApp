@@ -1,7 +1,6 @@
 import { defineConfig, loadEnv } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
-import { nativephpMobile, nativephpHotFile } from './vendor/nativephp/mobile/resources/js/vite-plugin.js';
 
 /**
  * Multi-Platform Vite Configuration
@@ -30,7 +29,7 @@ import { nativephpMobile, nativephpHotFile } from './vendor/nativephp/mobile/res
  * Requirements: 4.1, 4.7
  */
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(async ({ mode }) => {
     // Load .env variables so VITE_PLATFORM is available even when the
     // variable is declared only in .env (not in process.env at this point).
     const env = loadEnv(mode, process.cwd(), '');
@@ -48,6 +47,17 @@ export default defineConfig(({ mode }) => {
     }
 
     const activePlatform = validPlatforms.includes(platform) ? platform : 'web';
+
+    // The NativePHP Vite plugin is only needed for mobile builds. Loading it
+    // lazily keeps ordinary web/desktop builds independent of mobile assets.
+    // This matters in CI, where Composer may omit platform-specific resources.
+    let nativephpMobile;
+    let nativephpHotFile;
+
+    if (activePlatform === 'mobile') {
+        const nativephpPluginPath = './vendor/nativephp/mobile/resources/js/' + 'vite-plugin.js';
+        ({ nativephpMobile, nativephpHotFile } = await import(nativephpPluginPath));
+    }
 
     // ─── Per-platform build descriptors ──────────────────────────────────
     // Each descriptor declares:
@@ -83,8 +93,8 @@ export default defineConfig(({ mode }) => {
             publicBuild: 'public/build/mobile',
             // nativephpHotFile() returns 'public/ios-hot', 'public/android-hot',
             // or 'public/hot' depending on --mode=ios / --mode=android flags.
-            hotFile:     nativephpHotFile(),
-            plugins:     [nativephpMobile()],
+            hotFile:     activePlatform === 'mobile' ? nativephpHotFile() : 'public/mobile-hot',
+            plugins:     activePlatform === 'mobile' ? [nativephpMobile()] : [],
         },
         desktop: {
             input: [
