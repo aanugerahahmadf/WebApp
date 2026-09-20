@@ -302,12 +302,12 @@ On Windows PowerShell, use `vendor\bin\pint.bat` and `vendor\bin\phpstan.bat` if
 
 | Document | Description |
 | --- | --- |
-| [docs/command-guide.md](docs/command-guide.md) | Commands, prerequisites, troubleshooting |
-| [docs/command-decision-tree.md](docs/command-decision-tree.md) | Select web, mobile, or desktop mode |
-| [docs/environment-configuration.md](docs/environment-configuration.md) | Environment layering |
-| [docs/asset-compilation.md](docs/asset-compilation.md) | Vite build process |
-| [docs/platform-support.md](docs/platform-support.md) | Platform architecture |
-| [docs/platform-features.md](docs/platform-features.md) | Feature matrix by platform |
+| [docs/command-guide.md](docs/command-guide/command-guide.md) | Commands, prerequisites, troubleshooting |
+| [docs/command-decision-tree.md](docs/command-decision-tree/command-decision-tree.md) | Select web, mobile, or desktop mode |
+| [docs/environment-configuration.md](docs/environment-configuration/environment-configuration.md) | Environment layering |
+| [docs/asset-compilation.md](docs/asset-compilation/asset-compilation.md) | Vite build process |
+| [docs/platform-support.md](docs/platform-support/platform-support.md) | Platform architecture |
+| [docs/platform-features.md](docs/platform-features/platform-features.md) | Feature matrix by platform |
 
 ## Contributing
 

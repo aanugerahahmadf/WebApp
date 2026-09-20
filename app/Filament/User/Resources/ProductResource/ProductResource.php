@@ -6,12 +6,15 @@ use App\Enums\DiscountType\DiscountType;
 use App\Enums\OrderPaymentStatus\OrderPaymentStatus;
 use App\Enums\OrderStatus\OrderStatus;
 use App\Filament\User\Pages\MessagesPage\MessagesPage;
+use App\Filament\User\Pages\ReviewDetailPage\ReviewDetailPage;
 use App\Filament\User\Resources\ProductResource\Pages;
+use App\Filament\User\Resources\ReviewResource\ReviewResource;
 use App\Forms\Components\CheckoutCalendarPicker\CheckoutCalendarPicker;
 use App\Models\Cart\Cart;
 use App\Models\Order\Order;
 use App\Models\PaymentMethod\PaymentMethod;
 use App\Models\Product\Product;
+use App\Models\Review\Review;
 use App\Models\Transaction\Transaction;
 use App\Models\Voucher\Voucher;
 use App\Models\Wishlist\Wishlist;
@@ -472,6 +475,47 @@ class ProductResource extends Resource
                                             }),
                                     ])->fullWidth()->extraAttributes(['class' => '!mt-2']),
 
+                                    Actions::make([
+                                        Action::make('write_review')
+                                            ->label(__('Tulis Ulasan'))
+                                            ->icon('heroicon-m-star')
+                                            ->color('warning')
+                                            ->button()
+                                            ->visible(fn (Product $record): bool => auth()->check() && Order::query()
+                                                ->where('user_id', auth()->id())
+                                                ->where('product_id', $record->id)
+                                                ->where('status', OrderStatus::COMPLETED)
+                                                ->exists())
+                                            ->modalHeading(__('Tulis Ulasan'))
+                                            ->modalDescription(__('Bagikan pengalaman Anda setelah pesanan selesai.'))
+                                            ->form(fn (Product $record): array => ReviewResource::orderReviewFields(
+                                                Order::query()
+                                                    ->where('user_id', auth()->id())
+                                                    ->where('product_id', $record->id)
+                                                    ->where('status', OrderStatus::COMPLETED)
+                                                    ->latest()
+                                                    ->firstOrFail()
+                                            ))
+                                            ->action(function (Product $record, array $data): void {
+                                                if (Review::query()->where('user_id', auth()->id())->where('product_id', $record->id)->exists()) {
+                                                    Notification::make()->title(__('Anda sudah menulis ulasan untuk produk ini.'))->warning()->send();
+
+                                                    return;
+                                                }
+
+                                                Review::create([
+                                                    'user_id' => auth()->id(),
+                                                    'product_id' => $record->id,
+                                                    'rating' => $data['rating'],
+                                                    'title' => $data['title'] ?? null,
+                                                    'comment' => $data['comment'],
+                                                    'photo' => $data['photo'] ?? null,
+                                                ]);
+
+                                                Notification::make()->title(__('Terima kasih atas ulasan Anda!'))->success()->send();
+                                            }),
+                                    ])->fullWidth()->extraAttributes(['class' => '!mt-2']),
+
                                     // REVIEWS (mobile _buildReviewCard parity)
                                     Infolists\Components\Section::make(__('Ulasan'))
                                         ->icon('heroicon-o-chat-bubble-oval-left-ellipsis')
@@ -508,6 +552,13 @@ class ProductResource extends Resource
                                                             ])->columnSpan(8),
 
                                                             Infolists\Components\Actions::make([
+                                                                Infolists\Components\Actions\Action::make('view_review')
+                                                                    ->label(__('Lihat Detail'))
+                                                                    ->icon('heroicon-m-eye')
+                                                                    ->color('gray')
+                                                                    ->outlined()
+                                                                    ->size(ActionSize::ExtraSmall)
+                                                                    ->url(fn ($record): string => ReviewDetailPage::getUrl(['id' => $record->id], panel: 'user')),
                                                                 Infolists\Components\Actions\Action::make('report_review')
                                                                     ->label(__('Lapor'))
                                                                     ->icon('heroicon-m-flag')
