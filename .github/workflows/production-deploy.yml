@@ -1,165 +1,49 @@
-name: CI/CD Pipeline (GCP — DISABLED)
+name: Deploy Cloud Run
 
 on:
   workflow_dispatch:
-  # push / pull_request sengaja dinonaktifkan:
-  # workflow ini butuh secret GCP (GCP_SERVICE_KEY, GCP_PROJECT_ID, dll)
-  # yang belum di-set. Aktifkan kembali dengan menambahkan trigger di atas
-  # SETELAH semua secret GCP tersedia di pengaturan repo.
-  # push:
-  #   branches: [ "main", "develop" ]
-  # pull_request:
-  #   branches: [ "main" ]
 
-env:
-  PHP_VERSION: '8.4'
-  NODE_VERSION: '20'
-  DB_CONNECTION: sqlite
-  DB_DATABASE: ":memory:"
+permissions:
+  contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: deploy-cloud-run
+  cancel-in-progress: false
 
 jobs:
-  lint:
-    name: Lint (Pint + PHPStan)
+  preflight:
     runs-on: ubuntu-latest
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ env.PHP_VERSION }}
-          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo, grpc
-          coverage: none
-          tools: composer:v2
-
-      - name: Cache Composer
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/composer
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-
-
-      - name: Install Dependencies
-        run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist --ignore-platform-reqs
-
-      - name: Run Pint
-        run: ./vendor/bin/pint --test
-
-      - name: Run PHPStan
-        run: ./vendor/bin/phpstan analyse --memory-limit=2G --no-progress || echo "PHPStan completed with warnings"
-
-  test:
-    name: Tests (Pest)
-    needs: lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ env.PHP_VERSION }}
-          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo, grpc
-          coverage: xdebug
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-
-      - name: Cache Composer
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/composer
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-
-
-      - name: Install Composer Dependencies
-        run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist --ignore-platform-reqs
-
-      - name: Install NPM
-        run: npm ci
-
-      - name: Build Assets
-        run: npm run build
-
-      - name: Prepare Laravel
+      - id: check
+        env:
+          GCP_SERVICE_KEY: ${{ secrets.GCP_SERVICE_KEY }}
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: |
-          cp .env.example .env
-          php artisan key:generate
-          mkdir -p storage/framework/{sessions,views,cache} bootstrap/cache
-          chmod -R 777 storage bootstrap/cache
-
-      - name: Run Tests
-        run: php artisan test
-
-  deploy:
-    name: Deploy to Production
-    needs: test
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Check GCP credentials
-        id: check-gcp
-        run: |
-          if [ -n "${{ secrets.GCP_SERVICE_KEY }}" ]; then
-            echo "ready=true" >> "$GITHUB_OUTPUT"
+          if [ -n "$GCP_SERVICE_KEY" ] && [ -n "$GCP_PROJECT_ID" ]; then
+            echo 'ready=true' >> "$GITHUB_OUTPUT"
           else
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "⚠️ GCP_PROJECT_ID secret not set — skipping cloud deploy"
+            echo 'ready=false' >> "$GITHUB_OUTPUT"
+            echo 'Deployment skipped: configure GCP_SERVICE_KEY and GCP_PROJECT_ID first.'
           fi
-
-      - name: Google Cloud Auth
-        if: steps.check-gcp.outputs.ready == 'true'
-        uses: google-github-actions/auth@v2
+  deploy:
+    needs: preflight
+    if: needs.preflight.outputs.ready == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SERVICE_KEY }}
-
-      - name: Set up Cloud SDK
-        if: steps.check-gcp.outputs.ready == 'true'
-        uses: google-github-actions/setup-gcloud@v2
-
-      - name: Configure Docker
-        if: steps.check-gcp.outputs.ready == 'true'
-        run: gcloud auth configure-docker gcr.io -q
-
-      - name: Build & Push Docker Image
-        if: steps.check-gcp.outputs.ready == 'true'
-        run: |
-          docker build -f Dockerfile.cloudrun \
-            -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/wedding-decorasi-api:${{ github.sha }} \
-            -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/wedding-decorasi-api:latest .
-          docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/wedding-decorasi-api:${{ github.sha }}
-          docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/wedding-decorasi-api:latest
-
-      - name: Deploy to Cloud Run
-        if: steps.check-gcp.outputs.ready == 'true'
-        run: |
-          gcloud run deploy wedding-decorasi-api \
-            --image=gcr.io/${{ secrets.GCP_PROJECT_ID }}/wedding-decorasi-api:${{ github.sha }} \
-            --region=asia-southeast2 \
-            --platform=managed \
-            --allow-unauthenticated \
-            --memory=512Mi \
-            --cpu=1 \
-            --min-instances=0 \
-            --max-instances=10 \
-            --concurrency=80 \
-            --timeout=300 \
-            --set-env-vars="APP_ENV=production,APP_DEBUG=false,APP_URL=${{ secrets.APP_URL }},DB_CONNECTION=mysql,DB_HOST=${{ secrets.DB_HOST }},DB_PORT=${{ secrets.DB_PORT }},DB_DATABASE=${{ secrets.DB_DATABASE }},DB_USERNAME=${{ secrets.DB_USERNAME }},DB_PASSWORD=${{ secrets.DB_PASSWORD }},SESSION_DRIVER=database,CACHE_STORE=database,QUEUE_CONNECTION=database"
-
-      - name: Deploy Firebase
-        if: steps.check-gcp.outputs.ready == 'true'
-        run: |
-          npx -y firebase-tools@latest deploy \
-            --only hosting,dataconnect \
-            --project "${{ secrets.GCP_PROJECT_ID }}"
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Build and deploy image
         env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          APP_KEY: ${{ secrets.APP_KEY }}
+        run: |
+          IMAGE="gcr.io/$PROJECT_ID/wedding-decorasi-api:${{ github.sha }}"
+          gcloud auth configure-docker gcr.io --quiet
+          docker build --file Dockerfile.cloudrun --tag "$IMAGE" .
+          docker push "$IMAGE"
+          gcloud run deploy wedding-decorasi-api --image "$IMAGE" --project "$PROJECT_ID" --region asia-southeast2 --platform managed --allow-unauthenticated --set-env-vars "APP_ENV=production,APP_DEBUG=false,APP_KEY=$APP_KEY"

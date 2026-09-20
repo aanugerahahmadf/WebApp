@@ -1,13 +1,6 @@
-name: Backend Deploy (Docker + SSH VPS)
+name: Deploy VPS
 
 on:
-  push:
-    branches: [main]
-    paths-ignore:
-      - 'docs/**'
-      - '**.md'
-  tags:
-    - 'v*'
   workflow_dispatch:
 
 permissions:
@@ -15,154 +8,66 @@ permissions:
   packages: write
 
 concurrency:
-  group: deploy-vps-${{ github.ref }}
-  cancel-in-progress: true
+  group: deploy-vps
+  cancel-in-progress: false
 
 env:
-  PHP_VERSION: '8.3'
-  IMAGE: ghcr.io/${{ github.repository }}/wedding-api
+  IMAGE: ghcr.io/${{ github.repository_owner }}/wedding-api
 
 jobs:
-  test:
-    name: Test (Pest)
+  preflight:
     runs-on: ubuntu-latest
-    env:
-      APP_ENV: testing
-      DB_CONNECTION: mysql
-      DB_HOST: 127.0.0.1
-      DB_PORT: 3306
-      DB_DATABASE: testing
-      DB_USERNAME: root
-      DB_PASSWORD: ''
-      CACHE_STORE: array
-      QUEUE_CONNECTION: sync
-      SESSION_DRIVER: array
-      BROADCAST_CONNECTION: null
-
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
-          MYSQL_DATABASE: testing
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ env.PHP_VERSION }}
-          coverage: xdebug
-          extensions: mbstring, pdo, pdo_mysql, bcmath, gd, xml, curl, zip
-          tools: composer:v2
-
-      - name: Cache Composer
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/composer
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-
-
-      - name: Install dependencies
-        run: composer install --no-progress --prefer-dist --optimize-autoloader --no-scripts --ignore-platform-reqs
-
-      - name: Prepare Laravel
+      - id: check
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_GHCR_TOKEN: ${{ secrets.VPS_GHCR_TOKEN }}
         run: |
-          cp .env.example .env
-          php artisan key:generate
-          mkdir -p storage/framework/{sessions,views,cache} bootstrap/cache
-          chmod -R 777 storage bootstrap/cache
-
-      - name: Run tests
-        env:
-          APP_KEY: ${{ secrets.APP_KEY_TEST || 'base64:qlfLQwBtJA/blNrn3/qZ8T3NZYaj9cSHCPI88Ldmelo=' }}
-        run: ./vendor/bin/pest
-
+          if [ -n "$VPS_HOST" ] && [ -n "$VPS_USER" ] && [ -n "$VPS_SSH_KEY" ] && [ -n "$VPS_GHCR_TOKEN" ]; then
+            echo 'ready=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'ready=false' >> "$GITHUB_OUTPUT"
+            echo 'Deployment skipped: configure the VPS_* secrets first.'
+          fi
   build:
-    name: Build & Push Docker image
-    needs: test
+    needs: preflight
+    if: needs.preflight.outputs.ready == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata (tags, labels)
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.IMAGE }}
-          tags: |
-            type=sha
-            type=ref,event=branch
-            type=semver,pattern={{version}}
-            type=raw,value=latest,enable={{is_default_branch}}
-
-      - name: Build and push
-        uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v6
         with:
           context: .
           file: Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ env.IMAGE }}:latest,${{ env.IMAGE }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
   deploy:
-    name: Deploy to VPS (SSH)
-    needs: build
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+    needs: [preflight, build]
+    if: needs.preflight.outputs.ready == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1
+      - uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.VPS_HOST }}
           port: ${{ secrets.VPS_PORT || 22 }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            export IMAGE="${{ env.IMAGE }}"
-            set -e
-
-            echo "== Log in to GHCR =="
-            echo "${{ secrets.VPS_GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-            echo "== Prepare deploy directory =="
-            mkdir -p /opt/wedding-api
+            set -eu
+            echo "${{ secrets.VPS_GHCR_TOKEN }}" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
             cd /opt/wedding-api
-
-            echo "== Pull latest image =="
-            docker pull "$IMAGE:latest"
-
-            echo "== Backup current container =="
-            docker compose -f docker-compose.prod.yml down --remove-orphans || true
-
-            echo "== Start application =="
-            IMAGE_NAME="$IMAGE" docker compose -f docker-compose.prod.yml up -d --remove-orphans
-
-            echo "== Prune old images =="
-            docker image prune -f || true
-
-            echo "== Health check =="
-            sleep 10
-            curl -fsS -o /dev/null -w "HTTP %{http_code}\n" http://127.0.0.1:${{ secrets.APP_PORT || 8000 }}/api/health || echo "health endpoint not reachable (check APP_ROUTE)"
+            export IMAGE_NAME='${{ env.IMAGE }}'
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans

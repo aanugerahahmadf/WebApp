@@ -1,251 +1,35 @@
-name: Build — Mobile Platform (Android / iOS)
+name: Build mobile assets
 
 on:
-  push:
-    branches: [main]
-    paths-ignore:
-      - 'docs/**'
-      - '**.md'
   workflow_dispatch:
     inputs:
-      platform:
-        description: 'Target platform'
+      target:
+        description: Mobile target
         required: true
-        default: 'android'
+        default: android
         type: choice
-        options: [android, ios, both]
-      build_type:
-        description: 'Build type'
-        required: true
-        default: 'bundle'
-        type: choice
-        options: [debug, apk, bundle]
+        options: [android, ios]
 
-env:
-  # Default values — override via workflow_dispatch inputs or environment secrets
-  VITE_PLATFORM: mobile
+permissions:
+  contents: read
 
 jobs:
-  # ── Shared: Run tests before building ──────────────────────────────────────
-  test:
-    name: Run Tests (Mobile Mode)
+  build:
+    name: Build mobile assets (${{ inputs.target }})
     runs-on: ubuntu-latest
-
-    env:
-      APP_ENV: testing
-      APP_KEY: base64:TEST_KEY_32_BYTES_HERE_FOR_CI_USE=
-      DB_CONNECTION: sqlite
-      DB_DATABASE: ':memory:'
-      CACHE_DRIVER: array
-      QUEUE_CONNECTION: sync
-      SESSION_DRIVER: array
-      VITE_PLATFORM: mobile
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up PHP
-        uses: shivammathur/setup-php@v2
+      - uses: actions/setup-node@v4
         with:
-          php-version: '8.3'
-          extensions: pdo, pdo_sqlite, mbstring, openssl
-
-      - name: Cache Composer packages
-        uses: actions/cache@v4
-        with:
-          path: vendor
-          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
-
-      - name: Install PHP dependencies
-        run: composer install --no-progress --no-scripts --ignore-platform-reqs
-
-      - name: Copy environment file
-        run: cp .env.example .env && php artisan key:generate
-
-      - name: Run Pest tests
-        run: php artisan test --parallel
-        env:
-          APP_KEY: base64:qlfLQwBtJA/blNrn3/qZ8T3NZYaj9cSHCPI88Ldmelo=
-
-  # ── Build mobile assets ────────────────────────────────────────────────────
-  build-assets:
-    name: Build Mobile Assets
-    runs-on: ubuntu-latest
-    needs: test
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install Node dependencies
-        run: npm ci
-
-      - name: Build mobile assets
-        run: npm run build:mobile
-        env:
-          VITE_PLATFORM: mobile
-
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build:mobile:${{ inputs.target }}
       - name: Verify build output
-        run: |
-          test -f public/build/mobile/manifest.json && echo "✅ Mobile manifest.json exists" || (echo "❌ Mobile manifest.json missing" && exit 1)
-
-      - name: Upload mobile assets
-        uses: actions/upload-artifact@v4
+        run: test -f public/build/mobile/.vite/manifest.json
+      - uses: actions/upload-artifact@v4
         with:
-          name: mobile-assets
-          path: public/build/mobile/
+          name: mobile-assets-${{ inputs.target }}
+          path: public/build/mobile
+          if-no-files-found: error
           retention-days: 7
-
-  # ── Android Build ──────────────────────────────────────────────────────────
-  build-android:
-    name: Build Android (${{ github.event.inputs.build_type || 'bundle' }})
-    runs-on: ubuntu-latest
-    needs: build-assets
-    if: >
-      github.event.inputs.platform == 'android' ||
-      github.event.inputs.platform == 'both' ||
-      github.event.inputs.platform == ''
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Java (required by Android SDK)
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Set up PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install PHP dependencies
-        run: composer install --no-dev --optimize-autoloader --no-progress --no-scripts --ignore-platform-reqs
-
-      - name: Install Node dependencies
-        run: npm ci
-
-      - name: Download mobile assets
-        uses: actions/download-artifact@v4
-        with:
-          name: mobile-assets
-          path: public/build/mobile/
-
-      - name: Create .env for mobile build
-        run: |
-          cp .env.mobile.example .env.mobile
-          echo "APP_KEY=${{ secrets.APP_KEY }}" >> .env.mobile
-          echo "NATIVEPHP_APP_ID=${{ secrets.NATIVEPHP_APP_ID }}" >> .env.mobile
-          echo "NATIVEPHP_APP_VERSION=${{ secrets.NATIVEPHP_APP_VERSION || '1.0.0' }}" >> .env.mobile
-          echo "NATIVEPHP_APP_VERSION_CODE=${{ github.run_number }}" >> .env.mobile
-
-      - name: Write Android keystore
-        run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android-release.jks
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
-
-      - name: Build Android App Bundle
-        run: |
-          php artisan native:run android --build=${{ github.event.inputs.build_type || 'bundle' }} --no-interaction
-        env:
-          NATIVEPHP_ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/android-release.jks
-          NATIVEPHP_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          NATIVEPHP_ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          NATIVEPHP_ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-
-      - name: Upload Android bundle
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-bundle
-          path: |
-            build/android/*.aab
-            build/android/*.apk
-          retention-days: 14
-
-  # ── iOS Build (macOS only) ─────────────────────────────────────────────────
-  build-ios:
-    name: Build iOS (.ipa)
-    runs-on: macos-latest
-    needs: build-assets
-    if: >
-      github.event.inputs.platform == 'ios' ||
-      github.event.inputs.platform == 'both'
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install PHP dependencies
-        run: composer install --no-dev --optimize-autoloader --no-progress --no-scripts --ignore-platform-reqs
-
-      - name: Install Node dependencies
-        run: npm ci
-
-      - name: Download mobile assets
-        uses: actions/download-artifact@v4
-        with:
-          name: mobile-assets
-          path: public/build/mobile/
-
-      - name: Install Apple certificate and provisioning profile
-        env:
-          P12_CERTIFICATE_BASE64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
-          P12_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
-          PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
-          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
-        run: |
-          # Create temporary keychain
-          security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
-
-          # Import certificate
-          echo "$P12_CERTIFICATE_BASE64" | base64 --decode > certificate.p12
-          security import certificate.p12 -k build.keychain -P "$P12_PASSWORD" -T /usr/bin/codesign
-
-          # Install provisioning profile
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "$PROVISIONING_PROFILE_BASE64" | base64 --decode > profile.mobileprovision
-          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
-
-      - name: Create .env for iOS build
-        run: |
-          cp .env.mobile.example .env.mobile
-          echo "APP_KEY=${{ secrets.APP_KEY }}" >> .env.mobile
-          echo "NATIVEPHP_APP_ID=${{ secrets.NATIVEPHP_APP_ID }}" >> .env.mobile
-          echo "NATIVEPHP_IOS_TEAM_ID=${{ secrets.IOS_TEAM_ID }}" >> .env.mobile
-
-      - name: Build iOS .ipa
-        run: php artisan native:run ios --build=release --no-interaction
-
-      - name: Upload iOS archive
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-ipa
-          path: build/ios/*.ipa
-          retention-days: 14
