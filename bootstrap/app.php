@@ -27,15 +27,6 @@ if (PHP_OS_FAMILY === 'Windows') {
     putenv("TMPDIR={$tempDirectory}");
 }
 
-/*
-|--------------------------------------------------------------------------
-| Vercel Storage Redirection
-|--------------------------------------------------------------------------
-| On Vercel, the filesystem is read-only. We need to redirect storage,
-| cache, and views to /tmp during the build and at runtime.
-*/
-// Logic moved to AppServiceProvider to avoid premature config() calls.
-
 $app = Application::configure(basePath: dirname(__DIR__))
     ->withProviders([
         AutoTranslationServiceProvider::class,
@@ -89,9 +80,8 @@ $app = Application::configure(basePath: dirname(__DIR__))
 
         $middleware->redirectGuestsTo(fn () => route('filament.user.auth.login'));
 
-        // Trust proxies for Vercel, Production, or ngrok development
-        if (env('VERCEL') ||
-            env('APP_ENV') === 'production' ||
+        // Trust proxies for production deployments or ngrok development.
+        if (env('APP_ENV') === 'production' ||
             str_contains((string) env('APP_URL'), 'ngrok-free.dev') ||
             (isset($_SERVER['HTTP_X_FORWARDED_HOST']) && str_contains($_SERVER['HTTP_X_FORWARDED_HOST'], 'ngrok')) ||
             (isset($_SERVER['HTTP_HOST']) && str_contains($_SERVER['HTTP_HOST'], 'ngrok'))
