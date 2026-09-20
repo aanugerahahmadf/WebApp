@@ -1,17 +1,6 @@
 #!/usr/bin/env php
 <?php
 
-$tempDirectory = __DIR__.DIRECTORY_SEPARATOR.'storage'.DIRECTORY_SEPARATOR.'framework'.DIRECTORY_SEPARATOR.'temp';
-
-if (! is_dir($tempDirectory) && ! mkdir($tempDirectory, 0777, true) && ! is_dir($tempDirectory)) {
-    fwrite(STDERR, "Unable to create Laravel temporary directory: {$tempDirectory}".PHP_EOL);
-    exit(1);
-}
-
-putenv("TMP={$tempDirectory}");
-putenv("TEMP={$tempDirectory}");
-putenv("TMPDIR={$tempDirectory}");
-
 use Illuminate\Foundation\Application;
 use Symfony\Component\Console\Input\ArgvInput;
 

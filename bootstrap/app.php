@@ -12,6 +12,21 @@ use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 
+// Symfony uses temporary files for `php artisan serve` on Windows. Keep them
+// inside the project so Artisan works even when the system temp path is locked.
+if (PHP_OS_FAMILY === 'Windows') {
+    $tempDirectory = dirname(__DIR__).DIRECTORY_SEPARATOR.'storage'.DIRECTORY_SEPARATOR.'framework'.DIRECTORY_SEPARATOR.'temp';
+
+    if (! is_dir($tempDirectory) && ! mkdir($tempDirectory, 0777, true) && ! is_dir($tempDirectory)) {
+        fwrite(STDERR, "Unable to create Laravel temporary directory: {$tempDirectory}".PHP_EOL);
+        exit(1);
+    }
+
+    putenv("TMP={$tempDirectory}");
+    putenv("TEMP={$tempDirectory}");
+    putenv("TMPDIR={$tempDirectory}");
+}
+
 /*
 |--------------------------------------------------------------------------
 | Vercel Storage Redirection
