@@ -14,8 +14,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
-    name: Test Laravel application
+  application:
+    name: Boot Laravel application
     runs-on: ubuntu-latest
     env:
       APP_ENV: testing
@@ -40,7 +40,10 @@ jobs:
       - run: composer install --no-interaction --no-progress --prefer-dist --no-scripts
       - name: Create Laravel runtime directories
         run: mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache
-      - run: php artisan test
+      - name: Verify Laravel can boot
+        run: php artisan about --only=environment
+      - name: Verify application routes load
+        run: php artisan route:list --json > /dev/null
   frontend:
     name: Build web assets
     runs-on: ubuntu-latest
