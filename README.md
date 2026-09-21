@@ -223,7 +223,7 @@ php artisan platform:status
 php artisan platform:clear
 ```
 
-Read [docs/command-guide.md](docs/command-guide.md) and [docs/command-decision-tree.md](docs/command-decision-tree.md) before setting up a native target.
+Read [docs/command-guide.md](docs/command-guide/command-guide.md) and [docs/command-decision-tree/command-decision-tree.md](docs/command-decision-tree/command-decision-tree.md) before setting up a native target.
 
 ## Real-time, queues, and notifications
 
