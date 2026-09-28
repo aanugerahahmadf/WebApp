@@ -77,7 +77,7 @@ class OtpRequestPasswordReset extends BaseRequestPasswordReset
                 Section::make()
                     ->schema([
                         $this->getEmailFormComponent(),
-                        View::make('User.auth.otp-request-password-reset.actions'),
+                        View::make('User.auth.otp-request-password-reset.actions.actions'),
                     ])
                     ->columns(1),
             ]);

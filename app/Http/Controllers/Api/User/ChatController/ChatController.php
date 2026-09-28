@@ -224,11 +224,9 @@ class ChatController extends Controller
 
         if ($request->filled('cs_category') && ! $user->hasRole('super_admin')) {
             $inboxMeta = $inbox->meta ?? [];
-            if (empty($inboxMeta['cs_category'])) {
-                $inboxMeta['cs_category'] = $request->input('cs_category');
-                $inbox->meta = $inboxMeta;
-                $inbox->save();
-            }
+            $inboxMeta['cs_category'] = $request->input('cs_category');
+            $inbox->meta = $inboxMeta;
+            $inbox->save();
         }
 
         if ($request->hasFile('attachment')) {
@@ -723,11 +721,9 @@ class ChatController extends Controller
         }
 
         if ($request->filled('cs_category')) {
-            if (empty($inboxMeta['cs_category'])) {
-                $inboxMeta['cs_category'] = $request->input('cs_category');
-                $inbox->meta = $inboxMeta;
-                $inbox->save();
-            }
+            $inboxMeta['cs_category'] = $request->input('cs_category');
+            $inbox->meta = $inboxMeta;
+            $inbox->save();
         }
 
         return response()->json([
@@ -841,11 +837,9 @@ class ChatController extends Controller
 
         if ($request->filled('cs_category')) {
             $inboxMeta = $inbox->meta ?? [];
-            if (empty($inboxMeta['cs_category'])) {
-                $inboxMeta['cs_category'] = $request->input('cs_category');
-                $inbox->meta = $inboxMeta;
-                $inbox->save();
-            }
+            $inboxMeta['cs_category'] = $request->input('cs_category');
+            $inbox->meta = $inboxMeta;
+            $inbox->save();
         }
 
         SendBotReply::dispatch($message->id)->delay(now()->addSeconds(5));

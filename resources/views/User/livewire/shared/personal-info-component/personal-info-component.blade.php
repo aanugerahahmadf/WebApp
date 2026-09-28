@@ -2,7 +2,7 @@
     <form wire:submit="save" class="fi-sc-form">
         {{ $this->form }}
 
-        <div class="flex justify-end mt-4">
+        <div class="flex justify-end mt-4 mb-8">
             <x-filament::button type="submit">
                 {{ __('Simpan Perubahan') }}
             </x-filament::button>

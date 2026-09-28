@@ -329,8 +329,7 @@
                         {{-- Text / Media bubble --}}
                         @if ($hasText || $hasMedia)
                             @php
-                                // Bubble color follows panel primary color
-                                // admin = Indigo (#4338ca), user = Yellow (#eab308 with dark text)
+                                // Bubble color follows User panel primary color (Yellow #eab308 with dark text)
                                 $bubbleStyle = $isMine ? 'background-color:#eab308;color:#1c1917;' : '';
                             @endphp
                             <div @class([
@@ -353,27 +352,36 @@
                                     <p class="text-sm leading-relaxed">{!! nl2br(e($displayMessage)) !!}</p>
                                 @endif
 
-                                {{-- Tampilkan formulir pada semua balasan bot, termasuk pesan bot yang
-                                     sudah tersimpan sebelum fitur formulir ditambahkan. --}}
                                 @if (!empty($meta['is_bot']))
                                     @php
+                                        $csCategory = $selectedConversation->meta['cs_category'] ?? null;
                                         $consultationForms = $selectedConversation->meta['consultation_forms'] ?? [];
                                         $hasConsultationForm = !empty($consultationForms[(string) auth()->id()]);
                                     @endphp
-                                    <div class="mt-3 flex flex-wrap gap-2">
-                                        <button type="button" wire:click="mountAction('weddingConsultationForm')"
-                                            class="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-primary-500">
-                                            <x-filament::icon icon="heroicon-o-clipboard-document-list" class="h-4 w-4" />
-                                            {{ $hasConsultationForm ? __('Ubah Formulir') : __('Isi Formulir') }}
-                                        </button>
-                                        @if ($hasConsultationForm)
-                                            <a href="{{ route('messages.consultation-form.pdf', $selectedConversation) }}"
-                                                class="inline-flex items-center gap-1.5 rounded-lg border border-primary-500 px-3 py-2 text-xs font-semibold text-primary-700 transition hover:bg-primary-50 dark:text-primary-300 dark:hover:bg-primary-900/30">
-                                                <x-filament::icon icon="heroicon-o-arrow-down-tray" class="h-4 w-4" />
-                                                {{ __('Unduh PDF') }}
-                                            </a>
-                                        @endif
-                                    </div>
+                                    @if ($csCategory === 'decor_consultation' && !empty($meta['consultation_form']))
+                                        <div class="mt-3 flex flex-wrap gap-2">
+                                            <button type="button" wire:click="mountAction('weddingConsultationForm')"
+                                                class="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-primary-500">
+                                                <x-filament::icon icon="heroicon-o-clipboard-document-list" class="h-4 w-4" />
+                                                {{ $hasConsultationForm ? __('Ubah Formulir') : __('Isi Formulir Kebutuhan Acara') }}
+                                            </button>
+                                            @if ($hasConsultationForm)
+                                                <a href="{{ route('messages.consultation-form.pdf', $selectedConversation) }}"
+                                                    class="inline-flex items-center gap-1.5 rounded-lg border border-primary-500 px-3 py-2 text-xs font-semibold text-primary-700 transition hover:bg-primary-50 dark:text-primary-300 dark:hover:bg-primary-900/30">
+                                                    <x-filament::icon icon="heroicon-o-arrow-down-tray" class="h-4 w-4" />
+                                                    {{ __('Unduh PDF') }}
+                                                </a>
+                                            @endif
+                                        </div>
+                                    @elseif (in_array($csCategory, ['bug_report', 'account_issue', 'order_help', 'payment_issue', 'general_question'], true))
+                                        <div class="mt-3">
+                                            <button type="button" wire:click="mountAction('csReportForm')"
+                                                class="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-primary-500">
+                                                <x-filament::icon icon="heroicon-o-clipboard-document-list" class="h-4 w-4" />
+                                                {{ __('Isi Formulir Laporan') }}
+                                            </button>
+                                        </div>
+                                    @endif
                                 @endif
 
                                 @if ($hasMedia)
@@ -727,6 +735,10 @@
         });
 
         $wire.on('download-consultation-pdf', ({ url }) => {
+            if (url) window.location.assign(url);
+        });
+
+        $wire.on('download-report-pdf', ({ url }) => {
             if (url) window.location.assign(url);
         });
 

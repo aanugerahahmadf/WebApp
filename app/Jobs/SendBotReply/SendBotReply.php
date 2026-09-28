@@ -213,7 +213,10 @@ class SendBotReply implements ShouldQueue
         // Persist real line breaks so every client (web, mobile, notifications)
         // receives cleanly formatted text.
         $reply = str_replace(['\\r\\n', '\\n', '\\r'], ["\r\n", "\n", "\r"], $reply);
-        $reply .= "\n\nAgar kami dapat menyiapkan rekomendasi yang lebih tepat, silakan isi formulir kebutuhan acara melalui tombol di bawah ini. Setelah dikirim, ringkasannya dapat diunduh dalam bentuk PDF.";
+        $showConsultationForm = $csCategory === 'decor_consultation';
+        if ($showConsultationForm) {
+            $reply .= "\n\nAgar kami dapat menyiapkan rekomendasi yang lebih tepat, silakan isi formulir kebutuhan acara melalui tombol di bawah ini. Setelah dikirim, ringkasannya dapat diunduh dalam bentuk PDF.";
+        }
 
         $admin = User::whereHas('roles', function ($q) {
             $q->where('name', 'super_admin');
@@ -232,7 +235,7 @@ class SendBotReply implements ShouldQueue
                         'order_number' => $userMessage->meta['order_number'] ?? null,
                         'item_name' => $userMessage->meta['name'] ?? null,
                     ],
-                    'consultation_form' => true,
+                    'consultation_form' => $showConsultationForm,
                 ],
             ]);
         }

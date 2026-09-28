@@ -20,10 +20,10 @@ use App\Livewire\Admin\Messages\Inbox\Inbox as AdminMessagesInbox;
 use App\Livewire\Admin\Messages\Messages\Messages as AdminMessagesContent;
 use App\Livewire\Admin\Messages\Search\Search as AdminMessagesSearch;
 use App\Livewire\Admin\UsernameComponent\UsernameComponent;
-use App\Livewire\Shared\BrowserSessionsComponent\BrowserSessionsComponent;
-use App\Livewire\Shared\DeleteAccountComponent\DeleteAccountComponent;
-use App\Livewire\Shared\EditPasswordComponent\EditPasswordComponent;
-use App\Livewire\Shared\MobileSettingsComponent\MobileSettingsComponent;
+use App\Livewire\User\BrowserSessionsComponent\BrowserSessionsComponent;
+use App\Livewire\User\DeleteAccountComponent\DeleteAccountComponent;
+use App\Livewire\User\EditPasswordComponent\EditPasswordComponent;
+use App\Livewire\User\MobileSettingsComponent\MobileSettingsComponent;
 use App\Livewire\User\AppLockComponent\AppLockComponent;
 use App\Livewire\User\CompleteProfileComponent\CompleteProfileComponent;
 use App\Livewire\User\Messages\Inbox\Inbox as UserMessagesInbox;
@@ -87,6 +87,7 @@ use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\BaseFilter;
 use Filament\Tables\Table;
+use Filament\Events\ServingFilament;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Auth\Events\Login as LoginEvent;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -96,6 +97,7 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
 use Spatie\Backup\BackupServiceProvider;
@@ -302,6 +304,39 @@ class AppServiceProvider extends ServiceProvider
             'App\Models\WhatsappOtp' => WhatsappOtp::class,
             'App\Models\Wishlist' => Wishlist::class,
         ]);
+
+        // ═══════════════════════════════════════════════════════════
+        // VENDOR VIEW SEPARATION (Admin/vendor vs User/vendor)
+        // Dynamically register namespace paths so Admin panel loads
+        // resources/views/Admin/vendor and User panel loads resources/views/User/vendor
+        // ═══════════════════════════════════════════════════════════
+        $registerVendorViews = function (string $panelType): void {
+            $vendorPath = resource_path("views/{$panelType}/vendor");
+            if (! is_dir($vendorPath)) {
+                return;
+            }
+
+            foreach (scandir($vendorPath) as $folder) {
+                if ($folder !== '.' && $folder !== '..' && is_dir($vendorPath . '/' . $folder)) {
+                    View::prependNamespace($folder, $vendorPath . '/' . $folder);
+                }
+            }
+        };
+
+        if (request()->is('admin*')) {
+            $registerVendorViews('Admin');
+        } else {
+            $registerVendorViews('User');
+        }
+
+        Event::listen(ServingFilament::class, function () use ($registerVendorViews): void {
+            $panelId = filament()->getCurrentPanel()?->getId();
+            if ($panelId === 'admin') {
+                $registerVendorViews('Admin');
+            } elseif ($panelId === 'user') {
+                $registerVendorViews('User');
+            }
+        });
 
         // Register Firebase Service Provider
         $this->app->register(FirebaseServiceProvider::class);

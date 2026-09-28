@@ -1,143 +1,143 @@
-# Platform Support Architecture
+# Arsitektur Dukungan Platform
 
-This document covers how the Laravel Wedding Organizer CBIR application handles three distinct runtime environments: web browsers, native mobile apps, and native desktop apps. Each environment is started with a specific Artisan command and gets its own environment configuration, asset bundle, and feature set.
+Dokumen ini membahas bagaimana aplikasi Laravel Wedding Organizer CBIR menangani tiga lingkungan runtime yang berbeda: browser web, aplikasi mobile native, dan aplikasi desktop native. Setiap lingkungan dimulai dengan perintah Artisan tertentu dan mendapatkan konfigurasi lingkungan, bundel aset, dan kumpulan fiturnya sendiri.
 
 ---
 
-## Platform Modes
+## Mode Platform
 
-The application supports three platform modes, each triggered by a dedicated Artisan command.
+Aplikasi mendukung tiga mode platform, masing-masing dipicu oleh perintah Artisan khusus.
 
-### Web Server Mode
+### Mode Server Web
 
 ```bash
 php artisan serve
 ```
 
-Serves the application for web browsers over HTTP. Uses standard Laravel session/cookie handling and WebRTC for camera access. Ideal for development and web-only deployments.
+Menyajikan aplikasi untuk browser web melalui HTTP. Menggunakan penanganan sesi/cookie Laravel standar dan WebRTC untuk akses kamera. Ideal untuk pengembangan dan deployment khusus web.
 
-**RuntimePlatform cases produced:**
-- `WebsiteWindows` — Windows/Linux desktop browsers
-- `WebsiteMacOS` — macOS Safari/Chrome/Firefox
-- `WebsiteAndroid` — Chrome/Firefox on Android
-- `WebsiteIos` — Safari on iPhone/iPad
+**Kasus RuntimePlatform yang dihasilkan:**
+- `WebsiteWindows` — browser desktop Windows/Linux
+- `WebsiteMacOS` — Safari/Chrome/Firefox macOS
+- `WebsiteAndroid` — Chrome/Firefox di Android
+- `WebsiteIos` — Safari di iPhone/iPad
 
-### Mobile Native Mode
+### Mode Mobile Native
 
 ```bash
 php artisan native:run
 ```
 
-Starts the application embedded inside a NativePHP Mobile wrapper targeting Android and iOS. The Laravel HTTP server runs locally within the app process. Requires the `laravel-native` mobile package.
+Memulai aplikasi yang tertanam di dalam wrapper NativePHP Mobile yang menargetkan Android dan iOS. Server HTTP Laravel berjalan secara lokal di dalam proses aplikasi. Memerlukan paket mobile `laravel-native`.
 
-**RuntimePlatform cases produced:**
+**Kasus RuntimePlatform yang dihasilkan:**
 - `MobileAppAndroid`
 - `MobileAppIos`
 
-### Desktop App Mode
+### Mode Aplikasi Desktop
 
 ```bash
 php artisan native:serve
 ```
 
-Starts the application inside an Electron (NativePHP Desktop) window on Windows or macOS. The PHP server runs as a background process inside the Electron app. Requires the `nativephp/electron` package.
+Memulai aplikasi di dalam jendela Electron (NativePHP Desktop) di Windows atau macOS. Server PHP berjalan sebagai proses latar belakang di dalam aplikasi Electron. Memerlukan paket `nativephp/electron`.
 
-**RuntimePlatform cases produced:**
+**Kasus RuntimePlatform yang dihasilkan:**
 - `DesktopAppWindows`
 - `DesktopAppMacOS`
 
 ---
 
-## The RuntimePlatform Enum
+## Enum RuntimePlatform
 
-`App\Enums\RuntimePlatform` represents the eight specific runtime cases the application can operate in. It sits one level below `PlatformMode` — the mode tells you *which command started the app*, while `RuntimePlatform` tells you *what device/OS is actually running it*.
+`App\Enums\RuntimePlatform` mewakili delapan kasus runtime spesifik di mana aplikasi dapat beroperasi. Ia berada satu level di bawah `PlatformMode` — mode memberi tahu Anda *perintah mana yang memulai aplikasi*, sementara `RuntimePlatform` memberi tahu Anda *perangkat/OS apa yang sebenarnya menjalankannya*.
 
 ```php
 enum RuntimePlatform: string
 {
-    // Web mode → 4 website cases
+    // Mode Web → 4 kasus website
     case WebsiteWindows  = 'website_windows';
     case WebsiteMacOS    = 'website_macos';
     case WebsiteAndroid  = 'website_android';
     case WebsiteIos      = 'website_ios';
 
-    // Mobile mode → 2 mobile app cases
+    // Mode Mobile → 2 kasus aplikasi mobile
     case MobileAppAndroid = 'mobile_app_android';
     case MobileAppIos     = 'mobile_app_ios';
 
-    // Desktop mode → 2 desktop app cases
+    // Mode Desktop → 2 kasus aplikasi desktop
     case DesktopAppWindows = 'desktop_app_windows';
     case DesktopAppMacOS   = 'desktop_app_macos';
 }
 ```
 
-### Relationship to PlatformMode
+### Hubungan dengan PlatformMode
 
-| PlatformMode | RuntimePlatform cases |
+| PlatformMode | Kasus RuntimePlatform |
 |---|---|
 | `Web` | `WebsiteWindows`, `WebsiteMacOS`, `WebsiteAndroid`, `WebsiteIos` |
 | `Mobile` | `MobileAppAndroid`, `MobileAppIos` |
 | `Desktop` | `DesktopAppWindows`, `DesktopAppMacOS` |
 
-### Category helper methods
+### Metode helper kategori
 
-The enum exposes three mutually exclusive category methods. Exactly one returns `true` for any given case:
+Enum mengekspos tiga metode kategori yang saling eksklusif. Tepat satu yang mengembalikan `true` untuk kasus mana pun:
 
 ```php
-$platform->isWebsite();    // true for all Website* cases
-$platform->isMobileApp();  // true for MobileApp* cases
-$platform->isDesktopApp(); // true for DesktopApp* cases
+$platform->isWebsite();    // true untuk semua kasus Website*
+$platform->isMobileApp();  // true untuk kasus MobileApp*
+$platform->isDesktopApp(); // true untuk kasus DesktopApp*
 ```
 
-### Feature helper methods
+### Metode helper fitur
 
 ```php
 $platform->hasNativeCameraAccess();  // MobileApp* + DesktopApp*
-$platform->hasWebRTCAccess();        // Website* only
+$platform->hasWebRTCAccess();        // hanya Website*
 $platform->hasFileSystemAccess();    // MobileApp* + DesktopApp*
-$platform->hasDesktopNotifications();// DesktopApp* only
-$platform->hasPushNotifications();   // MobileApp* only
-$platform->hasAutoUpdates();         // DesktopApp* only
-$platform->hasAppBadge();            // MobileApp* only
+$platform->hasDesktopNotifications();// hanya DesktopApp*
+$platform->hasPushNotifications();   // hanya MobileApp*
+$platform->hasAutoUpdates();         // hanya DesktopApp*
+$platform->hasAppBadge();            // hanya MobileApp*
 
-// Delegates to PlatformFeatureRegistry:
+// Mendelegasikan ke PlatformFeatureRegistry:
 $platform->hasFeature('camera');
-$platform->getAvailableFeatures();   // returns string[]
+$platform->getAvailableFeatures();   // mengembalikan string[]
 ```
 
-### CBIR camera mode
+### Mode kamera CBIR
 
 ```php
-$platform->cbirCameraMode(); // 'native' (mobile/desktop) or 'webrtc' (website)
+$platform->cbirCameraMode(); // 'native' (mobile/desktop) atau 'webrtc' (website)
 ```
 
-Use this to decide which camera API to invoke for the CBIR search feature.
+Gunakan ini untuk memutuskan API kamera mana yang akan dipanggil untuk fitur pencarian CBIR.
 
 ---
 
-## Component Overview
+## Ikhtisar Komponen
 
 ### PlatformCommandDetector
 
-**Location:** `app/Support/Platform/PlatformCommandDetector.php`
+**Lokasi:** `app/Support/Platform/PlatformCommandDetector.php`
 
-Reads `$_SERVER['argv']` during application bootstrap to identify which Artisan command was executed, then maps it to a `PlatformMode` value.
+Membaca `$_SERVER['argv']` selama bootstrap aplikasi untuk mengidentifikasi perintah Artisan mana yang dieksekusi, kemudian memetakannya ke nilai `PlatformMode`.
 
-| Command | Detected Mode |
+| Perintah | Mode yang Terdeteksi |
 |---|---|
 | `artisan serve` | `PlatformMode::Web` |
 | `artisan native:run` | `PlatformMode::Mobile` |
 | `artisan native:serve` | `PlatformMode::Desktop` |
-| Any other `artisan native:*` | `PlatformMode::Desktop` |
-| No artisan / HTTP request | Falls back to runtime detection |
+| `artisan native:*` lainnya | `PlatformMode::Desktop` |
+| Tanpa artisan / request HTTP | Fallback ke deteksi runtime |
 
-When not running through Artisan (e.g., embedded HTTP request), it falls back to checking env variables:
-- `NATIVEPHP_RUNNING` or `ELECTRON_RUN_AS_NODE` → Desktop
+Ketika tidak berjalan melalui Artisan (mis. request HTTP tertanam), ia jatuh kembali ke pemeriksaan variabel env:
+- `NATIVEPHP_RUNNING` atau `ELECTRON_RUN_AS_NODE` → Desktop
 - `NATIVE_MOBILE_RUNNING` → Mobile
-- Otherwise → Web
+- Selain itu → Web
 
 ```php
-// The single public entry point
+// Titik masuk publik tunggal
 $mode = PlatformCommandDetector::detectMode(); // PlatformMode
 ```
 
@@ -145,15 +145,15 @@ $mode = PlatformCommandDetector::detectMode(); // PlatformMode
 
 ### RuntimePlatformDetector
 
-**Location:** `app/Support/Platform/RuntimePlatformDetector.php`
+**Lokasi:** `app/Support/Platform/RuntimePlatformDetector.php`
 
-Given a `PlatformMode` and an optional HTTP `Request`, narrows the mode down to the exact `RuntimePlatform` case.
+Diberikan `PlatformMode` dan `Request` HTTP opsional, mempersempit mode ke kasus `RuntimePlatform` yang tepat.
 
-- **Web mode** — parses the `User-Agent` header for `iphone/ipad/ipod` (→ iOS), `android` (→ Android), `mac/darwin` (→ macOS), default (→ Windows).
-- **Mobile mode** — queries `\Native\Mobile\Device::platform()` if available; falls back to `config('native.platform', 'android')`.
-- **Desktop mode** — checks `PHP_OS_FAMILY`; `Darwin` → macOS, anything else → Windows.
+- **Mode Web** — mengurai header `User-Agent` untuk `iphone/ipad/ipod` (→ iOS), `android` (→ Android), `mac/darwin` (→ macOS), default (→ Windows).
+- **Mode Mobile** — mengquery `\Native\Mobile\Device::platform()` jika tersedia; jatuh kembali ke `config('native.platform', 'android')`.
+- **Mode Desktop** — memeriksa `PHP_OS_FAMILY`; `Darwin` → macOS, lainnya → Windows.
 
-On any exception the detector logs a warning and returns `RuntimePlatform::WebsiteWindows`.
+Saat terjadi exception, detektor mencatat warning dan mengembalikan `RuntimePlatform::WebsiteWindows`.
 
 ```php
 $detector = app(RuntimePlatformDetector::class);
@@ -164,27 +164,27 @@ $runtime  = $detector->detect($mode, $request); // RuntimePlatform
 
 ### EnvironmentManager
 
-**Location:** `app/Support/Platform/EnvironmentManager.php`
+**Lokasi:** `app/Support/Platform/EnvironmentManager.php`
 
-Loads and merges a platform-specific `.env.{mode}` file on top of the already-loaded base `.env`. Platform-specific values take precedence.
+Memuat dan menggabungkan file `.env.{mode}` khusus platform di atas `.env` dasar yang sudah dimuat. Nilai khusus platform mendapat prioritas.
 
-| Platform Mode | File loaded |
+| Mode Platform | File yang dimuat |
 |---|---|
 | Web | `.env.web` |
 | Mobile | `.env.mobile` |
 | Desktop | `.env.desktop` |
 
-If the file doesn't exist the manager logs a debug message and continues without error.
+Jika file tidak ada, manager mencatat pesan debug dan melanjutkan tanpa error.
 
 ```php
 $envManager = app(EnvironmentManager::class);
 $envManager->loadPlatformEnvironment($mode);
 
-// Check if platform env file is present
+// Periksa apakah file env platform ada
 $envManager->platformEnvironmentExists($mode); // bool
 ```
 
-Example `.env.mobile`:
+Contoh `.env.mobile`:
 
 ```env
 APP_URL=http://10.0.2.2:8000
@@ -196,11 +196,11 @@ SESSION_DRIVER=database
 
 ### PlatformAssetManager
 
-**Location:** `app/Support/Platform/PlatformAssetManager.php`
+**Lokasi:** `app/Support/Platform/PlatformAssetManager.php`
 
-Resolves platform-specific Vite build output paths and manifest entries.
+Me-resolve jalur output build Vite dan entri manifest khusus platform.
 
-| Platform Mode | Build directory | Vite entry point |
+| Mode Platform | Direktori build | Titik masuk Vite |
 |---|---|---|
 | Web | `public/build/web` | `resources/js/app-web/app-web.js` |
 | Mobile | `public/build/mobile` | `resources/js/app-mobile/app-mobile.js` |
@@ -210,10 +210,10 @@ Resolves platform-specific Vite build output paths and manifest entries.
 $assetManager = app(PlatformAssetManager::class);
 $assetManager->configure($mode);
 
-$assetManager->getBuildDirectory();  // e.g. "build/web"
-$assetManager->getManifestPath();    // absolute path to manifest.json
-$assetManager->getViteInput();       // e.g. "resources/js/app-web/app-web.js"
-$assetManager->asset('resources/js/app-web/app-web.js'); // versioned URL
+$assetManager->getBuildDirectory();  // mis. "build/web"
+$assetManager->getManifestPath();    // path absolut ke manifest.json
+$assetManager->getViteInput();       // mis. "resources/js/app-web/app-web.js"
+$assetManager->asset('resources/js/app-web/app-web.js'); // URL berversi
 $assetManager->manifestExists();     // bool
 ```
 
@@ -221,29 +221,29 @@ $assetManager->manifestExists();     // bool
 
 ### PlatformFeatureRegistry
 
-**Location:** `app/Support/Platform/PlatformFeatureRegistry.php`
+**Lokasi:** `app/Support/Platform/PlatformFeatureRegistry.php`
 
-Maintains a static feature matrix that maps feature names to the `RuntimePlatform` cases that support them.
+Mempertahankan matriks fitur statis yang memetakan nama fitur ke kasus `RuntimePlatform` yang mendukungnya.
 
 ```php
 $registry = app(PlatformFeatureRegistry::class);
 
-// Check a single feature
+// Periksa satu fitur
 $registry->isAvailable('camera', RuntimePlatform::MobileAppAndroid); // true
 $registry->isAvailable('webrtc', RuntimePlatform::DesktopAppWindows); // false
 
-// Get all features for a platform
+// Dapatkan semua fitur untuk satu platform
 $registry->getAvailableFeatures(RuntimePlatform::DesktopAppMacOS);
 // ['camera', 'desktop_notifications', 'file_system', 'auto_updates']
 
-// Get all platforms for a feature
+// Dapatkan semua platform untuk satu fitur
 $registry->getPlatformsForFeature('push_notifications');
 // [RuntimePlatform::MobileAppAndroid, RuntimePlatform::MobileAppIos]
 ```
 
-Feature availability matrix:
+Matriks ketersediaan fitur:
 
-| Feature | WebsiteWindows | WebsiteMacOS | WebsiteAndroid | WebsiteIos | MobileAppAndroid | MobileAppIos | DesktopAppWindows | DesktopAppMacOS |
+| Fitur | WebsiteWindows | WebsiteMacOS | WebsiteAndroid | WebsiteIos | MobileAppAndroid | MobileAppIos | DesktopAppWindows | DesktopAppMacOS |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | `camera` | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
 | `webrtc` | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
@@ -257,68 +257,68 @@ Feature availability matrix:
 
 ### PlatformModeServiceProvider
 
-**Location:** `app/Providers/PlatformModeServiceProvider.php`
+**Lokasi:** `app/Providers/PlatformModeServiceProvider.php`
 
-The glue that wires everything together during application bootstrap. It must be registered **before** `RouteServiceProvider` so the `platform.mode` singleton is available when conditional routes are loaded.
+Perekat yang menghubungkan semuanya selama bootstrap aplikasi. Harus didaftarkan **sebelum** `RouteServiceProvider` agar singleton `platform.mode` tersedia saat rute kondisional dimuat.
 
-**`register()` phase** (before boot):
-- Calls `PlatformCommandDetector::detectMode()` and binds the result as `app('platform.mode')`
-- Registers `RuntimePlatformDetector`, `EnvironmentManager`, and `PlatformAssetManager` as singletons
+**Fase `register()`** (sebelum boot):
+- Memanggil `PlatformCommandDetector::detectMode()` dan mengikat hasilnya sebagai `app('platform.mode')`
+- Mendaftarkan `RuntimePlatformDetector`, `EnvironmentManager`, dan `PlatformAssetManager` sebagai singleton
 
-**`boot()` phase** (after all providers registered):
-1. Resolves `platform.mode`
-2. Calls `EnvironmentManager::loadPlatformEnvironment($mode)` — merges `.env.{mode}`
-3. Binds `app('runtime.platform')` by calling `RuntimePlatformDetector::detect($mode, $request)`
-4. Calls `PlatformAssetManager::configure($mode)` — sets build directory
-5. In `local` environment, logs all detection details to the Laravel log
+**Fase `boot()`** (setelah semua provider terdaftar):
+1. Me-resolve `platform.mode`
+2. Memanggil `EnvironmentManager::loadPlatformEnvironment($mode)` — menggabungkan `.env.{mode}`
+3. Mengikat `app('runtime.platform')` dengan memanggil `RuntimePlatformDetector::detect($mode, $request)`
+4. Memanggil `PlatformAssetManager::configure($mode)` — menetapkan direktori build
+5. Di lingkungan `local`, mencatat semua detail deteksi ke log Laravel
 
 ---
 
-## Data Flow
+## Alur Data
 
-From command execution to a fully configured application:
+Dari eksekusi perintah ke aplikasi yang sepenuhnya dikonfigurasi:
 
 ```
-1. Developer runs: php artisan native:run
+1. Developer menjalankan: php artisan native:run
        │
        ▼
-2. PlatformCommandDetector reads argv[1] = "native:run"
-   → returns PlatformMode::Mobile
+2. PlatformCommandDetector membaca argv[1] = "native:run"
+   → mengembalikan PlatformMode::Mobile
        │
        ▼
 3. PlatformModeServiceProvider::register()
-   → binds app('platform.mode') = PlatformMode::Mobile
+   → mengikat app('platform.mode') = PlatformMode::Mobile
        │
        ▼
 4. PlatformModeServiceProvider::boot()
-   → EnvironmentManager loads .env.mobile
-     (merges SESSION_DRIVER=database, APP_URL=..., etc.)
+   → EnvironmentManager memuat .env.mobile
+     (menggabungkan SESSION_DRIVER=database, APP_URL=..., dll.)
        │
        ▼
 5. RuntimePlatformDetector::detect(PlatformMode::Mobile, null)
-   → queries Native\Mobile\Device::platform()
-   → returns RuntimePlatform::MobileAppAndroid (or MobileAppIos)
-   → binds app('runtime.platform')
+   → mengquery Native\Mobile\Device::platform()
+   → mengembalikan RuntimePlatform::MobileAppAndroid (atau MobileAppIos)
+   → mengikat app('runtime.platform')
        │
        ▼
 6. PlatformAssetManager::configure(PlatformMode::Mobile)
-   → sets build directory to "build/mobile"
+   → menetapkan direktori build ke "build/mobile"
    → manifest path = public/build/mobile/manifest.json
        │
        ▼
-7. RouteServiceProvider loads routes/mobile.php (mobile-only routes)
+7. RouteServiceProvider memuat routes/mobile.php (rute khusus mobile)
        │
        ▼
-8. Views request assets via PlatformAssetManager::asset(...)
-   → returns versioned URLs from build/mobile/manifest.json
+8. Tampilan meminta aset melalui PlatformAssetManager::asset(...)
+   → mengembalikan URL berversi dari build/mobile/manifest.json
 ```
 
-In a sequence diagram:
+Dalam diagram urutan:
 
 ```
 artisan native:run
       │
-      │ argv detection
+      │ deteksi argv
       ▼
 PlatformCommandDetector ──── PlatformMode::Mobile ────► PlatformModeServiceProvider
                                                                │
@@ -326,7 +326,7 @@ PlatformCommandDetector ──── PlatformMode::Mobile ────► Platfo
                                │                               │
                                ▼                               ▼
                        EnvironmentManager              RuntimePlatformDetector
-                       (loads .env.mobile)             (returns MobileAppAndroid)
+                       (memuat .env.mobile)            (mengembalikan MobileAppAndroid)
                                │                               │
                                └───────────────────────────────┤
                                                                │
@@ -335,18 +335,18 @@ PlatformCommandDetector ──── PlatformMode::Mobile ────► Platfo
                                                        (build/mobile)
                                                                │
                                                                ▼
-                                                     Application fully configured
+                                                     Aplikasi sepenuhnya dikonfigurasi
 ```
 
 ---
 
-## Platform Feature Matrix
+## Matriks Fitur Platform
 
-The table below shows every named feature tracked by `PlatformFeatureRegistry` and which of the eight `RuntimePlatform` cases support it.
+Tabel di bawah ini menampilkan setiap fitur bernama yang dilacak oleh `PlatformFeatureRegistry` dan kasus `RuntimePlatform` mana dari delapan yang mendukungnya.
 
-> **Legend:** ✅ Available &nbsp;|&nbsp; ❌ Not available
+> **Keterangan:** ✅ Tersedia &nbsp;|&nbsp; ❌ Tidak tersedia
 
-| Feature | Web Win | Web macOS | Web Android | Web iOS | Mobile Android | Mobile iOS | Desktop Win | Desktop macOS |
+| Fitur | Web Win | Web macOS | Web Android | Web iOS | Mobile Android | Mobile iOS | Desktop Win | Desktop macOS |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | `camera` | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
 | `webrtc` | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
@@ -356,9 +356,9 @@ The table below shows every named feature tracked by `PlatformFeatureRegistry` a
 | `auto_updates` | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
 | `app_badge` | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ |
 
-Column headers map to `RuntimePlatform` enum cases:
+Header kolom dipetakan ke kasus enum `RuntimePlatform`:
 
-| Short label | `RuntimePlatform` case |
+| Label singkat | Kasus `RuntimePlatform` |
 |---|---|
 | Web Win | `WebsiteWindows` |
 | Web macOS | `WebsiteMacOS` |
@@ -369,21 +369,21 @@ Column headers map to `RuntimePlatform` enum cases:
 | Desktop Win | `DesktopAppWindows` |
 | Desktop macOS | `DesktopAppMacOS` |
 
-### Feature descriptions
+### Deskripsi fitur
 
-| Feature | Description |
+| Fitur | Deskripsi |
 |---|---|
-| `camera` | Native device camera access via NativePHP APIs (mobile sheet / desktop dialog) |
-| `webrtc` | Browser-based camera access via `MediaDevices.getUserMedia()` |
-| `file_system` | Read/write access to the local file system through NativePHP |
-| `desktop_notifications` | OS-level desktop notification toasts (NativePHP Electron) |
-| `push_notifications` | Remote push notifications delivered to the mobile app |
-| `auto_updates` | In-app automatic update mechanism provided by NativePHP Electron |
-| `app_badge` | Home-screen / dock badge counter on mobile |
+| `camera` | Akses kamera perangkat native melalui NativePHP APIs (lembar mobile / dialog desktop) |
+| `webrtc` | Akses kamera berbasis browser melalui `MediaDevices.getUserMedia()` |
+| `file_system` | Akses baca/tulis ke sistem file lokal melalui NativePHP |
+| `desktop_notifications` | Toast notifikasi desktop tingkat OS (NativePHP Electron) |
+| `push_notifications` | Push notification jarak jauh yang dikirimkan ke aplikasi mobile |
+| `auto_updates` | Mekanisme pembaruan otomatis dalam aplikasi yang disediakan oleh NativePHP Electron |
+| `app_badge` | Penghitung badge layar beranda / dock pada mobile |
 
-### Grouped by platform category
+### Dikelompokkan berdasarkan kategori platform
 
-| Feature | Website platforms | Mobile apps | Desktop apps |
+| Fitur | Platform Website | Aplikasi Mobile | Aplikasi Desktop |
 |---|:---:|:---:|:---:|
 | `camera` | ❌ | ✅ | ✅ |
 | `webrtc` | ✅ | ❌ | ❌ |
@@ -395,71 +395,71 @@ Column headers map to `RuntimePlatform` enum cases:
 
 ---
 
-## Checking Feature Availability in Code
+## Memeriksa Ketersediaan Fitur dalam Kode
 
-There are three equivalent approaches for querying feature availability, depending on the context.
+Ada tiga pendekatan yang setara untuk mengquery ketersediaan fitur, bergantung pada konteks.
 
-### 1. `platform_feature()` global helper (recommended for views and controllers)
+### 1. Helper global `platform_feature()` (direkomendasikan untuk tampilan dan kontroler)
 
-`platform_feature(string $feature): bool` checks the feature against the **current** `RuntimePlatform` singleton resolved from the service container.
+`platform_feature(string $feature): bool` memeriksa fitur terhadap singleton `RuntimePlatform` **saat ini** yang di-resolve dari kontainer layanan.
 
 ```php
-// Simple boolean guard
+// Guard boolean sederhana
 if (platform_feature('camera')) {
-    // Only reached on MobileApp* and DesktopApp* platforms
+    // Hanya dicapai di platform MobileApp* dan DesktopApp*
     $image = CameraService::capture();
 }
 
 if (platform_feature('webrtc')) {
-    // Only reached on Website* platforms
+    // Hanya dicapai di platform Website*
 }
 
 if (platform_feature('file_system')) {
-    // Only reached on MobileApp* and DesktopApp* platforms
+    // Hanya dicapai di platform MobileApp* dan DesktopApp*
     Storage::disk('local')->put('export.csv', $csv);
 }
 
 if (platform_feature('desktop_notifications')) {
-    \Native\Laravel\Notification::title('Order updated')
-        ->message('Your order status has changed.')
+    \Native\Laravel\Notification::title('Pesanan diperbarui')
+        ->message('Status pesanan Anda telah berubah.')
         ->send();
 }
 
 if (platform_feature('push_notifications')) {
-    // Trigger FCM/APNs push via your mobile notification service
+    // Trigger push FCM/APNs melalui layanan notifikasi mobile Anda
     $user->notify(new OrderStatusNotification($order));
 }
 
 if (platform_feature('auto_updates')) {
-    // Show "Check for updates" menu item in the desktop app
+    // Tampilkan item menu "Periksa pembaruan" di aplikasi desktop
 }
 
 if (platform_feature('app_badge')) {
-    // Set unread-message badge count
+    // Atur jumlah badge pesan yang belum dibaca
 }
 ```
 
-### 2. `RuntimePlatform` enum methods (explicit, type-safe)
+### 2. Metode enum `RuntimePlatform` (eksplisit, type-safe)
 
-If you already hold a `RuntimePlatform` instance you can call the per-feature methods directly:
+Jika Anda sudah memiliki instance `RuntimePlatform`, Anda dapat memanggil metode per fitur secara langsung:
 
 ```php
-$platform = runtime_platform();  // or app('runtime.platform')
+$platform = runtime_platform();  // atau app('runtime.platform')
 
-$platform->hasNativeCameraAccess();   // camera feature
-$platform->hasWebRTCAccess();         // webrtc feature
-$platform->hasFileSystemAccess();     // file_system feature
-$platform->hasDesktopNotifications(); // desktop_notifications feature
-$platform->hasPushNotifications();    // push_notifications feature
-$platform->hasAutoUpdates();          // auto_updates feature
-$platform->hasAppBadge();             // app_badge feature
+$platform->hasNativeCameraAccess();   // fitur camera
+$platform->hasWebRTCAccess();         // fitur webrtc
+$platform->hasFileSystemAccess();     // fitur file_system
+$platform->hasDesktopNotifications(); // fitur desktop_notifications
+$platform->hasPushNotifications();    // fitur push_notifications
+$platform->hasAutoUpdates();          // fitur auto_updates
+$platform->hasAppBadge();             // fitur app_badge
 
-// Or delegate to the registry via hasFeature():
+// Atau delegasikan ke registry melalui hasFeature():
 $platform->hasFeature('camera');
 $platform->hasFeature('webrtc');
 ```
 
-### 3. `PlatformFeatureRegistry` directly (useful in services and tests)
+### 3. `PlatformFeatureRegistry` secara langsung (berguna di service dan pengujian)
 
 ```php
 use App\Support\Platform\PlatformFeatureRegistry;
@@ -467,44 +467,44 @@ use App\Enums\RuntimePlatform;
 
 $registry = app(PlatformFeatureRegistry::class);
 
-// Check one feature against one platform
+// Periksa satu fitur terhadap satu platform
 $registry->isAvailable('camera', RuntimePlatform::MobileAppAndroid); // true
 $registry->isAvailable('webrtc', RuntimePlatform::DesktopAppWindows); // false
 
-// Get all features supported by a specific platform
+// Dapatkan semua fitur yang didukung oleh platform tertentu
 $features = $registry->getAvailableFeatures(RuntimePlatform::DesktopAppMacOS);
 // ['camera', 'desktop_notifications', 'file_system', 'auto_updates']
 
-// Get all platforms that support a feature
+// Dapatkan semua platform yang mendukung suatu fitur
 $platforms = $registry->getPlatformsForFeature('push_notifications');
 // [RuntimePlatform::MobileAppAndroid, RuntimePlatform::MobileAppIos]
 ```
 
-### Combining feature checks with mode helpers
+### Menggabungkan pemeriksaan fitur dengan helper mode
 
-When you want to branch broadly by platform category and then fine-tune with specific features:
+Ketika Anda ingin memilah secara luas berdasarkan kategori platform lalu menyempurnakan dengan fitur tertentu:
 
 ```php
-// Broad mode check
+// Pemeriksaan mode luas
 if (is_mobile_mode()) {
-    // Mobile-only setup — push notifications, camera, badges
+    // Setup khusus mobile — push notification, kamera, badge
     if (platform_feature('camera')) {
-        // ... register native camera route bindings
+        // ... daftarkan binding rute kamera native
     }
 } elseif (is_desktop_mode()) {
-    // Desktop-only setup — desktop notifications, auto-updates
+    // Setup khusus desktop — notifikasi desktop, pembaruan otomatis
     if (platform_feature('desktop_notifications')) {
-        // ... register OS notification listeners
+        // ... daftarkan listener notifikasi OS
     }
 } else {
-    // Web fallback — WebRTC, browser session handling
+    // Fallback web — WebRTC, penanganan sesi browser
     if (platform_feature('webrtc')) {
-        // ... mount browser camera component
+        // ... mount komponen kamera browser
     }
 }
 ```
 
-### Feature checks in Blade templates
+### Pemeriksaan fitur dalam template Blade
 
 ```blade
 @if(platform_feature('camera'))
@@ -522,9 +522,9 @@ if (is_mobile_mode()) {
 @endif
 ```
 
-### CBIR camera mode selection
+### Pemilihan mode kamera CBIR
 
-For the Content-Based Image Retrieval feature use `cbirCameraMode()` to select the correct API in one call:
+Untuk fitur Content-Based Image Retrieval gunakan `cbirCameraMode()` untuk memilih API yang benar dalam satu panggilan:
 
 ```php
 $mode = runtime_platform()->cbirCameraMode(); // 'native' | 'webrtc'
@@ -537,78 +537,78 @@ match ($mode) {
 
 ---
 
-## Quick Reference: Helper Functions
+## Referensi Cepat: Fungsi Helper
 
-Using the helper functions defined in `app/helpers.php`:
+Menggunakan fungsi helper yang didefinisikan di `app/helpers.php`:
 
 ```php
-// Get the current platform mode
+// Dapatkan mode platform saat ini
 $mode = platform_mode();       // PlatformMode::Mobile
 $mode->label();                // "Mobile Native"
 $mode->environmentFile();      // ".env.mobile"
 $mode->assetDirectory();       // "build/mobile"
 $mode->allowsCameraAccess();   // true
 
-// Get the specific runtime platform
+// Dapatkan runtime platform yang spesifik
 $runtime = runtime_platform(); // RuntimePlatform::MobileAppAndroid
 $runtime->label();             // "Mobile App (Android)"
 $runtime->isMobileApp();       // true
 
-// Check a feature
+// Periksa fitur
 if (platform_feature('camera')) {
-    // Show native camera UI
+    // Tampilkan UI kamera native
 }
 
-// Conditional platform logic
+// Logika platform kondisional
 if (is_mobile_mode()) {
-    // Mobile-specific code
+    // Kode khusus mobile
 } elseif (is_desktop_mode()) {
-    // Desktop-specific code
+    // Kode khusus desktop
 } else {
-    // Web fallback
+    // Fallback web
 }
 ```
 
-Using the `RuntimePlatform` enum directly:
+Menggunakan enum `RuntimePlatform` secara langsung:
 
 ```php
 $platform = app('runtime.platform');
 
-// Branch on camera mode for CBIR
-$cameraMode = $platform->cbirCameraMode(); // 'native' or 'webrtc'
+// Pilih mode kamera untuk CBIR
+$cameraMode = $platform->cbirCameraMode(); // 'native' atau 'webrtc'
 
 if ($cameraMode === 'native') {
-    // Use NativePHP camera sheet / dialog
+    // Gunakan lembar / dialog kamera NativePHP
 } else {
-    // Use browser MediaDevices.getUserMedia()
+    // Gunakan browser MediaDevices.getUserMedia()
 }
 ```
 
 ---
 
-## Platform-Specific Routes
+## Rute Khusus Platform
 
-Routes can be registered conditionally in `RouteServiceProvider`:
+Rute dapat didaftarkan secara kondisional di `RouteServiceProvider`:
 
 ```php
-// routes/mobile.php — only loaded in Mobile mode
+// routes/mobile.php — hanya dimuat dalam mode Mobile
 Route::middleware('api')->prefix('api/mobile')->group(function () {
     Route::post('/camera/capture', [PlatformCameraController::class, 'capture']);
 });
 
-// routes/desktop.php — only loaded in Desktop mode
+// routes/desktop.php — hanya dimuat dalam mode Desktop
 Route::middleware('api')->prefix('api/desktop')->group(function () {
     Route::post('/file/save', [DesktopFileController::class, 'save']);
 });
 ```
 
-Accessing a mobile-only route from a web browser returns `404 Not Found`. The platform middleware/check is responsible for enforcing this.
+Mengakses rute khusus mobile dari browser web mengembalikan `404 Not Found`. Middleware/pemeriksaan platform bertanggung jawab untuk menegakkan ini.
 
 ---
 
-## Vite Build Configuration
+## Konfigurasi Build Vite
 
-Each platform mode has its own Vite entry point and output directory. Run the appropriate build command before serving:
+Setiap mode platform memiliki titik masuk Vite dan direktori output sendiri. Jalankan perintah build yang sesuai sebelum melayani:
 
 ```bash
 # Web
@@ -621,7 +621,7 @@ npx vite build --config vite.config.js -- --mode mobile
 npx vite build --config vite.config.js -- --mode desktop
 ```
 
-Output locations:
+Lokasi output:
 
 ```
 public/
@@ -640,35 +640,35 @@ public/
 
 ---
 
-## Deciding Which Command to Use
+## Memilih Perintah yang Tepat
 
-Follow the flowchart below to pick the right Artisan command. For a standalone version with detailed "when to use" guidance and a full troubleshooting reference, see [command-decision-tree.md](./command-decision-tree.md).
+Ikuti diagram alur di bawah ini untuk memilih perintah Artisan yang tepat. Untuk versi mandiri dengan panduan "kapan menggunakan" yang detail dan referensi pemecahan masalah lengkap, lihat [command-decision-tree.md](./command-decision-tree.md).
 
 ```mermaid
 flowchart TD
-    START([Start: What are you building?])
+    START([Mulai: Apa yang sedang Anda bangun?])
 
-    START --> Q1{Will users open the app\nin a web browser?}
+    START --> Q1{Apakah pengguna akan membuka aplikasi\ndalam browser web?}
 
-    Q1 -- YES --> WEB["✅ php artisan serve\n──────────────────\nWeb Browser Mode\nPlatformMode::Web\nPort 8000 · No extra packages"]
+    Q1 -- YA --> WEB["✅ php artisan serve\n──────────────────\nMode Browser Web\nPlatformMode::Web\nPort 8000 · Tidak perlu paket tambahan"]
 
-    Q1 -- NO --> Q2{Native mobile app\nfor Android or iOS?}
+    Q1 -- TIDAK --> Q2{Aplikasi mobile native\nuntuk Android atau iOS?}
 
-    Q2 -- YES --> Q3{nativephp/mobile\ninstalled?}
+    Q2 -- YA --> Q3{nativephp/mobile\nterinstal?}
 
-    Q3 -- YES --> MOB["✅ php artisan native:run\n──────────────────────\nMobile Native Mode\nPlatformMode::Mobile\nPort 8001 · nativephp/mobile"]
+    Q3 -- YA --> MOB["✅ php artisan native:run\n──────────────────────\nMode Mobile Native\nPlatformMode::Mobile\nPort 8001 · nativephp/mobile"]
 
-    Q3 -- NO --> INST_MOB["⚠️ Install first:\ncomposer require nativephp/mobile\nphp artisan native:install\nThen: php artisan native:run"]
+    Q3 -- TIDAK --> INST_MOB["⚠️ Instal terlebih dahulu:\ncomposer require nativephp/mobile\nphp artisan native:install\nLalu: php artisan native:run"]
 
-    Q2 -- NO --> Q4{Desktop app for\nWindows or macOS?}
+    Q2 -- TIDAK --> Q4{Aplikasi desktop untuk\nWindows atau macOS?}
 
-    Q4 -- YES --> Q5{nativephp/electron\ninstalled?}
+    Q4 -- YA --> Q5{nativephp/electron\nterinstal?}
 
-    Q5 -- YES --> DESK["✅ php artisan native:serve\n───────────────────────\nDesktop App Mode\nPlatformMode::Desktop\nPort 8002 · nativephp/electron\n+ nativephp/laravel"]
+    Q5 -- YA --> DESK["✅ php artisan native:serve\n───────────────────────\nMode Aplikasi Desktop\nPlatformMode::Desktop\nPort 8002 · nativephp/electron\n+ nativephp/laravel"]
 
-    Q5 -- NO --> INST_DESK["⚠️ Install first:\ncomposer require nativephp/electron nativephp/laravel\nphp artisan native:install\nThen: php artisan native:serve"]
+    Q5 -- TIDAK --> INST_DESK["⚠️ Instal terlebih dahulu:\ncomposer require nativephp/electron nativephp/laravel\nphp artisan native:install\nLalu: php artisan native:serve"]
 
-    Q4 -- NO --> UNSURE["❓ Run: php artisan platform:status\nor see command-decision-tree.md"]
+    Q4 -- TIDAK --> UNSURE["❓ Jalankan: php artisan platform:status\natau lihat command-decision-tree.md"]
 
     style WEB fill:#d4edda,stroke:#28a745,color:#155724
     style MOB fill:#d4edda,stroke:#28a745,color:#155724
@@ -679,101 +679,101 @@ flowchart TD
     style START fill:#e2e3e5,stroke:#6c757d,color:#383d41
 ```
 
-### Quick reference
+### Referensi cepat
 
-| Situation | Command |
+| Situasi | Perintah |
 |---|---|
-| Standard web app in browser | `php artisan serve` |
-| Android / iOS native app | `php artisan native:run` |
-| Windows / macOS desktop app | `php artisan native:serve` |
-| Check which mode is active | `php artisan platform:status` |
-| Validate dependencies before running | `php artisan platform:native:run` or `php artisan platform:native:serve` |
+| Aplikasi web standar di browser | `php artisan serve` |
+| Aplikasi native Android / iOS | `php artisan native:run` |
+| Aplikasi desktop Windows / macOS | `php artisan native:serve` |
+| Periksa mode mana yang aktif | `php artisan platform:status` |
+| Validasi dependensi sebelum menjalankan | `php artisan platform:native:run` atau `php artisan platform:native:serve` |
 
 ---
 
-## Common Issues
+## Masalah Umum
 
-### Wrong assets loading (404 on JS/CSS)
+### Aset yang Salah Dimuat (404 pada JS/CSS)
 
-The build directory for the active mode may be missing. Run the Vite build for that specific platform before serving:
+Direktori build untuk mode aktif mungkin tidak ada. Jalankan build Vite untuk platform tertentu sebelum melayani:
 
 ```bash
-npm run build:web      # for php artisan serve
-npm run build:mobile   # for php artisan native:run
-npm run build:desktop  # for php artisan native:serve
+npm run build:web      # untuk php artisan serve
+npm run build:mobile   # untuk php artisan native:run
+npm run build:desktop  # untuk php artisan native:serve
 ```
 
-Use `php artisan platform:status` to confirm which asset directory the app is reading and whether `manifest.json` exists at that path.
+Gunakan `php artisan platform:status` untuk mengkonfirmasi direktori aset mana yang dibaca aplikasi dan apakah `manifest.json` ada di jalur tersebut.
 
-### `.env.mobile` / `.env.desktop` values not applying
+### Nilai `.env.mobile` / `.env.desktop` Tidak Diterapkan
 
-Ensure the file exists at the project root (same directory as `composer.json`). The `EnvironmentManager` only merges the file if it exists — it will not error if it's absent. Common causes:
+Pastikan file ada di root proyek (direktori yang sama dengan `composer.json`). `EnvironmentManager` hanya menggabungkan file jika ada — ia tidak akan error jika tidak ada. Penyebab umum:
 
-- File placed in a subdirectory instead of the project root.
-- Incorrect casing — filename must be lowercase (`.env.mobile`, not `.env.Mobile`).
-- Only the `.example` file was copied but not renamed.
+- File ditempatkan di subdirektori alih-alih root proyek.
+- Casing salah — nama file harus huruf kecil (`.env.mobile`, bukan `.env.Mobile`).
+- Hanya file `.example` yang disalin tetapi tidak diubah namanya.
 
 ```bash
 cp .env.mobile.example .env.mobile
 cp .env.desktop.example .env.desktop
 ```
 
-### `native:run` or `native:serve` command not found
+### Perintah `native:run` atau `native:serve` Tidak Ditemukan
 
-The NativePHP or Laravel Native package is not installed and has not registered its Artisan commands. Install the missing package first:
+Paket NativePHP atau Laravel Native tidak terinstal dan belum mendaftarkan perintah Artisan-nya. Instal paket yang hilang terlebih dahulu:
 
 ```bash
-# For native:run (Mobile mode)
+# Untuk native:run (mode Mobile)
 composer require nativephp/mobile
 php artisan native:install
 
-# For native:serve (Desktop mode)
+# Untuk native:serve (mode Desktop)
 composer require nativephp/electron nativephp/laravel
 php artisan native:install
 ```
 
-Use the validation wrapper commands to get a human-readable error before running the real command:
+Gunakan perintah wrapper validasi untuk mendapatkan error yang mudah dibaca sebelum menjalankan perintah sesungguhnya:
 
 ```bash
-php artisan platform:native:run     # validates mobile dependencies
-php artisan platform:native:serve   # validates desktop dependencies
+php artisan platform:native:run     # memvalidasi dependensi mobile
+php artisan platform:native:serve   # memvalidasi dependensi desktop
 ```
 
-### RuntimePlatform always returns `WebsiteWindows`
+### RuntimePlatform Selalu Mengembalikan `WebsiteWindows`
 
-Platform detection failed and fell back to the default. Check the Laravel log for a `Platform detection failed` warning:
+Deteksi platform gagal dan jatuh kembali ke default. Periksa log Laravel untuk warning `Platform detection failed`:
 
 ```bash
 tail -n 50 storage/logs/laravel.log | grep "Platform detection"
 ```
 
-Ensure the native runtime environment variables are set in the platform env file:
+Pastikan variabel lingkungan runtime native diatur dalam file env platform:
 
 ```dotenv
-# .env.desktop — set automatically by NativePHP Electron
+# .env.desktop — diatur secara otomatis oleh NativePHP Electron
 NATIVEPHP_RUNNING=true
 
-# .env.mobile — set automatically by NativePHP Mobile
+# .env.mobile — diatur secara otomatis oleh NativePHP Mobile
 NATIVE_MOBILE_RUNNING=true
 ```
 
-Clear any stale cached state and retry:
+Bersihkan state yang di-cache yang basi dan coba lagi:
 
 ```bash
 php artisan platform:clear
 ```
 
-### Platform mode not available in RouteServiceProvider
+### Mode Platform Tidak Tersedia di RouteServiceProvider
 
-`PlatformModeServiceProvider` must appear **before** any provider that loads routes in `config/app.php`. It binds `platform.mode` during `register()` so the value is available before `boot()` runs on other providers.
+`PlatformModeServiceProvider` harus muncul **sebelum** provider mana pun yang memuat rute di `config/app.php`. Ia mengikat `platform.mode` selama `register()` sehingga nilai tersebut tersedia sebelum `boot()` berjalan di provider lain.
 
-### Port already in use
+### Port Sudah Digunakan
 
 ```
 Failed to listen on 127.0.0.1:8000 (reason: Address already in use)
 ```
 
-Find and kill the conflicting process, or use a different port:
+Temukan dan hentikan proses yang konflik, atau gunakan port yang berbeda:
 
 ```bash
 # Windows
@@ -784,18 +784,18 @@ taskkill /PID <pid> /F
 lsof -i :8000
 kill -9 <pid>
 
-# Or simply use a different port
+# Atau cukup gunakan port yang berbeda
 php artisan serve --port=8080
 ```
 
-For NativePHP modes, set `APP_PORT` (Mobile) or `NATIVEPHP_HTTP_PORT` (Desktop) in the relevant `.env.*` file.
+Untuk mode NativePHP, atur `APP_PORT` (Mobile) atau `NATIVEPHP_HTTP_PORT` (Desktop) dalam file `.env.*` yang relevan.
 
 ---
 
-## See Also
+## Lihat Juga
 
-- [Command Usage Decision Tree](./command-decision-tree.md) — full decision flowchart with detailed "when to use" guidance and troubleshooting
-- [Command Usage Guide](./command-guide.md) — complete command reference with all flags, options, and examples
-- [Environment Configuration Strategy](./environment-configuration.md) — `.env.*` file structure and merge rules
-- [Asset Compilation Process](./asset-compilation.md) — Vite build pipeline and HMR setup
-- [Platform Feature Matrix](./platform-features.md) — feature availability per platform and code examples
+- [Pohon Keputusan Penggunaan Perintah](./command-decision-tree.md) — diagram alur keputusan lengkap dengan panduan "kapan menggunakan" yang detail dan pemecahan masalah
+- [Panduan Penggunaan Perintah](./command-guide.md) — referensi perintah lengkap dengan semua flag, opsi, dan contoh
+- [Strategi Konfigurasi Lingkungan](./environment-configuration.md) — struktur file `.env.*` dan aturan penggabungan
+- [Proses Kompilasi Aset](./asset-compilation.md) — pipeline build Vite dan pengaturan HMR
+- [Matriks Fitur Platform](./platform-features.md) — ketersediaan fitur per platform dan contoh kode

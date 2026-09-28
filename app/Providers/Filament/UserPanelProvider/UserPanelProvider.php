@@ -89,13 +89,6 @@ class UserPanelProvider extends PanelProvider
                 'panels::styles.after',
                 fn (): string => Blade::render('@vite(\'resources/css/User/User.css\')')
             )
-            ->renderHook(
-                'panels::footer',
-                fn (): ?View => (
-                    ! str_contains(request()->route()?->getName() ?? '', 'auth')
-                    && ! NativeServiceProvider::isAnyMobile()
-                ) ? view('User.footer.footer') : null
-            )
             ->discoverResources(in: app_path('Filament/User/Resources'), for: 'App\\Filament\\User\\Resources')
             ->discoverPages(in: app_path('Filament/User/Pages'), for: 'App\\Filament\\User\\Pages')
             ->pages([

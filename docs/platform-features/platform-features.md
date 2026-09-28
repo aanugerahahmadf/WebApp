@@ -1,17 +1,17 @@
-# Platform Feature Matrix
+# Matriks Fitur Platform
 
-This document describes which application features are available on each of the eight supported
-runtime platforms, explains what each feature enables in the Wedding Organizer CBIR app, and
-shows the three ways you can check feature availability from PHP code.
+Dokumen ini menjelaskan fitur-fitur aplikasi yang tersedia di masing-masing dari delapan runtime
+platform yang didukung, menjelaskan apa yang diaktifkan setiap fitur dalam aplikasi Wedding Organizer
+CBIR, dan menampilkan tiga cara untuk memeriksa ketersediaan fitur dari kode PHP.
 
 ---
 
-## Feature Matrix
+## Matriks Fitur
 
-The application defines seven named features. Each is tracked by `PlatformFeatureRegistry` and
-mapped to the `RuntimePlatform` cases that support it.
+Aplikasi mendefinisikan tujuh fitur bernama. Setiap fitur dilacak oleh `PlatformFeatureRegistry` dan
+dipetakan ke kasus `RuntimePlatform` yang mendukungnya.
 
-| Feature | Website<br>Windows | Website<br>macOS | Website<br>Android | Website<br>iOS | Mobile App<br>Android | Mobile App<br>iOS | Desktop App<br>Windows | Desktop App<br>macOS |
+| Fitur | Website<br>Windows | Website<br>macOS | Website<br>Android | Website<br>iOS | Mobile App<br>Android | Mobile App<br>iOS | Desktop App<br>Windows | Desktop App<br>macOS |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | `camera` | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
 | `webrtc` | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
@@ -21,145 +21,146 @@ mapped to the `RuntimePlatform` cases that support it.
 | `auto_updates` | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
 | `app_badge` | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ |
 
-> **Legend:** ✅ Available &nbsp;|&nbsp; ❌ Not available
+> **Keterangan:** ✅ Tersedia &nbsp;|&nbsp; ❌ Tidak tersedia
 
-### Platform column reference
+### Referensi kolom platform
 
-| Column label | `RuntimePlatform` case | Launched by |
+| Label kolom | Kasus `RuntimePlatform` | Diluncurkan oleh |
 |---|---|---|
-| Website Windows | `WebsiteWindows` | `php artisan serve` on Windows/Linux browser |
-| Website macOS | `WebsiteMacOS` | `php artisan serve` on macOS browser |
-| Website Android | `WebsiteAndroid` | `php artisan serve` on Android browser |
-| Website iOS | `WebsiteIos` | `php artisan serve` on iPhone/iPad browser |
-| Mobile App Android | `MobileAppAndroid` | `php artisan native:run` on Android device |
-| Mobile App iOS | `MobileAppIos` | `php artisan native:run` on iOS device |
-| Desktop App Windows | `DesktopAppWindows` | `php artisan native:serve` on Windows |
-| Desktop App macOS | `DesktopAppMacOS` | `php artisan native:serve` on macOS |
+| Website Windows | `WebsiteWindows` | `php artisan serve` pada browser Windows/Linux |
+| Website macOS | `WebsiteMacOS` | `php artisan serve` pada browser macOS |
+| Website Android | `WebsiteAndroid` | `php artisan serve` pada browser Android |
+| Website iOS | `WebsiteIos` | `php artisan serve` pada browser iPhone/iPad |
+| Mobile App Android | `MobileAppAndroid` | `php artisan native:run` pada perangkat Android |
+| Mobile App iOS | `MobileAppIos` | `php artisan native:run` pada perangkat iOS |
+| Desktop App Windows | `DesktopAppWindows` | `php artisan native:serve` di Windows |
+| Desktop App macOS | `DesktopAppMacOS` | `php artisan native:serve` di macOS |
 
 ---
 
-## What Each Feature Enables
+## Apa yang Diaktifkan Setiap Fitur
 
 ### `camera`
 
-**Available on:** Mobile apps, Desktop apps
+**Tersedia di:** Aplikasi Mobile, Aplikasi Desktop
 
-Grants access to the native device camera through the NativePHP APIs. Used by the
-Content-Based Image Retrieval (CBIR) feature to let users photograph garments and search for
-visually similar wedding attire without leaving the app.
+Memberikan akses ke kamera perangkat native melalui NativePHP APIs. Digunakan oleh fitur
+Content-Based Image Retrieval (CBIR) untuk memungkinkan pengguna memotret pakaian dan mencari
+busana pernikahan yang mirip secara visual tanpa meninggalkan aplikasi.
 
-- Mobile: opens the NativePHP Mobile Camera sheet (`native:run`)
-- Desktop: opens the NativePHP Electron Camera dialog (`native:serve`)
-- The enum method `$platform->cbirCameraMode()` returns `'native'` for these platforms
+- Mobile: membuka lembar NativePHP Mobile Camera (`native:run`)
+- Desktop: membuka dialog NativePHP Electron Camera (`native:serve`)
+- Metode enum `$platform->cbirCameraMode()` mengembalikan `'native'` untuk platform ini
 
 ### `webrtc`
 
-**Available on:** All website platforms (Windows, macOS, Android, iOS browsers)
+**Tersedia di:** Semua platform website (browser Windows, macOS, Android, iOS)
 
-Enables camera input via the browser's `MediaDevices.getUserMedia()` API (WebRTC). This is the
-web-browser equivalent of the native `camera` feature and powers the CBIR image capture flow
-on the website.
+Mengaktifkan input kamera melalui API `MediaDevices.getUserMedia()` browser (WebRTC). Ini adalah
+padanan berbasis browser dari fitur `camera` native dan mendukung alur pengambilan gambar CBIR
+di website.
 
-- The enum method `$platform->cbirCameraMode()` returns `'webrtc'` for website platforms
-- `camera` and `webrtc` are mutually exclusive — a platform has one or the other, never both
+- Metode enum `$platform->cbirCameraMode()` mengembalikan `'webrtc'` untuk platform website
+- `camera` dan `webrtc` saling eksklusif — sebuah platform memiliki salah satunya, tidak pernah keduanya
 
 ### `file_system`
 
-**Available on:** Mobile apps, Desktop apps
+**Tersedia di:** Aplikasi Mobile, Aplikasi Desktop
 
-Provides read/write access to the device file system through NativePHP APIs. Used to:
+Menyediakan akses baca/tulis ke sistem file perangkat melalui NativePHP APIs. Digunakan untuk:
 
-- Save captured CBIR reference images locally for offline comparison
-- Export order summaries and decoration proposals to PDF files
-- Cache downloaded wedding package assets for offline viewing
+- Menyimpan gambar referensi CBIR yang diambil secara lokal untuk perbandingan offline
+- Mengekspor ringkasan pesanan dan proposal dekorasi ke file PDF
+- Menyimpan cache aset paket pernikahan yang diunduh untuk penayangan offline
 
-Website platforms do not have persistent file system access; the browser's `File System Access
-API` is not used by this app.
+Platform website tidak memiliki akses sistem file persisten; `File System Access API` browser
+tidak digunakan oleh aplikasi ini.
 
 ### `desktop_notifications`
 
-**Available on:** Desktop apps only (Windows, macOS)
+**Tersedia di:** Hanya aplikasi Desktop (Windows, macOS)
 
-Sends OS-level desktop notifications via the NativePHP Electron notification API. Used by
-`PlatformNotificationService` to alert the organizer about:
+Mengirim notifikasi desktop tingkat OS melalui NativePHP Electron notification API. Digunakan oleh
+`PlatformNotificationService` untuk mengingatkan penyelenggara tentang:
 
-- New customer orders
-- Payment status changes (via the Midtrans webhook)
-- Upcoming scheduled events
+- Pesanan pelanggan baru
+- Perubahan status pembayaran (melalui webhook Midtrans)
+- Acara terjadwal yang akan datang
 
-Mobile apps use `push_notifications` instead. Website platforms rely on in-app Filament
-notifications only.
+Aplikasi mobile menggunakan `push_notifications` sebagai gantinya. Platform website hanya
+mengandalkan notifikasi in-app Filament.
 
 ### `push_notifications`
 
-**Available on:** Mobile apps only (Android, iOS)
+**Tersedia di:** Hanya aplikasi Mobile (Android, iOS)
 
-Delivers push notifications to the user's device even when the app is backgrounded. Used by
-`PlatformNotificationService` for the same organizer-alert use cases as `desktop_notifications`,
-but through the mobile platform's push infrastructure (FCM for Android, APNs for iOS).
+Mengirimkan push notification ke perangkat pengguna bahkan saat aplikasi berada di latar belakang.
+Digunakan oleh `PlatformNotificationService` untuk kasus penggunaan peringatan penyelenggara yang
+sama seperti `desktop_notifications`, tetapi melalui infrastruktur push platform mobile
+(FCM untuk Android, APNs untuk iOS).
 
 ### `auto_updates`
 
-**Available on:** Desktop apps only (Windows, macOS)
+**Tersedia di:** Hanya aplikasi Desktop (Windows, macOS)
 
-Allows the Electron shell to download and install application updates automatically in the
-background. This keeps installed desktop clients current without requiring manual reinstallation
-and is handled by the NativePHP Electron auto-updater.
+Memungkinkan shell Electron mengunduh dan menginstal pembaruan aplikasi secara otomatis di latar
+belakang. Ini membuat klien desktop yang terinstal tetap terkini tanpa memerlukan instalasi ulang
+manual dan ditangani oleh auto-updater NativePHP Electron.
 
-Not applicable to mobile apps (managed by the app stores) or websites (always served fresh).
+Tidak berlaku untuk aplikasi mobile (dikelola oleh toko aplikasi) atau website (selalu disajikan fresh).
 
 ### `app_badge`
 
-**Available on:** Mobile apps only (Android, iOS)
+**Tersedia di:** Hanya aplikasi Mobile (Android, iOS)
 
-Sets the numeric badge count on the app icon on the device's home screen. Used to surface
-unread message counts or pending order notifications at a glance, without requiring the user to
-open the app.
+Menetapkan jumlah badge numerik pada ikon aplikasi di layar beranda perangkat. Digunakan untuk
+menampilkan jumlah pesan yang belum dibaca atau notifikasi pesanan yang tertunda secara sekilas,
+tanpa mengharuskan pengguna membuka aplikasi.
 
 ---
 
-## Checking Feature Availability in Code
+## Memeriksa Ketersediaan Fitur dalam Kode
 
-There are three supported approaches, from most to least convenient.
+Ada tiga pendekatan yang didukung, dari yang paling hingga paling tidak mudah digunakan.
 
-### Approach 1 — `platform_feature()` global helper
+### Pendekatan 1 — helper global `platform_feature()`
 
-The simplest way to gate a code path on a feature. Returns `true` if the feature is available
-on the *current* runtime platform.
+Cara paling sederhana untuk membatasi jalur kode pada suatu fitur. Mengembalikan `true` jika fitur
+tersedia di runtime platform *saat ini*.
 
 ```php
-// Show the native camera button only when native camera is available
+// Tampilkan tombol kamera native hanya saat kamera native tersedia
 if (platform_feature('camera')) {
     // Render NativePHP camera UI
 }
 
-// Fall back to WebRTC capture on website platforms
+// Fallback ke pengambilan WebRTC di platform website
 if (platform_feature('webrtc')) {
-    // Render <video> element and getUserMedia() controls
+    // Render <video> element dan kontrol getUserMedia()
 }
 
-// Conditionally enable "Save to Device" option
+// Aktifkan opsi "Simpan ke Perangkat" secara kondisional
 if (platform_feature('file_system')) {
     $actions[] = Action::make('save_to_device')
         ->label('Save to Device')
         ->action(fn () => $this->exportToFile());
 }
 
-// Show badge count setter only on mobile
+// Tampilkan pengatur jumlah badge hanya di mobile
 if (platform_feature('app_badge')) {
     $this->updateBadgeCount($unreadCount);
 }
 ```
 
-Internally this function resolves `runtime_platform()` and delegates to
+Secara internal fungsi ini me-resolve `runtime_platform()` dan mendelegasikan ke
 `PlatformFeatureRegistry::isAvailable()`.
 
 ---
 
-### Approach 2 — `$platform->hasFeature()` on the enum instance
+### Pendekatan 2 — `$platform->hasFeature()` pada instance enum
 
-Call `hasFeature()` directly on a `RuntimePlatform` instance when you already have the enum
-value in scope. This is useful in service classes that receive the platform as a dependency.
+Panggil `hasFeature()` langsung pada instance `RuntimePlatform` ketika Anda sudah memiliki nilai
+enum dalam cakupan. Ini berguna dalam kelas service yang menerima platform sebagai dependensi.
 
 ```php
 use App\Enums\RuntimePlatform;
@@ -169,45 +170,45 @@ class PlatformNotificationService
     public function notify(RuntimePlatform $platform, string $message): void
     {
         if ($platform->hasFeature('push_notifications')) {
-            // Send FCM / APNs push notification
+            // Kirim push notification FCM / APNs
             $this->sendPush($message);
         } elseif ($platform->hasFeature('desktop_notifications')) {
-            // Send OS desktop notification via NativePHP
+            // Kirim notifikasi desktop OS melalui NativePHP
             $this->sendDesktopNotification($message);
         } else {
-            // Fall back to Filament in-app notification (all platforms)
+            // Fallback ke notifikasi in-app Filament (semua platform)
             $this->sendInAppNotification($message);
         }
     }
 }
 ```
 
-The enum also exposes dedicated boolean methods for the most common checks:
+Enum juga mengekspos metode boolean khusus untuk pemeriksaan paling umum:
 
 ```php
 $platform = app('runtime.platform'); // RuntimePlatform
 
-$platform->hasNativeCameraAccess();   // true for MobileApp* and DesktopApp*
-$platform->hasWebRTCAccess();         // true for Website* only
-$platform->hasFileSystemAccess();     // true for MobileApp* and DesktopApp*
-$platform->hasDesktopNotifications(); // true for DesktopApp* only
-$platform->hasPushNotifications();    // true for MobileApp* only
-$platform->hasAutoUpdates();          // true for DesktopApp* only
-$platform->hasAppBadge();             // true for MobileApp* only
+$platform->hasNativeCameraAccess();   // true untuk MobileApp* dan DesktopApp*
+$platform->hasWebRTCAccess();         // true hanya untuk Website*
+$platform->hasFileSystemAccess();     // true untuk MobileApp* dan DesktopApp*
+$platform->hasDesktopNotifications(); // true hanya untuk DesktopApp*
+$platform->hasPushNotifications();    // true hanya untuk MobileApp*
+$platform->hasAutoUpdates();          // true hanya untuk DesktopApp*
+$platform->hasAppBadge();             // true hanya untuk MobileApp*
 
-// Generic feature check (delegates to PlatformFeatureRegistry)
+// Pemeriksaan fitur generik (mendelegasikan ke PlatformFeatureRegistry)
 $platform->hasFeature('camera');
 
-// Get all features as a string array
-$platform->getAvailableFeatures(); // e.g. ['camera', 'file_system', 'push_notifications', 'app_badge']
+// Dapatkan semua fitur sebagai array string
+$platform->getAvailableFeatures(); // mis. ['camera', 'file_system', 'push_notifications', 'app_badge']
 ```
 
 ---
 
-### Approach 3 — `PlatformFeatureRegistry` directly
+### Pendekatan 3 — `PlatformFeatureRegistry` secara langsung
 
-Inject the registry when you need to check features against a platform that may differ from
-the current request (e.g. admin tooling, reporting, or tests).
+Injeksi registry saat Anda perlu memeriksa fitur terhadap platform yang mungkin berbeda dari
+request saat ini (mis. tooling admin, pelaporan, atau pengujian).
 
 ```php
 use App\Enums\RuntimePlatform;
@@ -217,35 +218,35 @@ class PlatformCapabilityReport
 {
     public function __construct(private PlatformFeatureRegistry $registry) {}
 
-    /** Returns all features supported by a given platform. */
+    /** Mengembalikan semua fitur yang didukung oleh platform tertentu. */
     public function featuresFor(RuntimePlatform $platform): array
     {
         return $this->registry->getAvailableFeatures($platform);
-        // e.g. for DesktopAppMacOS → ['camera', 'file_system', 'desktop_notifications', 'auto_updates']
+        // mis. untuk DesktopAppMacOS → ['camera', 'file_system', 'desktop_notifications', 'auto_updates']
     }
 
-    /** Returns all platforms that support a given feature. */
+    /** Mengembalikan semua platform yang mendukung fitur tertentu. */
     public function platformsFor(string $feature): array
     {
         return $this->registry->getPlatformsForFeature($feature);
-        // e.g. for 'push_notifications' → [MobileAppAndroid, MobileAppIos]
+        // mis. untuk 'push_notifications' → [MobileAppAndroid, MobileAppIos]
     }
 
-    /** Check a specific feature on a specific platform. */
+    /** Memeriksa fitur tertentu pada platform tertentu. */
     public function isSupported(string $feature, RuntimePlatform $platform): bool
     {
         return $this->registry->isAvailable($feature, $platform);
     }
 }
 
-// Usage
+// Penggunaan
 $report = app(PlatformCapabilityReport::class);
 
 $report->isSupported('auto_updates', RuntimePlatform::DesktopAppWindows); // true
 $report->isSupported('auto_updates', RuntimePlatform::MobileAppAndroid);  // false
 $report->isSupported('webrtc',       RuntimePlatform::WebsiteIos);        // true
 
-// Check all 8 platforms for a feature
+// Periksa semua 8 platform untuk satu fitur
 foreach (RuntimePlatform::cases() as $platform) {
     $has = $report->isSupported('camera', $platform);
     echo "{$platform->label()}: " . ($has ? 'yes' : 'no') . PHP_EOL;
@@ -254,26 +255,26 @@ foreach (RuntimePlatform::cases() as $platform) {
 
 ---
 
-## CBIR Camera Mode Selection
+## Pemilihan Mode Kamera CBIR
 
-The CBIR image search feature selects its camera API based on the current platform. Use
-`cbirCameraMode()` to branch between native and WebRTC capture:
+Fitur pencarian gambar CBIR memilih API kameranya berdasarkan platform saat ini. Gunakan
+`cbirCameraMode()` untuk memilih antara pengambilan native dan WebRTC:
 
 ```php
 $platform  = app('runtime.platform');   // RuntimePlatform
-$cameraMode = $platform->cbirCameraMode(); // 'native' or 'webrtc'
+$cameraMode = $platform->cbirCameraMode(); // 'native' atau 'webrtc'
 
 if ($cameraMode === 'native') {
-    // NativePHP Mobile Camera sheet (mobile) or
-    // NativePHP Electron Camera dialog (desktop)
+    // Lembar NativePHP Mobile Camera (mobile) atau
+    // Dialog NativePHP Electron Camera (desktop)
     return view('cbir.camera-native');
 } else {
-    // Browser MediaDevices.getUserMedia() via <video> element
+    // Browser MediaDevices.getUserMedia() melalui elemen <video>
     return view('cbir.camera-webrtc');
 }
 ```
 
-| `RuntimePlatform` case | `cbirCameraMode()` | Backing API |
+| Kasus `RuntimePlatform` | `cbirCameraMode()` | API yang digunakan |
 |---|---|---|
 | `WebsiteWindows` | `'webrtc'` | `MediaDevices.getUserMedia()` |
 | `WebsiteMacOS` | `'webrtc'` | `MediaDevices.getUserMedia()` |
@@ -286,35 +287,35 @@ if ($cameraMode === 'native') {
 
 ---
 
-## Feature Availability by Platform Group
+## Ketersediaan Fitur berdasarkan Kelompok Platform
 
-A quick summary grouped by the three platform categories:
+Ringkasan cepat dikelompokkan berdasarkan tiga kategori platform:
 
-| Category | Platforms | Available features |
+| Kategori | Platform | Fitur yang tersedia |
 |---|---|---|
 | **Website** | `WebsiteWindows`, `WebsiteMacOS`, `WebsiteAndroid`, `WebsiteIos` | `webrtc` |
-| **Mobile App** | `MobileAppAndroid`, `MobileAppIos` | `camera`, `file_system`, `push_notifications`, `app_badge` |
-| **Desktop App** | `DesktopAppWindows`, `DesktopAppMacOS` | `camera`, `file_system`, `desktop_notifications`, `auto_updates` |
+| **Aplikasi Mobile** | `MobileAppAndroid`, `MobileAppIos` | `camera`, `file_system`, `push_notifications`, `app_badge` |
+| **Aplikasi Desktop** | `DesktopAppWindows`, `DesktopAppMacOS` | `camera`, `file_system`, `desktop_notifications`, `auto_updates` |
 
-You can check which category is active using the `RuntimePlatform` category methods:
+Anda dapat memeriksa kategori mana yang aktif menggunakan metode kategori `RuntimePlatform`:
 
 ```php
 $platform = app('runtime.platform');
 
-$platform->isWebsite();    // Website* cases
-$platform->isMobileApp();  // MobileApp* cases
-$platform->isDesktopApp(); // DesktopApp* cases
+$platform->isWebsite();    // Kasus Website*
+$platform->isMobileApp();  // Kasus MobileApp*
+$platform->isDesktopApp(); // Kasus DesktopApp*
 ```
 
-These three methods are mutually exclusive — exactly one returns `true` for any platform case.
+Ketiga metode ini saling eksklusif — tepat satu yang mengembalikan `true` untuk kasus platform mana pun.
 
 ---
 
-## Related Documentation
+## Dokumentasi Terkait
 
-- [Platform Support Architecture](platform-support.md) — full architecture overview, detection pipeline, and data flow
-- [Environment Configuration](environment-configuration.md) — per-platform `.env` files and variable merging
-- [Asset Compilation](asset-compilation.md) — Vite entry points and build directories per platform
-- `app/Support/Platform/PlatformFeatureRegistry.php` — feature matrix source of truth
-- `app/Enums/RuntimePlatform.php` — enum definition with all feature helper methods
-- `app/helpers.php` — `platform_feature()`, `runtime_platform()`, and mode helpers
+- [Arsitektur Dukungan Platform](platform-support.md) — ikhtisar arsitektur lengkap, pipeline deteksi, dan alur data
+- [Konfigurasi Lingkungan](environment-configuration.md) — file `.env` per platform dan penggabungan variabel
+- [Kompilasi Aset](asset-compilation.md) — titik masuk Vite dan direktori build per platform
+- `app/Support/Platform/PlatformFeatureRegistry.php` — sumber kebenaran matriks fitur
+- `app/Enums/RuntimePlatform.php` — definisi enum dengan semua metode helper fitur
+- `app/helpers.php` — `platform_feature()`, `runtime_platform()`, dan helper mode

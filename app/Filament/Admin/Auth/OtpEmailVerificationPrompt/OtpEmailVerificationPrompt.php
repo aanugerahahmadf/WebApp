@@ -20,7 +20,7 @@ class OtpEmailVerificationPrompt extends EmailVerificationPrompt
 {
     use InteractsWithFormActions;
 
-    protected static string $view = 'User.pages.auth.otp-email-verification-prompt.otp-email-verification-prompt';
+    protected static string $view = 'Admin.pages.auth.otp-email-verification-prompt.otp-email-verification-prompt';
 
     public ?array $data = [];
 
@@ -94,7 +94,7 @@ class OtpEmailVerificationPrompt extends EmailVerificationPrompt
             ->schema([
                 ViewField::make('otp')
                     ->label(__('Kode Verifikasi'))
-                    ->view('User.auth.otp-field.otp-field')
+                    ->view('Admin.auth.otp-field.otp-field')
                     ->required(),
             ])
             ->statePath('data');

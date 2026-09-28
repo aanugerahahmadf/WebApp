@@ -1,21 +1,21 @@
-# Security Policy
+# Kebijakan Keamanan
 
-## Supported Versions
+## Versi yang Didukung
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+Gunakan bagian ini untuk memberi tahu pengguna tentang versi proyek mana yang
+saat ini mendapatkan pembaruan keamanan.
 
-| Version | Supported          |
+| Versi   | Didukung           |
 | ------- | ------------------ |
 | 5.1.x   | :white_check_mark: |
 | 5.0.x   | :x:                |
 | 4.0.x   | :white_check_mark: |
 | < 4.0   | :x:                |
 
-## Reporting a Vulnerability
+## Melaporkan Kerentanan
 
-Use this section to tell people how to report a vulnerability.
+Gunakan bagian ini untuk memberi tahu pengguna cara melaporkan kerentanan.
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+Jelaskan ke mana mereka harus melapor, seberapa sering mereka dapat mengharapkan
+pembaruan atas kerentanan yang dilaporkan, apa yang diharapkan jika kerentanan
+diterima atau ditolak, dan sebagainya.

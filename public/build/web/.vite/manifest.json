@@ -4,7 +4,7 @@
     "name": "popper"
   },
   "resources/css/Admin/Admin.css": {
-    "file": "assets/Admin-bc0ZQoNR.css",
+    "file": "assets/Admin-CMzf6MAn.css",
     "src": "resources/css/Admin/Admin.css",
     "isEntry": true,
     "name": "Admin",
@@ -13,7 +13,7 @@
     ]
   },
   "resources/css/User/User.css": {
-    "file": "assets/User-DJgzKWio.css",
+    "file": "assets/User-53CXCaTT.css",
     "src": "resources/css/User/User.css",
     "isEntry": true,
     "name": "User",

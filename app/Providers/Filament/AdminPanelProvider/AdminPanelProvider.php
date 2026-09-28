@@ -77,10 +77,6 @@ class AdminPanelProvider extends PanelProvider
                 'panels::styles.after',
                 fn (): string => Blade::render('@vite(\'resources/css/Admin/Admin.css\')')
             )
-            ->renderHook(
-                'panels::footer',
-                fn (): ?View => ! str_contains(request()->route()?->getName() ?? '', 'auth') ? view('Admin.footer.footer') : null
-            )
             ->userMenuItems([
                 'profile' => MenuItem::make()
                     ->label(fn (): string => Auth::user()?->full_name ?? __('Profil'))

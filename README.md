@@ -1,88 +1,88 @@
-# 💍 Wedding Organizer — Wedding Flower Decorations
+# 💍 Wedding Organizer — Dekorasi Bunga Pernikahan
 
-Wedding Organizer is a multi-platform application for wedding planning and decoration commerce. It combines a customer catalogue, orders, payments, chat, notifications, account security, visual/CBIR search, and a Filament administration panel.
+Wedding Organizer adalah aplikasi multi-platform untuk perencanaan pernikahan dan perdagangan dekorasi. Aplikasi ini menggabungkan katalog pelanggan, pesanan, pembayaran, obrolan, notifikasi, keamanan akun, pencarian visual/CBIR, dan panel administrasi Filament.
 
-It runs as a Laravel web application and supports NativePHP Mobile (Android/iOS) and NativePHP Electron (Windows/macOS).
+Aplikasi ini berjalan sebagai aplikasi web Laravel dan mendukung NativePHP Mobile (Android/iOS) serta NativePHP Electron (Windows/macOS).
 
-> This is an application repository. Do not commit `.env`, production data, private keys, Firebase credentials, payment credentials, OAuth secrets, or generated local state.
+> Ini adalah repositori aplikasi. Jangan commit `.env`, data produksi, kunci privat, kredensial Firebase, kredensial pembayaran, rahasia OAuth, atau status lokal yang dihasilkan.
 
-## Contents
+## Daftar Isi
 
-- Features
-- Technology
-- Requirements
-- Quick start
-- Configuration
-- Development and platform commands
-- Real-time services
-- Tests and quality checks
-- Project layout
-- Security, deployment, contributing, and license
+- Fitur
+- Teknologi
+- Prasyarat
+- Mulai cepat
+- Konfigurasi
+- Perintah pengembangan dan platform
+- Layanan real-time
+- Pengujian dan pemeriksaan kualitas
+- Tata letak proyek
+- Keamanan, deployment, kontribusi, dan lisensi
 
-## Features
+## Fitur
 
-### User application
+### Aplikasi pengguna
 
-- Browse products and wedding service packages.
-- Search the catalogue and use image-based/CBIR discovery when the configured AI service is available.
-- Save favourites, apply vouchers, manage a cart, create orders, and follow transaction activity.
-- Manage profile details, photo, address, preferred language, and WhatsApp number.
-- Choose an international calling code from a searchable Filament selector with ISO country code, country name, and calling code.
-- Use the message centre for conversations and attachments.
-- Receive database, broadcast, native, and Firebase notifications when the platform/service is configured.
-- Open an individual notification detail page. Security notifications can open sign-in activity while keeping contextual back navigation.
-- Use password change, email-change OTP confirmation, two-factor controls, trusted devices, saved sign-in preferences, backup codes, and account check-up tools.
-- Change language through the language switcher. User-facing static text must use Laravel translation helpers.
+- Jelajahi produk dan paket layanan pernikahan.
+- Cari katalog dan gunakan penemuan berbasis gambar/CBIR saat layanan AI yang dikonfigurasi tersedia.
+- Simpan favorit, terapkan voucher, kelola keranjang, buat pesanan, dan ikuti aktivitas transaksi.
+- Kelola detail profil, foto, alamat, bahasa pilihan, dan nomor WhatsApp.
+- Pilih kode panggilan internasional dari selektor Filament yang dapat dicari dengan kode negara ISO, nama negara, dan kode panggilan.
+- Gunakan pusat pesan untuk percakapan dan lampiran.
+- Terima notifikasi database, broadcast, native, dan Firebase saat platform/layanan dikonfigurasi.
+- Buka halaman detail notifikasi individual. Notifikasi keamanan dapat membuka aktivitas masuk sambil mempertahankan navigasi balik kontekstual.
+- Gunakan perubahan kata sandi, konfirmasi OTP perubahan email, kontrol dua faktor, perangkat tepercaya, preferensi masuk tersimpan, kode cadangan, dan alat pemeriksaan akun.
+- Ganti bahasa melalui pengalih bahasa. Teks statis yang menghadap pengguna harus menggunakan helper terjemahan Laravel.
 
-### Administration
+### Administrasi
 
-- Manage users, roles, permissions, products, packages, media, vouchers, banners, reviews, orders, and transactions.
-- Use Filament tables, forms, actions, filters, and dashboard widgets for daily operations.
-- Manage customer-facing catalogue and content data.
+- Kelola pengguna, peran, izin, produk, paket, media, voucher, spanduk, ulasan, pesanan, dan transaksi.
+- Gunakan tabel, formulir, aksi, filter Filament, dan widget dasbor untuk operasi harian.
+- Kelola katalog dan data konten yang menghadap pelanggan.
 
-### Supported platforms
+### Platform yang didukung
 
-| Platform | Capability |
+| Platform | Kemampuan |
 | --- | --- |
-| Web | Laravel browser app with Vite assets and browser APIs where supported |
-| Mobile | NativePHP Mobile with Android/iOS integration where configured |
-| Desktop | NativePHP Electron with Windows/macOS support where configured |
+| Web | Aplikasi browser Laravel dengan aset Vite dan API browser yang didukung |
+| Mobile | NativePHP Mobile dengan integrasi Android/iOS jika dikonfigurasi |
+| Desktop | NativePHP Electron dengan dukungan Windows/macOS jika dikonfigurasi |
 
-## Technology
+## Teknologi
 
-| Area | Main technology |
+| Area | Teknologi utama |
 | --- | --- |
 | Backend | PHP 8.3+, Laravel 12 |
-| User interface | Filament 3, Livewire 3, Blade, Tailwind CSS |
-| Front-end build | Vite 7 and Node.js |
-| Database | MySQL by default with Laravel migrations/seeders |
-| Real-time | Laravel Reverb, Echo, Pusher-compatible configuration |
-| API and authentication | Laravel sessions and Sanctum |
-| Native apps | NativePHP Mobile, NativePHP Electron, NativePHP Laravel |
-| Media/documents | Spatie Media Library, Dompdf, PhpSpreadsheet |
-| Integrations | Firebase, Midtrans, Google/Facebook OAuth, Fonnte/WhatsApp, CBIR/AI |
-| Quality tools | Pest, Laravel Pint, PHPStan, Rector |
+| Antarmuka pengguna | Filament 3, Livewire 3, Blade, Tailwind CSS |
+| Build front-end | Vite 7 dan Node.js |
+| Database | MySQL secara default dengan migrasi/seeder Laravel |
+| Real-time | Laravel Reverb, Echo, konfigurasi kompatibel Pusher |
+| API dan autentikasi | Sesi Laravel dan Sanctum |
+| Aplikasi native | NativePHP Mobile, NativePHP Electron, NativePHP Laravel |
+| Media/dokumen | Spatie Media Library, Dompdf, PhpSpreadsheet |
+| Integrasi | Firebase, Midtrans, OAuth Google/Facebook, Fonnte/WhatsApp, CBIR/AI |
+| Alat kualitas | Pest, Laravel Pint, PHPStan, Rector |
 
-Dependency versions are defined by `composer.json`, `composer.lock`, `package.json`, and the lockfiles. Use them for audits and reproducible deployments.
+Versi dependensi didefinisikan oleh `composer.json`, `composer.lock`, `package.json`, dan lockfile-nya. Gunakan untuk audit dan deployment yang dapat direproduksi.
 
-## Requirements
+## Prasyarat
 
-| Requirement | Purpose |
+| Prasyarat | Tujuan |
 | --- | --- |
-| PHP 8.3+ | Laravel runtime; Composer platform is set to PHP 8.4.99 |
-| Composer 2 | PHP dependency installation |
-| Node.js LTS + npm | Vite build tooling |
-| MySQL | Default local database |
-| Git | Clone, update, and contribute |
-| Redis (optional) | Redis-backed cache, queue, or realtime services |
-| Android SDK/JDK (mobile) | Android NativePHP development |
-| Xcode (iOS) | iOS development on macOS |
+| PHP 8.3+ | Runtime Laravel; platform Composer diatur ke PHP 8.4.99 |
+| Composer 2 | Instalasi dependensi PHP |
+| Node.js LTS + npm | Tooling build Vite |
+| MySQL | Database lokal default |
+| Git | Clone, perbarui, dan berkontribusi |
+| Redis (opsional) | Cache, antrean, atau layanan realtime berbasis Redis |
+| Android SDK/JDK (mobile) | Pengembangan Android NativePHP |
+| Xcode (iOS) | Pengembangan iOS di macOS |
 
-External features require credentials from their providers. Values in `.env.example` are placeholders and not valid production secrets.
+Fitur eksternal memerlukan kredensial dari penyedianya. Nilai di `.env.example` adalah placeholder dan bukan rahasia produksi yang valid.
 
-## Quick start
+## Mulai Cepat
 
-Run commands from the repository root:
+Jalankan perintah dari root repositori:
 
 ```bash
 git clone https://github.com/aanugerahahmadf/Wedding-Organizer.git
@@ -91,7 +91,7 @@ composer install
 npm install
 ```
 
-Create the environment file and application key:
+Buat file environment dan kunci aplikasi:
 
 ```powershell
 # Windows PowerShell
@@ -105,7 +105,7 @@ cp .env.example .env
 php artisan key:generate
 ```
 
-Create the MySQL database named by `DB_DATABASE`, set its credentials in `.env`, then run:
+Buat database MySQL yang dinamai oleh `DB_DATABASE`, atur kredensialnya di `.env`, lalu jalankan:
 
 ```bash
 php artisan migrate --seed
@@ -113,28 +113,28 @@ npm run build:web
 php artisan serve --port=8000
 ```
 
-Open `http://127.0.0.1:8000`. Use locally created accounts only; never publish or reuse production credentials.
+Buka `http://127.0.0.1:8000`. Gunakan hanya akun yang dibuat secara lokal; jangan pernah mempublikasikan atau menggunakan ulang kredensial produksi.
 
-For the standard local development stack (Laravel server, queue listener, Vite), run:
+Untuk stack pengembangan lokal standar (server Laravel, pendengar antrean, Vite), jalankan:
 
 ```bash
 composer dev
 ```
 
-## Configuration
+## Konfigurasi
 
-### Environment files
+### File environment
 
-| File | Use |
+| File | Kegunaan |
 | --- | --- |
-| `.env` | Shared base configuration |
-| `.env.web` | Optional web-specific overrides |
-| `.env.mobile` | Optional NativePHP Mobile overrides |
-| `.env.desktop` | Optional NativePHP Electron overrides |
+| `.env` | Konfigurasi dasar bersama |
+| `.env.web` | Override khusus web opsional |
+| `.env.mobile` | Override NativePHP Mobile opsional |
+| `.env.desktop` | Override NativePHP Electron opsional |
 
-Platform files are layered over `.env`; values in a platform file take precedence.
+File platform ditumpuk di atas `.env`; nilai dalam file platform lebih diutamakan.
 
-At minimum configure URL, language, timezone, and database:
+Minimal konfigurasikan URL, bahasa, zona waktu, dan database:
 
 ```dotenv
 APP_URL=http://127.0.0.1:8000
@@ -149,113 +149,113 @@ DB_USERNAME=root
 DB_PASSWORD=
 ```
 
-After editing cached production configuration run:
+Setelah mengedit konfigurasi produksi yang di-cache, jalankan:
 
 ```bash
 php artisan config:clear
 ```
 
-### Optional integrations
+### Integrasi opsional
 
-| Feature | Primary settings |
+| Fitur | Pengaturan utama |
 | --- | --- |
-| Email and OTP | `MAIL_*` |
-| Reverb broadcasts | `REVERB_*`, `VITE_REVERB_*` |
-| Pusher-compatible broadcasts | `PUSHER_*` |
-| Firebase push | `FIREBASE_*`, `FIREBASE_CREDENTIALS_PATH` |
-| CBIR/AI image search | `AI_CORE_URL`, `CBIR_API_URL` |
-| Google/Facebook sign-in | `GOOGLE_*`, `FACEBOOK_*` |
+| Email dan OTP | `MAIL_*` |
+| Broadcast Reverb | `REVERB_*`, `VITE_REVERB_*` |
+| Broadcast kompatibel Pusher | `PUSHER_*` |
+| Push Firebase | `FIREBASE_*`, `FIREBASE_CREDENTIALS_PATH` |
+| Pencarian gambar CBIR/AI | `AI_CORE_URL`, `CBIR_API_URL` |
+| Masuk Google/Facebook | `GOOGLE_*`, `FACEBOOK_*` |
 | Midtrans | `MIDTRANS_*` |
 | WhatsApp/Fonnte | `FONNTE_TOKEN` |
-| Android build/signing | `ANDROID_*`, `JAVA_HOME`, `NATIVEPHP_*` |
+| Build/penandatanganan Android | `ANDROID_*`, `JAVA_HOME`, `NATIVEPHP_*` |
 
-## Development and platform commands
+## Perintah Pengembangan dan Platform
 
 ### Web
 
-Start Vite HMR in one terminal:
+Mulai Vite HMR di satu terminal:
 
 ```bash
 npm run dev:web
 ```
 
-Start Laravel in another terminal:
+Mulai Laravel di terminal lain:
 
 ```bash
 php artisan serve --port=8000
 ```
 
-For a compiled local build:
+Untuk build lokal yang dikompilasi:
 
 ```bash
 npm run build:web
 php artisan serve --port=8000
 ```
 
-### Assets
+### Aset
 
-| Command | Result |
+| Perintah | Hasil |
 | --- | --- |
-| `npm run dev` | Default Vite server |
-| `npm run dev:web` | Web HMR |
-| `npm run dev:mobile` | Mobile HMR |
-| `npm run dev:desktop` | Desktop HMR |
-| `npm run build` | Default Vite build |
-| `npm run build:web` | Web bundle |
-| `npm run build:mobile` | Mobile bundle |
-| `npm run build:desktop` | Desktop bundle |
-| `npm run build:all` | Builds all target bundles |
+| `npm run dev` | Server Vite default |
+| `npm run dev:web` | HMR Web |
+| `npm run dev:mobile` | HMR Mobile |
+| `npm run dev:desktop` | HMR Desktop |
+| `npm run build` | Build Vite default |
+| `npm run build:web` | Bundle Web |
+| `npm run build:mobile` | Bundle Mobile |
+| `npm run build:desktop` | Bundle Desktop |
+| `npm run build:all` | Build semua bundle target |
 
-`public/build/` contains generated assets. Commit them only when the deployment workflow requires prebuilt assets.
+`public/build/` berisi aset yang dihasilkan. Commit hanya jika alur kerja deployment memerlukan aset yang sudah dibangun sebelumnya.
 
-### Native targets
+### Target native
 
-| Target | Start command | Asset command | Notes |
+| Target | Perintah mulai | Perintah aset | Catatan |
 | --- | --- | --- | --- |
-| Web | `php artisan serve` | `npm run build:web` | Browser target |
-| Android/iOS | `php artisan native:run` | `npm run build:mobile` | Requires NativePHP Mobile and platform tools |
-| Windows/macOS | `php artisan native:serve` | `npm run build:desktop` | Requires NativePHP Electron |
+| Web | `php artisan serve` | `npm run build:web` | Target browser |
+| Android/iOS | `php artisan native:run` | `npm run build:mobile` | Memerlukan NativePHP Mobile dan alat platform |
+| Windows/macOS | `php artisan native:serve` | `npm run build:desktop` | Memerlukan NativePHP Electron |
 
-Check or reset platform state:
+Periksa atau reset status platform:
 
 ```bash
 php artisan platform:status
 php artisan platform:clear
 ```
 
-Read [docs/command-guide.md](docs/command-guide.md) and [docs/command-decision-tree.md](docs/command-decision-tree.md) before setting up a native target.
+Baca [docs/command-guide.md](docs/command-guide.md) dan [docs/command-decision-tree.md](docs/command-decision-tree.md) sebelum menyiapkan target native.
 
-## Real-time, queues, and notifications
+## Real-time, Antrean, dan Notifikasi
 
-Run a worker when `QUEUE_CONNECTION` is not `sync`:
+Jalankan worker saat `QUEUE_CONNECTION` bukan `sync`:
 
 ```bash
 php artisan queue:listen --tries=1
 ```
 
-Run Reverb when the broadcast connection uses it:
+Jalankan Reverb saat koneksi broadcast menggunakannya:
 
 ```bash
 php artisan reverb:start
 ```
 
-Run scheduled tasks locally when enabled:
+Jalankan tugas terjadwal secara lokal saat diaktifkan:
 
 ```bash
 php artisan schedule:work
 ```
 
-Notification flow:
+Alur notifikasi:
 
-1. An application event creates a Filament database notification.
-2. The notification can broadcast to active clients.
-3. Native/Firebase delivery is attempted only if the active platform and service configuration allow it.
-4. A click opens `/user/notifications/{id}` for the selected item.
-5. Login activity can open the appropriate security page and retain a validated return link.
+1. Sebuah event aplikasi membuat notifikasi database Filament.
+2. Notifikasi dapat melakukan broadcast ke klien aktif.
+3. Pengiriman Native/Firebase hanya dicoba jika platform aktif dan konfigurasi layanan mengizinkannya.
+4. Klik membuka `/user/notifications/{id}` untuk item yang dipilih.
+5. Aktivitas login dapat membuka halaman keamanan yang sesuai dan mempertahankan tautan kembali yang tervalidasi.
 
-## Tests and quality checks
+## Pengujian dan Pemeriksaan Kualitas
 
-Run relevant checks before release:
+Jalankan pemeriksaan yang relevan sebelum rilis:
 
 ```bash
 composer test
@@ -268,58 +268,58 @@ php artisan view:cache
 npm run build:web
 ```
 
-On Windows PowerShell, use `vendor\bin\pint.bat` and `vendor\bin\phpstan.bat` if Unix executable files are unavailable.
+Di Windows PowerShell, gunakan `vendor\bin\pint.bat` dan `vendor\bin\phpstan.bat` jika file executable Unix tidak tersedia.
 
-## Project layout
+## Tata Letak Proyek
 
-| Path | Purpose |
+| Path | Tujuan |
 | --- | --- |
-| `app/Filament/` | Admin/user pages, resources, widgets |
-| `app/Livewire/` | Interactive components |
-| `app/Models/` | Eloquent models |
-| `app/Services/` | Domain and integration services |
-| `app/Support/` | Shared helpers |
-| `config/` | Application configuration |
-| `database/` | Migrations, factories, seeders |
-| `docs/` | Platform and command guides |
-| `lang/` | Laravel JSON/package translations |
-| `public/` | Public entry point and built assets |
+| `app/Filament/` | Halaman, resource, widget admin/pengguna |
+| `app/Livewire/` | Komponen interaktif |
+| `app/Models/` | Model Eloquent |
+| `app/Services/` | Layanan domain dan integrasi |
+| `app/Support/` | Helper bersama |
+| `config/` | Konfigurasi aplikasi |
+| `database/` | Migrasi, factory, seeder |
+| `docs/` | Panduan platform dan perintah |
+| `lang/` | Terjemahan JSON/paket Laravel |
+| `public/` | Titik masuk publik dan aset yang sudah dibangun |
 | `resources/` | Blade, CSS, JavaScript |
-| `routes/` | Web, API, and platform routes |
-| `tests/` | Pest/Laravel tests |
+| `routes/` | Rute web, API, dan platform |
+| `tests/` | Pengujian Pest/Laravel |
 
-## Security and deployment
+## Keamanan dan Deployment
 
-- Set `APP_DEBUG=false`, use HTTPS, secure cookies, and a unique production `APP_KEY`.
-- Never commit environment files, Firebase credential files, keystores, SMTP passwords, OAuth secrets, payment keys, or database exports.
-- Review roles, permissions, policies, and admin access before deployment.
-- Supervise queue workers and scheduled tasks in production.
-- Back up database and media before migrations or releases.
-- Keep Composer/Node lockfiles committed for reproducible builds.
-- Build assets and run migrations through the deployment pipeline, then clear/rebuild Laravel caches as appropriate.
+- Atur `APP_DEBUG=false`, gunakan HTTPS, cookie aman, dan `APP_KEY` produksi yang unik.
+- Jangan pernah commit file environment, file kredensial Firebase, keystore, kata sandi SMTP, rahasia OAuth, kunci pembayaran, atau ekspor database.
+- Tinjau peran, izin, kebijakan, dan akses admin sebelum deployment.
+- Awasi worker antrean dan tugas terjadwal di produksi.
+- Cadangkan database dan media sebelum migrasi atau rilis.
+- Jaga lockfile Composer/Node tetap ter-commit untuk build yang dapat direproduksi.
+- Bangun aset dan jalankan migrasi melalui pipeline deployment, lalu hapus/bangun ulang cache Laravel sesuai kebutuhan.
 
-## Documentation
+## Dokumentasi
 
-| Document | Description |
+| Dokumen | Deskripsi |
 | --- | --- |
-| [docs/command-guide.md](docs/command-guide/command-guide.md) | Commands, prerequisites, troubleshooting |
-| [docs/command-decision-tree.md](docs/command-decision-tree/command-decision-tree.md) | Select web, mobile, or desktop mode |
-| [docs/environment-configuration.md](docs/environment-configuration/environment-configuration.md) | Environment layering |
-| [docs/asset-compilation.md](docs/asset-compilation/asset-compilation.md) | Vite build process |
-| [docs/platform-support.md](docs/platform-support/platform-support.md) | Platform architecture |
-| [docs/platform-features.md](docs/platform-features/platform-features.md) | Feature matrix by platform |
+| [docs/command-guide.md](docs/command-guide/command-guide.md) | Perintah, prasyarat, pemecahan masalah |
+| [docs/command-decision-tree.md](docs/command-decision-tree/command-decision-tree.md) | Pilih mode web, mobile, atau desktop |
+| [docs/environment-configuration.md](docs/environment-configuration/environment-configuration.md) | Pelapisan environment |
+| [docs/asset-compilation.md](docs/asset-compilation/asset-compilation.md) | Proses build Vite |
+| [docs/platform-support.md](docs/platform-support/platform-support.md) | Arsitektur platform |
+| [docs/platform-features.md](docs/platform-features/platform-features.md) | Matriks fitur per platform |
 
-## Contributing
+## Kontribusi
 
-1. Create a focused branch from the default branch.
-2. Keep changes scoped and avoid unrelated generated files/formatting.
-3. Update tests for behaviour changes.
-4. Run relevant PHP, Blade, and asset checks.
-5. Keep secrets and personal data out of commits.
-6. Explain user-visible behaviour and verification in the pull request.
+1. Buat branch yang terfokus dari branch default.
+2. Jaga perubahan tetap terbatas dan hindari file/format yang tidak terkait yang dihasilkan secara otomatis.
+3. Perbarui pengujian untuk perubahan perilaku.
+4. Jalankan pemeriksaan PHP, Blade, dan aset yang relevan.
+5. Jaga rahasia dan data pribadi agar tidak masuk ke commit.
+6. Jelaskan perilaku yang terlihat pengguna dan verifikasi dalam pull request.
 
-## License
+## Lisensi
 
-This project is licensed under the [MIT License](LICENSE). The complete legal terms are in the root [`LICENSE`](LICENSE) file.
+Proyek ini dilisensikan di bawah [Lisensi MIT](LICENSE). Ketentuan hukum lengkap ada di file [`LICENSE`](LICENSE) root.
 
-Copyright (c) 2026 Anugerah Ahmad.
+Hak Cipta (c) 2026 Anugerah Ahmad.

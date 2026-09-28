@@ -104,7 +104,7 @@ class OtpResetPassword extends BaseResetPassword
                         $this->getEmailFormComponent(),
                         $this->getPasswordFormComponent(),
                         $this->getPasswordConfirmationFormComponent(),
-                        View::make('User.auth.otp-reset-password.actions'),
+                        View::make('User.auth.otp-reset-password.actions.actions'),
                     ])
                     ->columns(1),
             ]);

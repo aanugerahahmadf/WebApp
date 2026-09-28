@@ -1,22 +1,22 @@
-# Mobile App Store Deployment Guide
+# Panduan Deployment Aplikasi Mobile ke Toko Aplikasi
 
-This guide covers building and publishing the Laravel Wedding Organizer CBIR application for Android (Google Play Store) and iOS (Apple App Store) using [NativePHP Mobile](https://github.com/nativephp/mobile).
+Panduan ini mencakup proses membangun dan menerbitkan aplikasi Laravel Wedding Organizer CBIR untuk Android (Google Play Store) dan iOS (Apple App Store) menggunakan [NativePHP Mobile](https://github.com/nativephp/mobile).
 
 ---
 
-## Prerequisites
+## Prasyarat
 
-| Requirement | Details |
+| Persyaratan | Detail |
 |---|---|
-| `nativephp/mobile` package | `composer require nativephp/mobile` |
-| PHP 8.2+ CLI | Required on the build machine |
-| Node.js 18+ | Required for asset compilation |
-| Android SDK + ADB | Required for Android builds |
-| Xcode 15+ | Required for iOS builds (macOS only) |
-| Apple Developer Account | Required for iOS App Store submission |
-| Google Play Developer Account | Required for Android Play Store submission |
+| Paket `nativephp/mobile` | `composer require nativephp/mobile` |
+| PHP 8.2+ CLI | Diperlukan di mesin build |
+| Node.js 18+ | Diperlukan untuk kompilasi aset |
+| Android SDK + ADB | Diperlukan untuk build Android |
+| Xcode 15+ | Diperlukan untuk build iOS (hanya macOS) |
+| Akun Apple Developer | Diperlukan untuk pengiriman ke App Store iOS |
+| Akun Google Play Developer | Diperlukan untuk pengiriman ke Play Store Android |
 
-Install and scaffold NativePHP Mobile once per project:
+Instal dan siapkan NativePHP Mobile sekali per proyek:
 
 ```bash
 composer require nativephp/mobile
@@ -25,74 +25,74 @@ php artisan native:install
 
 ---
 
-## Environment Configuration
+## Konfigurasi Lingkungan
 
-Create `.env.mobile` from the example file:
+Buat `.env.mobile` dari file contoh:
 
 ```bash
 cp .env.mobile.example .env.mobile
 ```
 
-Required variables in `.env.mobile`:
+Variabel yang diperlukan di `.env.mobile`:
 
 ```dotenv
 APP_ENV=production
-APP_KEY=base64:...          # Generate: php artisan key:generate
+APP_KEY=base64:...          # Buat dengan: php artisan key:generate
 APP_URL=https://your-api.com
 
-# Session — database driver survives app restarts
+# Session — driver database bertahan saat aplikasi di-restart
 SESSION_DRIVER=database
 SESSION_LIFETIME=10080
 
-# Mobile platform marker
+# Penanda platform mobile
 VITE_PLATFORM=mobile
 
-# NativePHP Mobile app identity
+# Identitas aplikasi NativePHP Mobile
 NATIVEPHP_APP_ID=com.yourcompany.weddingorganizer
 NATIVEPHP_APP_NAME="Wedding Flower Decorations"
 NATIVEPHP_APP_VERSION=1.0.0
 NATIVEPHP_APP_VERSION_CODE=1
 ```
 
-### Required Variable Reference
+### Referensi Variabel yang Diperlukan
 
-| Variable | Required | Description |
+| Variabel | Wajib | Deskripsi |
 |---|---|---|
-| `APP_ENV` | Yes | Must be `production` for store builds |
-| `APP_KEY` | Yes | 32-byte base64 encryption key |
-| `APP_URL` | Yes | URL of the backend API server |
-| `SESSION_DRIVER` | Yes | Use `database` for mobile |
-| `VITE_PLATFORM` | Yes | Must be `mobile` |
-| `NATIVEPHP_APP_ID` | Yes | Unique reverse-DNS bundle identifier |
-| `NATIVEPHP_APP_VERSION` | Yes | Semantic version string (e.g. `1.0.0`) |
-| `NATIVEPHP_APP_VERSION_CODE` | Yes | Integer version code, increment on each release |
+| `APP_ENV` | Ya | Harus `production` untuk build toko |
+| `APP_KEY` | Ya | Kunci enkripsi base64 32-byte |
+| `APP_URL` | Ya | URL server API backend |
+| `SESSION_DRIVER` | Ya | Gunakan `database` untuk mobile |
+| `VITE_PLATFORM` | Ya | Harus `mobile` |
+| `NATIVEPHP_APP_ID` | Ya | Identifier bundle reverse-DNS yang unik |
+| `NATIVEPHP_APP_VERSION` | Ya | String versi semantik (mis. `1.0.0`) |
+| `NATIVEPHP_APP_VERSION_CODE` | Ya | Kode versi integer, tingkatkan pada setiap rilis |
 
 ---
 
-## Build Steps
+## Langkah Build
 
-### 1. Install dependencies
+### 1. Instal dependensi
 
 ```bash
 composer install --no-dev --optimize-autoloader
 npm ci
 ```
 
-### 2. Compile mobile assets
+### 2. Kompilasi aset mobile
 
 ```bash
 npm run build:mobile
 ```
 
-Assets output to `public/build/mobile/`.
+Aset di-output ke `public/build/mobile/`.
 
-### 3. Cache Laravel configuration
+### 3. Cache konfigurasi Laravel
 
 ```bash
 php artisan optimize
 ```
 
-### 4. Run database migrations (if using a remote DB)
+### 4. Jalankan migrasi database (jika menggunakan DB remote)
 
 ```bash
 php artisan migrate --force
@@ -100,20 +100,20 @@ php artisan migrate --force
 
 ---
 
-## Android Build
+## Build Android
 
-### Development / Debug Build
+### Build Pengembangan / Debug
 
-Deploy directly to a connected device or emulator:
+Deploy langsung ke perangkat atau emulator yang terhubung:
 
 ```bash
-# Auto-detect connected Android device
+# Deteksi otomatis perangkat Android yang terhubung
 php artisan native:run android
 
-# Specify a device by ADB serial
+# Tentukan perangkat berdasarkan serial ADB
 php artisan native:run android <device-serial>
 
-# Watch mode (hot reload during development)
+# Mode watch (hot reload selama pengembangan)
 php artisan native:run android --watch
 ```
 
@@ -127,7 +127,7 @@ Output: `build/android/app-release.apk`
 
 ### App Bundle (Play Store)
 
-The Play Store requires an Android App Bundle (`.aab`) instead of a plain APK:
+Play Store memerlukan Android App Bundle (`.aab`) alih-alih APK biasa:
 
 ```bash
 php artisan native:run android --build=bundle
@@ -135,9 +135,9 @@ php artisan native:run android --build=bundle
 
 Output: `build/android/app-release.aab`
 
-### Android Keystore (Code Signing)
+### Keystore Android (Penandatanganan Kode)
 
-Generate a keystore for signing release builds. **Keep the keystore file and passwords secret — losing them means you cannot update the app.**
+Buat keystore untuk menandatangani release build. **Simpan file keystore dan kata sandi dengan aman — kehilangan keduanya berarti Anda tidak dapat memperbarui aplikasi.**
 
 ```bash
 keytool -genkey -v \
@@ -148,7 +148,7 @@ keytool -genkey -v \
   -validity 10000
 ```
 
-Configure signing in `nativephp.php` or pass via environment variables:
+Konfigurasi penandatanganan di `nativephp.php` atau lewatkan melalui variabel lingkungan:
 
 ```dotenv
 NATIVEPHP_ANDROID_KEYSTORE_PATH=/path/to/wedding-organizer-release.jks
@@ -157,9 +157,9 @@ NATIVEPHP_ANDROID_KEY_ALIAS=wedding-organizer
 NATIVEPHP_ANDROID_KEY_PASSWORD=your-key-password
 ```
 
-### Android Build Configuration
+### Konfigurasi Build Android
 
-Key settings in `config/nativephp.php` (or equivalent NativePHP config):
+Pengaturan utama di `config/nativephp.php` (atau konfigurasi NativePHP yang setara):
 
 ```php
 'app_id'           => env('NATIVEPHP_APP_ID', 'com.yourcompany.weddingorganizer'),
@@ -181,17 +181,17 @@ Key settings in `config/nativephp.php` (or equivalent NativePHP config):
 
 ---
 
-## iOS Build
+## Build iOS
 
-> **iOS builds require macOS.** You cannot build for iOS on Windows or Linux.
+> **Build iOS memerlukan macOS.** Anda tidak dapat build untuk iOS di Windows atau Linux.
 
-### Development Build
+### Build Pengembangan
 
 ```bash
-# Deploy to connected iOS device or simulator
+# Deploy ke perangkat atau simulator iOS yang terhubung
 php artisan native:run ios
 
-# Watch mode
+# Mode watch
 php artisan native:run ios --watch
 ```
 
@@ -201,17 +201,17 @@ php artisan native:run ios --watch
 php artisan native:run ios --build=release
 ```
 
-This produces an `.ipa` archive ready for TestFlight or App Store submission.
+Ini menghasilkan arsip `.ipa` yang siap untuk pengiriman ke TestFlight atau App Store.
 
-### iOS Code Signing
+### Penandatanganan Kode iOS
 
-iOS apps must be signed with an Apple Developer certificate and provisioning profile. Set up via Xcode or the command line:
+Aplikasi iOS harus ditandatangani dengan sertifikat Apple Developer dan provisioning profile. Siapkan melalui Xcode atau baris perintah:
 
-1. Open Xcode → Preferences → Accounts → add your Apple ID.
-2. In the project target, set your Team and Bundle Identifier to match `NATIVEPHP_APP_ID`.
-3. Enable automatic signing, or manually select the distribution certificate and provisioning profile.
+1. Buka Xcode → Preferences → Accounts → tambahkan Apple ID Anda.
+2. Di target proyek, atur Team dan Bundle Identifier agar cocok dengan `NATIVEPHP_APP_ID`.
+3. Aktifkan penandatanganan otomatis, atau pilih sertifikat distribusi dan provisioning profile secara manual.
 
-Required environment variables for automated CI signing:
+Variabel lingkungan yang diperlukan untuk penandatanganan CI otomatis:
 
 ```dotenv
 NATIVEPHP_IOS_TEAM_ID=ABCDE12345
@@ -221,94 +221,94 @@ NATIVEPHP_IOS_CERTIFICATE_PASSWORD=cert-password
 NATIVEPHP_IOS_PROVISIONING_PROFILE=/path/to/profile.mobileprovision
 ```
 
-### iOS Build Configuration
+### Konfigurasi Build iOS
 
-Key settings in `config/nativephp.php`:
+Pengaturan utama di `config/nativephp.php`:
 
 ```php
 'ios' => [
     'deployment_target'   => '16.0',   // iOS 16+
     'device_families'     => ['iphone', 'ipad'],
     'permissions'         => [
-        'NSCameraUsageDescription'       => 'Required for CBIR image search.',
-        'NSPhotoLibraryUsageDescription' => 'Required to select images for search.',
+        'NSCameraUsageDescription'       => 'Diperlukan untuk pencarian gambar CBIR.',
+        'NSPhotoLibraryUsageDescription' => 'Diperlukan untuk memilih gambar pencarian.',
     ],
 ],
 ```
 
 ---
 
-## App Store Submission
+## Pengiriman ke Toko Aplikasi
 
 ### Google Play Store
 
-1. Create the app in [Google Play Console](https://play.google.com/console).
-2. Set up the app signing key — use Play App Signing for the best key recovery options.
-3. Upload the `.aab` bundle to the desired track (Internal → Alpha → Beta → Production).
-4. Complete the Store Listing: screenshots, description, content rating, privacy policy URL.
-5. Submit for review.
+1. Buat aplikasi di [Google Play Console](https://play.google.com/console).
+2. Siapkan kunci penandatanganan aplikasi — gunakan Play App Signing untuk opsi pemulihan kunci terbaik.
+3. Unggah bundel `.aab` ke track yang diinginkan (Internal → Alpha → Beta → Produksi).
+4. Lengkapi Daftar Toko: screenshot, deskripsi, rating konten, URL kebijakan privasi.
+5. Kirim untuk ditinjau.
 
-**Release checklist:**
+**Daftar periksa rilis:**
 
 ```
-☐ APP_ENV=production in .env.mobile
-☐ NATIVEPHP_APP_VERSION_CODE incremented
-☐ AAB signed with release keystore
-☐ Target SDK = 34 (Android 14 — current Play Store requirement)
-☐ Privacy policy URL set
-☐ At least 2 screenshots per device type
-☐ Content rating questionnaire completed
+☐ APP_ENV=production di .env.mobile
+☐ NATIVEPHP_APP_VERSION_CODE ditingkatkan
+☐ AAB ditandatangani dengan keystore rilis
+☐ Target SDK = 34 (Android 14 — persyaratan Play Store saat ini)
+☐ URL kebijakan privasi diatur
+☐ Minimal 2 screenshot per tipe perangkat
+☐ Kuesioner rating konten dilengkapi
 ```
 
 ### Apple App Store
 
-1. Create the app record in [App Store Connect](https://appstoreconnect.apple.com).
-2. Archive the app in Xcode (Product → Archive) or use `native:run ios --build=release`.
-3. Upload the `.ipa` to App Store Connect via Xcode Organizer or `xcrun altool`.
-4. Complete the App Store listing: screenshots, description, keywords, support URL.
-5. Submit for App Review.
+1. Buat catatan aplikasi di [App Store Connect](https://appstoreconnect.apple.com).
+2. Arsipkan aplikasi di Xcode (Product → Archive) atau gunakan `native:run ios --build=release`.
+3. Unggah `.ipa` ke App Store Connect melalui Xcode Organizer atau `xcrun altool`.
+4. Lengkapi daftar App Store: screenshot, deskripsi, kata kunci, URL dukungan.
+5. Kirim untuk App Review.
 
-**Release checklist:**
+**Daftar periksa rilis:**
 
 ```
-☐ APP_ENV=production in .env.mobile
-☐ Bundle version incremented (CFBundleVersion)
-☐ Signed with Distribution certificate + App Store provisioning profile
-☐ All required permission usage descriptions filled in Info.plist
-☐ Privacy policy URL set
-☐ At least 1 screenshot per required device (iPhone 6.5", iPhone 5.5", iPad Pro 12.9")
-☐ App Review information: demo account credentials provided
+☐ APP_ENV=production di .env.mobile
+☐ Versi bundle ditingkatkan (CFBundleVersion)
+☐ Ditandatangani dengan sertifikat Distribution + provisioning profile App Store
+☐ Semua deskripsi penggunaan izin yang diperlukan diisi di Info.plist
+☐ URL kebijakan privasi diatur
+☐ Minimal 1 screenshot per perangkat yang diperlukan (iPhone 6.5", iPhone 5.5", iPad Pro 12.9")
+☐ Informasi App Review: kredensial akun demo diberikan
 ```
 
 ---
 
-## Post-Deployment Verification
+## Verifikasi Pasca-Deployment
 
-After rolling out a new release, verify the deployment:
+Setelah merilis rilis baru, verifikasi deployment:
 
 ```bash
-# Confirm the mobile platform mode is detected correctly
+# Konfirmasi mode platform mobile terdeteksi dengan benar
 php artisan platform:status
 
-# Verify mobile asset manifest exists
+# Verifikasi manifest aset mobile ada
 ls -la public/build/mobile/manifest.json
 
-# Smoke-test the backend API from a device
+# Uji asap backend API dari perangkat
 curl https://your-api.com/api/health
 ```
 
 ---
 
-## Rolling Back a Release
+## Rollback Rilis
 
-- **Google Play:** Halt the rollout from Play Console → Release → Production → Manage rollout → Halt.
-- **Apple App Store:** You cannot remove an already-approved version. Prepare a hotfix release and submit for expedited review.
+- **Google Play:** Hentikan rollout dari Play Console → Release → Production → Manage rollout → Halt.
+- **Apple App Store:** Anda tidak dapat menghapus versi yang sudah disetujui. Siapkan rilis hotfix dan kirimkan untuk expedited review.
 
 ---
 
-## Related Documentation
+## Dokumentasi Terkait
 
-- [Asset Compilation](../asset-compilation.md) — how `npm run build:mobile` works
-- [Environment Configuration](../environment-configuration.md) — `.env.mobile` variable reference
-- `.env.mobile.example` — annotated starter file
-- [CI/CD Pipeline Examples](./../deployment-ci.md) — automated build workflows
+- [Kompilasi Aset](../asset-compilation.md) — cara kerja `npm run build:mobile`
+- [Konfigurasi Lingkungan](../environment-configuration.md) — referensi variabel `.env.mobile`
+- `.env.mobile.example` — file starter beranotasi
+- [Contoh Pipeline CI/CD](./../deployment-ci.md) — alur kerja build otomatis

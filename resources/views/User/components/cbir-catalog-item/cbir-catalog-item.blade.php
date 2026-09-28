@@ -38,8 +38,7 @@
     $catColors = ['#f87171','#fb923c','#fbbf24','#34d399','#38bdf8','#818cf8','#e879f9','#f472b6','#a3e635','#2dd4bf'];
     $catColor  = $category ? $catColors[abs(crc32($category)) % count($catColors)] : '#6b7280';
 
-    $isMessages = $this instanceof \App\Livewire\Admin\Messages\Messages\Messages
-        || $this instanceof \App\Livewire\User\Messages\Messages\Messages;
+    $isMessages = $this instanceof \App\Livewire\User\Messages\Messages\Messages;
 @endphp
 
 {{-- Wrapper: sama persis dengan .catalog-card tapi tanpa <a> kalau di messages --}}

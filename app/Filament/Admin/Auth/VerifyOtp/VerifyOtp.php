@@ -19,7 +19,7 @@ class VerifyOtp extends SimplePage
 {
     use InteractsWithFormActions;
 
-    protected static string $view = 'User.auth.verify-otp.verify-otp';
+    protected static string $view = 'Admin.auth.verify-otp.verify-otp';
 
     protected static string $layout = 'filament-panels::components.layout.simple';
 
@@ -88,7 +88,7 @@ class VerifyOtp extends SimplePage
                     ->dehydrated(),
                 ViewField::make('otp')
                     ->label(__('6 Digit Kode OTP'))
-                    ->view('User.auth.otp-field.otp-field')
+                    ->view('Admin.auth.otp-field.otp-field')
                     ->required(),
             ]);
     }

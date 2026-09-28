@@ -44,12 +44,25 @@ class PersonalInfoComponent extends Component implements HasForms
             $rawAvatar = $user->getRawOriginal('avatar_url');
             $whatsapp = CountryCallingCodeOptions::split($user->whatsapp);
 
+            $firstName = $user->first_name;
+            $midName = $user->mid_name;
+            $lastName = $user->last_name;
+
+            if (empty($firstName) && filled($user->full_name)) {
+                $parts = explode(' ', trim($user->full_name));
+                $firstName = array_shift($parts);
+                $lastName = count($parts) > 0 ? array_pop($parts) : null;
+                $midName = count($parts) > 0 ? implode(' ', $parts) : null;
+            }
+
+            $fullName = $this->buildFullName($firstName, $midName, $lastName) ?: $user->full_name;
+
             $this->form->fill([
                 'avatar_url' => filter_var($rawAvatar, FILTER_VALIDATE_URL) ? null : $rawAvatar,
-                'first_name' => $user->first_name,
-                'mid_name' => $user->mid_name,
-                'last_name' => $user->last_name,
-                'full_name' => $this->buildFullName($user->first_name, $user->mid_name, $user->last_name),
+                'first_name' => $firstName,
+                'mid_name' => $midName,
+                'last_name' => $lastName,
+                'full_name' => $fullName,
                 'username' => $user->username,
                 'whatsapp_country_code' => $whatsapp['selection'],
                 'whatsapp' => $whatsapp['national'],
@@ -234,6 +247,11 @@ class PersonalInfoComponent extends Component implements HasForms
             }
 
             $data['whatsapp'] = $newWhatsapp ?: null;
+            $data['full_name'] = $this->buildFullName(
+                $data['first_name'] ?? $user->first_name,
+                $data['mid_name'] ?? $user->mid_name,
+                $data['last_name'] ?? $user->last_name,
+            );
 
             // ── Simpan ────────────────────────────────────────────────────
             $user->update($data);

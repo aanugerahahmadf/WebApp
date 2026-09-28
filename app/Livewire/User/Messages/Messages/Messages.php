@@ -6,18 +6,20 @@ use App\Enums\DiscountType\DiscountType;
 use App\Enums\Messages\MediaCollectionType\MediaCollectionType;
 use App\Enums\OrderPaymentStatus\OrderPaymentStatus;
 use App\Enums\OrderStatus\OrderStatus;
+use App\Enums\ReportStatus\ReportStatus;
 use App\Filament\User\Pages\MessagesPage\MessagesPage;
 use App\Filament\User\Resources\PackageResource\PackageResource;
 use App\Filament\User\Resources\ProductResource\ProductResource;
 use App\Jobs\SendBotReply\SendBotReply;
-use App\Livewire\Traits\CanMarkAsRead\CanMarkAsRead;
-use App\Livewire\Traits\CanValidateFiles\CanValidateFiles;
-use App\Livewire\Traits\HasPollInterval\HasPollInterval;
+use App\Livewire\User\Traits\CanMarkAsRead\CanMarkAsRead;
+use App\Livewire\User\Traits\CanValidateFiles\CanValidateFiles;
+use App\Livewire\User\Traits\HasPollInterval\HasPollInterval;
 use App\Models\Inbox\Inbox;
 use App\Models\Message\Message;
 use App\Models\Order\Order;
 use App\Models\Package\Package;
 use App\Models\Product\Product;
+use App\Models\Report\Report;
 use App\Models\Voucher\Voucher;
 use App\Providers\NativeServiceProvider\NativeServiceProvider;
 use App\Services\AutoTranslationService\AutoTranslationService;
@@ -742,7 +744,7 @@ class Messages extends Component implements HasActions, HasForms
             ->modalWidth('xl')
             ->modalHeading(__('Formulir Kebutuhan Acara'))
             ->modalDescription(__('Lengkapi data berikut agar kami dapat menyiapkan rekomendasi yang sesuai.'))
-            ->modalSubmitActionLabel(__('Simpan & Unduh PDF'))
+            ->modalSubmitActionLabel(__('Kirim ke Admin & Unduh PDF'))
             ->form([
                 Section::make(__('Data Pemesan'))->schema([
                     Forms\Components\TextInput::make('customer_name')->label(__('Nama Lengkap'))->required()->maxLength(120),
@@ -781,8 +783,94 @@ class Messages extends Component implements HasActions, HasForms
                 $this->selectedConversation->meta = $meta;
                 $this->selectedConversation->save();
 
+                Report::create([
+                    'user_id' => Auth::id(),
+                    'category' => 'decor_consultation',
+                    'reason' => __('Konsultasi dekorasi acara'),
+                    'description' => collect([
+                        __('Tanggal acara').': '.($data['event_date'] ?? '-'),
+                        __('Jumlah tamu').': '.($data['guest_count'] ?? '-'),
+                        __('Lokasi acara').': '.($data['venue'] ?? '-'),
+                        __('Tema').': '.($data['theme'] ?? '-'),
+                        __('Warna dominan').': '.($data['dominant_colors'] ?? '-'),
+                        __('Anggaran').': '.($data['budget'] ?? '-'),
+                        __('Catatan').': '.($data['notes'] ?? '-'),
+                    ])->implode("\n"),
+                    'status' => ReportStatus::OPEN,
+                ]);
+
                 Notification::make()->title(__('Formulir berhasil disimpan'))->body(__('PDF ringkasan akan segera diunduh.'))->success()->send();
                 $this->dispatch('download-consultation-pdf', url: route('messages.consultation-form.pdf', $this->selectedConversation));
+            });
+    }
+
+    /** Formulir laporan bantuan dari balasan bot, diteruskan ke panel admin. */
+    public function csReportFormAction(): Action
+    {
+        return Action::make('csReportForm')
+            ->label(__('Isi Formulir Laporan'))
+            ->slideOver()
+            ->modalWidth('xl')
+            ->modalHeading(__('Formulir Laporan'))
+            ->modalDescription(fn () => match (($this->selectedConversation?->meta ?? [])['cs_category'] ?? null) {
+                'bug_report' => __('Ceritakan langkah yang dilakukan, hasil yang diharapkan, dan hasil yang muncul.'),
+                'account_issue' => __('Jelaskan akun dan kendala akses atau profil yang Anda alami.'),
+                'order_help' => __('Sertakan nomor pesanan dan bantuan yang Anda perlukan.'),
+                'payment_issue' => __('Sertakan metode pembayaran, status, dan kendala yang terjadi.'),
+                'general_question' => __('Tuliskan pertanyaan atau permintaan bantuan Anda.'),
+                default => __('Jelaskan kendala atau kebutuhan Anda agar Admin dapat menindaklanjutinya.'),
+            })
+            ->modalSubmitActionLabel(__('Kirim ke Admin'))
+            ->form([
+                Forms\Components\TextInput::make('reason')
+                    ->label(__('Judul laporan'))
+                    ->required()
+                    ->maxLength(255),
+                Textarea::make('description')
+                    ->label(__('Detail masalah / permintaan'))
+                    ->helperText(fn () => match (($this->selectedConversation?->meta ?? [])['cs_category'] ?? null) {
+                        'bug_report' => __('Sertakan langkah, hasil yang diharapkan, dan hasil yang muncul.'),
+                        'account_issue' => __('Contoh: tidak bisa login, lupa kata sandi, atau data profil bermasalah.'),
+                        'order_help' => __('Cantumkan nomor pesanan jika tersedia.'),
+                        'payment_issue' => __('Lampirkan bukti pembayaran bila diperlukan.'),
+                        'decor_consultation' => __('Ceritakan tema, tanggal acara, lokasi, dan perkiraan anggaran.'),
+                        default => __('Tuliskan informasi yang membantu Admin memahami kebutuhan Anda.'),
+                    })
+                    ->required()
+                    ->rows(6)
+                    ->maxLength(2000),
+                Forms\Components\FileUpload::make('attachments')
+                    ->label(__('Lampiran foto/video'))
+                    ->disk('public')
+                    ->directory('reports')
+                    ->multiple()
+                    ->maxFiles(5)
+                    ->maxSize(51200)
+                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/quicktime', 'video/webm']),
+            ])
+            ->action(function (array $data): void {
+                $conversationMeta = $this->selectedConversation?->meta ?? [];
+                $category = $conversationMeta['cs_category'] ?? 'general_question';
+                $categories = ['bug_report', 'account_issue', 'order_help', 'payment_issue', 'decor_consultation', 'general_question'];
+                if (! in_array($category, $categories, true)) {
+                    $category = 'general_question';
+                }
+
+                $report = Report::create([
+                    'user_id' => Auth::id(),
+                    'category' => $category,
+                    'reason' => $data['reason'],
+                    'description' => $data['description'],
+                    'attachments' => $data['attachments'] ?? [],
+                    'status' => ReportStatus::OPEN,
+                ]);
+
+                Notification::make()
+                    ->title(__('Laporan terkirim ke Admin'))
+                    ->body(__('Admin dapat melihat laporan dan lampiran Anda di panel laporan.'))
+                    ->success()
+                    ->send();
+                $this->dispatch('download-report-pdf', url: route('user.reports.pdf', $report));
             });
     }
 

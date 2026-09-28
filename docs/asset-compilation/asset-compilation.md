@@ -1,31 +1,31 @@
-# Asset Compilation Process
+# Proses Kompilasi Aset
 
-This document explains how the Vite build pipeline is configured for multi-platform asset compilation in the Laravel Wedding Organizer CBIR application.
-
----
-
-## Overview
-
-The project uses a single `vite.config.js` that reads the `VITE_PLATFORM` environment variable to determine which platform to build for. Each platform gets its own:
-
-- Entry point JavaScript file
-- Output directory inside `public/build/`
-- Asset manifest (`manifest.json`)
-- Hot-module-replacement (HMR) hot file
-
-The `cross-env` package is used in npm scripts to set `VITE_PLATFORM` cross-platform (Windows, macOS, Linux).
+Dokumen ini menjelaskan bagaimana pipeline build Vite dikonfigurasi untuk kompilasi aset multi-platform pada aplikasi Laravel Wedding Organizer CBIR.
 
 ---
 
-## Platform Selection
+## Ikhtisar
 
-Vite reads the active platform from the `VITE_PLATFORM` environment variable. The resolution order is:
+Proyek ini menggunakan satu file `vite.config.js` yang membaca variabel lingkungan `VITE_PLATFORM` untuk menentukan platform mana yang akan di-build. Setiap platform mendapatkan:
 
-1. Shell / CI environment (`process.env.VITE_PLATFORM`)
-2. `.env` file value (`VITE_PLATFORM=...`)
+- File JavaScript entry point tersendiri
+- Direktori output di dalam `public/build/`
+- Manifest aset (`manifest.json`)
+- Hot file untuk hot-module-replacement (HMR)
+
+Paket `cross-env` digunakan dalam skrip npm untuk mengatur `VITE_PLATFORM` secara lintas platform (Windows, macOS, Linux).
+
+---
+
+## Pemilihan Platform
+
+Vite membaca platform aktif dari variabel lingkungan `VITE_PLATFORM`. Urutan resolusinya adalah:
+
+1. Lingkungan Shell / CI (`process.env.VITE_PLATFORM`)
+2. Nilai file `.env` (`VITE_PLATFORM=...`)
 3. Default: `web`
 
-Valid values are `web`, `mobile`, and `desktop`. An unknown value triggers a warning and falls back to `web`.
+Nilai yang valid adalah `web`, `mobile`, dan `desktop`. Nilai yang tidak dikenal akan memicu peringatan dan kembali ke `web`.
 
 ```js
 // vite.config.js (simplified)
@@ -34,138 +34,138 @@ const validPlatforms = ['web', 'mobile', 'desktop'];
 const activePlatform = validPlatforms.includes(platform) ? platform : 'web';
 ```
 
-At build time, four constants are injected into the client bundle and tree-shaken:
+Saat build, empat konstanta disuntikkan ke dalam bundle klien dan di-tree-shake:
 
-| Constant                  | Type    | Example (`mobile` build) |
-|---------------------------|---------|--------------------------|
-| `__VITE_PLATFORM__`       | string  | `"mobile"`               |
-| `__VITE_PLATFORM_WEB__`   | boolean | `false`                  |
-| `__VITE_PLATFORM_MOBILE__`| boolean | `true`                   |
-| `__VITE_PLATFORM_DESKTOP__`| boolean| `false`                  |
+| Konstanta                   | Tipe    | Contoh (build `mobile`)  |
+|-----------------------------|---------|--------------------------|
+| `__VITE_PLATFORM__`         | string  | `"mobile"`               |
+| `__VITE_PLATFORM_WEB__`     | boolean | `false`                  |
+| `__VITE_PLATFORM_MOBILE__`  | boolean | `true`                   |
+| `__VITE_PLATFORM_DESKTOP__` | boolean | `false`                  |
 
 ---
 
-## Platform-Specific Entry Points
+## Entry Point Per Platform
 
-Each platform has a dedicated JavaScript entry point in `resources/js/`. The entry points share common dependencies but diverge on platform-specific APIs.
+Setiap platform memiliki entry point JavaScript khusus di dalam `resources/js/`. Entry point ini berbagi dependensi yang sama, namun berbeda pada API yang spesifik untuk setiap platform.
 
 ### `resources/js/app-web/app-web.js`
 
-Used for web browser deployments (`php artisan serve`).
+Digunakan untuk deployment di browser web (`php artisan serve`).
 
-- Imports `../bootstrap/bootstrap`, shared UI components, and Firebase client
-- Uses the **WebRTC `getUserMedia` API** for camera access (CBIR feature)
-- Does **not** import `phpProtocolAdapter` (mobile-only)
-- Exposes `window.__PLATFORM__` with `type: 'web'` and `supportsWebRTC: true`
+- Mengimpor `../bootstrap/bootstrap`, komponen UI bersama, dan Firebase client
+- Menggunakan **WebRTC `getUserMedia` API** untuk akses kamera (fitur CBIR)
+- **Tidak** mengimpor `phpProtocolAdapter` (khusus mobile)
+- Mengekspos `window.__PLATFORM__` dengan `type: 'web'` dan `supportsWebRTC: true`
 
 ### `resources/js/app-mobile/app-mobile.js`
 
-Used for NativePHP Mobile (Android / iOS) (`php artisan native:run`).
+Digunakan untuk NativePHP Mobile (Android / iOS) (`php artisan native:run`).
 
-- Imports `../bootstrap/bootstrap`, shared UI components, and Firebase client
-- Imports `../phpProtocolAdapter/phpProtocolAdapter` — required for the iOS `php://` protocol bridge
-- Uses the **NativePHP Mobile Camera API** instead of WebRTC
-- Exposes `window.__PLATFORM__` with `type: 'mobile'`, sub-platform detection (`isIOS`, `isAndroid`)
+- Mengimpor `../bootstrap/bootstrap`, komponen UI bersama, dan Firebase client
+- Mengimpor `../phpProtocolAdapter/phpProtocolAdapter` — wajib untuk jembatan protokol `php://` pada iOS
+- Menggunakan **NativePHP Mobile Camera API** sebagai pengganti WebRTC
+- Mengekspos `window.__PLATFORM__` dengan `type: 'mobile'`, deteksi sub-platform (`isIOS`, `isAndroid`)
 
 ### `resources/js/app-desktop/app-desktop.js`
 
-Used for NativePHP Electron (Windows / macOS) (`php artisan native:serve`).
+Digunakan untuk NativePHP Electron (Windows / macOS) (`php artisan native:serve`).
 
-- Imports `../bootstrap/bootstrap`, shared UI components, and Firebase client
-- Does **not** import `phpProtocolAdapter`
-- Uses the **NativePHP Electron Camera API** instead of WebRTC
-- Exposes `window.__PLATFORM__` with `type: 'desktop'`, sub-platform detection (`isWindows`, `isMacOS`)
+- Mengimpor `../bootstrap/bootstrap`, komponen UI bersama, dan Firebase client
+- **Tidak** mengimpor `phpProtocolAdapter`
+- Menggunakan **NativePHP Electron Camera API** sebagai pengganti WebRTC
+- Mengekspos `window.__PLATFORM__` dengan `type: 'desktop'`, deteksi sub-platform (`isWindows`, `isMacOS`)
 
 ---
 
-## Build Commands
+## Perintah Build
 
-### Production Builds
+### Build Produksi
 
-Build assets for a specific platform using the `build:*` scripts:
+Build aset untuk platform tertentu menggunakan skrip `build:*`:
 
 ```bash
-# Build for web only
+# Build untuk web saja
 npm run build:web
 
-# Build for mobile only
+# Build untuk mobile saja
 npm run build:mobile
 
-# Build for desktop only
+# Build untuk desktop saja
 npm run build:desktop
 
-# Build all three platforms sequentially
+# Build ketiga platform secara berurutan
 npm run build:all
 ```
 
-`build:all` runs `build:web && build:mobile && build:desktop` in sequence, producing all three output directories.
+`build:all` menjalankan `build:web && build:mobile && build:desktop` secara berurutan, menghasilkan ketiga direktori output.
 
-#### Mobile Sub-Platform Builds
+#### Build Sub-Platform Mobile
 
-Mobile builds can target a specific OS:
+Build mobile dapat menargetkan OS tertentu:
 
 ```bash
-# iOS-specific bundle (sets --mode=ios)
+# Bundle khusus iOS (mengatur --mode=ios)
 npm run build:mobile:ios
 
-# Android-specific bundle (sets --mode=android)
+# Bundle khusus Android (mengatur --mode=android)
 npm run build:mobile:android
 ```
 
 ---
 
-## Development / HMR Commands
+## Perintah Pengembangan / HMR
 
-Each platform runs on a separate port so all three can be active simultaneously during development.
+Setiap platform berjalan pada port terpisah sehingga ketiganya dapat aktif secara bersamaan selama pengembangan.
 
-| Command              | Platform | Port  |
-|----------------------|----------|-------|
-| `npm run dev:web`    | web      | 5173  |
-| `npm run dev:mobile` | mobile   | 5174  |
-| `npm run dev:desktop`| desktop  | 5175  |
+| Perintah              | Platform | Port  |
+|-----------------------|----------|-------|
+| `npm run dev:web`     | web      | 5173  |
+| `npm run dev:mobile`  | mobile   | 5174  |
+| `npm run dev:desktop` | desktop  | 5175  |
 
-The port is determined automatically from the platform, but can be overridden:
+Port ditentukan secara otomatis berdasarkan platform, namun dapat diganti:
 
 ```bash
-# Override port via environment variable
+# Ganti port melalui variabel lingkungan
 VITE_PORT=5200 npm run dev:web
 ```
 
-The HMR host defaults to `localhost` and can be overridden via `VITE_HMR_HOST` — useful in Docker or WSL environments:
+HMR host secara default adalah `localhost` dan dapat diganti melalui `VITE_HMR_HOST` — berguna di lingkungan Docker atau WSL:
 
 ```bash
 VITE_HMR_HOST=0.0.0.0 npm run dev:web
 ```
 
-### HMR Support Per Platform
+### Dukungan HMR Per Platform
 
-All three platforms fully support Vite's hot module replacement during development. Changes to watched files are pushed to the browser / native webview without a full reload.
+Ketiga platform sepenuhnya mendukung hot module replacement Vite selama pengembangan. Perubahan pada file yang dipantau langsung dikirim ke browser / native webview tanpa perlu reload penuh.
 
-Blade view cache files (`storage/framework/views/**`) are excluded from the file watcher to reduce unnecessary HMR noise.
+File cache Blade view (`storage/framework/views/**`) dikecualikan dari file watcher untuk mengurangi noise HMR yang tidak perlu.
 
-The Laravel `asset()` helper locates the Vite dev server via a "hot file":
+Helper Laravel `asset()` menemukan dev server Vite melalui "hot file":
 
 | Platform | Hot File            |
 |----------|---------------------|
 | web      | `public/hot`        |
-| mobile   | `public/ios-hot` or `public/android-hot` (set by `nativephpHotFile()`) |
+| mobile   | `public/ios-hot` atau `public/android-hot` (diatur oleh `nativephpHotFile()`) |
 | desktop  | `public/hot`        |
 
 ---
 
-## Output Directories
+## Direktori Output
 
-Each platform writes its compiled assets to a separate directory under `public/build/`:
+Setiap platform menulis aset yang telah dikompilasi ke direktori terpisah di bawah `public/build/`:
 
-| Platform | Output Directory        | Manifest Path                        |
+| Platform | Direktori Output        | Path Manifest                        |
 |----------|-------------------------|--------------------------------------|
 | web      | `public/build/web`      | `public/build/web/manifest.json`     |
 | mobile   | `public/build/mobile`   | `public/build/mobile/manifest.json`  |
 | desktop  | `public/build/desktop`  | `public/build/desktop/manifest.json` |
 
-The `PlatformAssetManager` class reads the correct manifest at runtime based on the active platform mode, so Laravel's `@vite()` directive and the `asset()` helper always resolve to hashed filenames from the right build.
+Kelas `PlatformAssetManager` membaca manifest yang sesuai saat runtime berdasarkan mode platform aktif, sehingga direktif `@vite()` Laravel dan helper `asset()` selalu me-resolve ke nama file yang telah di-hash dari build yang tepat.
 
-### Example Manifest Entry
+### Contoh Entri Manifest
 
 ```json
 {
@@ -180,9 +180,9 @@ The `PlatformAssetManager` class reads the correct manifest at runtime based on 
 
 ---
 
-## Full `vite.config.js` Reference
+## Referensi Lengkap `vite.config.js`
 
-Below is an annotated summary of the complete configuration:
+Berikut adalah ringkasan beranotasi dari konfigurasi lengkap:
 
 ```js
 import { defineConfig, loadEnv } from 'vite';
@@ -285,9 +285,9 @@ export default defineConfig(({ mode }) => {
 
 ---
 
-## Using Platform Constants in JavaScript
+## Menggunakan Konstanta Platform di JavaScript
 
-The `__VITE_PLATFORM__` constants can be used for conditional logic that is tree-shaken at build time:
+Konstanta `__VITE_PLATFORM__` dapat digunakan untuk logika kondisional yang di-tree-shake saat build:
 
 ```js
 // Dead code is removed by Rollup during production builds
@@ -304,23 +304,23 @@ if (__VITE_PLATFORM__ === 'desktop') {
 
 ---
 
-## Platform Entry Point Feature Comparison
+## Perbandingan Fitur Entry Point Per Platform
 
-| Feature                    | app-web.js | app-mobile.js | app-desktop.js |
-|----------------------------|:----------:|:-------------:|:--------------:|
-| WebRTC camera              | ✅          | ❌             | ❌              |
-| NativePHP Mobile Camera    | ❌          | ✅             | ❌              |
-| NativePHP Desktop Camera   | ❌          | ❌             | ✅              |
-| phpProtocolAdapter (iOS)   | ❌          | ✅             | ❌              |
-| Push notifications         | ❌          | ✅             | ❌              |
-| Desktop notifications      | ❌          | ❌             | ✅              |
-| Native file system access  | ❌          | ✅             | ✅              |
-| Firebase client            | ✅          | ✅             | ✅              |
+| Fitur                       | app-web.js | app-mobile.js | app-desktop.js |
+|-----------------------------|:----------:|:-------------:|:--------------:|
+| Kamera WebRTC               | ✅          | ❌             | ❌              |
+| Kamera NativePHP Mobile     | ❌          | ✅             | ❌              |
+| Kamera NativePHP Desktop    | ❌          | ❌             | ✅              |
+| phpProtocolAdapter (iOS)    | ❌          | ✅             | ❌              |
+| Push notifications          | ❌          | ✅             | ❌              |
+| Notifikasi desktop          | ❌          | ❌             | ✅              |
+| Akses sistem file native    | ❌          | ✅             | ✅              |
+| Firebase client             | ✅          | ✅             | ✅              |
 
 ---
 
-## Related Documentation
+## Dokumentasi Terkait
 
-- [Platform Support Overview](./platform-support.md)
-- [Environment Configuration](./environment-configuration.md)
-- [Platform Feature Matrix](./platform-features.md)
+- [Ikhtisar Dukungan Platform](./platform-support.md)
+- [Konfigurasi Lingkungan](./environment-configuration.md)
+- [Matriks Fitur Platform](./platform-features.md)

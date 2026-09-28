@@ -3,9 +3,9 @@
 namespace App\Livewire\Admin\Messages\Inbox;
 
 use App\Filament\Admin\Pages\MessagesPage\MessagesPage as AdminMessagesPage;
-use App\Livewire\Traits\CanMarkAsRead\CanMarkAsRead;
-use App\Livewire\Traits\CanValidateFiles\CanValidateFiles;
-use App\Livewire\Traits\HasPollInterval\HasPollInterval;
+use App\Livewire\Admin\Traits\CanMarkAsRead\CanMarkAsRead;
+use App\Livewire\Admin\Traits\CanValidateFiles\CanValidateFiles;
+use App\Livewire\Admin\Traits\HasPollInterval\HasPollInterval;
 use App\Models\Inbox\Inbox as InboxModel;
 use App\Models\User\User;
 use Filament\Actions\Action;

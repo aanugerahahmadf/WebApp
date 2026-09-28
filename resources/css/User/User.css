@@ -62,7 +62,6 @@
     background: transparent;
 }
 
-
 /* ─── NativePHP Mobile Safe Area for Filament ─── */
 
 /* Top navigation bar — fixed on all sizes (user panel)
@@ -223,29 +222,6 @@
 }
 
 
-/* Konten utama: padding bawah agar tidak tertutup bottom-nav.
-   HANYA user panel yang punya bottom-nav — admin panel tidak perlu.
-   Mobile: padding-bottom TIADA di sini — di-scroll oleh .fi-main-ctn yang jadi
-   scroll container (mobile-bottom-nav). Menerapkan di dua tempat akan membuat
-   double padding → pita kosong besar di bawah grid. */
-
-@media (max-width: 1023px) {
-    .fi-panel-user .fi-main {
-        padding-bottom: 0 !important;
-        /* Pastikan area konten utama bisa di-scroll di mobile */
-        overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch !important;
-    }
-}
-
-
-
-@media (min-width: 1024px) {
-    .fi-panel-user .fi-main {
-        padding-bottom: 1.5rem !important;
-    }
-}
-
 
 /* ─── Hilangkan garis border di atas filter AboveContent (user panel) ─── */
 .fi-panel-user .fi-ta-filters-above-content-ctn {
@@ -276,34 +252,7 @@
 }
 
 
-/* ── Scroll container & background (user panel) ──
- *
- * 1. Jadikan .fi-main-ctn scroll container di semua ukuran (tidak hanya mobile).
- *    Dengan begini scrollbar dan background konsisten antara desktop & mobile.
- * 2. Beri background agar padding-bottom dari footer tidak tembus ke body.
- */
-.fi-panel-user .fi-main-ctn {
-    scroll-behavior: smooth !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    background-color: #f9fafb; /* bg-gray-50 — agar padding-bottom tidak transparan */
-}
 
-
-.dark .fi-panel-user .fi-main-ctn {
-    background-color: #030712; /* dark:bg-gray-950 */
-}
-
-
-/* Desktop: constrain .fi-layout height agar overflow-y di .fi-main-ctn berfungsi
- * (tanpa parent height tetap, overflow-y:auto tidak aktif) */
-
-@media (min-width: 1024px) {
-    .fi-panel-user .fi-layout {
-        height: 100dvh !important;
-        overflow: hidden !important;
-    }
-}
 
 
 /* ═══════════════════════════════════════════════════════════════════

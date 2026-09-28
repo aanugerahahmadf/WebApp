@@ -1,24 +1,24 @@
-# Desktop Application Distribution Guide
+# Panduan Distribusi Aplikasi Desktop
 
-This guide covers building and distributing the Laravel Wedding Organizer CBIR application as a native desktop application for Windows and macOS using [NativePHP Electron](https://nativephp.com).
+Panduan ini mencakup proses membangun dan mendistribusikan aplikasi Laravel Wedding Organizer CBIR sebagai aplikasi desktop native untuk Windows dan macOS menggunakan [NativePHP Electron](https://nativephp.com).
 
 ---
 
-## Prerequisites
+## Prasyarat
 
-| Requirement | Details |
+| Persyaratan | Detail |
 |---|---|
-| `nativephp/electron` package | `composer require nativephp/electron` |
-| `nativephp/laravel` package | `composer require nativephp/laravel` |
-| PHP 8.2+ CLI | Required on the build machine |
-| Node.js 18+ | Required (Electron toolchain) |
-| Electron Builder | Installed automatically by `nativephp/electron` |
-| **Windows builds:** Windows 10+ | Cross-compilation from macOS/Linux is limited |
-| **macOS builds:** macOS 12+ + Xcode | Required for `.app` packaging and code signing |
-| Apple Developer Account | Required for macOS notarization and distribution |
-| Windows Code Signing Certificate | Required for Windows Authenticode signing (optional but recommended) |
+| Paket `nativephp/electron` | `composer require nativephp/electron` |
+| Paket `nativephp/laravel` | `composer require nativephp/laravel` |
+| PHP 8.2+ CLI | Diperlukan di mesin build |
+| Node.js 18+ | Diperlukan (toolchain Electron) |
+| Electron Builder | Diinstal secara otomatis oleh `nativephp/electron` |
+| **Build Windows:** Windows 10+  | Cross-compilation dari macOS/Linux terbatas |
+| **Build macOS:** macOS 12+ + Xcode | Diperlukan untuk packaging `.app` dan penandatanganan kode |
+| Akun Apple Developer | Diperlukan untuk notarization macOS dan distribusi |
+| Sertifikat Penandatanganan Kode Windows | Diperlukan untuk penandatanganan Authenticode Windows (opsional namun direkomendasikan) |
 
-Install and scaffold NativePHP Desktop once per project:
+Instal dan siapkan NativePHP Desktop sekali per proyek:
 
 ```bash
 composer require nativephp/electron nativephp/laravel
@@ -27,125 +27,125 @@ php artisan native:install
 
 ---
 
-## Environment Configuration
+## Konfigurasi Lingkungan
 
-Create `.env.desktop` from the example file:
+Buat `.env.desktop` dari file contoh:
 
 ```bash
 cp .env.desktop.example .env.desktop
 ```
 
-Required variables in `.env.desktop`:
+Variabel yang diperlukan di `.env.desktop`:
 
 ```dotenv
 APP_ENV=production
-APP_KEY=base64:...           # Generate: php artisan key:generate
+APP_KEY=base64:...           # Buat dengan: php artisan key:generate
 APP_URL=http://localhost:8002
 
-# Single-user local file session is ideal for desktop
+# Session file lokal pengguna tunggal ideal untuk desktop
 SESSION_DRIVER=file
 SESSION_LIFETIME=10080
 
-# Desktop platform marker
+# Penanda platform desktop
 VITE_PLATFORM=desktop
 
-# Embedded PHP server port
+# Port server PHP tertanam
 NATIVEPHP_HTTP_PORT=8002
 
-# NativePHP app identity
+# Identitas aplikasi NativePHP
 NATIVEPHP_APP_ID=com.yourcompany.weddingorganizer
 NATIVEPHP_APP_NAME="Wedding Flower Decorations"
 NATIVEPHP_APP_VERSION=1.0.0
 ```
 
-### Required Variable Reference
+### Referensi Variabel yang Diperlukan
 
-| Variable | Required | Description |
+| Variabel | Wajib | Deskripsi |
 |---|---|---|
-| `APP_ENV` | Yes | Must be `production` for distributed builds |
-| `APP_KEY` | Yes | 32-byte base64 encryption key |
-| `APP_URL` | Yes | Should match `http://localhost:{NATIVEPHP_HTTP_PORT}` |
-| `SESSION_DRIVER` | Yes | Use `file` for desktop (single-user local) |
-| `VITE_PLATFORM` | Yes | Must be `desktop` |
-| `NATIVEPHP_HTTP_PORT` | Yes | Port the embedded PHP server listens on (default 8002) |
-| `NATIVEPHP_APP_ID` | Yes | Unique reverse-DNS bundle identifier |
-| `NATIVEPHP_APP_VERSION` | Yes | Semantic version string (e.g. `1.0.0`) |
+| `APP_ENV` | Ya | Harus `production` untuk build yang didistribusikan |
+| `APP_KEY` | Ya | Kunci enkripsi base64 32-byte |
+| `APP_URL` | Ya | Harus cocok dengan `http://localhost:{NATIVEPHP_HTTP_PORT}` |
+| `SESSION_DRIVER` | Ya | Gunakan `file` untuk desktop (lokal pengguna tunggal) |
+| `VITE_PLATFORM` | Ya | Harus `desktop` |
+| `NATIVEPHP_HTTP_PORT` | Ya | Port yang didengarkan server PHP tertanam (default 8002) |
+| `NATIVEPHP_APP_ID` | Ya | Identifier bundle reverse-DNS yang unik |
+| `NATIVEPHP_APP_VERSION` | Ya | String versi semantik (mis. `1.0.0`) |
 
 ---
 
-## Build Steps
+## Langkah Build
 
-### 1. Install dependencies
+### 1. Instal dependensi
 
 ```bash
 composer install --no-dev --optimize-autoloader
 npm ci
 ```
 
-### 2. Compile desktop assets
+### 2. Kompilasi aset desktop
 
 ```bash
 npm run build:desktop
 ```
 
-Assets output to `public/build/desktop/`.
+Aset di-output ke `public/build/desktop/`.
 
-### 3. Cache Laravel configuration
+### 3. Cache konfigurasi Laravel
 
 ```bash
 php artisan optimize
 ```
 
-### 4. Build the Electron app
+### 4. Build aplikasi Electron
 
 ```bash
 php artisan native:build
 ```
 
-NativePHP Electron's build command packages the PHP runtime, Laravel application, and Electron shell into a distributable bundle.
+Perintah build NativePHP Electron mengemas runtime PHP, aplikasi Laravel, dan shell Electron ke dalam bundel yang dapat didistribusikan.
 
 ---
 
-## Windows Packaging
+## Packaging Windows
 
-### Development
+### Pengembangan
 
-Start the app in development mode with live reloading:
+Mulai aplikasi dalam mode pengembangan dengan live reloading:
 
 ```bash
 php artisan native:serve
 ```
 
-### Production `.exe` Installer
+### Installer `.exe` Produksi
 
 ```bash
 php artisan native:build --os=win
 ```
 
-Output: `dist/Wedding-Organizer-Setup-{version}.exe` (NSIS installer) and `dist/Wedding-Organizer-{version}-win.zip` (portable).
+Output: `dist/Wedding-Organizer-Setup-{version}.exe` (installer NSIS) dan `dist/Wedding-Organizer-{version}-win.zip` (portable).
 
-### Windows Code Signing (Authenticode)
+### Penandatanganan Kode Windows (Authenticode)
 
-Unsigned Windows installers trigger SmartScreen warnings. Sign with an Authenticode certificate from a trusted CA (DigiCert, Sectigo, etc.):
+Installer Windows yang tidak ditandatangani akan memicu peringatan SmartScreen. Tandatangani dengan sertifikat Authenticode dari CA tepercaya (DigiCert, Sectigo, dll.):
 
 ```dotenv
 NATIVEPHP_WINDOWS_CERT_FILE=/path/to/certificate.pfx
 NATIVEPHP_WINDOWS_CERT_PASSWORD=your-cert-password
 ```
 
-Or use a cloud-based HSM signing service (Trusted Signing, SignPath):
+Atau gunakan layanan penandatanganan HSM berbasis cloud (Trusted Signing, SignPath):
 
 ```yaml
-# In electron-builder config (nativephp.config.js or package.json)
+# Dalam konfigurasi electron-builder (nativephp.config.js atau package.json)
 win:
   certificateSubjectName: "Your Company Name"
   signingHashAlgorithms: ["sha256"]
   sign: "./scripts/sign-windows.js"
 ```
 
-### Windows Build Configuration
+### Konfigurasi Build Windows
 
-Key settings in `config/nativephp.php`:
+Pengaturan utama di `config/nativephp.php`:
 
 ```php
 'app_id'      => env('NATIVEPHP_APP_ID', 'com.yourcompany.weddingorganizer'),
@@ -160,27 +160,27 @@ Key settings in `config/nativephp.php`:
 
 ---
 
-## macOS Packaging
+## Packaging macOS
 
-### Development
+### Pengembangan
 
 ```bash
 php artisan native:serve
 ```
 
-### Production `.dmg` / `.app`
+### Produksi `.dmg` / `.app`
 
 ```bash
 php artisan native:build --os=mac
 ```
 
-Output: `dist/Wedding-Organizer-{version}.dmg` and `dist/Wedding-Organizer-{version}-mac.zip`.
+Output: `dist/Wedding-Organizer-{version}.dmg` dan `dist/Wedding-Organizer-{version}-mac.zip`.
 
-### macOS Code Signing and Notarization
+### Penandatanganan Kode dan Notarisasi macOS
 
-macOS requires code signing with an Apple Developer ID certificate. Without it, Gatekeeper blocks the app on first launch. **Notarization** is required for distribution outside the Mac App Store on macOS 10.15+.
+macOS memerlukan penandatanganan kode dengan sertifikat Apple Developer ID. Tanpanya, Gatekeeper akan memblokir aplikasi saat pertama kali diluncurkan. **Notarisasi** diperlukan untuk distribusi di luar Mac App Store pada macOS 10.15+.
 
-Set up credentials:
+Siapkan kredensial:
 
 ```dotenv
 NATIVEPHP_MACOS_IDENTITY="Developer ID Application: Your Name (TEAMID)"
@@ -189,12 +189,12 @@ NATIVEPHP_APPLE_APP_SPECIFIC_PASSWORD=xxxx-xxxx-xxxx-xxxx
 NATIVEPHP_APPLE_TEAM_ID=ABCDE12345
 ```
 
-The build pipeline will automatically:
-1. Sign all binaries with your Developer ID certificate.
-2. Submit the `.dmg` to Apple's notarization service.
-3. Staple the notarization ticket to the `.dmg` so it opens offline.
+Pipeline build akan secara otomatis:
+1. Menandatangani semua biner dengan sertifikat Developer ID Anda.
+2. Mengirimkan `.dmg` ke layanan notarisasi Apple.
+3. Melampirkan tiket notarisasi ke `.dmg` sehingga dapat dibuka secara offline.
 
-### macOS Build Configuration
+### Konfigurasi Build macOS
 
 ```php
 'macos' => [
@@ -207,7 +207,7 @@ The build pipeline will automatically:
 ],
 ```
 
-Required `entitlements.mac.plist` for camera access:
+`entitlements.mac.plist` yang diperlukan untuk akses kamera:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -225,44 +225,44 @@ Required `entitlements.mac.plist` for camera access:
 
 ---
 
-## Cross-Platform Builds
+## Build Lintas Platform
 
-Electron Builder supports cross-compilation, but with limitations:
+Electron Builder mendukung cross-compilation, tetapi dengan keterbatasan:
 
-| Build target | Build machine | Notes |
+| Target build | Mesin build | Catatan |
 |---|---|---|
-| Windows `.exe` | Windows (recommended) | Also possible on Linux via Wine |
-| Windows `.exe` | macOS | Limited — no native NSIS support |
-| macOS `.dmg` | macOS only | Apple requires macOS for notarization |
-| Linux `.AppImage` | Linux or macOS/Windows via Docker | |
+| Windows `.exe` | Windows (direkomendasikan) | Juga memungkinkan di Linux melalui Wine |
+| Windows `.exe` | macOS | Terbatas — tidak ada dukungan NSIS native |
+| macOS `.dmg` | Hanya macOS | Apple memerlukan macOS untuk notarisasi |
+| Linux `.AppImage` | Linux atau macOS/Windows melalui Docker | |
 
-For CI/CD, use platform-specific runners (GitHub Actions `windows-latest`, `macos-latest`) — see the CI/CD pipeline examples.
+Untuk CI/CD, gunakan runner khusus platform (GitHub Actions `windows-latest`, `macos-latest`) — lihat contoh pipeline CI/CD.
 
 ---
 
-## Distribution Strategies
+## Strategi Distribusi
 
-### Direct Download
+### Unduhan Langsung
 
-Host the installer on your website or S3 bucket. Users download and run it manually. Suitable for internal enterprise distribution.
+Host installer di website Anda atau bucket S3. Pengguna mengunduh dan menjalankannya secara manual. Cocok untuk distribusi enterprise internal.
 
 ```
 https://downloads.yourcompany.com/wedding-organizer/
-  ├── Wedding-Organizer-Setup-1.0.0.exe      ← Windows installer
-  ├── Wedding-Organizer-1.0.0.dmg            ← macOS disk image
-  └── latest.yml                              ← Auto-updater manifest
+  ├── Wedding-Organizer-Setup-1.0.0.exe      ← Installer Windows
+  ├── Wedding-Organizer-1.0.0.dmg            ← Disk image macOS
+  └── latest.yml                              ← Manifest auto-updater
 ```
 
-### Auto-Updates (NativePHP Electron)
+### Pembaruan Otomatis (NativePHP Electron)
 
-NativePHP Electron integrates Electron's `autoUpdater` module. Publish a `latest.yml` (Windows) and `latest-mac.yml` (macOS) alongside your installers, and the app will check for updates on startup.
+NativePHP Electron mengintegrasikan modul `autoUpdater` Electron. Terbitkan `latest.yml` (Windows) dan `latest-mac.yml` (macOS) bersama installer Anda, dan aplikasi akan memeriksa pembaruan saat startup.
 
 ```dotenv
-# URL where NativePHP checks for updates
+# URL tempat NativePHP memeriksa pembaruan
 NATIVEPHP_UPDATER_URL=https://downloads.yourcompany.com/wedding-organizer/
 ```
 
-Manual update check in PHP:
+Pemeriksaan pembaruan manual di PHP:
 
 ```php
 if (platform_feature('auto_updates')) {
@@ -272,42 +272,42 @@ if (platform_feature('auto_updates')) {
 
 ### Microsoft Store
 
-Build an MSIX package for Microsoft Store distribution:
+Build paket MSIX untuk distribusi Microsoft Store:
 
 ```bash
 php artisan native:build --os=win --target=appx
 ```
 
-Requires a Microsoft Partner Center account and a code signing certificate trusted by the Store.
+Memerlukan akun Microsoft Partner Center dan sertifikat penandatanganan kode yang dipercaya oleh Store.
 
 ### Mac App Store
 
-Mac App Store builds require a separate `Mac App Store Distribution` certificate and use sandboxed entitlements. Consult the [NativePHP documentation](https://nativephp.com) for MAS-specific configuration.
+Build Mac App Store memerlukan sertifikat `Mac App Store Distribution` terpisah dan menggunakan entitlement yang di-sandbox. Konsultasikan [dokumentasi NativePHP](https://nativephp.com) untuk konfigurasi khusus MAS.
 
 ---
 
-## Post-Build Verification
+## Verifikasi Pasca-Build
 
-After building, verify the package before distribution:
+Setelah build, verifikasi paket sebelum distribusi:
 
 ```bash
-# Confirm desktop asset manifest exists
+# Konfirmasi manifest aset desktop ada
 ls -la public/build/desktop/manifest.json
 
-# Inspect the built app bundle (macOS)
+# Inspeksi bundel aplikasi yang dibangun (macOS)
 codesign -dvv dist/Wedding-Organizer-1.0.0.dmg
 
-# Verify notarization (macOS)
+# Verifikasi notarisasi (macOS)
 spctl --assess --type open --context context:primary-signature -v dist/Wedding-Organizer-1.0.0.dmg
 
-# Run the installer on a clean machine to verify it works without development dependencies
+# Jalankan installer di mesin bersih untuk memverifikasi berfungsi tanpa dependensi pengembangan
 ```
 
 ---
 
-## Related Documentation
+## Dokumentasi Terkait
 
-- [Asset Compilation](../asset-compilation.md) — how `npm run build:desktop` works
-- [Environment Configuration](../environment-configuration.md) — `.env.desktop` variable reference
-- `.env.desktop.example` — annotated starter file
-- [CI/CD Pipeline Examples](../ci-cd.md) — automated build workflows for all three platforms
+- [Kompilasi Aset](../asset-compilation.md) — cara kerja `npm run build:desktop`
+- [Konfigurasi Lingkungan](../environment-configuration.md) — referensi variabel `.env.desktop`
+- `.env.desktop.example` — file starter beranotasi
+- [Contoh Pipeline CI/CD](../ci-cd.md) — alur kerja build otomatis untuk ketiga platform

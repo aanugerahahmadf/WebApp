@@ -52,12 +52,25 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
         if ($user) {
             $whatsapp = CountryCallingCodeOptions::split($user->whatsapp);
 
+            $firstName = $user->first_name;
+            $midName = $user->mid_name;
+            $lastName = $user->last_name;
+
+            if (empty($firstName) && filled($user->full_name)) {
+                $parts = explode(' ', trim($user->full_name));
+                $firstName = array_shift($parts);
+                $lastName = count($parts) > 0 ? array_pop($parts) : null;
+                $midName = count($parts) > 0 ? implode(' ', $parts) : null;
+            }
+
+            $fullName = $this->buildFullName($firstName, $midName, $lastName) ?: $user->full_name;
+
             $this->form->fill([
                 'avatar_url' => filter_var($user->getRawOriginal('avatar_url'), FILTER_VALIDATE_URL) ? null : $user->getRawOriginal('avatar_url'),
-                'full_name' => $user->full_name,
-                'first_name' => $user->first_name,
-                'mid_name' => $user->mid_name,
-                'last_name' => $user->last_name,
+                'full_name' => $fullName,
+                'first_name' => $firstName,
+                'mid_name' => $midName,
+                'last_name' => $lastName,
                 'username' => $user->username,
                 'email' => $user->email,
                 'whatsapp_country_code' => $whatsapp['selection'],
@@ -136,29 +149,31 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
                             ->label(__('Nama Depan'))
                             ->required()
                             ->maxLength(255)
-                            ->live()
-                            ->afterStateUpdated(function ($state, Set $set, Get $get) {
-                                $set('full_name', $this->joinFullName($get));
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                $set('full_name', $this->buildFullName($state, $get('mid_name'), $get('last_name')));
                             }),
                         TextInput::make('mid_name')
                             ->label(__('Nama Tengah'))
                             ->maxLength(255)
-                            ->live()
-                            ->afterStateUpdated(function ($state, Set $set, Get $get) {
-                                $set('full_name', $this->joinFullName($get));
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                $set('full_name', $this->buildFullName($get('first_name'), $state, $get('last_name')));
                             }),
                         TextInput::make('last_name')
                             ->label(__('Nama Belakang'))
-                            ->required()
                             ->maxLength(255)
-                            ->live()
-                            ->afterStateUpdated(function ($state, Set $set, Get $get) {
-                                $set('full_name', $this->joinFullName($get));
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                $set('full_name', $this->buildFullName($get('first_name'), $get('mid_name'), $state));
                             }),
                         TextInput::make('full_name')
-                            ->label(__('Preview Nama Lengkap'))
-                            ->readOnly()
-                            ->dehydrated(false),
+                            ->label(__('Nama Lengkap'))
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->prefixIcon('heroicon-o-user')
+                            ->helperText(__('Terisi otomatis dari Nama Depan, Tengah, dan Belakang.'))
+                            ->columnSpanFull(),
                     ])->columns(3),
 
                 // ── Username ────────────────────────────────────────────────
@@ -546,13 +561,14 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
             ]);
     }
 
+    protected function buildFullName(?string $first, ?string $mid, ?string $last): string
+    {
+        return trim(collect([$first, $mid, $last])->filter()->implode(' '));
+    }
+
     protected function joinFullName(Get $get): string
     {
-        return trim(implode(' ', array_filter([
-            $get('first_name'),
-            $get('mid_name'),
-            $get('last_name'),
-        ])));
+        return $this->buildFullName($get('first_name'), $get('mid_name'), $get('last_name'));
     }
 
     /**
@@ -696,6 +712,12 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
                 }
                 unset($data['birth_place_date']);
             }
+
+            $data['full_name'] = $this->buildFullName(
+                $data['first_name'] ?? null,
+                $data['mid_name'] ?? null,
+                $data['last_name'] ?? null,
+            );
 
             $user->update($data);
 

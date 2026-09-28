@@ -2,7 +2,7 @@
 
 namespace App\Filament\User\Pages\SettingsPage;
 
-use App\Livewire\Shared\DeleteAccountComponent\DeleteAccountComponent;
+use App\Livewire\User\DeleteAccountComponent\DeleteAccountComponent;
 use Filament\Pages\Page;
 
 class SettingsPage extends Page

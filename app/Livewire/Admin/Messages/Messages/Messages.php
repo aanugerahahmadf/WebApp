@@ -10,9 +10,9 @@ use App\Filament\Admin\Pages\MessagesPage\MessagesPage;
 use App\Filament\User\Resources\PackageResource\PackageResource;
 use App\Filament\User\Resources\ProductResource\ProductResource;
 use App\Jobs\SendBotReply\SendBotReply;
-use App\Livewire\Traits\CanMarkAsRead\CanMarkAsRead;
-use App\Livewire\Traits\CanValidateFiles\CanValidateFiles;
-use App\Livewire\Traits\HasPollInterval\HasPollInterval;
+use App\Livewire\Admin\Traits\CanMarkAsRead\CanMarkAsRead;
+use App\Livewire\Admin\Traits\CanValidateFiles\CanValidateFiles;
+use App\Livewire\Admin\Traits\HasPollInterval\HasPollInterval;
 use App\Models\Message\Message;
 use App\Models\Order\Order;
 use App\Models\Package\Package;
@@ -544,7 +544,7 @@ class Messages extends Component implements HasActions, HasForms
 
                         // ── CBIR Results Preview ──
                         Forms\Components\ViewField::make('catalog_list')
-                            ->view('User.components.cbir-item-card.cbir-item-card')
+                            ->view('Admin.components.cbir-item-card.cbir-item-card')
                             ->viewData([
                                 'orderId' => $arguments['orderId'] ?? null,
                             ]),

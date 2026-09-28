@@ -28,14 +28,7 @@
         default => strtoupper($currentLocale),
     };
 
-    $currentPanelId = filament()->getCurrentPanel()?->getId() ?? '';
-    $isAdmin = $currentPanelId === 'admin' || str_contains(request()->url(), '/admin');
-    $isUser = $currentPanelId === 'user' || str_contains(request()->url(), '/user');
-    $activeColorClass = 'text-[#e91e63]';
-    if ($isAdmin)
-        $activeColorClass = 'text-[#6366f1]';
-    if ($isUser)
-        $activeColorClass = 'text-[#fbbf24]';
+    $activeColorClass = 'text-[#fbbf24]';
     $canReloadAfterLanguageChange = ! filament()->auth()->check() || filament()->auth()->user()?->hasVerifiedEmail();
 @endphp
 

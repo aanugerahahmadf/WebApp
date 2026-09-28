@@ -6,7 +6,6 @@ use App\Enums\DiscountType\DiscountType;
 use App\Enums\OrderPaymentStatus\OrderPaymentStatus;
 use App\Enums\OrderStatus\OrderStatus;
 use App\Filament\User\Pages\MessagesPage\MessagesPage;
-use App\Filament\User\Pages\ReviewDetailPage\ReviewDetailPage;
 use App\Filament\User\Resources\ProductResource\Pages;
 use App\Filament\User\Resources\ReviewResource\ReviewResource;
 use App\Forms\Components\CheckoutCalendarPicker\CheckoutCalendarPicker;
@@ -481,30 +480,21 @@ class ProductResource extends Resource
                                             ->icon('heroicon-m-star')
                                             ->color('warning')
                                             ->button()
-                                            ->visible(fn (Product $record): bool => auth()->check() && Order::query()
-                                                ->where('user_id', auth()->id())
-                                                ->where('product_id', $record->id)
-                                                ->where('status', OrderStatus::COMPLETED)
-                                                ->exists())
+                                            ->visible(fn (Product $record): bool => Filament::auth()->check()
+                                                && ! Review::query()->where('user_id', Filament::auth()->id())->where('product_id', $record->id)->exists())
                                             ->modalHeading(__('Tulis Ulasan'))
-                                            ->modalDescription(__('Bagikan pengalaman Anda setelah pesanan selesai.'))
-                                            ->form(fn (Product $record): array => ReviewResource::orderReviewFields(
-                                                Order::query()
-                                                    ->where('user_id', auth()->id())
-                                                    ->where('product_id', $record->id)
-                                                    ->where('status', OrderStatus::COMPLETED)
-                                                    ->latest()
-                                                    ->firstOrFail()
-                                            ))
+                                            ->modalDescription(__('Bagikan pengalaman Anda tentang produk ini.'))
+                                            ->slideOver()
+                                            ->form(fn (Product $record): array => ReviewResource::itemReviewFields('product_id', $record->id))
                                             ->action(function (Product $record, array $data): void {
-                                                if (Review::query()->where('user_id', auth()->id())->where('product_id', $record->id)->exists()) {
+                                                if (Review::query()->where('user_id', Filament::auth()->id())->where('product_id', $record->id)->exists()) {
                                                     Notification::make()->title(__('Anda sudah menulis ulasan untuk produk ini.'))->warning()->send();
 
                                                     return;
                                                 }
 
                                                 Review::create([
-                                                    'user_id' => auth()->id(),
+                                                    'user_id' => Filament::auth()->id(),
                                                     'product_id' => $record->id,
                                                     'rating' => $data['rating'],
                                                     'title' => $data['title'] ?? null,
@@ -521,20 +511,32 @@ class ProductResource extends Resource
                                         ->icon('heroicon-o-chat-bubble-oval-left-ellipsis')
                                         ->iconColor('warning')
                                         ->compact()
-                                        ->visible(fn ($record) => $record->reviews()->count() > 0)
-                                        ->schema([
-                                            Infolists\Components\RepeatableEntry::make('reviews')
-                                                ->label('')
-                                                ->hiddenLabel()
-                                                ->schema([
-                                                    Infolists\Components\Grid::make(12)
-                                                        ->schema([
+                                            ->visible(fn ($record) => $record->reviews()->count() > 0)
+                                            ->schema([
+                                                Infolists\Components\ViewEntry::make('review_summary')
+                                                    ->label('')
+                                                    ->hiddenLabel()
+                                                    ->view('User.components.review-summary.review-summary', fn (Product $record): array => ReviewResource::summaryData($record, __('Penilaian Produk'))),
+                                                Infolists\Components\RepeatableEntry::make('reviews')
+                                                    ->label('')
+                                                    ->hiddenLabel()
+                                                    ->contained(false)
+                                                    ->state(fn (Product $record) => ReviewResource::filteredReviews($record))
+                                                    ->placeholder(__('Tidak ada ulasan untuk filter ini.'))
+                                                    ->extraAttributes([
+                                                        'class' => '[&>ul>div]:!gap-2',
+                                                        'x-data' => "{ reviewFilter: '".ReviewResource::activeReviewFilter()."' }",
+                                                        'x-on:review-filter.window' => 'reviewFilter = $event.detail',
+                                                    ])
+                                                    ->schema([
+                                                        Infolists\Components\Grid::make(12)
+                                                            ->schema([
                                                             Infolists\Components\ImageEntry::make('user.avatar_url')
                                                                 ->label('')
                                                                 ->hiddenLabel()
                                                                 ->circular()
                                                                 ->height('2.5rem')
-                                                                ->columnSpan(2)
+                                                                ->columnSpan(1)
                                                                 ->defaultImageUrl(fn ($record) => 'https://ui-avatars.com/api/?name='.urlencode($record->user?->full_name ?? 'U')),
 
                                                             Infolists\Components\Group::make([
@@ -549,52 +551,74 @@ class ProductResource extends Resource
                                                                     ->hiddenLabel()
                                                                     ->color('warning')
                                                                     ->formatStateUsing(fn ($state) => str_repeat('⭐', (int) $state)),
-                                                            ])->columnSpan(8),
+                                                            ])->columnSpan(11)->extraAttributes(['class' => '!gap-y-0']),
 
                                                             Infolists\Components\Actions::make([
-                                                                Infolists\Components\Actions\Action::make('view_review')
-                                                                    ->label(__('Lihat Detail'))
-                                                                    ->icon('heroicon-m-eye')
-                                                                    ->color('gray')
-                                                                    ->outlined()
-                                                                    ->size(ActionSize::ExtraSmall)
-                                                                    ->url(fn ($record): string => ReviewDetailPage::getUrl(['id' => $record->id], panel: 'user')),
-                                                                Infolists\Components\Actions\Action::make('report_review')
+                                                                Action::make('report_review')
                                                                     ->label(__('Lapor'))
                                                                     ->icon('heroicon-m-flag')
                                                                     ->color('danger')
                                                                     ->outlined()
                                                                     ->size(ActionSize::ExtraSmall)
-                                                                    ->action(function ($record) {
+                                                                    ->action(function (Review $record) {
                                                                         $inbox = ChatService::getOrCreateInboxWithAdmin(auth()->id());
-                                                                        ChatService::sendReportMessage(
-                                                                            $inbox,
-                                                                            'review',
-                                                                            (string) ($record->user?->full_name ?? __('Pengguna'))
-                                                                        );
+                                                                        ChatService::sendReportMessage($inbox, 'review', (string) ($record->user?->full_name ?? __('Pengguna')));
 
-                                                                        return redirect(
-                                                                            MessagesPage::getUrl(['id' => $inbox->id])
-                                                                        );
-                                                                    }),
-                                                            ])->columnSpan(2),
+                                                                        return redirect(MessagesPage::getUrl(['id' => $inbox->id]));
+                                                                    })
+                                                                    ->extraAttributes(['x-on:click.stop' => '']),
+                                                            ])->extraAttributes(['class' => 'absolute right-3 top-3 z-10']),
+
+                                                            Infolists\Components\TextEntry::make('created_at')
+                                                                ->label('')
+                                                                ->hiddenLabel()
+                                                                ->dateTime('d M Y H:i')
+                                                                ->color('gray')
+                                                                ->size('xs')
+                                                                ->columnSpanFull(),
 
                                                             Infolists\Components\TextEntry::make('comment')
                                                                 ->label('')
                                                                 ->hiddenLabel()
-                                                                ->size('sm')
-                                                                ->columnSpan(12)
-                                                                ->visible(fn ($record) => filled($record->comment)),
+                                                                    ->size('sm')
+                                                                    ->columnSpan(12)
+                                                                    ->extraEntryWrapperAttributes(['class' => '!p-0 !m-0'])
+                                                                    ->visible(fn ($record) => filled($record->comment)),
 
-                                                            Infolists\Components\ImageEntry::make('photo_urls')
+                                                                Infolists\Components\ImageEntry::make('photo_urls')
                                                                 ->label('')
                                                                 ->hiddenLabel()
-                                                                ->height('4rem')
-                                                                ->columnSpan(12)
-                                                                ->extraImgAttributes(['class' => 'rounded-xl object-cover'])
+                                                                    ->height('2.5rem')
+                                                                    ->columnSpan(12)
+                                                                    ->extraAttributes(['class' => '!gap-x-1'])
+                                                                ->extraImgAttributes(['class' => 'rounded-lg object-cover'])
                                                                 ->visible(fn ($record) => filled($record->photo_urls)),
-                                                        ])
-                                                        ->extraAttributes(['class' => 'items-start gap-2']),
+
+                                                            Infolists\Components\TextEntry::make('helpful_count')
+                                                                ->label('')
+                                                                ->hiddenLabel()
+                                                                ->icon('heroicon-o-hand-thumb-up')
+                                                                ->formatStateUsing(fn ($state) => number_format((int) $state))
+                                                                ->color('gray')
+                                                                ->size('xs')
+                                                                ->columnSpanFull()
+                                                                ->visible(fn ($record) => (int) $record->helpful_count > 0),
+
+                                                            Infolists\Components\ViewEntry::make('review_modal')
+                                                                ->label('')
+                                                                ->hiddenLabel()
+                                                                ->view('User.components.review-card-modal.review-card-modal', fn (Review $record): array => ['review' => $record])
+                                                                ->columnSpanFull(),
+                                                            ])
+                                                            ->extraAttributes(fn (Review $record): array => [
+                                                                'x-data' => '{ openReview: false }',
+                                                                'x-show' => "reviewFilter === 'all' || reviewFilter === 'rating_".(int) $record->rating."' || (reviewFilter === 'comment' && ".(filled($record->comment) ? 'true' : 'false').") || (reviewFilter === 'media' && ".(filled($record->photo_urls) ? 'true' : 'false').')',
+                                                                'x-on:click' => 'openReview = true',
+                                                                'x-on:keydown.enter' => 'openReview = true',
+                                                                'role' => 'button',
+                                                                'tabindex' => '0',
+                                                                'class' => 'relative items-start !gap-x-2 !gap-y-0 cursor-pointer rounded-xl bg-white p-3 text-gray-950 shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:text-white dark:ring-white/10',
+                                                            ]),
                                                 ]),
                                         ]),
                                 ])->columnSpan([

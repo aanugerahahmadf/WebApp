@@ -7,4 +7,5 @@ use App\Http\Controllers\Api\User\ReportController\ReportController;
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/reports', [ReportController::class, 'index']);
     Route::post('/reports', [ReportController::class, 'store']);
+    Route::get('/reports/{report}/pdf', [ReportController::class, 'downloadPdf']);
 });

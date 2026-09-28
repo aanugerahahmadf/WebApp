@@ -94,7 +94,7 @@ class VerifyOtp extends SimplePage
                             ->label(__('6 Digit Kode OTP'))
                             ->view('User.auth.otp-field.otp-field')
                             ->required(),
-                        View::make('User.auth.verify-otp.actions'),
+                        View::make('User.auth.verify-otp.actions.actions'),
                     ])
                     ->columns(1),
             ]);

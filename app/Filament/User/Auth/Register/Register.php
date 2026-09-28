@@ -139,23 +139,31 @@ class Register extends BaseRegister
                             ->label(__('Nama Depan'))
                             ->required()
                             ->maxLength(255)
-                            ->live()
-                            ->afterStateUpdated(fn (Get $get, Set $set) => $set('full_name', $this->joinFullName($get))),
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                $set('full_name', $this->buildFullName($state, $get('mid_name'), $get('last_name')));
+                            }),
                         TextInput::make('mid_name')
                             ->label(__('Nama Tengah'))
                             ->maxLength(255)
-                            ->live()
-                            ->afterStateUpdated(fn (Get $get, Set $set) => $set('full_name', $this->joinFullName($get))),
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                $set('full_name', $this->buildFullName($get('first_name'), $state, $get('last_name')));
+                            }),
                         TextInput::make('last_name')
                             ->label(__('Nama Belakang'))
-                            ->required()
                             ->maxLength(255)
-                            ->live()
-                            ->afterStateUpdated(fn (Get $get, Set $set) => $set('full_name', $this->joinFullName($get))),
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                $set('full_name', $this->buildFullName($get('first_name'), $get('mid_name'), $state));
+                            }),
                         TextInput::make('full_name')
-                            ->label(__('Preview Nama Lengkap'))
-                            ->readOnly()
-                            ->dehydrated(false),
+                            ->label(__('Nama Lengkap'))
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->prefixIcon('heroicon-o-user')
+                            ->helperText(__('Terisi otomatis dari Nama Depan, Tengah, dan Belakang.'))
+                            ->columnSpanFull(),
                     ])
                     ->columns(1),
 
@@ -676,7 +684,6 @@ class Register extends BaseRegister
 
                 Hidden::make('agreement'),
                 Hidden::make('remember'),
-                Hidden::make('full_name')->dehydrated(true),
                 Hidden::make('password_strength')->dehydrated(false),
             ])
             ->statePath('data');
@@ -690,13 +697,14 @@ class Register extends BaseRegister
         ];
     }
 
+    protected function buildFullName(?string $first, ?string $mid, ?string $last): string
+    {
+        return trim(collect([$first, $mid, $last])->filter()->implode(' '));
+    }
+
     protected function joinFullName(Get $get): string
     {
-        return trim(implode(' ', array_filter([
-            $get('first_name'),
-            $get('mid_name'),
-            $get('last_name'),
-        ])));
+        return $this->buildFullName($get('first_name'), $get('mid_name'), $get('last_name'));
     }
 
     /**
@@ -719,11 +727,11 @@ class Register extends BaseRegister
 
     protected function mutateFormDataBeforeRegister(array $data): array
     {
-        $data['full_name'] = trim(implode(' ', array_filter([
+        $data['full_name'] = $this->buildFullName(
             $data['first_name'] ?? null,
             $data['mid_name'] ?? null,
             $data['last_name'] ?? null,
-        ])));
+        );
 
         // Parse "Kota, DD/MM/YYYY" → birth_place + birth_date
         if (! empty($data['birth_place_date'])) {

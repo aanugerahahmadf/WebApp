@@ -19,6 +19,8 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 
 class ReviewResource extends Resource
@@ -44,9 +46,68 @@ class ReviewResource extends Resource
     public static function getGlobalSearchResultDetails(Model $record): array
     {
         return [
-            __('Rating') => ($record->rating ?? 0).' ⭐',
+            __('Rating') => new HtmlString(self::ratingStarsHtml((int) ($record->rating ?? 0))),
             __('Komentar') => Str::limit($record->comment ?? '-', 50),
         ];
+    }
+
+    private static function ratingOptions(): array
+    {
+        return [
+            5 => self::ratingStarsHtml(5),
+            4 => self::ratingStarsHtml(4),
+            3 => self::ratingStarsHtml(3),
+            2 => self::ratingStarsHtml(2),
+            1 => self::ratingStarsHtml(1),
+        ];
+    }
+
+    private static function ratingStarsHtml(int $rating): string
+    {
+        $rating = max(0, min(5, $rating));
+        $star = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="h-5 w-5"><path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005Z" clip-rule="evenodd"/></svg>';
+        $stars = '';
+
+        for ($index = 1; $index <= 5; $index++) {
+            $color = $index <= $rating ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600';
+            $stars .= '<span class="'.$color.'">'.$star.'</span>';
+        }
+
+        return '<span class="inline-flex items-center gap-1" role="img" aria-label="Rating">'.$stars.'</span>';
+    }
+
+    public static function summaryData(Model $item, string $heading): array
+    {
+        $ratingCounts = $item->reviews()->selectRaw('rating, COUNT(*) as aggregate')
+            ->groupBy('rating')
+            ->pluck('aggregate', 'rating');
+
+        return [
+            'heading' => $heading,
+            'total' => $item->reviews()->count(),
+            'average' => round((float) $item->reviews()->avg('rating'), 1),
+            'ratingCounts' => $ratingCounts,
+            'commentCount' => $item->reviews()->whereNotNull('comment')->where('comment', '<>', '')->count(),
+            'mediaCount' => $item->reviews()->where(function (Builder $query): void {
+                $query->where(fn (Builder $photoQuery) => $photoQuery->whereNotNull('photo')->where('photo', '<>', ''))
+                    ->orWhereJsonLength('photos', '>', 0);
+            })->count(),
+            'activeFilter' => self::activeReviewFilter(),
+        ];
+    }
+
+    public static function activeReviewFilter(): string
+    {
+        $filter = (string) request()->query('review_filter', 'all');
+
+        return in_array($filter, ['all', 'rating_1', 'rating_2', 'rating_3', 'rating_4', 'rating_5', 'comment', 'media'], true)
+            ? $filter
+            : 'all';
+    }
+
+    public static function filteredReviews(Model $item): Collection
+    {
+        return $item->reviews()->with('user')->latest()->get();
     }
 
     public static function getGlobalSearchResultUrl(Model $record): ?string
@@ -120,13 +181,8 @@ class ReviewResource extends Resource
                         Forms\Components\Select::make('rating')
                             ->searchable()
                             ->label(__('Berikan Rating Bintang'))
-                            ->options([
-                                5 => __('5 Bintang').' ('.__('Sangat Puas').')',
-                                4 => __('4 Bintang').' ('.__('Puas').')',
-                                3 => __('3 Bintang').' ('.__('Cukup').')',
-                                2 => __('2 Bintang').' ('.__('Kurang').')',
-                                1 => __('1 Bintang').' ('.__('Sangat Kurang').')',
-                            ])
+                            ->options(self::ratingOptions())
+                            ->allowHtml()
                             ->required()
 
                             ->native(false)
@@ -169,13 +225,8 @@ class ReviewResource extends Resource
             Forms\Components\Select::make('rating')
                 ->searchable()
                 ->label(__('Berikan Rating Bintang'))
-                ->options([
-                    5 => __('5 Bintang').' ('.__('Sangat Puas').')',
-                    4 => __('4 Bintang').' ('.__('Puas').')',
-                    3 => __('3 Bintang').' ('.__('Cukup').')',
-                    2 => __('2 Bintang').' ('.__('Kurang').')',
-                    1 => __('1 Bintang').' ('.__('Sangat Kurang').')',
-                ])
+                ->options(self::ratingOptions())
+                ->allowHtml()
                 ->required()
                 ->native(false)
                 ->prefixIcon('heroicon-o-star')
@@ -199,6 +250,40 @@ class ReviewResource extends Resource
                 ->maxSize(5120)
                 ->helperText(__('Opsional — unggah foto hasil dekorasi Anda.'))
                 ->columnSpanFull(),
+        ];
+    }
+
+    /** Fields for writing a review directly from a product or package detail page. */
+    public static function itemReviewFields(string $itemField, int $itemId): array
+    {
+        if (! in_array($itemField, ['package_id', 'product_id'], true)) {
+            throw new \InvalidArgumentException('Unsupported review item field.');
+        }
+
+        return [
+            Forms\Components\Hidden::make($itemField)->default($itemId),
+            Forms\Components\Select::make('rating')
+                ->label(__('Berikan Rating Bintang'))
+                ->options(self::ratingOptions())
+                ->allowHtml()
+                ->required()
+                ->native(false)
+                ->prefixIcon('heroicon-o-star'),
+            Forms\Components\TextInput::make('title')
+                ->label(__('Judul Ulasan'))
+                ->maxLength(255),
+            Forms\Components\Textarea::make('comment')
+                ->label(__('Komentar Anda'))
+                ->required()
+                ->rows(5),
+            Forms\Components\FileUpload::make('photo')
+                ->label(__('Foto Ulasan'))
+                ->image()
+                ->directory('review-photos')
+                ->disk('public')
+                ->visibility('public')
+                ->maxSize(5120)
+                ->helperText(__('Opsional — unggah foto hasil dekorasi Anda.')),
         ];
     }
 
@@ -242,9 +327,8 @@ class ReviewResource extends Resource
                             ->color('gray')
                             ->grow(false),
                         Tables\Columns\TextColumn::make('rating')
-                            ->badge()
-                            ->icon('heroicon-m-star')
-                            ->color('warning')
+                            ->formatStateUsing(fn ($state): HtmlString => new HtmlString(self::ratingStarsHtml((int) $state)))
+                            ->html()
                             ->alignEnd(),
                     ])->extraAttributes(['class' => 'mb-2 border-b border-gray-100 dark:border-gray-800 pb-2']),
 
@@ -300,11 +384,11 @@ class ReviewResource extends Resource
                     ->searchable()
                     ->label(__('Rating'))
                     ->options([
-                        '5' => '⭐⭐⭐⭐⭐ '.__('5 Bintang'),
-                        '4' => '⭐⭐⭐⭐ '.__('4 Bintang'),
-                        '3' => '⭐⭐⭐ '.__('3 Bintang'),
-                        '2' => '⭐⭐ '.__('2 Bintang'),
-                        '1' => '⭐ '.__('1 Bintang'),
+                        5 => '★★★★★ (5)',
+                        4 => '★★★★☆ (4)',
+                        3 => '★★★☆☆ (3)',
+                        2 => '★★☆☆☆ (2)',
+                        1 => '★☆☆☆☆ (1)',
                     ]),
 
                 SelectFilter::make('sort_by')

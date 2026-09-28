@@ -38,6 +38,7 @@ class Report extends Model
         'category',
         'reason',
         'description',
+        'attachments',
         'status',
         'resolved_at',
         'resolved_by',
@@ -46,6 +47,7 @@ class Report extends Model
     protected $casts = [
         'status' => ReportStatus::class,
         'resolved_at' => 'datetime',
+        'attachments' => 'array',
     ];
 
     public function user(): BelongsTo
@@ -66,5 +68,12 @@ class Report extends Model
     public function scopeOpen(Builder $query): Builder
     {
         return $query->where('status', ReportStatus::OPEN);
+    }
+
+    public function getAttachmentUrlsAttribute(): array
+    {
+        return collect($this->attachments ?? [])
+            ->map(fn (string $path) => \Illuminate\Support\Facades\Storage::disk('public')->url($path))
+            ->all();
     }
 }

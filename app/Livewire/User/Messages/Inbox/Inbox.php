@@ -4,9 +4,9 @@ namespace App\Livewire\User\Messages\Inbox;
 
 use App\Filament\User\Pages\MessagesPage\MessagesPage as UserMessagesPage;
 use App\Jobs\SendBotReply\SendBotReply;
-use App\Livewire\Traits\CanMarkAsRead\CanMarkAsRead;
-use App\Livewire\Traits\CanValidateFiles\CanValidateFiles;
-use App\Livewire\Traits\HasPollInterval\HasPollInterval;
+use App\Livewire\User\Traits\CanMarkAsRead\CanMarkAsRead;
+use App\Livewire\User\Traits\CanValidateFiles\CanValidateFiles;
+use App\Livewire\User\Traits\HasPollInterval\HasPollInterval;
 use App\Models\Inbox\Inbox as InboxModel;
 use App\Models\User\User;
 use Filament\Actions\Concerns\InteractsWithActions;
@@ -183,11 +183,9 @@ class Inbox extends Component implements HasActions, HasForms
         }
 
         $meta = $inbox->meta ?? [];
-        if (empty($meta['cs_category'])) {
-            $meta['cs_category'] = $category;
-            $inbox->meta = $meta;
-            $inbox->save();
-        }
+        $meta['cs_category'] = $category;
+        $inbox->meta = $meta;
+        $inbox->save();
 
         if ($message = $this->categoryMessage($category)) {
             $newMessage = $inbox->messages()->create([

@@ -1,29 +1,29 @@
-# Environment Configuration Strategy
+# Strategi Konfigurasi Environment
 
-This document explains how the application manages environment variables across its three platform modes: **web**, **mobile**, and **desktop**. Understanding this strategy is essential for configuring the app correctly during development and production.
-
----
-
-## Overview
-
-The application uses a base `.env` file supplemented by **optional** platform-specific override files. When a platform-specific file exists, its values take precedence over any matching keys in `.env`. When no platform-specific file exists, the app runs fine using only `.env`.
-
-```
-.env                  ← always loaded (required)
-.env.web              ← loaded on top of .env when running in Web mode   (optional)
-.env.mobile           ← loaded on top of .env when running in Mobile mode (optional)
-.env.desktop          ← loaded on top of .env when running in Desktop mode (optional)
-```
-
-The `EnvironmentManager` handles this merging during application bootstrap, before routes are registered or services are resolved.
+Dokumen ini menjelaskan bagaimana aplikasi mengelola variabel environment di tiga mode platform: **web**, **mobile**, dan **desktop**. Memahami strategi ini sangat penting untuk mengonfigurasi aplikasi dengan benar selama pengembangan maupun produksi.
 
 ---
 
-## File Structure and Purpose
+## Ikhtisar
 
-### `.env` — Base Configuration (Required)
+Aplikasi menggunakan file `.env` dasar yang dilengkapi dengan file override **opsional** per platform. Ketika file platform-spesifik ada, nilainya akan menggantikan kunci yang sama di `.env`. Jika file platform-spesifik tidak ada, aplikasi tetap berjalan dengan baik hanya menggunakan `.env`.
 
-The base `.env` file contains settings shared across all platforms: database credentials, mail configuration, third-party API keys, and default values for session, cache, and queue drivers.
+```
+.env                  ← selalu dimuat (wajib)
+.env.web              ← dimuat di atas .env saat berjalan dalam mode Web   (opsional)
+.env.mobile           ← dimuat di atas .env saat berjalan dalam mode Mobile (opsional)
+.env.desktop          ← dimuat di atas .env saat berjalan dalam mode Desktop (opsional)
+```
+
+`EnvironmentManager` menangani penggabungan ini selama bootstrap aplikasi, sebelum route didaftarkan atau service di-resolve.
+
+---
+
+## Struktur File dan Tujuan
+
+### `.env` — Konfigurasi Dasar (Wajib)
+
+File `.env` dasar berisi pengaturan yang digunakan bersama di semua platform: kredensial database, konfigurasi mail, API key pihak ketiga, serta nilai default untuk driver session, cache, dan queue.
 
 ```dotenv
 APP_NAME="Wedding Flower Decorations"
@@ -39,24 +39,24 @@ QUEUE_CONNECTION=sync
 
 VITE_APP_NAME="${APP_NAME}"
 
-# ... database, mail, Firebase, Midtrans, etc.
+# ... database, mail, Firebase, Midtrans, dll.
 ```
 
-All three platform modes inherit every variable from `.env`. You only need the platform-specific files when you want to change a value for a particular mode.
+Ketiga mode platform mewarisi setiap variabel dari `.env`. File platform-spesifik hanya diperlukan ketika Anda ingin mengubah nilai untuk mode tertentu.
 
 ---
 
-### `.env.web` — Web Platform Overrides (Optional)
+### `.env.web` — Override Platform Web (Opsional)
 
-Loaded when the application starts with `php artisan serve`. Typically used to set the correct `APP_URL` and a browser-friendly session driver.
+Dimuat ketika aplikasi dijalankan dengan `php artisan serve`. Biasanya digunakan untuk mengatur `APP_URL` yang benar dan driver session yang ramah browser.
 
-Copy the example to get started:
+Salin contoh untuk memulai:
 
 ```bash
 cp .env.web.example .env.web
 ```
 
-Typical contents:
+Isi tipikal:
 
 ```dotenv
 APP_PORT=8000
@@ -77,28 +77,28 @@ SANCTUM_STATEFUL_DOMAINS=localhost:8000,127.0.0.1:8000
 
 ---
 
-### `.env.mobile` — Mobile Platform Overrides (Optional)
+### `.env.mobile` — Override Platform Mobile (Opsional)
 
-Loaded when the application starts with `php artisan native:run`. Configures the backend for the Android/iOS native app, including the correct host address for the emulator and a database-backed session driver that survives app restarts.
+Dimuat ketika aplikasi dijalankan dengan `php artisan native:run`. Mengonfigurasi backend untuk aplikasi native Android/iOS, termasuk alamat host yang benar untuk emulator dan driver session berbasis database yang bertahan saat aplikasi di-restart.
 
-Copy the example to get started:
+Salin contoh untuk memulai:
 
 ```bash
 cp .env.mobile.example .env.mobile
 ```
 
-Typical contents:
+Isi tipikal:
 
 ```dotenv
 APP_PORT=8001
 NATIVE_SERVER_PORT=8001
 
-# 10.0.2.2 is the Android emulator's alias for the host machine.
-# For physical devices, use your LAN IP: http://192.168.1.x:8001
+# 10.0.2.2 adalah alias emulator Android untuk mesin host.
+# Untuk perangkat fisik, gunakan IP LAN Anda: http://192.168.1.x:8001
 APP_URL=http://10.0.2.2:8001
 
 SESSION_DRIVER=database
-SESSION_LIFETIME=10080     # 7 days — reduces mobile re-login friction
+SESSION_LIFETIME=10080     # 7 hari — mengurangi frekuensi login ulang di mobile
 
 CACHE_DRIVER=file
 QUEUE_CONNECTION=database
@@ -109,17 +109,17 @@ VITE_PLATFORM=mobile
 
 ---
 
-### `.env.desktop` — Desktop Platform Overrides (Optional)
+### `.env.desktop` — Override Platform Desktop (Opsional)
 
-Loaded when the application starts with `php artisan native:serve`. Configures the embedded NativePHP HTTP server port and uses file-based sessions, which are appropriate for a single-user local application.
+Dimuat ketika aplikasi dijalankan dengan `php artisan native:serve`. Mengonfigurasi port server HTTP NativePHP yang tertanam dan menggunakan session berbasis file, yang sesuai untuk aplikasi lokal pengguna tunggal.
 
-Copy the example to get started:
+Salin contoh untuk memulai:
 
 ```bash
 cp .env.desktop.example .env.desktop
 ```
 
-Typical contents:
+Isi tipikal:
 
 ```dotenv
 APP_PORT=8002
@@ -127,7 +127,7 @@ NATIVEPHP_HTTP_PORT=8002
 APP_URL=http://localhost:8002
 
 SESSION_DRIVER=file
-SESSION_LIFETIME=43200     # 30 days — desktop apps rarely need re-login
+SESSION_LIFETIME=43200     # 30 hari — aplikasi desktop jarang memerlukan login ulang
 
 CACHE_DRIVER=file
 QUEUE_CONNECTION=sync
@@ -138,80 +138,80 @@ VITE_PLATFORM=desktop
 
 ---
 
-## Merge Precedence: Platform-Specific Overrides Base
+## Prioritas Penggabungan: Platform-Spesifik Menggantikan Dasar
 
-When a platform-specific file is present, its values override any matching keys from `.env`. Variables that only exist in `.env` are inherited as-is.
+Ketika file platform-spesifik ada, nilainya akan menggantikan kunci yang sama dari `.env`. Variabel yang hanya ada di `.env` diwarisi apa adanya.
 
-**Example:**
+**Contoh:**
 
-`.env` (base):
+`.env` (dasar):
 ```dotenv
 SESSION_DRIVER=database
 APP_URL=http://127.0.0.1:8000
 DB_HOST=127.0.0.1
 ```
 
-`.env.web` (platform override):
+`.env.web` (override platform):
 ```dotenv
 SESSION_DRIVER=cookie
 APP_URL=http://localhost:8000
 ```
 
-Effective environment when running in Web mode:
+Environment efektif saat berjalan dalam mode Web:
 ```dotenv
-SESSION_DRIVER=cookie          ← from .env.web (overrides .env)
-APP_URL=http://localhost:8000  ← from .env.web (overrides .env)
-DB_HOST=127.0.0.1              ← from .env (no override, inherited)
+SESSION_DRIVER=cookie          ← dari .env.web (menggantikan .env)
+APP_URL=http://localhost:8000  ← dari .env.web (menggantikan .env)
+DB_HOST=127.0.0.1              ← dari .env (tidak ada override, diwarisi)
 ```
 
-The merge happens at the PHP runtime level by writing to `$_ENV`, `$_SERVER`, and `putenv()`. Laravel's `env()` helper and `config()` calls both pick up the merged values.
+Penggabungan terjadi di level runtime PHP dengan menulis ke `$_ENV`, `$_SERVER`, dan `putenv()`. Helper `env()` milik Laravel dan pemanggilan `config()` keduanya mengambil nilai yang telah digabung.
 
 ---
 
-## Platform Files Are Optional
+## File Platform Bersifat Opsional
 
-The application works perfectly with just `.env`. Platform-specific files are only needed when a variable must differ between modes.
+Aplikasi bekerja dengan sempurna hanya dengan `.env`. File platform-spesifik hanya diperlukan ketika sebuah variabel harus berbeda antar mode.
 
-| Scenario | Files Needed |
-|----------|--------------|
-| Only running the web server | `.env` only |
-| Running web + mobile simultaneously | `.env`, `.env.mobile` |
-| All three platforms simultaneously | `.env`, `.env.web`, `.env.mobile`, `.env.desktop` |
-| Running in production (single platform) | `.env` only (or one platform file) |
+| Skenario | File yang Diperlukan |
+|----------|----------------------|
+| Hanya menjalankan server web | Hanya `.env` |
+| Menjalankan web + mobile secara bersamaan | `.env`, `.env.mobile` |
+| Ketiga platform secara bersamaan | `.env`, `.env.web`, `.env.mobile`, `.env.desktop` |
+| Berjalan di produksi (satu platform) | Hanya `.env` (atau satu file platform) |
 
-If a platform file is missing, the `EnvironmentManager` logs a debug message and continues without error — nothing breaks.
+Jika file platform tidak ada, `EnvironmentManager` mencatat pesan debug dan melanjutkan tanpa error — tidak ada yang rusak.
 
 ---
 
-## EnvironmentManager Loading Behavior
+## Perilaku Pemuatan EnvironmentManager
 
-The `EnvironmentManager` class (`app/Support/Platform/EnvironmentManager.php`) is responsible for loading and merging platform environment files. It is invoked by `PlatformModeServiceProvider` during application boot, before routes or views are resolved.
+Kelas `EnvironmentManager` (`app/Support/Platform/EnvironmentManager.php`) bertanggung jawab untuk memuat dan menggabungkan file environment platform. Kelas ini dipanggil oleh `PlatformModeServiceProvider` selama boot aplikasi, sebelum route atau view di-resolve.
 
-### Load sequence
+### Urutan pemuatan
 
-1. `PlatformModeServiceProvider::boot()` detects the active `PlatformMode` (Web, Mobile, or Desktop).
-2. It calls `EnvironmentManager::loadPlatformEnvironment(PlatformMode $mode)`.
-3. The method resolves the file path using `PlatformMode::environmentFile()`, e.g. `.env.mobile`.
-4. If the file does not exist, it logs a `debug` message and returns early — no error is thrown.
-5. If the file exists, it parses each `KEY=VALUE` line, skipping blank lines and `#` comments.
-6. Each variable is written to `$_ENV`, `$_SERVER`, and `putenv()`, overwriting any base value for that key.
-7. After merging, it logs an `info` message with the file name, variable count, and number of conflicts resolved.
+1. `PlatformModeServiceProvider::boot()` mendeteksi `PlatformMode` aktif (Web, Mobile, atau Desktop).
+2. Memanggil `EnvironmentManager::loadPlatformEnvironment(PlatformMode $mode)`.
+3. Metode ini me-resolve path file menggunakan `PlatformMode::environmentFile()`, misalnya `.env.mobile`.
+4. Jika file tidak ada, ia mencatat pesan `debug` dan kembali lebih awal — tidak ada error yang dilempar.
+5. Jika file ada, ia mengurai setiap baris `KEY=VALUE`, melewati baris kosong dan komentar `#`.
+6. Setiap variabel ditulis ke `$_ENV`, `$_SERVER`, dan `putenv()`, menimpa nilai dasar untuk kunci tersebut.
+7. Setelah penggabungan, ia mencatat pesan `info` dengan nama file, jumlah variabel, dan jumlah konflik yang diselesaikan.
 
-### Parsing rules
+### Aturan penguraian
 
-- Lines starting with `#` are treated as comments and skipped.
-- Empty lines are skipped.
-- Values wrapped in `"double"` or `'single'` quotes have the quotes stripped.
-- `null`, `(null)`, `empty`, and `(empty)` are normalised to an empty string `""`.
-- The first `=` on a line separates the key from the value — values may contain `=`.
+- Baris yang dimulai dengan `#` diperlakukan sebagai komentar dan dilewati.
+- Baris kosong dilewati.
+- Nilai yang dibungkus dengan tanda kutip `"ganda"` atau `'tunggal'` akan dihapus tanda kutipnya.
+- `null`, `(null)`, `empty`, dan `(empty)` dinormalisasi menjadi string kosong `""`.
+- `=` pertama pada sebuah baris memisahkan kunci dari nilai — nilai boleh mengandung `=`.
 
-### Logging output (local environment)
+### Output log (environment lokal)
 
 ```
 [info]  Loaded platform environment  {"file":".env.mobile","mode":"mobile","vars_count":12,"conflicts_resolved":3}
 ```
 
-When no platform file is found:
+Ketika tidak ada file platform yang ditemukan:
 
 ```
 [debug] Platform environment file not found, using base environment  {"file":".env.mobile","mode":"mobile"}
@@ -219,19 +219,19 @@ When no platform file is found:
 
 ---
 
-## Common Configuration Scenarios
+## Skenario Konfigurasi Umum
 
-### Scenario 1: Different `SESSION_DRIVER` per platform
+### Skenario 1: `SESSION_DRIVER` berbeda per platform
 
-The session driver typically differs across platforms:
+Driver session biasanya berbeda antar platform:
 
-| Platform | Recommended Driver | Reason |
-|----------|--------------------|--------|
-| Web | `cookie` | Stateless HTTP; cookies work natively in browsers |
-| Mobile | `database` | Persists across native app restarts; works with token auth |
-| Desktop | `file` | Single-user local app; file sessions are fast and simple |
+| Platform | Driver yang Direkomendasikan | Alasan |
+|----------|------------------------------|--------|
+| Web | `cookie` | HTTP stateless; cookie bekerja secara native di browser |
+| Mobile | `database` | Bertahan saat aplikasi native di-restart; bekerja dengan token auth |
+| Desktop | `file` | Aplikasi lokal pengguna tunggal; session file cepat dan sederhana |
 
-Base `.env`:
+`.env` dasar:
 ```dotenv
 SESSION_DRIVER=database
 ```
@@ -246,15 +246,15 @@ SESSION_DRIVER=cookie
 SESSION_DRIVER=file
 ```
 
-Mobile mode inherits `SESSION_DRIVER=database` from `.env` — no override needed.
+Mode Mobile mewarisi `SESSION_DRIVER=database` dari `.env` — tidak diperlukan override.
 
 ---
 
-### Scenario 2: Different `APP_URL` per platform
+### Skenario 2: `APP_URL` berbeda per platform
 
-Each platform typically runs on a different port (or host) to allow simultaneous development:
+Setiap platform biasanya berjalan pada port (atau host) yang berbeda untuk memungkinkan pengembangan secara bersamaan:
 
-`.env` (base):
+`.env` (dasar):
 ```dotenv
 APP_URL=http://127.0.0.1:8000
 ```
@@ -266,10 +266,10 @@ APP_URL=http://localhost:8000
 
 `.env.mobile`:
 ```dotenv
-# Android emulator routes 10.0.2.2 to the host machine
+# Emulator Android merutekan 10.0.2.2 ke mesin host
 APP_URL=http://10.0.2.2:8001
 
-# For physical Android device on the same Wi-Fi network:
+# Untuk perangkat Android fisik di jaringan Wi-Fi yang sama:
 # APP_URL=http://192.168.1.42:8001
 ```
 
@@ -280,9 +280,9 @@ APP_URL=http://localhost:8002
 
 ---
 
-### Scenario 3: `VITE_PLATFORM` for frontend asset selection
+### Skenario 3: `VITE_PLATFORM` untuk pemilihan aset frontend
 
-The Vite build pipeline uses `VITE_PLATFORM` to select the correct JavaScript entry point and asset bundle. Set it in each platform file so the browser/native app loads the right bundle.
+Pipeline build Vite menggunakan `VITE_PLATFORM` untuk memilih entry point JavaScript dan bundle aset yang benar. Atur di setiap file platform agar browser/aplikasi native memuat bundle yang tepat.
 
 `.env.web`:
 ```dotenv
@@ -299,7 +299,7 @@ VITE_PLATFORM=mobile
 VITE_PLATFORM=desktop
 ```
 
-In Blade templates or JavaScript, you can read this value:
+Dalam template Blade atau JavaScript, Anda dapat membaca nilai ini:
 
 ```js
 // resources/js/app/app.js
@@ -308,37 +308,37 @@ const platform = import.meta.env.VITE_PLATFORM ?? 'web';
 
 ---
 
-### Scenario 4: Running all three platforms simultaneously
+### Skenario 4: Menjalankan ketiga platform secara bersamaan
 
-Start each platform in a separate terminal. Each reads its own port from the platform-specific file:
+Jalankan setiap platform di terminal terpisah. Masing-masing membaca portnya sendiri dari file platform-spesifik:
 
 ```bash
 # Terminal 1 — Web (port 8000)
 php artisan serve --port=8000
 
-# Terminal 2 — Mobile (port 8001, set in .env.mobile)
+# Terminal 2 — Mobile (port 8001, diatur di .env.mobile)
 php artisan native:run
 
-# Terminal 3 — Desktop (port 8002, set in .env.desktop)
+# Terminal 3 — Desktop (port 8002, diatur di .env.desktop)
 php artisan native:serve
 ```
 
-Port assignment convention:
+Konvensi penugasan port:
 
-| Platform | Command | Port |
-|----------|---------|------|
+| Platform | Perintah | Port |
+|----------|----------|------|
 | Web | `php artisan serve` | 8000 |
 | Mobile | `php artisan native:run` | 8001 |
 | Desktop | `php artisan native:serve` | 8002 |
 
 ---
 
-### Scenario 5: Keeping shared secrets in `.env` only
+### Skenario 5: Menyimpan rahasia bersama hanya di `.env`
 
-Secrets such as database passwords, API keys, and mail credentials only need to appear once in `.env`. Platform files never need to duplicate them — they are inherited automatically.
+Rahasia seperti password database, API key, dan kredensial mail hanya perlu muncul sekali di `.env`. File platform tidak perlu menduplikasinya — semuanya diwarisi secara otomatis.
 
 ```dotenv
-# .env — the single source of truth for secrets
+# .env — sumber kebenaran tunggal untuk rahasia
 DB_HOST=127.0.0.1
 DB_DATABASE=wedding_flowers_decorasi
 DB_USERNAME=root
@@ -348,29 +348,29 @@ MIDTRANS_SERVER_KEY=SB-Mid-server-xxxx
 FIREBASE_CREDENTIALS_PATH=storage/app/firebase-credentials.json
 ```
 
-Platform files only override the variables that genuinely differ per platform.
+File platform hanya menggantikan variabel yang benar-benar berbeda per platform.
 
 ---
 
-## Quick Reference
+## Referensi Cepat
 
 ```
-.env                   → always loaded; all shared config and secrets go here
-.env.web               → (optional) web overrides; copy from .env.web.example
-.env.mobile            → (optional) mobile overrides; copy from .env.mobile.example
-.env.desktop           → (optional) desktop overrides; copy from .env.desktop.example
+.env                   → selalu dimuat; semua konfigurasi bersama dan rahasia ada di sini
+.env.web               → (opsional) override web; salin dari .env.web.example
+.env.mobile            → (opsional) override mobile; salin dari .env.mobile.example
+.env.desktop           → (opsional) override desktop; salin dari .env.desktop.example
 
-Merge rule:            platform file wins over .env for matching keys
-Missing platform file: app continues with base .env — no error
-Load timing:           during PlatformModeServiceProvider::boot(), before routes
+Aturan penggabungan:   file platform menang atas .env untuk kunci yang sama
+File platform hilang:  aplikasi melanjutkan dengan .env dasar — tidak ada error
+Waktu pemuatan:        selama PlatformModeServiceProvider::boot(), sebelum route
 ```
 
 ---
 
-## See Also
+## Lihat Juga
 
-- `app/Support/Platform/EnvironmentManager.php` — implementation
-- `app/Providers/PlatformModeServiceProvider.php` — where loading is triggered
-- `app/Enums/PlatformMode.php` — `environmentFile()` method returns the file name per mode
-- `.env.web.example`, `.env.mobile.example`, `.env.desktop.example` — annotated starter files
-- `docs/platform-support.md` — platform architecture overview
+- `app/Support/Platform/EnvironmentManager.php` — implementasi
+- `app/Providers/PlatformModeServiceProvider.php` — tempat pemuatan dipicu
+- `app/Enums/PlatformMode.php` — metode `environmentFile()` mengembalikan nama file per mode
+- `.env.web.example`, `.env.mobile.example`, `.env.desktop.example` — file awal beranotasi
+- `docs/platform-support.md` — ikhtisar arsitektur platform

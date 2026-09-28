@@ -1,44 +1,44 @@
-# Web Production Deployment Guide
+# Panduan Deployment Produksi Web
 
-This guide covers building, configuring, and deploying the Laravel Wedding Organizer CBIR application for web production environments.
+Panduan ini mencakup proses membangun, mengkonfigurasi, dan men-deploy aplikasi Laravel Wedding Organizer CBIR untuk lingkungan produksi web.
 
 ---
 
-## Production Build
+## Build Produksi
 
-The web platform uses a dedicated npm script that sets `VITE_PLATFORM=web` before invoking Vite. This ensures only the web-specific JavaScript entry point (`resources/js/app-web/app-web.js`) is bundled, keeping the production asset as small as possible.
+Platform web menggunakan skrip npm khusus yang menetapkan `VITE_PLATFORM=web` sebelum memanggil Vite. Ini memastikan hanya titik masuk JavaScript khusus web (`resources/js/app-web/app-web.js`) yang dibundel, sehingga aset produksi sekecil mungkin.
 
 ```bash
 npm run build:web
 ```
 
-The command is equivalent to:
+Perintah ini setara dengan:
 
 ```bash
 cross-env VITE_PLATFORM=web vite build
 ```
 
-Built assets are written to `public/build/web/` with a `manifest.json` that Laravel uses to map entry-point paths to their hashed filenames.
+Aset yang dibangun ditulis ke `public/build/web/` dengan `manifest.json` yang digunakan Laravel untuk memetakan jalur titik masuk ke nama file yang di-hash.
 
 ---
 
-## Required Environment Variables
+## Variabel Lingkungan yang Wajib
 
-Create a `.env` file in the project root with at least the following values before running the deployment checklist.
+Buat file `.env` di root proyek dengan setidaknya nilai-nilai berikut sebelum menjalankan daftar periksa deployment.
 
 ```dotenv
-# Application
+# Aplikasi
 APP_ENV=production
-APP_KEY=base64:...           # Required — generate with: php artisan key:generate
-APP_URL=https://yourdomain.com  # Must match your actual domain exactly
+APP_KEY=base64:...           # Wajib — buat dengan: php artisan key:generate
+APP_URL=https://yourdomain.com  # Harus cocok persis dengan domain Anda
 
 # Session
-SESSION_DRIVER=cookie        # Or "database" for multi-server setups
+SESSION_DRIVER=cookie        # Atau "database" untuk setup multi-server
 
-# Frontend platform
+# Platform frontend
 VITE_PLATFORM=web
 
-# Database (example — adjust for your DB engine)
+# Database (contoh — sesuaikan untuk engine DB Anda)
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
@@ -46,61 +46,61 @@ DB_DATABASE=wedding_flowers_decorasi
 DB_USERNAME=dbuser
 DB_PASSWORD=secret
 
-# Cache & Queue (recommended for production)
+# Cache & Queue (direkomendasikan untuk produksi)
 CACHE_STORE=redis
 QUEUE_CONNECTION=database
 
-# Mail, Firebase, Midtrans, etc.
-# ... add all remaining secrets from your base .env
+# Mail, Firebase, Midtrans, dll.
+# ... tambahkan semua rahasia lainnya dari base .env Anda
 ```
 
-### Variable Reference
+### Referensi Variabel
 
-| Variable | Required | Description |
+| Variabel | Wajib | Deskripsi |
 |---|---|---|
-| `APP_ENV` | Yes | Must be `production` to disable debug output |
-| `APP_KEY` | Yes | 32-byte base64 key used for encryption and signing |
-| `APP_URL` | Yes | Full URL of the application — must match the actual domain |
-| `SESSION_DRIVER` | Yes | `cookie` for single-server; `database` for multi-server |
-| `VITE_PLATFORM` | Yes | Must be `web` so `PlatformAssetManager` loads the correct manifest |
+| `APP_ENV` | Ya | Harus `production` untuk menonaktifkan output debug |
+| `APP_KEY` | Ya | Kunci base64 32-byte yang digunakan untuk enkripsi dan penandatanganan |
+| `APP_URL` | Ya | URL lengkap aplikasi — harus cocok dengan domain yang sebenarnya |
+| `SESSION_DRIVER` | Ya | `cookie` untuk server tunggal; `database` untuk multi-server |
+| `VITE_PLATFORM` | Ya | Harus `web` agar `PlatformAssetManager` memuat manifest yang benar |
 
-> `APP_URL` is particularly sensitive — an incorrect value breaks URL generation, email links, and Sanctum CSRF protection.
+> `APP_URL` sangat sensitif — nilai yang salah akan merusak pembuatan URL, tautan email, dan perlindungan CSRF Sanctum.
 
 ---
 
-## Deployment Checklist
+## Daftar Periksa Deployment
 
-Run these commands in order after uploading the application code to the server.
+Jalankan perintah-perintah ini secara berurutan setelah mengunggah kode aplikasi ke server.
 
 ```bash
-# 1. Install PHP dependencies (production-only, no dev packages)
+# 1. Instal dependensi PHP (hanya produksi, tanpa paket dev)
 composer install --no-dev --optimize-autoloader
 
-# 2. Build frontend assets for the web platform
+# 2. Build aset frontend untuk platform web
 npm ci
 npm run build:web
 
-# 3. Cache Laravel configuration, routes, and views for performance
+# 3. Cache konfigurasi Laravel, rute, dan tampilan untuk performa
 php artisan optimize
 
-# 4. Run pending database migrations
+# 4. Jalankan migrasi database yang tertunda
 php artisan migrate --force
 ```
 
-### Notes
+### Catatan
 
-- `composer install --no-dev` excludes testing and development packages, reducing disk usage and attack surface.
-- `npm ci` uses the exact versions locked in `package-lock.json` — prefer this over `npm install` in CI/CD pipelines.
-- `php artisan optimize` is a convenience command that combines `config:cache`, `route:cache`, and `view:cache`.
-- The `--force` flag on `migrate` bypasses the interactive confirmation prompt required in production mode.
+- `composer install --no-dev` mengecualikan paket pengujian dan pengembangan, mengurangi penggunaan disk dan permukaan serangan.
+- `npm ci` menggunakan versi yang terkunci persis di `package-lock.json` — lebih disarankan daripada `npm install` dalam pipeline CI/CD.
+- `php artisan optimize` adalah perintah praktis yang menggabungkan `config:cache`, `route:cache`, dan `view:cache`.
+- Flag `--force` pada `migrate` melewati prompt konfirmasi interaktif yang diperlukan dalam mode produksi.
 
-If you use a deployment tool (Envoyer, Deployer, Forge), add these four commands to your deployment hook in the listed order.
+Jika Anda menggunakan alat deployment (Envoyer, Deployer, Forge), tambahkan keempat perintah ini ke deployment hook Anda dalam urutan yang tercantum.
 
 ---
 
-## Nginx Configuration
+## Konfigurasi Nginx
 
-The following example configures Nginx with PHP-FPM (via FastCGI), proper asset caching, and `FollowSymlinks`-equivalent support via `root` resolution.
+Contoh berikut mengkonfigurasi Nginx dengan PHP-FPM (via FastCGI), caching aset yang tepat, dan dukungan setara `FollowSymlinks` melalui resolusi `root`.
 
 ```nginx
 server {
@@ -108,7 +108,7 @@ server {
     listen [::]:80;
     server_name yourdomain.com www.yourdomain.com;
 
-    # Redirect all HTTP traffic to HTTPS
+    # Redirect semua traffic HTTP ke HTTPS
     return 301 https://$host$request_uri;
 }
 
@@ -117,14 +117,14 @@ server {
     listen [::]:443 ssl http2;
     server_name yourdomain.com www.yourdomain.com;
 
-    # TLS certificates (example: Let's Encrypt / Certbot)
+    # Sertifikat TLS (contoh: Let's Encrypt / Certbot)
     ssl_certificate     /etc/letsencrypt/live/yourdomain.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/yourdomain.com/privkey.pem;
     ssl_protocols       TLSv1.2 TLSv1.3;
     ssl_ciphers         HIGH:!aNULL:!MD5;
 
-    # Document root — Laravel's public/ directory
-    # Using the real path avoids issues with symlinks in deployment pipelines
+    # Document root — direktori public/ Laravel
+    # Menggunakan path sebenarnya menghindari masalah dengan symlink dalam pipeline deployment
     root /var/www/yourdomain.com/public;
     index index.php;
     charset utf-8;
@@ -133,9 +133,9 @@ server {
     access_log /var/log/nginx/yourdomain.com.access.log;
     error_log  /var/log/nginx/yourdomain.com.error.log;
 
-    # ── Static asset caching ─────────────────────────────────────────────
-    # Vite produces content-hashed filenames, so these can be cached
-    # indefinitely — a new filename is generated on every build.
+    # ── Caching aset statis ─────────────────────────────────────────────
+    # Vite menghasilkan nama file content-hashed, sehingga dapat di-cache
+    # selamanya — nama file baru dibuat pada setiap build.
     location ~* ^/build/(web|mobile|desktop)/.+\.(js|css|woff2?|ttf|eot|svg|png|jpg|jpeg|gif|ico|webp)$ {
         expires max;
         add_header Cache-Control "public, immutable";
@@ -144,7 +144,7 @@ server {
         try_files $uri =404;
     }
 
-    # Generic static file caching for everything else under public/
+    # Caching file statis generik untuk semua yang ada di bawah public/
     location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff2?|ttf|eot|webp)$ {
         expires 30d;
         add_header Cache-Control "public, max-age=2592000";
@@ -152,109 +152,109 @@ server {
         try_files $uri =404;
     }
 
-    # ── Laravel front controller ─────────────────────────────────────────
+    # ── Front controller Laravel ─────────────────────────────────────────
     location / {
         try_files $uri $uri/ /index.php?$query_string;
     }
 
     # ── PHP-FPM (FastCGI) ────────────────────────────────────────────────
     location ~ \.php$ {
-        # Pass requests to PHP-FPM via Unix socket (adjust path as needed)
+        # Teruskan request ke PHP-FPM melalui Unix socket (sesuaikan path sesuai kebutuhan)
         fastcgi_pass   unix:/var/run/php/php8.2-fpm.sock;
         fastcgi_index  index.php;
 
-        # Standard FastCGI parameters
+        # Parameter FastCGI standar
         include        fastcgi_params;
         fastcgi_param  SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
         fastcgi_param  DOCUMENT_ROOT   $realpath_root;
 
-        # Recommended timeouts for long-running requests (e.g. image processing)
+        # Timeout yang direkomendasikan untuk request yang berjalan lama (mis. pemrosesan gambar)
         fastcgi_read_timeout 120;
         fastcgi_buffers      16 16k;
         fastcgi_buffer_size  32k;
     }
 
-    # ── Security: deny access to hidden files ────────────────────────────
+    # ── Keamanan: tolak akses ke file tersembunyi ────────────────────────
     location ~ /\.(?!well-known) {
         deny all;
     }
 
-    # ── File upload size (adjust to match php.ini) ───────────────────────
+    # ── Ukuran upload file (sesuaikan dengan php.ini) ───────────────────
     client_max_body_size 20M;
 }
 ```
 
-### Symlink Support
+### Dukungan Symlink
 
-When using zero-downtime deployment tools (Envoyer, Capistrano, Deployer), the `current/` directory is typically a symlink pointing to the latest release. Nginx resolves the `root` path through symlinks automatically because it evaluates `$realpath_root` at request time — no additional configuration is needed.
+Saat menggunakan alat deployment zero-downtime (Envoyer, Capistrano, Deployer), direktori `current/` biasanya merupakan symlink yang menunjuk ke rilis terbaru. Nginx me-resolve jalur `root` melalui symlink secara otomatis karena mengevaluasi `$realpath_root` pada waktu request — tidak diperlukan konfigurasi tambahan.
 
-If Nginx is configured with `disable_symlinks on` (unusual), change it to `disable_symlinks if_not_owner` or `off`.
+Jika Nginx dikonfigurasi dengan `disable_symlinks on` (tidak umum), ubah menjadi `disable_symlinks if_not_owner` atau `off`.
 
 ---
 
-## Apache Configuration (.htaccess)
+## Konfigurasi Apache (.htaccess)
 
-Place the following `.htaccess` file in the `public/` directory. Laravel ships with a default `.htaccess`; the example below extends it with production-appropriate caching and security headers.
+Tempatkan file `.htaccess` berikut di direktori `public/`. Laravel sudah menyertakan `.htaccess` default; contoh di bawah ini memperluasnya dengan caching yang sesuai untuk produksi dan header keamanan.
 
 ```apache
 <IfModule mod_rewrite.c>
     Options -MultiViews -Indexes
     RewriteEngine On
 
-    # Follow symbolic links (required for deployment symlinks)
+    # Ikuti symbolic links (diperlukan untuk symlink deployment)
     Options +FollowSymLinks
 
-    # Handle Laravel front controller
+    # Tangani front controller Laravel
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
 
-# ── HTTPS redirect ────────────────────────────────────────────────────────
+# ── Redirect HTTPS ────────────────────────────────────────────────────────
 <IfModule mod_rewrite.c>
     RewriteCond %{HTTPS} off
     RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 </IfModule>
 
-# ── Immutable caching for Vite content-hashed assets ─────────────────────
+# ── Caching immutable untuk aset content-hashed Vite ─────────────────────
 <IfModule mod_expires.c>
     ExpiresActive On
 
-    # Vite hashed bundles: cache forever (filename changes on rebuild)
+    # Bundle hashed Vite: cache selamanya (nama file berubah saat rebuild)
     <FilesMatch "^.+\.(js|css)\?id=.+$">
         ExpiresDefault "access plus 1 year"
         Header set Cache-Control "public, immutable"
     </FilesMatch>
 
-    # Font and image assets
+    # Aset font dan gambar
     <FilesMatch "\.(woff2?|ttf|eot|otf|svg|png|jpg|jpeg|gif|ico|webp)$">
         ExpiresDefault "access plus 30 days"
         Header set Cache-Control "public, max-age=2592000"
     </FilesMatch>
 </IfModule>
 
-# ── Security headers ──────────────────────────────────────────────────────
+# ── Header keamanan ──────────────────────────────────────────────────────
 <IfModule mod_headers.c>
     Header always set X-Content-Type-Options "nosniff"
     Header always set X-Frame-Options "SAMEORIGIN"
     Header always set X-XSS-Protection "1; mode=block"
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
 
-    # Remove server signature
+    # Hapus signature server
     Header unset Server
     Header always unset X-Powered-By
 </IfModule>
 
-# ── Deny access to sensitive files ────────────────────────────────────────
+# ── Tolak akses ke file sensitif ────────────────────────────────────────
 <FilesMatch "^\.env">
     Order allow,deny
     Deny from all
 </FilesMatch>
 ```
 
-### Required Apache Modules
+### Modul Apache yang Diperlukan
 
-Ensure the following modules are enabled:
+Pastikan modul-modul berikut diaktifkan:
 
 ```bash
 a2enmod rewrite
@@ -265,46 +265,46 @@ systemctl restart apache2
 
 ---
 
-## Post-Deployment Verification
+## Verifikasi Pasca-Deployment
 
-After completing the deployment checklist, verify the deployment is healthy:
+Setelah menyelesaikan daftar periksa deployment, verifikasi bahwa deployment berjalan dengan baik:
 
 ```bash
-# Check application status and active platform
+# Periksa status aplikasi dan platform yang aktif
 php artisan about
 
-# Confirm the web platform is detected correctly
+# Konfirmasi platform web terdeteksi dengan benar
 php artisan platform:status
 
-# Verify asset manifest exists
+# Verifikasi manifest aset ada
 ls -la public/build/web/manifest.json
 
-# Confirm there are no config caching issues
+# Konfirmasi tidak ada masalah caching konfigurasi
 php artisan config:show app.env
 ```
 
 ---
 
-## Rolling Back
+## Rollback
 
-If a deployment needs to be rolled back:
+Jika deployment perlu di-rollback:
 
 ```bash
-# Clear all caches (required before switching to a previous release)
+# Bersihkan semua cache (diperlukan sebelum beralih ke rilis sebelumnya)
 php artisan optimize:clear
 
-# Restore the previous release (deployment-tool specific)
-# e.g. Envoyer: mark a previous deployment as current
-# e.g. Deployer: dep rollback production
+# Pulihkan rilis sebelumnya (spesifik per alat deployment)
+# mis. Envoyer: tandai deployment sebelumnya sebagai current
+# mis. Deployer: dep rollback production
 
-# Re-run optimize after switching releases
+# Jalankan ulang optimize setelah beralih rilis
 php artisan optimize
 ```
 
 ---
 
-## Related Documentation
+## Dokumentasi Terkait
 
-- [Asset Compilation](../asset-compilation.md) — how `npm run build:web` works internally
-- [Environment Configuration](../environment-configuration.md) — full variable reference and multi-platform strategy
-- `.env.web.example` — annotated starter file for web environment variables
+- [Kompilasi Aset](../asset-compilation.md) — cara kerja `npm run build:web` secara internal
+- [Konfigurasi Lingkungan](../environment-configuration.md) — referensi variabel lengkap dan strategi multi-platform
+- `.env.web.example` — file starter beranotasi untuk variabel lingkungan web
