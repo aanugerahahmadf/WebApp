@@ -1,0 +1,22 @@
+{
+    "appId":  "id.dekorasi.pengantin.user",
+    "appName":  "Dekorasi User",
+    "webDir":  "dist",
+    "server":  {
+                   "url":  "http://10.0.2.2:8000/welcome",
+                   "androidScheme":  "https",
+                   "iosScheme":  "https",
+                   "cleartext":  true
+               },
+    "plugins":  {
+                    "SplashScreen":  {
+                                         "launchAutoHide":  true,
+                                         "launchShowDuration":  0,
+                                         "backgroundColor":  "#eab308",
+                                         "androidScaleType":  "CENTER_CROP",
+                                         "showSpinner":  false,
+                                         "splashFullScreen":  true,
+                                         "splashImmersive":  false
+                                     }
+                }
+}

@@ -12,8 +12,6 @@ use App\Support\Platform\PlatformFeatureRegistry\PlatformFeatureRegistry;
 use Filament\Notifications\Actions\Action;
 use Filament\Notifications\Notification as FilamentNotification;
 use Illuminate\Support\Facades\Log;
-use Native\Laravel\Notification;
-use Native\Mobile\Dialog;
 
 class PlatformNotificationService
 {
@@ -23,14 +21,16 @@ class PlatformNotificationService
      * Pass pre-translated $title / $body strings (already built with the
      * recipient's locale via withRecipientLocale()).
      *
-     * If 'runtime.platform' is bound in the container, desktop/mobile
-     * notification channels are gated by PlatformFeatureRegistry before
-     * attempting the NativePHP API calls.  When the binding is absent the
-     * service falls back to the original behavior (attempt anyway).
+     * Delivery is the same on every surface: a Filament database record the
+     * panel renders, plus a WebSocket broadcast that any open client — website,
+     * Capacitor mobile shell or Electron desktop shell — picks up live. The
+     * Capacitor shells are ordinary browser contexts, so an OS-level toast is
+     * requested through the browser Notification API by the client, and real
+     * push to a device that is not in the foreground goes out over FCM.
      */
     public static function send(User $user, string $title, string $body, ?string $actionUrl = null, ?string $actionLabel = null): void
     {
-        // 1. Filament database notification (website — all browsers)
+        // 1. Filament database notification (in-app inbox, every surface)
         $notification = FilamentNotification::make()
             ->title($title)
             ->body($body)
@@ -47,7 +47,7 @@ class PlatformNotificationService
 
         $notification->sendToDatabase($user);
 
-        // 2. Broadcast via WebSocket (real-time push to connected clients)
+        // 2. Broadcast via WebSocket (real-time delivery to open clients)
         event(new NotificationBroadcast([
             'title' => $title,
             'message' => $body,
@@ -55,35 +55,7 @@ class PlatformNotificationService
             'created_at' => now()->toISOString(),
         ], $user->id));
 
-        // Resolve the current runtime platform once (may be null).
-        $runtimePlatform = static::resolveRuntimePlatform();
-
-        // 2. NativePHP desktop notification (desktop app)
-        if (static::isDesktopNotificationAvailable($runtimePlatform)) {
-            try {
-                if (class_exists(Notification::class)) {
-                    Notification::new()
-                        ->title($title)
-                        ->message(strip_tags($body))
-                        ->show();
-                }
-            } catch (\Throwable $e) {
-                report($e);
-            }
-        }
-
-        // 3. NativePHP mobile toast notification (Android / iOS app)
-        if (static::isMobileNotificationAvailable($runtimePlatform)) {
-            try {
-                if (class_exists(Dialog::class)) {
-                    Dialog::toast(strip_tags($body), 'long');
-                }
-            } catch (\Throwable $e) {
-                report($e);
-            }
-        }
-
-        // 4. FCM push notification (Android / iOS physical device)
+        // 3. FCM push notification (device not in the foreground)
         static::sendFcmPush($user, $title, $body);
     }
 
@@ -256,67 +228,5 @@ class PlatformNotificationService
         }
 
         return null;
-    }
-
-    /**
-     * Determine whether the desktop notification channel should be attempted.
-     *
-     * - When $platform is null (no binding), fall through and attempt anyway
-     *   (legacy behavior).
-     * - When $platform is set, consult PlatformFeatureRegistry.
-     */
-    private static function isDesktopNotificationAvailable(?RuntimePlatform $platform): bool
-    {
-        if ($platform === null) {
-            return true;
-        }
-
-        try {
-            $registry = app(PlatformFeatureRegistry::class);
-            $available = $registry->isAvailable('desktop_notifications', $platform);
-
-            if (! $available) {
-                Log::info('PlatformNotificationService: desktop_notifications channel skipped', [
-                    'platform' => $platform->value,
-                    'reason' => 'Feature not available on this platform',
-                ]);
-            }
-
-            return $available;
-        } catch (\Throwable) {
-            // Registry unavailable — fall back to attempting the channel.
-            return true;
-        }
-    }
-
-    /**
-     * Determine whether the mobile notification channel should be attempted.
-     *
-     * - When $platform is null (no binding), fall through and attempt anyway
-     *   (legacy behavior).
-     * - When $platform is set, consult PlatformFeatureRegistry.
-     */
-    private static function isMobileNotificationAvailable(?RuntimePlatform $platform): bool
-    {
-        if ($platform === null) {
-            return true;
-        }
-
-        try {
-            $registry = app(PlatformFeatureRegistry::class);
-            $available = $registry->isAvailable('push_notifications', $platform);
-
-            if (! $available) {
-                Log::info('PlatformNotificationService: push_notifications channel skipped', [
-                    'platform' => $platform->value,
-                    'reason' => 'Feature not available on this platform',
-                ]);
-            }
-
-            return $available;
-        } catch (\Throwable) {
-            // Registry unavailable — fall back to attempting the channel.
-            return true;
-        }
     }
 }

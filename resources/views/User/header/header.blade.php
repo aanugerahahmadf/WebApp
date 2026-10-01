@@ -1,5 +1,5 @@
 @php
-    $isMobile = \App\Providers\NativeServiceProvider\NativeServiceProvider::isAnyMobile();
+    $isMobile = \App\Support\AppPlatform\AppPlatform::isAnyMobile();
     // Dapatkan ID WeddingFlowersDecorasi secara dinamis agar tidak 404 jika ID bukan 1
     $firstWeddingFlowersDecorasiId = 1;
 @endphp
@@ -15,7 +15,7 @@
 
     {{-- Logo & Brand Name: hidden di mobile, tampil di web --}}
     @if(!$isMobile)
-        <a href="{{ \App\Providers\NativeServiceProvider\NativeServiceProvider::normalizeUrl(url('/')) }}"
+        <a href="{{ \App\Support\AppPlatform\AppPlatform::normalizeUrl(url('/')) }}"
             class="flex items-center shrink-0 {{ (isset($hideLogo) && $hideLogo) ? 'hidden' : '' }}">
             <img src="{{ asset('favicon.ico') }}" alt="{{ __('Dekorasi Bunga Pernikahan Logo') }}"
                 class="w-8 h-8 rounded shrink-0">
@@ -33,16 +33,16 @@
         @if(!$isMobile)
             <div class="hidden lg:flex items-center gap-2 lg:gap-3">
                 @auth
-                    <a href="{{ \App\Providers\NativeServiceProvider\NativeServiceProvider::normalizeUrl(route('filament.user.pages.home')) }}"
+                    <a href="{{ \App\Support\AppPlatform\AppPlatform::normalizeUrl(route('filament.user.pages.home')) }}"
                         class="flex items-center justify-center px-5 h-10 text-sm min-w-10 dark:text-[#EDEDEC] text-[#1b1b18] ring-1 ring-gray-950/10 dark:ring-white/20 hover:bg-gray-50 dark:hover:bg-white/5 rounded-md font-medium transition-all active:scale-95 whitespace-nowrap">
                         {{ __('Beranda') }}
                     </a>
                 @else
-                    <a href="{{ \App\Providers\NativeServiceProvider\NativeServiceProvider::normalizeUrl(route('filament.user.auth.login')) }}"
+                    <a href="{{ \App\Support\AppPlatform\AppPlatform::normalizeUrl(route('filament.user.auth.login')) }}"
                         class="flex items-center justify-center px-5 h-10 text-sm min-w-10 dark:text-[#EDEDEC] text-[#1b1b18] ring-1 ring-gray-950/10 dark:ring-white/20 hover:bg-gray-50 dark:hover:bg-white/5 rounded-md font-medium transition-all active:scale-95 whitespace-nowrap">
                         {{ __('Log in') }}
                     </a>
-                    <a href="{{ \App\Providers\NativeServiceProvider\NativeServiceProvider::normalizeUrl(route('filament.user.auth.register')) }}"
+                    <a href="{{ \App\Support\AppPlatform\AppPlatform::normalizeUrl(route('filament.user.auth.register')) }}"
                         class="flex items-center justify-center px-5 h-10 text-sm min-w-10 dark:text-[#EDEDEC] text-[#1b1b18] ring-1 ring-gray-950/10 dark:ring-white/20 hover:bg-gray-50 dark:hover:bg-white/5 rounded-md font-medium transition-all active:scale-95 whitespace-nowrap">
                         {{ __('Register') }}
                     </a>

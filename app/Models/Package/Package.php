@@ -11,7 +11,7 @@ use App\Models\Review\Review;
 use App\Models\Vendor\Vendor;
 use App\Models\Wishlist\Wishlist;
 
-use App\Providers\NativeServiceProvider\NativeServiceProvider;
+use App\Support\AppPlatform\AppPlatform;
 use App\Traits\HasTranslations\HasTranslations;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -168,7 +168,7 @@ class Package extends Model implements HasMedia
 
     public function getImageUrlAttribute()
     {
-        $fallback = NativeServiceProvider::normalizeUrl(asset('images/placeholders/image-placeholder.png'));
+        $fallback = AppPlatform::normalizeUrl(asset('images/placeholders/image-placeholder.png'));
         $url = $this->getFirstMediaUrl('package_image') ?: null;
         $url = $url ? str_replace('/storage/', '/media/', $url) : $url;
 
@@ -179,7 +179,7 @@ class Package extends Model implements HasMedia
     {
         $url = $this->getFirstMediaUrl('videos') ?: null;
 
-        return $url ? NativeServiceProvider::normalizeUrl($url) : null;
+        return $url ? AppPlatform::normalizeUrl($url) : null;
     }
 
     public function getIsOutOfStockAttribute(): bool
@@ -278,18 +278,18 @@ class Package extends Model implements HasMedia
 
         // If it's already a full URL or a data URI, return it
         if (Str::startsWith($url, ['http://', 'https://', 'data:image'])) {
-            // Normalize host IP for NativePHP mobile
-            return NativeServiceProvider::normalizeUrl($url);
+            // Normalize host IP for the Capacitor shells (they reach the API over the LAN)
+            return AppPlatform::normalizeUrl($url);
         }
 
         // If it starts with a slash, check if it's already a public path
         if (Str::startsWith($url, '/')) {
-            return NativeServiceProvider::normalizeUrl(url($url));
+            return AppPlatform::normalizeUrl(url($url));
         }
 
         // Otherwise, resolve via the public storage disk
         $resolved = asset('media/'.ltrim($url, '/'));
 
-        return NativeServiceProvider::normalizeUrl($resolved);
+        return AppPlatform::normalizeUrl($resolved);
     }
 }

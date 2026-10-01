@@ -1,6 +1,6 @@
 @php
     use App\Support\PlatformContext\PlatformContext;
-    use App\Providers\NativeServiceProvider\NativeServiceProvider;
+    use App\Support\AppPlatform\AppPlatform;
 
     $currentLocale = app()->getLocale();
     $locals = config('filament-language-switcher.locals', []);

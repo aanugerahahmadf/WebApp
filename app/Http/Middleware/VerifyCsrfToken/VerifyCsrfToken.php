@@ -14,7 +14,6 @@ class VerifyCsrfToken extends Middleware
     protected $except = [
         'admin/*',
         'livewire/*',
-        'api/db-proxy',
 
         'api/v1.0/payment/notify',
         'api/webhooks/fonnte',

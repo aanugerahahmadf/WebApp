@@ -95,6 +95,7 @@ class CartResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->paginated(false)
             ->emptyStateHeading(__('Keranjang Kosong'))
             ->emptyStateDescription(__('Mulai belanja dan temukan dekorasi impian Anda sekarang!'))
             ->emptyStateIcon('heroicon-o-shopping-cart')

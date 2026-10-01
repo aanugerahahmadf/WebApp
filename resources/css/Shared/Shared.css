@@ -27,12 +27,9 @@ body {
     -webkit-overflow-scrolling: touch;
 }
 
-.nativephp-safe-area {
-    padding-top: calc(3rem + var(--inset-top, env(safe-area-inset-top, 0px))) !important;
-    padding-bottom: calc(1.5rem + var(--inset-bottom, env(safe-area-inset-bottom, 0px))) !important;
-    padding-left: calc(1.5rem + var(--inset-left, env(safe-area-inset-left, 0px))) !important;
-    padding-right: calc(1.5rem + var(--inset-right, env(safe-area-inset-right, 0px))) !important;
-}
+/* The old `.nativephp-safe-area` helper was removed here: nothing applied that
+   class, and every layout that needs safe-area padding uses the --inset-*
+   custom properties with env(safe-area-inset-*) fallbacks directly. */
 
 
 .fi-topbar-notif-badge {

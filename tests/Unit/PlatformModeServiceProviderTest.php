@@ -113,7 +113,7 @@ class PlatformModeServiceProviderTest extends TestCase
     public function test_boot_configures_asset_manager(): void
     {
         // Simulate Mobile mode
-        $_SERVER['argv'] = ['artisan', 'native:run'];
+        $_SERVER['argv'] = ['artisan', 'serve:mobile'];
 
         $provider = new PlatformModeServiceProvider($this->app);
         $provider->register();
@@ -135,7 +135,7 @@ class PlatformModeServiceProviderTest extends TestCase
         $this->app['env'] = 'local';
 
         // Simulate Desktop mode
-        $_SERVER['argv'] = ['artisan', 'native:serve'];
+        $_SERVER['argv'] = ['artisan', 'serve:desktop'];
 
         // Allow any debug/warning calls from EnvironmentManager and ProductionValidator
         Log::shouldReceive('debug')->zeroOrMoreTimes();
@@ -239,10 +239,10 @@ class PlatformModeServiceProviderTest extends TestCase
      */
     public function test_complete_bootstrap_flow_for_mobile_mode(): void
     {
-        $_SERVER['argv'] = ['artisan', 'native:run'];
+        $_SERVER['argv'] = ['artisan', 'serve:mobile'];
 
         // Mobile mode doesn't use request, uses config/environment
-        config(['native.platform' => 'android']);
+        config(['app-platform.force_platform' => 'android']);
 
         $provider = new PlatformModeServiceProvider($this->app);
         $provider->register();
@@ -266,7 +266,7 @@ class PlatformModeServiceProviderTest extends TestCase
      */
     public function test_complete_bootstrap_flow_for_desktop_mode(): void
     {
-        $_SERVER['argv'] = ['artisan', 'native:serve'];
+        $_SERVER['argv'] = ['artisan', 'serve:desktop'];
 
         $provider = new PlatformModeServiceProvider($this->app);
         $provider->register();

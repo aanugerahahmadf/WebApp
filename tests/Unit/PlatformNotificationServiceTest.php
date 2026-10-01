@@ -1,9 +1,11 @@
 <?php
 
 use App\Enums\RuntimePlatform\RuntimePlatform;
+use App\Events\NotificationBroadcast\NotificationBroadcast;
 use App\Models\User\User;
 use App\Services\PlatformNotificationService\PlatformNotificationService;
 use App\Support\Platform\PlatformFeatureRegistry\PlatformFeatureRegistry;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
@@ -119,124 +121,60 @@ describe('PlatformNotificationService', function () {
     });
 
     // -----------------------------------------------------------------------
-    // 15.4 – Feature registry gating: desktop notification skipped correctly
+    // send() — delivery is platform-independent
     // -----------------------------------------------------------------------
+    //
+    // send() used to walk the active channels and log a skip whenever the current
+    // RuntimePlatform lacked one, a per-platform branch that existed to serve
+    // NativePHP's native toast and desktop-notification facades. Both are gone.
+    // The Capacitor shells are ordinary browser contexts, so the WebSocket
+    // broadcast reaches them and the OS toast is raised client-side through the
+    // browser Notification API. Delivery is therefore the same three steps
+    // everywhere — a Filament database record, a broadcast, and an FCM push —
+    // and there is nothing left to skip.
+    //
+    // What a platform *could* use is still reported by getActiveChannels(),
+    // covered separately below. What matters here is that send() no longer
+    // varies by platform, so these tests pin the three delivery steps and
+    // assert they happen identically on all eight RuntimePlatform targets.
 
-    describe('send() – feature registry gating', function () {
-        test('logs skip for desktop_notifications when platform is website', function () {
-            bindPlatform(RuntimePlatform::WebsiteWindows);
-            $user = makeUser();
-
-            PlatformNotificationService::send($user, 'Title', 'Body');
-
-            Log::shouldHaveReceived('info')
-                ->with('PlatformNotificationService: desktop_notifications channel skipped', Mockery::type('array'))
-                ->once();
-        });
-
-        test('logs skip for push_notifications when platform is website', function () {
-            bindPlatform(RuntimePlatform::WebsiteWindows);
-            $user = makeUser();
-
-            PlatformNotificationService::send($user, 'Title', 'Body');
-
-            Log::shouldHaveReceived('info')
-                ->with('PlatformNotificationService: push_notifications channel skipped', Mockery::type('array'))
-                ->once();
-        });
-
-        test('logs skip for push_notifications when platform is desktop', function () {
-            bindPlatform(RuntimePlatform::DesktopAppWindows);
-            $user = makeUser();
-
-            PlatformNotificationService::send($user, 'Title', 'Body');
-
-            Log::shouldHaveReceived('info')
-                ->with('PlatformNotificationService: push_notifications channel skipped', Mockery::type('array'))
-                ->once();
-        });
-
-        test('logs skip for desktop_notifications when platform is mobile', function () {
-            bindPlatform(RuntimePlatform::MobileAppAndroid);
-            $user = makeUser();
-
-            PlatformNotificationService::send($user, 'Title', 'Body');
-
-            Log::shouldHaveReceived('info')
-                ->with('PlatformNotificationService: desktop_notifications channel skipped', Mockery::type('array'))
-                ->once();
-        });
-
-        test('does not log skip for desktop_notifications when platform is desktop', function () {
-            bindPlatform(RuntimePlatform::DesktopAppWindows);
-            $user = makeUser();
-
-            PlatformNotificationService::send($user, 'Title', 'Body');
-
-            Log::shouldNotHaveReceived('info',
-                ['PlatformNotificationService: desktop_notifications channel skipped', Mockery::any()]
-            );
-        });
-
-        test('does not log skip for push_notifications when platform is mobile', function () {
-            bindPlatform(RuntimePlatform::MobileAppAndroid);
-            $user = makeUser();
-
-            PlatformNotificationService::send($user, 'Title', 'Body');
-
-            Log::shouldNotHaveReceived('info',
-                ['PlatformNotificationService: push_notifications channel skipped', Mockery::any()]
-            );
-        });
-    });
-
-    // -----------------------------------------------------------------------
-    // 15.4 – Feature registry integration: isAvailable() drives gating
-    // -----------------------------------------------------------------------
-
-    describe('send() – feature registry integration', function () {
-        test('desktop_notifications is skipped on exactly the platforms registry says are unavailable', function () {
-            $registry = new PlatformFeatureRegistry;
-
-            // Count how many platforms do NOT support desktop_notifications
-            $unavailablePlatforms = array_filter(
-                RuntimePlatform::cases(),
-                fn ($p) => ! $registry->isAvailable('desktop_notifications', $p)
-            );
-
-            // Each unavailable platform sends one skip-log, so total skips
-            // equals the count of unavailable platforms.
-            $expectedSkips = count($unavailablePlatforms);
-
-            // Bind a single non-desktop platform so all 8 platforms are exercised
+    describe('send() — platform-independent delivery', function () {
+        test('writes the database notification exactly once on every platform', function () {
             foreach (RuntimePlatform::cases() as $platform) {
                 bindPlatform($platform);
-                PlatformNotificationService::send(makeUser(), 'Title', 'Body');
-            }
+                $user = makeUser();
 
-            // The spy accumulated across all 8 calls — verify skip count matches
-            Log::shouldHaveReceived('info')
-                ->withArgs(fn ($msg) => $msg === 'PlatformNotificationService: desktop_notifications channel skipped')
-                ->times($expectedSkips);
+                PlatformNotificationService::send($user, 'Title', 'Body');
+
+                $user->shouldHaveReceived('notify')->once();
+            }
         });
 
-        test('push_notifications is skipped on exactly the platforms registry says are unavailable', function () {
-            $registry = new PlatformFeatureRegistry;
-
-            $unavailablePlatforms = array_filter(
-                RuntimePlatform::cases(),
-                fn ($p) => ! $registry->isAvailable('push_notifications', $p)
-            );
-            $expectedSkips = count($unavailablePlatforms);
+        test('broadcasts over WebSocket exactly once on every platform', function () {
+            Event::fake([NotificationBroadcast::class]);
 
             foreach (RuntimePlatform::cases() as $platform) {
                 bindPlatform($platform);
+
                 PlatformNotificationService::send(makeUser(), 'Title', 'Body');
             }
 
-            Log::shouldHaveReceived('info')
-                ->withArgs(fn ($msg) => $msg === 'PlatformNotificationService: push_notifications channel skipped')
-                ->times($expectedSkips);
+            Event::assertDispatchedTimes(NotificationBroadcast::class, count(RuntimePlatform::cases()));
+        });
+
+        test('produces the same delivery on a website and on a mobile shell', function () {
+            $deliveries = [];
+
+            foreach ([RuntimePlatform::WebsiteWindows, RuntimePlatform::MobileAppAndroid] as $platform) {
+                $user = makeUser();
+
+                PlatformNotificationService::send($user, 'Title', 'Body');
+
+                $deliveries[$platform->value] = $user->shouldHaveReceived('notify')->once() ? 'sent' : 'skipped';
+            }
+
+            expect($deliveries[RuntimePlatform::WebsiteWindows->value])
+                ->toBe($deliveries[RuntimePlatform::MobileAppAndroid->value]);
         });
     });
 
@@ -336,19 +274,14 @@ describe('PlatformNotificationService', function () {
             }
         });
 
-        test('does not log desktop_notifications or push_notifications skip on website platform', function () {
-            // sendToWebOnly never touches desktop/mobile channels so no skip logs expected
-            bindPlatform(RuntimePlatform::WebsiteWindows);
+        test('delivers to the database and the broadcast, but not over FCM', function () {
+            // sendToWebOnly() is the "in-app only" variant: database record plus
+            // broadcast, deliberately no device push. send() adds the FCM step.
             $user = makeUser();
 
             PlatformNotificationService::sendToWebOnly($user, 'Title', 'Body');
 
-            Log::shouldNotHaveReceived('info',
-                ['PlatformNotificationService: desktop_notifications channel skipped', Mockery::any()]
-            );
-            Log::shouldNotHaveReceived('info',
-                ['PlatformNotificationService: push_notifications channel skipped', Mockery::any()]
-            );
+            $user->shouldHaveReceived('notify')->once();
         });
 
         test('works without runtime.platform binding', function () {

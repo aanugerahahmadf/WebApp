@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\PlatformMode\PlatformMode;
 use App\Http\Middleware\SetLocale\SetLocale;
 use App\Http\Middleware\VerifyCsrfToken\VerifyCsrfToken;
 use App\Providers\AutoTranslationServiceProvider\AutoTranslationServiceProvider;
@@ -10,7 +9,6 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Session\Middleware\StartSession;
-use Illuminate\Support\Facades\Route;
 
 // Symfony uses temporary files for `php artisan serve` on Windows. Keep them
 // inside the project so Artisan works even when the system temp path is locked.
@@ -37,26 +35,6 @@ $app = Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console/console.php',
         channels: __DIR__.'/../routes/channels/channels.php',
         health: '/up',
-        then: function (): void {
-            // ── Platform-Specific Route Registration (Requirements 9.1–9.4, 9.6) ──────
-            // Load mobile-specific routes only when running in Mobile Native Mode.
-            // These routes are prefixed with "api/mobile" and use the "api" middleware group.
-            $mode = app('platform.mode');
-
-            if ($mode === PlatformMode::Mobile && file_exists(base_path('routes/mobile/mobile.php'))) {
-                Route::middleware('api')
-                    ->prefix('api/mobile')
-                    ->group(base_path('routes/mobile/mobile.php'));
-            }
-
-            // Load desktop-specific routes only when running in Desktop App Mode.
-            // These routes are prefixed with "api/desktop" and use the "api" middleware group.
-            if ($mode === PlatformMode::Desktop && file_exists(base_path('routes/desktop/desktop.php'))) {
-                Route::middleware('api')
-                    ->prefix('api/desktop')
-                    ->group(base_path('routes/desktop/desktop.php'));
-            }
-        },
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // Mendaftarkan middleware SetLocale ke group web agar session dan auth tersedia
@@ -69,7 +47,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
             SetLocale::class,
         ]);
 
-        // Define mobile group for NativePHP
+        // Define the mobile middleware group, used by the Capacitor shells
         $middleware->group('mobile', [
             EncryptCookies::class,
             StartSession::class,

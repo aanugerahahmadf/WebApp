@@ -1,0 +1,370 @@
+/*
+ * ============================================================================
+ *  MOBILE / NATIVE SHELL LAYOUT
+ *  Shared by the Admin and User panels, so it applies identically to the
+ *  website on a phone and to the Capacitor shells (app/Capacitor/AdminApp and
+ *  app/Capacitor/UserApp) on Android / iOS.
+ *
+ *  Server side, the markup for these features is only emitted when
+ *  App\Support\AppPlatform\AppPlatform::isMobile() is true. Everything below is
+ *  therefore a *within-mobile* refinement plus a width guard, so rotating a
+ *  tablet to landscape (or resizing a browser below the breakpoint) never leaves
+ *  a stray bottom bar or a squashed card table behind.
+ *
+ *  Breakpoint: 1023px. Kept in sync with config('app-platform.mobile_nav.breakpoint')
+ *  and the MOBILE_BREAKPOINT env var.
+ * ============================================================================
+ */
+
+/* ---------------------------------------------------------------------------
+ *  1. BOTTOM NAVIGATION
+ * ------------------------------------------------------------------------ */
+
+.fi-bottom-nav {
+    /* Desktop safety net: the server should never have rendered this. */
+    display: none;
+}
+
+@media (max-width: 1023px) {
+
+    .fi-bottom-nav {
+        position: fixed;
+        inset-inline: 0;
+        bottom: 0;
+        z-index: 45;
+        display: flex;
+        align-items: stretch;
+        justify-content: space-around;
+        gap: 0.125rem;
+
+        /* Clears the iOS home indicator and the Android gesture/nav bar. */
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        padding-left: env(safe-area-inset-left, 0px);
+        padding-right: env(safe-area-inset-right, 0px);
+
+        background-color: rgb(255 255 255);
+        border-top: 1px solid rgb(229 231 235);
+        box-shadow: 0 -4px 24px rgb(0 0 0 / 0.06);
+
+        -webkit-backdrop-filter: saturate(180%) blur(12px);
+        backdrop-filter: saturate(180%) blur(12px);
+    }
+
+    .dark .fi-bottom-nav {
+        background-color: rgb(17 24 39);
+        border-top-color: rgb(55 65 81);
+        box-shadow: 0 -4px 24px rgb(0 0 0 / 0.5);
+    }
+
+    .fi-bottom-nav-item {
+        flex: 1 1 0%;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.1875rem;
+
+        /* Comfortable thumb target even on small phones. */
+        min-height: 3.5rem;
+        padding: 0.375rem 0.25rem 0.5rem;
+
+        font-size: 0.625rem;
+        font-weight: 500;
+        line-height: 1.1;
+        text-align: center;
+        text-decoration: none;
+        color: rgb(107 114 128);
+
+        -webkit-tap-highlight-color: transparent;
+        transition: color 0.15s ease;
+    }
+
+    .dark .fi-bottom-nav-item {
+        color: rgb(156 163 175);
+    }
+
+    .fi-bottom-nav-item:active {
+        opacity: 0.6;
+    }
+
+    .fi-bottom-nav-item.fi-active {
+        color: var(--fi-primary-600, rgb(79 70 229));
+        font-weight: 700;
+    }
+
+    .dark .fi-bottom-nav-item.fi-active {
+        color: rgb(199 210 254);
+    }
+
+    .fi-bottom-nav-item-icon {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .fi-bottom-nav-item-label {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /*
+     * The active tab is tinted via `.fi-active` on the anchor rather than by
+     * swapping in a second icon, so a single icon node is enough.
+     */
+    .fi-bottom-nav-item.fi-active .fi-bottom-nav-icon {
+        transform: translateY(-1px);
+    }
+
+    .fi-bottom-nav-badge {
+        position: absolute;
+        top: -0.25rem;
+        inset-inline-end: -0.5rem;
+        min-width: 1rem;
+        height: 1rem;
+        padding: 0 0.25rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9999px;
+        background-color: rgb(225 29 72);
+        color: #fff;
+        font-size: 0.5625rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    /*
+     * Reserve room for the bar so the last table row / form action is never
+     * trapped underneath it. The attribute is set by the mobile-bottom-nav
+     * partial, so desktop pages are untouched.
+     */
+    html[data-mobile-nav='1'] .fi-layout,
+    html[data-mobile-nav='1'] .fi-simple-layout {
+        padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    /* Modals and dropdowns must not be covered by the bar. */
+    html[data-mobile-nav='1'] .fi-modal-window {
+        margin-bottom: calc(4rem + env(safe-area-inset-bottom, 0px)) !important;
+    }
+}
+
+
+/* ---------------------------------------------------------------------------
+ *  2. RESPONSIVE TABLES
+ *
+ *  Filament v3 tables are desktop grids. Admin/UserResource alone declares 38
+ *  columns, so below the breakpoint every plain row becomes a stacked card with
+ *  label/value pairs. Tables that already manage their own responsiveness
+ *  (Layout\Stack / Layout\Split, which hide columns via `hidden sm:table-cell`)
+ *  are skipped by the script, not by this stylesheet.
+ * ------------------------------------------------------------------------ */
+
+@media (max-width: 1023px) {
+
+    .fi-table-cards thead,
+    .fi-table-cards tfoot {
+        display: none !important;
+    }
+
+    .fi-table-cards,
+    .fi-table-cards tbody,
+    .fi-table-cards tr,
+    .fi-table-cards td {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    /* Remove Filament's row separators; the card supplies its own. */
+    .fi-table-cards tbody > tr > td > * {
+        border: none !important;
+    }
+
+    .fi-table-cards tbody > tr {
+        margin-bottom: 0.75rem;
+        border-radius: 0.75rem;
+        background-color: rgb(255 255 255);
+        border: 1px solid rgb(229 231 235);
+        box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+        overflow: hidden;
+    }
+
+    .dark .fi-table-cards tbody > tr {
+        background-color: rgb(31 41 55);
+        border-color: rgb(55 65 81);
+    }
+
+    .fi-table-cards tbody > tr:last-child {
+        margin-bottom: 0;
+    }
+
+    .fi-table-cards td {
+        display: flex !important;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.5rem 0.75rem !important;
+
+        min-height: 2.25rem;
+        border-bottom: 1px dashed rgb(229 231 235) !important;
+        text-align: end !important;
+    }
+
+    .dark .fi-table-cards td {
+        border-bottom-color: rgb(55 65 81) !important;
+    }
+
+    .fi-table-cards td:last-child {
+        border-bottom: none !important;
+    }
+
+    /* The injected label for the current cell. */
+    .fi-table-cards td::before {
+        content: attr(data-label);
+        flex: 0 0 auto;
+        max-width: 45%;
+        text-align: start;
+        font-size: 0.75rem;
+        font-weight: 600;
+        line-height: 1.5;
+        color: rgb(107 114 128);
+    }
+
+    .dark .fi-table-cards td::before {
+        color: rgb(156 163 175);
+    }
+
+    /* A cell with no header counterpart (e.g. the actions column) has no label. */
+    .fi-table-cards td[data-label='']::before {
+        content: none;
+    }
+
+    .fi-table-cards td > * {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    /* The row-action cell should read as a full-width button strip. */
+    .fi-table-cards td.fi-ta-actions-cell,
+    .fi-table-cards td:has(> .fi-ta-actions-cell) {
+        justify-content: flex-end;
+    }
+
+    .fi-table-cards .fi-link {
+        text-align: end;
+    }
+
+    /* Re-hide Filament's column-toggle dropdown: it drives the desktop grid. */
+    .fi-table-cards + * .fi-ta-column-toggle,
+    .fi-dropdown-list.fi-ta-column-toggle {
+        display: none !important;
+    }
+
+    /*
+     * The filter bar sits directly above the cards and carries the same
+     * horizontal dividers as the desktop table, which read as one long
+     * ruled sheet once the rows stop being a grid. Flattening it lets the
+     * cards start straight under the filters.
+     */
+    .fi-ta-filters-above-content-ctn,
+    .fi-ta-filters-above-content-ctn > div {
+        border-top: none !important;
+        border-bottom: none !important;
+    }
+}
+
+
+/* ---------------------------------------------------------------------------
+ *  3. FORMS, INFORLISTS, WIDGETS
+ * ------------------------------------------------------------------------ */
+
+@media (max-width: 1023px) {
+
+    /*
+     * Filament lays out form sections on a multi-column grid. One column on a
+     * phone, otherwise inputs end up ~150px wide and unusable.
+     */
+    .fi-panel-admin .fi-fo-grid,
+    .fi-panel-user .fi-fo-grid,
+    .fi-panel-admin .fi-into-grid,
+    .fi-panel-user .fi-into-grid,
+    .fi-panel-admin .fi-sc,
+    .fi-panel-user .fi-sc {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .fi-panel-admin .fi-fo-component-ctn,
+    .fi-panel-user .fi-fo-component-ctn {
+        min-width: 0;
+    }
+
+    /* Stat cards: 2-up instead of 4-up so values stay legible. */
+    .fi-panel-admin .fi-wi-stats-overview,
+    .fi-panel-user .fi-wi-stats-overview {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    @media (max-width: 400px) {
+        .fi-panel-admin .fi-wi-stats-overview,
+        .fi-panel-user .fi-wi-stats-overview {
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
+    }
+
+    /* Dashboard widget grid collapses to a single column. */
+    .fi-panel-admin .fi-dashboard-widgets,
+    .fi-panel-user .fi-dashboard-widgets {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    /* Full-width action buttons read better than a cramped inline row. */
+    .fi-panel-admin .fi-modal-footer,
+    .fi-panel-user .fi-modal-footer {
+        flex-direction: column-reverse !important;
+        align-items: stretch !important;
+    }
+
+    .fi-panel-admin .fi-modal-footer > *,
+    .fi-panel-user .fi-modal-footer > * {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+}
+
+
+/* ---------------------------------------------------------------------------
+ *  4. NATIVE SHELL CHROME
+ * ------------------------------------------------------------------------ */
+
+@media (max-width: 1023px) {
+
+    /* Tap targets: Filament's defaults are sized for a mouse. */
+    .fi-panel-admin .fi-btn,
+    .fi-panel-user .fi-btn {
+        min-height: 2.5rem;
+    }
+
+    .fi-panel-admin .fi-input-wrp,
+    .fi-panel-user .fi-input-wrp,
+    .fi-panel-admin select,
+    .fi-panel-user select {
+        font-size: 16px !important; /* Stops iOS Safari from zooming on focus. */
+    }
+
+    /* Horizontal scroll containers get momentum scrolling + a visible edge. */
+    .fi-panel-admin .fi-ta-content,
+    .fi-panel-user .fi-ta-content {
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+    }
+
+    /* 16px inputs + safe-area gutters at the very bottom of the page. */
+    .fi-panel-admin .fi-simple-main,
+    .fi-panel-user .fi-simple-main {
+        padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px));
+    }
+}

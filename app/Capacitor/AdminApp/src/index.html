@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="id" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Dekorasi Bunga Pernikahan</title>
+    <meta
+      name="viewport"
+      content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="msapplication-tap-highlight" content="none" />
+    <meta name="color-scheme" content="light dark" />
+
+    <link rel="icon" type="image/x-icon" href="./assets/icon/favicon.ico" />
+    <link rel="manifest" href="./manifest.json" />
+    <link rel="stylesheet" href="./css/style.css" />
+    <meta name="theme-color" content="#4f46e5" />
+  </head>
+  <body>
+    <!--
+      Fallback / launcher page.
+
+      The panel itself is server rendered by Laravel, so Android and iOS load it
+      over the network via `server.url` in capacitor.config.json and this file
+      is never painted there. It exists for two cases:
+
+        1. Electron, which serves the bundled `dist/` before the remote URL is
+           resolved. launcher.js forwards the WebView to the panel.
+        2. The backend is unreachable. The retry UI below explains why instead
+           of showing a bare browser error page.
+
+      The URL lives in src/js/launcher.js. Keep it in sync with
+      capacitor.config.json via `npm run set:url -- <url>`.
+    -->
+    <div class="boot" id="boot">
+      <img class="boot__logo" src="./assets/imgs/logo.png" alt="" width="96" height="96" />
+      <p class="boot__title" id="boot-title">Dekorasi Admin</p>
+      <p class="boot__status" id="boot-status">Memuat...</p>
+
+      <div class="boot__spinner" id="boot-spinner" aria-hidden="true"></div>
+
+      <div class="boot__actions" id="boot-actions" hidden>
+        <button type="button" class="boot__btn" id="boot-retry">Coba lagi</button>
+      </div>
+    </div>
+
+    <script src="./js/launcher.js" type="module"></script>
+  </body>
+</html>

@@ -1,15 +1,23 @@
-# Matriks Fitur Platform
+# Matriks Fitur Platform (Capacitor)
 
-Dokumen ini menjelaskan fitur-fitur aplikasi yang tersedia di masing-masing dari delapan runtime
-platform yang didukung, menjelaskan apa yang diaktifkan setiap fitur dalam aplikasi Wedding Organizer
-CBIR, dan menampilkan tiga cara untuk memeriksa ketersediaan fitur dari kode PHP.
+Dokumen ini menjelaskan fitur-fitur aplikasi yang tersedia di masing-masing dari delapan
+runtime platform yang didukung, menjelaskan apa yang diaktifkan setiap fitur dalam
+aplikasi Wedding Organizer CBIR, dan menampilkan tiga cara untuk memeriksa
+ketersediaan fitur dari kode PHP.
+
+> **Catatan:** Semua shell Capacitor hanyalah *WebView loader* — tidak ada PHP
+> tertanam, tidak ada bridge native. Fitur "native" di sisi server berarti
+> server mendispatch event Alpine `capacitor-camera-open-input` dan shell
+> membuka `<input type="file" capture>`. WebRTC tetap hanya di browser karena
+> butuh secure context (`https`).
 
 ---
 
 ## Matriks Fitur
 
-Aplikasi mendefinisikan tujuh fitur bernama. Setiap fitur dilacak oleh `PlatformFeatureRegistry` dan
-dipetakan ke kasus `RuntimePlatform` yang mendukungnya.
+Aplikasi mendefinisikan tujuh fitur bernama. Setiap fitur dilacak oleh
+`PlatformFeatureRegistry` dan dipetakan ke kasus `RuntimePlatform` yang
+mendukungnya.
 
 | Fitur | Website<br>Windows | Website<br>macOS | Website<br>Android | Website<br>iOS | Mobile App<br>Android | Mobile App<br>iOS | Desktop App<br>Windows | Desktop App<br>macOS |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
@@ -27,14 +35,14 @@ dipetakan ke kasus `RuntimePlatform` yang mendukungnya.
 
 | Label kolom | Kasus `RuntimePlatform` | Diluncurkan oleh |
 |---|---|---|
-| Website Windows | `WebsiteWindows` | `php artisan serve` pada browser Windows/Linux |
-| Website macOS | `WebsiteMacOS` | `php artisan serve` pada browser macOS |
-| Website Android | `WebsiteAndroid` | `php artisan serve` pada browser Android |
-| Website iOS | `WebsiteIos` | `php artisan serve` pada browser iPhone/iPad |
-| Mobile App Android | `MobileAppAndroid` | `php artisan native:run` pada perangkat Android |
-| Mobile App iOS | `MobileAppIos` | `php artisan native:run` pada perangkat iOS |
-| Desktop App Windows | `DesktopAppWindows` | `php artisan native:serve` di Windows |
-| Desktop App macOS | `DesktopAppMacOS` | `php artisan native:serve` di macOS |
+| Website Windows | `WebsiteWindows` | `php artisan serve:web` pada browser Windows/Linux |
+| Website macOS | `WebsiteMacOS` | `php artisan serve:web` pada browser macOS |
+| Website Android | `WebsiteAndroid` | `php artisan serve:web` pada browser Android |
+| Website iOS | `WebsiteIos` | `php artisan serve:web` pada browser iPhone/iPad |
+| Mobile App Android | `MobileAppAndroid` | `php artisan serve:mobile` + shell Capacitor Android |
+| Mobile App iOS | `MobileAppIos` | `php artisan serve:mobile` + shell Capacitor iOS |
+| Desktop App Windows | `DesktopAppWindows` | `php artisan serve:desktop` + shell Electron Windows |
+| Desktop App macOS | `DesktopAppMacOS` | `php artisan serve:desktop` + shell Electron macOS |
 
 ---
 
@@ -42,96 +50,124 @@ dipetakan ke kasus `RuntimePlatform` yang mendukungnya.
 
 ### `camera`
 
-**Tersedia di:** Aplikasi Mobile, Aplikasi Desktop
+**Tersedia di:** Aplikasi Mobile (Capacitor), Aplikasi Desktop (Capacitor Electron)
 
-Memberikan akses ke kamera perangkat native melalui NativePHP APIs. Digunakan oleh fitur
-Content-Based Image Retrieval (CBIR) untuk memungkinkan pengguna memotret pakaian dan mencari
-busana pernikahan yang mirip secara visual tanpa meninggalkan aplikasi.
+Memberikan akses kamera untuk fitur Content-Based Image Retrieval (CBIR).
+Implementasi berbeda per platform:
 
-- Mobile: membuka lembar NativePHP Mobile Camera (`native:run`)
-- Desktop: membuka dialog NativePHP Electron Camera (`native:serve`)
-- Metode enum `$platform->cbirCameraMode()` mengembalikan `'native'` untuk platform ini
+- **Mobile (Capacitor):** Server mendispatch event Alpine
+  `capacitor-camera-open-input` → shell membuka `<input type="file" capture="environment">`
+  (kamera belakang) atau `capture="user"` (kamera depan/depan).
+- **Desktop (Electron):** Sama seperti mobile, shell membuka input file tersembunyi.
+  WebRTC *bisa* dipakai di Electron produksi (karena `https`), tapi arsitektur
+  standar pakai input file.
+- **Website:** Menggunakan WebRTC (`webrtc` feature), bukan `camera`.
+
+Metode enum `$platform->cbirCameraMode()` mengembalikan `'native'` untuk
+MobileApp* dan DesktopApp*.
+
+---
 
 ### `webrtc`
 
 **Tersedia di:** Semua platform website (browser Windows, macOS, Android, iOS)
 
-Mengaktifkan input kamera melalui API `MediaDevices.getUserMedia()` browser (WebRTC). Ini adalah
-padanan berbasis browser dari fitur `camera` native dan mendukung alur pengambilan gambar CBIR
-di website.
+Mengaktifkan input kamera melalui API `MediaDevices.getUserMedia()` browser
+(WebRTC). Padanan berbasis browser dari fitur `camera` native.
 
-- Metode enum `$platform->cbirCameraMode()` mengembalikan `'webrtc'` untuk platform website
-- `camera` dan `webrtc` saling eksklusif — sebuah platform memiliki salah satunya, tidak pernah keduanya
+- Metode enum `$platform->cbirCameraMode()` mengembalikan `'webrtc'` untuk
+  platform website.
+- `camera` dan `webrtc` saling eksklusif — sebuah platform memiliki salah
+  satunya, tidak pernah keduanya.
+
+---
 
 ### `file_system`
 
-**Tersedia di:** Aplikasi Mobile, Aplikasi Desktop
+**Tersedia di:** Aplikasi Mobile (Capacitor), Aplikasi Desktop (Capacitor Electron)
 
-Menyediakan akses baca/tulis ke sistem file perangkat melalui NativePHP APIs. Digunakan untuk:
+Menyediakan akses baca/tulis ke sistem file perangkat melalui input file
+tersembunyi yang dibuka shell:
 
-- Menyimpan gambar referensi CBIR yang diambil secara lokal untuk perbandingan offline
-- Mengekspor ringkasan pesanan dan proposal dekorasi ke file PDF
-- Menyimpan cache aset paket pernikahan yang diunduh untuk penayangan offline
+- Menyimpan gambar referensi CBIR yang diambil secara lokal
+- Mengekspor ringkasan pesanan dan proposal dekorasi ke file (download biasa)
+- Menyimpan cache aset untuk penayangan offline
 
-Platform website tidak memiliki akses sistem file persisten; `File System Access API` browser
-tidak digunakan oleh aplikasi ini.
+> Platform website tidak memiliki akses sistem file persisten; `File System Access API`
+> browser tidak digunakan oleh aplikasi ini.
+
+---
 
 ### `desktop_notifications`
 
-**Tersedia di:** Hanya aplikasi Desktop (Windows, macOS)
+**Tersedia di:** Hanya aplikasi Desktop (Capacitor Electron Windows, macOS)
 
-Mengirim notifikasi desktop tingkat OS melalui NativePHP Electron notification API. Digunakan oleh
-`PlatformNotificationService` untuk mengingatkan penyelenggara tentang:
+Mengirim notifikasi OS melalui **Web Notifications API** (standar browser,
+tersedia di Electron `BrowserWindow`). Digunakan oleh `PlatformNotificationService`
+untuk mengingatkan penyelenggara tentang:
 
 - Pesanan pelanggan baru
 - Perubahan status pembayaran (melalui webhook Midtrans)
 - Acara terjadwal yang akan datang
 
-Aplikasi mobile menggunakan `push_notifications` sebagai gantinya. Platform website hanya
-mengandalkan notifikasi in-app Filament.
+> Aplikasi mobile menggunakan `push_notifications` (FCM). Platform website hanya
+> mengandalkan notifikasi in-app Filament, meski Web Notifications API juga
+> tersedia di browser desktop jika user memberi izin.
+
+---
 
 ### `push_notifications`
 
-**Tersedia di:** Hanya aplikasi Mobile (Android, iOS)
+**Tersedia di:** Hanya aplikasi Mobile (Capacitor Android, iOS)
 
-Mengirimkan push notification ke perangkat pengguna bahkan saat aplikasi berada di latar belakang.
-Digunakan oleh `PlatformNotificationService` untuk kasus penggunaan peringatan penyelenggara yang
-sama seperti `desktop_notifications`, tetapi melalui infrastruktur push platform mobile
-(FCM untuk Android, APNs untuk iOS).
+Mengirimkan push notification ke perangkat pengguna bahkan saat aplikasi
+berada di latar belakang via **FCM** (Firebase Cloud Messaging). Digunakan oleh
+`PlatformNotificationService` untuk kasus penggunaan yang sama seperti
+`desktop_notifications`, tetapi melalui infrastruktur push platform mobile.
+
+---
 
 ### `auto_updates`
 
-**Tersedia di:** Hanya aplikasi Desktop (Windows, macOS)
+**Tersedia di:** Hanya aplikasi Desktop (Capacitor Electron Windows, macOS)
 
-Memungkinkan shell Electron mengunduh dan menginstal pembaruan aplikasi secara otomatis di latar
-belakang. Ini membuat klien desktop yang terinstal tetap terkini tanpa memerlukan instalasi ulang
-manual dan ditangani oleh auto-updater NativePHP Electron.
+Memungkungi shell Electron mengunduh dan menginstal pembaruan aplikasi
+secara otomatis di latar belakang via **electron-updater**. Ditangani sepenuhnya
+di sisi shell (`electron/main.ts` + `electron-builder.config.js`), bukan
+server Laravel.
 
-Tidak berlaku untuk aplikasi mobile (dikelola oleh toko aplikasi) atau website (selalu disajikan fresh).
+> Tidak berlaku untuk aplikasi mobile (dikelola oleh toko aplikasi) atau
+> website (selalu disajikan fresh).
+
+---
 
 ### `app_badge`
 
-**Tersedia di:** Hanya aplikasi Mobile (Android, iOS)
+**Tersedia di:** Hanya aplikasi Mobile (Capacitor Android, iOS)
 
-Menetapkan jumlah badge numerik pada ikon aplikasi di layar beranda perangkat. Digunakan untuk
-menampilkan jumlah pesan yang belum dibaca atau notifikasi pesanan yang tertunda secara sekilas,
-tanpa mengharuskan pengguna membuka aplikasi.
+Menetapkan jumlah badge numerik pada ikon aplikasi di layar beranda perangkat.
+Digunakan untuk menampilkan jumlah pesan yang belum dibaca atau notifikasi
+pesanan yang tertunda secara sekilas.
+
+> Di Capacitor, ini memerlukan plugin `@capacitor/push-notifications` atau
+> `@capawesome/capacitor-badge` di shell, serta integrasi FCM/APNs.
 
 ---
 
 ## Memeriksa Ketersediaan Fitur dalam Kode
 
-Ada tiga pendekatan yang didukung, dari yang paling hingga paling tidak mudah digunakan.
+Ada tiga pendekatan yang didukung, dari yang paling hingga paling tidak mudah
+digunakan.
 
 ### Pendekatan 1 — helper global `platform_feature()`
 
-Cara paling sederhana untuk membatasi jalur kode pada suatu fitur. Mengembalikan `true` jika fitur
-tersedia di runtime platform *saat ini*.
+Cara paling sederhana untuk membatasi jalur kode pada suatu fitur. Mengembalikan
+`true` jika fitur tersedia di runtime platform *saat ini*.
 
 ```php
-// Tampilkan tombol kamera native hanya saat kamera native tersedia
+// Tampilkan opsi kamera shell hanya saat fitur camera tersedia
 if (platform_feature('camera')) {
-    // Render NativePHP camera UI
+    // Render UI yang memdispatch capacitor-camera-open-input
 }
 
 // Fallback ke pengambilan WebRTC di platform website
@@ -159,8 +195,8 @@ Secara internal fungsi ini me-resolve `runtime_platform()` dan mendelegasikan ke
 
 ### Pendekatan 2 — `$platform->hasFeature()` pada instance enum
 
-Panggil `hasFeature()` langsung pada instance `RuntimePlatform` ketika Anda sudah memiliki nilai
-enum dalam cakupan. Ini berguna dalam kelas service yang menerima platform sebagai dependensi.
+Panggil `hasFeature()` langsung pada instance `RuntimePlatform` ketika Anda
+sudah memiliki nilai enum dalam cakupan. Berguna di kelas service.
 
 ```php
 use App\Enums\RuntimePlatform;
@@ -170,10 +206,10 @@ class PlatformNotificationService
     public function notify(RuntimePlatform $platform, string $message): void
     {
         if ($platform->hasFeature('push_notifications')) {
-            // Kirim push notification FCM / APNs
+            // Kirim push notification FCM
             $this->sendPush($message);
         } elseif ($platform->hasFeature('desktop_notifications')) {
-            // Kirim notifikasi desktop OS melalui NativePHP
+            // Kirim notifikasi OS via Web Notifications API (Electron)
             $this->sendDesktopNotification($message);
         } else {
             // Fallback ke notifikasi in-app Filament (semua platform)
@@ -200,15 +236,16 @@ $platform->hasAppBadge();             // true hanya untuk MobileApp*
 $platform->hasFeature('camera');
 
 // Dapatkan semua fitur sebagai array string
-$platform->getAvailableFeatures(); // mis. ['camera', 'file_system', 'push_notifications', 'app_badge']
+$platform->getAvailableFeatures();
+// mis. untuk DesktopAppMacOS → ['camera', 'file_system', 'desktop_notifications', 'auto_updates']
 ```
 
 ---
 
 ### Pendekatan 3 — `PlatformFeatureRegistry` secara langsung
 
-Injeksi registry saat Anda perlu memeriksa fitur terhadap platform yang mungkin berbeda dari
-request saat ini (mis. tooling admin, pelaporan, atau pengujian).
+Injeksi registry saat Anda perlu memeriksa fitur terhadap platform yang mungkin
+berbeda dari request saat ini (mis. tooling admin, pelaporan, atau pengujian).
 
 ```php
 use App\Enums\RuntimePlatform;
@@ -257,16 +294,17 @@ foreach (RuntimePlatform::cases() as $platform) {
 
 ## Pemilihan Mode Kamera CBIR
 
-Fitur pencarian gambar CBIR memilih API kameranya berdasarkan platform saat ini. Gunakan
-`cbirCameraMode()` untuk memilih antara pengambilan native dan WebRTC:
+Fitur pencarian gambar CBIR memilih API kameranya berdasarkan platform saat
+ini. Gunakan `cbirCameraMode()` untuk memilih antara pengambilan shell dan
+WebRTC:
 
 ```php
 $platform  = app('runtime.platform');   // RuntimePlatform
 $cameraMode = $platform->cbirCameraMode(); // 'native' atau 'webrtc'
 
 if ($cameraMode === 'native') {
-    // Lembar NativePHP Mobile Camera (mobile) atau
-    // Dialog NativePHP Electron Camera (desktop)
+    // Shell Capacitor membuka <input type="file" capture>
+    // Server dispatch event Alpine: capacitor-camera-open-input
     return view('cbir.camera-native');
 } else {
     // Browser MediaDevices.getUserMedia() melalui elemen <video>
@@ -280,10 +318,15 @@ if ($cameraMode === 'native') {
 | `WebsiteMacOS` | `'webrtc'` | `MediaDevices.getUserMedia()` |
 | `WebsiteAndroid` | `'webrtc'` | `MediaDevices.getUserMedia()` |
 | `WebsiteIos` | `'webrtc'` | `MediaDevices.getUserMedia()` |
-| `MobileAppAndroid` | `'native'` | NativePHP Mobile Camera API |
-| `MobileAppIos` | `'native'` | NativePHP Mobile Camera API |
-| `DesktopAppWindows` | `'native'` | NativePHP Electron Camera API |
-| `DesktopAppMacOS` | `'native'` | NativePHP Electron Camera API |
+| `MobileAppAndroid` | `'native'` | Shell: `<input capture="environment">` |
+| `MobileAppIos` | `'native'` | Shell: `<input capture="environment">` |
+| `DesktopAppWindows` | `'native'` | Shell: `<input capture="user">` |
+| `DesktopAppMacOS` | `'native'` | Shell: `<input capture="user">` |
+
+> `'native'` di sini berarti **shell membuka input file tersembunyi**, bukan
+> NativePHP bridge (yang sudah dihapus). Nama metode dipertahankan agar 54
+> callsite blade/JS tidak perlu diubah; dokumentasi di sini menjelaskan
+> semantik baru.
 
 ---
 
@@ -294,10 +337,11 @@ Ringkasan cepat dikelompokkan berdasarkan tiga kategori platform:
 | Kategori | Platform | Fitur yang tersedia |
 |---|---|---|
 | **Website** | `WebsiteWindows`, `WebsiteMacOS`, `WebsiteAndroid`, `WebsiteIos` | `webrtc` |
-| **Aplikasi Mobile** | `MobileAppAndroid`, `MobileAppIos` | `camera`, `file_system`, `push_notifications`, `app_badge` |
-| **Aplikasi Desktop** | `DesktopAppWindows`, `DesktopAppMacOS` | `camera`, `file_system`, `desktop_notifications`, `auto_updates` |
+| **Aplikasi Mobile (Capacitor)** | `MobileAppAndroid`, `MobileAppIos` | `camera`, `file_system`, `push_notifications`, `app_badge` |
+| **Aplikasi Desktop (Capacitor Electron)** | `DesktopAppWindows`, `DesktopAppMacOS` | `camera`, `file_system`, `desktop_notifications`, `auto_updates` |
 
-Anda dapat memeriksa kategori mana yang aktif menggunakan metode kategori `RuntimePlatform`:
+Anda dapat memeriksa kategori mana yang aktif menggunakan metode kategori
+`RuntimePlatform`:
 
 ```php
 $platform = app('runtime.platform');
@@ -307,7 +351,8 @@ $platform->isMobileApp();  // Kasus MobileApp*
 $platform->isDesktopApp(); // Kasus DesktopApp*
 ```
 
-Ketiga metode ini saling eksklusif — tepat satu yang mengembalikan `true` untuk kasus platform mana pun.
+Ketiga metode ini saling eksklusif — tepat satu yang mengembalikan `true`
+untuk kasus platform mana pun.
 
 ---
 

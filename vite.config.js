@@ -9,7 +9,10 @@ import tailwindcss from '@tailwindcss/vite';
  *  - Entry points (platform-specific JS, excluding unused APIs)
  *  - Output directory (public/build/web | mobile | desktop)
  *  - Asset manifest (manifest.json inside each build directory)
- *  - Hot-module-replacement hot file
+ *
+ * The Capacitor shells in app/Capacitor/* load this server in a WebView, so
+ * mobile and desktop are ordinary web bundles — no embedded PHP, no native
+ * protocol adapter. See DelegatesToServeCommand for the server-side side of it.
  *
  * Build commands:
  *   npm run build              → web (default)
@@ -26,10 +29,14 @@ import tailwindcss from '@tailwindcss/vite';
  * The active platform is read from the VITE_PLATFORM env variable.
  * When not set it defaults to 'web'.
  *
+ * There is no per-OS build target: Android and iOS load the same mobile bundle,
+ * and the difference between them lives in each Capacitor shell's native
+ * project, not here.
+ *
  * Requirements: 4.1, 4.7
  */
 
-export default defineConfig(async ({ mode }) => {
+export default defineConfig(({ mode }) => {
     // Load .env variables so VITE_PLATFORM is available even when the
     // variable is declared only in .env (not in process.env at this point).
     const env = loadEnv(mode, process.cwd(), '');
@@ -48,66 +55,56 @@ export default defineConfig(async ({ mode }) => {
 
     const activePlatform = validPlatforms.includes(platform) ? platform : 'web';
 
-    // The NativePHP Vite plugin is only needed for mobile builds. Loading it
-    // lazily keeps ordinary web/desktop builds independent of mobile assets.
-    // This matters in CI, where Composer may omit platform-specific resources.
-    let nativephpMobile;
-    let nativephpHotFile;
-
-    if (activePlatform === 'mobile') {
-        const nativephpPluginPath = './vendor/nativephp/mobile/resources/js/' + 'vite-plugin.js';
-        ({ nativephpMobile, nativephpHotFile } = await import(nativephpPluginPath));
-    }
-
     // ─── Per-platform build descriptors ──────────────────────────────────
     // Each descriptor declares:
     //   input        — Vite / laravel-vite-plugin entry points
     //   buildDir     — relative path inside public/ (used by laravel-vite-plugin)
     //   publicBuild  — full path from project root (used by build.outDir)
     //   hotFile      — path of the "hot" file used by Laravel's asset() helper
-    //   plugins      — platform-specific Vite plugins
+    //
+    // All three targets are plain web bundles now. The Capacitor shells load this
+    // server in a WebView rather than bundling any PHP, so mobile and desktop
+    // differ only in which entry points they pull in — there is no per-platform
+    // Vite plugin, no `php:` protocol adapter, and no per-OS hot file.
     const platformConfigs = {
         web: {
             input: [
                 'resources/css/User/User.css',
+                'resources/css/Welcome/Welcome.css',
                 'resources/css/Admin/Admin.css',
                 'resources/js/app-web/app-web.js',
                 './vendor/tangodev-it/filament-emoji-picker/resources/js/index.js',
                 'resources/js/echo/echo.js',
             ],
-            buildDir:    'build/web',
+            buildDir:   'build/web',
             publicBuild: 'public/build/web',
-            hotFile:     'public/hot',
-            plugins:     [],
+            hotFile:    'public/hot',
         },
         mobile: {
             input: [
                 'resources/css/User/User.css',
+                'resources/css/Welcome/Welcome.css',
                 'resources/css/Admin/Admin.css',
                 'resources/js/app-mobile/app-mobile.js',
-                './vendor/nativephp/mobile/resources/js/phpProtocolAdapter.js',
                 './vendor/tangodev-it/filament-emoji-picker/resources/js/index.js',
                 'resources/js/echo/echo.js',
             ],
-            buildDir:    'build/mobile',
+            buildDir:   'build/mobile',
             publicBuild: 'public/build/mobile',
-            // nativephpHotFile() returns 'public/ios-hot', 'public/android-hot',
-            // or 'public/hot' depending on --mode=ios / --mode=android flags.
-            hotFile:     activePlatform === 'mobile' ? nativephpHotFile() : 'public/mobile-hot',
-            plugins:     activePlatform === 'mobile' ? [nativephpMobile()] : [],
+            hotFile:    'public/hot',
         },
         desktop: {
             input: [
                 'resources/css/User/User.css',
+                'resources/css/Welcome/Welcome.css',
                 'resources/css/Admin/Admin.css',
                 'resources/js/app-desktop/app-desktop.js',
                 './vendor/tangodev-it/filament-emoji-picker/resources/js/index.js',
                 'resources/js/echo/echo.js',
             ],
-            buildDir:    'build/desktop',
+            buildDir:   'build/desktop',
             publicBuild: 'public/build/desktop',
-            hotFile:     'public/hot',
-            plugins:     [],
+            hotFile:    'public/hot',
         },
     };
 
@@ -121,14 +118,11 @@ export default defineConfig(async ({ mode }) => {
             laravel({
                 input:            config.input,
                 refresh:          true,
-                // Each platform writes its own hot file so Laravel's asset()
-                // helper can find the dev server for the correct platform.
                 hotFile:          config.hotFile,
                 // buildDirectory is relative to public/, e.g. "build/web"
                 buildDirectory:   config.buildDir,
             }),
             tailwindcss(),
-            ...config.plugins,
         ],
 
         // ── Define: expose platform to client-side JS ─────────────────────

@@ -229,7 +229,7 @@
                     ? \App\Filament\User\Resources\PackageResource\PackageResource::getUrl('view', ['record' => $item])
                     : \App\Filament\User\Resources\ProductResource\ProductResource::getUrl('view', ['record' => $item]);
                     
-                $normalizeImageUrl = fn (string $url) => \App\Providers\NativeServiceProvider\NativeServiceProvider::normalizeUrl($url);
+                $normalizeImageUrl = fn (string $url) => \App\Support\AppPlatform\AppPlatform::normalizeUrl($url);
                 $placeholderImg = $normalizeImageUrl(asset('images/placeholders/image-placeholder.svg'));
                 $imgUrl = $item->image_url ?? '';
                 if (! filled($imgUrl)) {

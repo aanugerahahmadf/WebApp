@@ -1,0 +1,193 @@
+
+  [39;41;1m FAIL [39;49;22m[39m Tests\Feature\PanelPaginationSplitTest[39m
+  [32;1m✓[39;22m[90m [39m[90mevery user panel list page renders all records instead of paginating with ('App\Filament\User\Resources\C…[39m[90m…[39m [90m38.69s[39m  
+  [32;1m✓[39;22m[90m [39m[90mevery user panel list page renders all records instead of paginating with ('App\Filament\User\Resources\H…t[39m[90m…[39m [90m0.59s[39m  
+  [32;1m✓[39;22m[90m [39m[90mevery user panel list page renders all records instead of paginating with ('App\Filament\User\Resources\O…O[39m[90m…[39m [90m0.59s[39m  
+  [32;1m✓[39;22m[90m [39m[90mevery user panel list page renders all records instead of paginating with ('App\Filament\User\Resources\P…c[39m[90m…[39m [90m0.44s[39m  
+  [32;1m✓[39;22m[90m [39m[90mevery user panel list page renders all records instead of paginating with ('App\Filament\User\Resources\P…o[39m[90m…[39m [90m0.41s[39m  
+  [32;1m✓[39;22m[90m [39m[90mevery user panel list page renders all records instead of paginating with ('App\Filament\User\Resources\R…e[39m[90m…[39m [90m0.26s[39m  
+  [32;1m✓[39;22m[90m [39m[90mevery user panel list page renders all records instead of paginating with ('App\Filament\User\Resources\V…u[39m[90m…[39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mevery user panel list page renders all records instead of paginating with ('App\Filament\User\Resources\W…h[39m[90m…[39m [90m0.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe user panel drops pagination on a phone too with ('App\Filament\User\Resources\C…eCarts')[39m[90m                [39m [90m0.28s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe user panel drops pagination on a phone too with ('App\Filament\User\Resources\H…tories')[39m[90m                [39m [90m0.33s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe user panel drops pagination on a phone too with ('App\Filament\User\Resources\O…Orders')[39m[90m                [39m [90m0.28s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe user panel drops pagination on a phone too with ('App\Filament\User\Resources\P…ckages')[39m[90m                [39m [90m0.26s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe user panel drops pagination on a phone too with ('App\Filament\User\Resources\P…oducts')[39m[90m                [39m [90m0.32s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe user panel drops pagination on a phone too with ('App\Filament\User\Resources\R…eviews')[39m[90m                [39m [90m0.32s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe user panel drops pagination on a phone too with ('App\Filament\User\Resources\V…uchers')[39m[90m                [39m [90m0.31s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe user panel drops pagination on a phone too with ('App\Filament\User\Resources\W…hlists')[39m[90m                [39m [90m0.27s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe user panel shows more rows than Filament default page size[39m[90m                                              [39m [90m1.05s[39m  
+  [32;1m✓[39;22m[90m [39m[90mno user panel page renders a paginator control[39m[90m                                                              [39m [90m1.14s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe admin panel keeps its paginator[39m[90m                                                                         [39m [90m0.65s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mthe admin panel offers a single larger page on a phone[39m[90m                                                      [39m [90m0.54s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe admin panel keeps the per-page picker on a desktop[39m[90m                                                      [39m [90m0.46s[39m  
+  [31;1m⨯[39;22m[90m [39m[90ma phone overrides the page size the resource declared[39m[90m                                                       [39m [90m0.94s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma desktop admin table keeps the page size its resource chose[39m[90m                                                [39m [90m0.72s[39m  
+
+  [39;41;1m FAIL [39;49;22m[39m Tests\Feature\ResponsivePanelsTest[39m
+  [32;1m✓[39;22m[90m [39m[90mdetects a desktop browser as a desktop website[39m[90m                                                             [39m [90m16.85s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mdetects a phone browser as a mobile website but not a native app[39m[90m                                            [39m [90m4.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90mdetects the capacitor android shell from the app_shell cookie[39m[90m                                               [39m [90m3.15s[39m  
+  [32;1m✓[39;22m[90m [39m[90mdetects the capacitor ios shell from the X-Capacitor header[39m[90m                                                 [39m [90m3.48s[39m  
+  [31;1m⨯[39;22m[90m [39m[90mdetects the electron desktop shell from the user agent[39m[90m                                                      [39m [90m2.96s[39m  
+  [32;1m✓[39;22m[90m [39m[90man android webview without the shell cookie is still treated as the native app[39m[90m                              [39m [90m3.61s[39m  
+  [32;1m✓[39;22m[90m [39m[90man installed desktop pwa is a desktop app[39m[90m                                                                   [39m [90m3.61s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma pwa installed on a phone stays a mobile platform[39m[90m                                                          [39m [90m7.72s[39m  
+  [32;1m✓[39;22m[90m [39m[90mCAPACITOR_PLATFORM overrides every request signal[39m[90m                                                           [39m [90m4.90s[39m  
+  [32;1m✓[39;22m[90m [39m[90man unknown user agent falls back to a desktop website[39m[90m                                                       [39m [90m3.79s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe bottom navigation is hidden on desktop[39m[90m                                                                  [39m [90m2.71s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe bottom navigation is shown for the mobile shells and phone browsers[39m[90m                                     [39m [90m2.76s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe bottom navigation stays hidden in the electron desktop shell[39m[90m                                            [39m [90m2.77s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe bottom navigation is suppressed on auth pages[39m[90m                                                           [39m [90m6.96s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe bottom navigation renders on an authenticated page on mobile[39m[90m                                            [39m [90m7.25s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe bottom navigation is not rendered on the same page on desktop[39m[90m                                           [39m [90m8.19s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe admin panel gets a bottom navigation of its own on mobile[39m[90m                                               [39m [90m6.97s[39m  
+  [32;1m✓[39;22m[90m [39m[90meach panel gets its own bottom navigation destinations[39m[90m                                                      [39m [90m3.12s[39m  
+  [32;1m✓[39;22m[90m [39m[90mbottom navigation items stay inside their own panel[39m[90m                                                         [39m [90m2.51s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma bottom navigation entry pointing at a missing class is dropped[39m[90m                                            [39m [90m3.72s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe card-table script is emitted on mobile and omitted on desktop[39m[90m                                           [39m [90m7.91s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe card-table script can be turned off through config[39m[90m                                                      [39m [90m8.73s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe runtime script reports the resolved platform to the client[39m[90m                                              [39m [90m6.62s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\WelcomePanelTest[39m
+  [32;1m✓[39;22m[90m [39m[90mthe welcome panel is registered[39m[90m                                                                             [39m [90m0.29s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe welcome panel is routed with ('/welcome')[39m[90m                                                               [39m [90m3.84s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe welcome panel is routed with ('/welcome/orders')[39m[90m                                                        [39m [90m3.96s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe welcome panel is routed with ('/welcome/histories')[39m[90m                                                     [39m [90m4.63s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe welcome panel is routed with ('/welcome/products')[39m[90m                                                      [39m [90m3.74s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe welcome panel is routed with ('/welcome/vouchers')[39m[90m                                                      [39m [90m3.83s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe welcome panel is routed with ('/welcome/wishlists')[39m[90m                                                     [39m [90m3.75s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe welcome panel is routed with ('/welcome/carts')[39m[90m                                                         [39m [90m3.98s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe welcome panel is routed with ('/welcome/reviews')[39m[90m                                                       [39m [90m3.68s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe welcome panel is routed with ('/welcome/packages')[39m[90m                                                      [39m [90m4.31s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe welcome panel dashboard renders on a desktop[39m[90m                                                            [39m [90m4.29s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe welcome panel dashboard renders in the mobile shell[39m[90m                                                     [39m [90m4.59s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma welcome list page renders[39m[90m                                                                                 [39m [90m4.48s[39m  
+  [32;1m✓[39;22m[90m [39m[90mwelcome resources resolve to the welcome namespace[39m[90m                                                          [39m [90m0.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mevery welcome class is namespaced under welcome[39m[90m                                                             [39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe welcome panel keeps its own auth pages, not the user panels[39m[90m                                             [39m [90m0.20s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe welcome panel drops the user panels custom user menu[39m[90m                                                    [39m [90m0.18s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe welcome panel mirrors the user panels layout configuration[39m[90m                                              [39m [90m0.20s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe welcome panel gates guests differently from the user panel[39m[90m                                              [39m [90m0.19s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe welcome panel renders without the mobile pagination pill[39m[90m                                                [39m [90m4.35s[39m  
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\WelcomeStorefrontGuestAccessTest[39m
+  [32;1m✓[39;22m[90m [39m[90mthe root url lands a guest on the storefront[39m[90m                                                                [39m [90m3.79s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma guest can browse the storefront and the catalog with ('/welcome/home')[39m[90m                                    [39m [90m4.04s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma guest can browse the storefront and the catalog with ('/welcome/products')[39m[90m                                [39m [90m4.10s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma guest can browse the storefront and the catalog with ('/welcome/packages')[39m[90m                                [39m [90m3.88s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma guest can browse the storefront and the catalog with ('/welcome/products/{product}')[39m[90m                      [39m [90m4.12s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma guest can browse the storefront and the catalog with ('/welcome/packages/{package}')[39m[90m                      [39m [90m3.71s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma guest is sent to the user panel login from an account page with ('/welcome/carts')[39m[90m                        [39m [90m0.22s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma guest is sent to the user panel login from an account page with ('/welcome/orders')[39m[90m                       [39m [90m0.29s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma guest is sent to the user panel login from an account page with ('/welcome/wishlists')[39m[90m                    [39m [90m0.27s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma guest is sent to the user panel login from an account page with ('/welcome/reviews')[39m[90m                      [39m [90m0.26s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma guest is sent to the user panel login from an account page with ('/welcome/vouchers')[39m[90m                     [39m [90m0.28s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma guest is sent to the user panel login from an account page with ('/welcome/histories')[39m[90m                    [39m [90m0.35s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma guest is sent to the user panel login from an account page with ('/welcome/settings')[39m[90m                     [39m [90m0.30s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe login route the gate redirects to exists[39m[90m                                                                [39m [90m3.53s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma guest cannot reach the checkout wizard[39m[90m                                                                    [39m [90m0.20s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma signed in customer can still reach the checkout wizard[39m[90m                                                    [39m [90m4.31s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe topbar offers Masuk to a guest instead of an avatar[39m[90m                                                     [39m [90m3.85s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe topbar offers Beranda to a signed in visitor[39m[90m                                                            [39m [90m4.24s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe topbar keeps the theme switcher reachable for a guest[39m[90m                                                   [39m [90m4.83s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe theme switcher is a dropdown offering all three modes[39m[90m                                                   [39m [90m5.14s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma guest sees no account actions on a product detail page[39m[90m                                                    [39m [90m4.69s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma guest sees no account actions on a package detail page[39m[90m                                                    [39m [90m4.35s[39m  
+  [32;1m✓[39;22m[90m [39m[90ma signed in customer still gets the account actions[39m[90m                                                         [39m [90m5.44s[39m  
+  [32;1m✓[39;22m[90m [39m[90mcatalog cards link within the welcome panel, not out to the user panel[39m[90m                                      [39m [90m4.21s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe dashboard catalog grid links within the welcome panel too[39m[90m                                               [39m [90m0.35s[39m  
+  [32;1m✓[39;22m[90m [39m[90mthe welcome panel resource urls are panel relative[39m[90m                                                          [39m [90m0.32s[39m  
+  [31m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Feature\PanelPaginationSplitTest[22m [90m>[39m the admin panel offers a single larger page on a phone              
+[39;1m  Failed asserting that two arrays are identical.
+--- Expected
++++ Actual
+@@ @@
+ Array &0 [
+-    0 => 20,
++    0 => 5,
+ ][39;22m
+
+  at [32mtests\Feature\PanelPaginationSplitTest.php[39m:[32m127[39m
+    123▕ 
+    124▕     $table = Livewire::test(ListOrders::class)->instance()->getTable();
+    125▕ 
+    126▕     // One option, so the per-page dropdown is a control with nothing to choose.
+  ➜ 127▕     expect($table->getPaginationPageOptions())->toBe([20])
+    128▕         ->and($table->getDefaultPaginationPageOption())->toBe(20);
+    129▕ });
+    130▕ 
+    131▕ test('the admin panel keeps the per-page picker on a desktop', function (): void {
+
+  [33m1   [39m[39;1mtests\Feature\PanelPaginationSplitTest.php[39;22m:[39;1m127[39;22m
+
+  [31m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Feature\PanelPaginationSplitTest[22m [90m>[39m a phone overrides the page size the resource declared               
+[39;1m  Failed asserting that two arrays are identical.
+--- Expected
++++ Actual
+@@ @@
+ Array &0 [
+-    0 => 20,
++    0 => 10,
++    1 => 25,
++    2 => 50,
+ ][39;22m
+
+  at [32mtests\Feature\PanelPaginationSplitTest.php[39m:[32m151[39m
+    147▕ 
+    148▕     $table = Livewire::test(ManageReferenceOptions::class)->instance()->getTable();
+    149▕ 
+    150▕     expect($table->isPaginated())->toBeTrue()
+  ➜ 151▕         ->and($table->getPaginationPageOptions())->toBe([20])
+    152▕         ->and($table->getDefaultPaginationPageOption())->toBe(20);
+    153▕ });
+    154▕ 
+    155▕ test('a desktop admin table keeps the page size its resource chose', function (): void {
+
+  [33m1   [39m[39;1mtests\Feature\PanelPaginationSplitTest.php[39;22m:[39;1m151[39;22m
+
+  [31m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Feature\ResponsivePanelsTest[22m [90m>[39m detects a phone browser as a mobile website but not a native app        
+[39;1m  Failed asserting that two strings are identical.
+--- Expected
++++ Actual
+@@ @@
+-'mobile_browser_capture'
++'webrtc'[39;22m
+
+  at [32mtests\Feature\ResponsivePanelsTest.php[39m:[32m77[39m
+     73▕         ->and($platform->isMobileShell())->toBeTrue()
+     74▕         // A phone in Chrome is not inside the app shell: the bottom bar and the
+     75▕         // Capacitor camera must not be forced on it.
+     76▕         ->and($platform->isMobileApp())->toBeFalse()
+  ➜  77▕         // Only an app shell gets 'native' (the shell's own file inputs). Every
+     78▕         // other surface -- website, desktop browser, mobile browser -- runs the
+     79▕         // in-page WebRTC viewfinder, so a phone browser resolves to 'webrtc'.
+     80▕         // The third legacy value, 'mobile_browser_capture', no longer exists:
+     81▕         // see RuntimePlatform::cbirCameraMode(), whose contract is native|webrtc.
+
+  [33m1   [39m[39;1mtests\Feature\ResponsivePanelsTest.php[39;22m:[39;1m77[39;22m
+
+  [31m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Feature\ResponsivePanelsTest[22m [90m>[39m detects the electron desktop shell from the user agent         [41;1m Error [49;22m  
+[39;1m  Call to undefined method App\Enums\RuntimePlatform\RuntimePlatform::isDesktop()[39;22m
+
+  at [32mtests\Feature\ResponsivePanelsTest.php[39m:[32m107[39m
+    103▕ });
+    104▕ 
+    105▕ test('detects the electron desktop shell from the user agent', function (): void {
+    106▕     $request = Request::create('/user', 'GET');
+  ➜ 107▕     $request->headers->set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0.0.0 Electron/33.0.0 Safari/537.36');
+    108▕ 
+    109▕     $platform = AppPlatform::detect($request);
+    110▕ 
+    111▕     expect($platform)->toBe(RuntimePlatform::DesktopAppWindows)
+
+  [33m1   [39m[39;1mtests\Feature\ResponsivePanelsTest.php[39;22m:[39;1m107[39;22m
+
+
+  [90mTests:[39m    [31;1m4 failed[39;22m[90m,[39m[39m [39m[32;1m88 passed[39;22m[90m (254 assertions)[39m
+  [90mDuration:[39m [39m300.14s[39m
+

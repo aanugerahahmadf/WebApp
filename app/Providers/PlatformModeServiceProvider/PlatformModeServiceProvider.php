@@ -77,7 +77,7 @@ class PlatformModeServiceProvider extends ServiceProvider
         $validator = $this->app->make(ProductionValidator::class);
         $validator->validateDependencies($mode);
 
-        // Detect the runtime platform (user agent / OS / NativePHP API).
+        // Detect the runtime platform (User-Agent / OS / CAPACITOR_PLATFORM hint).
         // Wrap in try/catch because the HTTP request may not be available yet
         // when booting in a CLI context (queue workers, scheduled commands, etc.).
         $this->app->singleton('runtime.platform', function () use ($mode): RuntimePlatform {

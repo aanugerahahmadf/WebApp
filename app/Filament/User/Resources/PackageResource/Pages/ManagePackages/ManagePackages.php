@@ -3,7 +3,6 @@
 namespace App\Filament\User\Resources\PackageResource\Pages\ManagePackages;
 
 use App\Enums\OrderStatus\OrderStatus;
-use App\Filament\User\Concerns\HasMobilePagination\HasMobilePagination;
 use App\Filament\User\Resources\PackageResource\PackageResource;
 use App\Models\Cart\Cart;
 use App\Models\Package\Package;
@@ -17,8 +16,6 @@ use Illuminate\Support\Facades\DB;
 
 class ManagePackages extends ManageRecords
 {
-    use HasMobilePagination;
-
     protected static string $resource = PackageResource::class;
 
     // public function getTabs(): array

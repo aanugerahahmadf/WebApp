@@ -18,7 +18,7 @@ use App\Filament\User\Resources\HistoryResource\HistoryResource;
 use App\Filament\User\Resources\ReviewResource\ReviewResource;
 use App\Http\Middleware\ClerkFilamentAuth\ClerkFilamentAuth;
 use App\Http\Middleware\SetLocale\SetLocale;
-use App\Providers\NativeServiceProvider\NativeServiceProvider;
+use App\Support\AppPlatform\AppPlatform;
 use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -78,7 +78,7 @@ class UserPanelProvider extends PanelProvider
                 function (): View|string {
                     // Keep the switcher available on website/desktop apps, but
                     // hide it on native mobile and mobile-browser requests.
-                    if (NativeServiceProvider::isAnyMobile()) {
+                    if (AppPlatform::isAnyMobile()) {
                         return '';
                     }
 

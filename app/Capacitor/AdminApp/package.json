@@ -1,0 +1,38 @@
+{
+  "name": "capacitor-admin-app",
+  "version": "1.0.0",
+  "description": "Capacitor shell for the Filament admin panel (Android, iOS, Electron)",
+  "type": "module",
+  "keywords": [
+    "capacitor",
+    "filament",
+    "admin",
+    "mobile",
+    "desktop"
+  ],
+  "scripts": {
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "set:url": "node scripts/set-url.mjs",
+    "sync": "npm run build && cap sync",
+    "android": "npm run build && cap run android",
+    "ios": "npm run build && cap run ios",
+    "desktop": "npm run build && cap run electron"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/camera": "latest",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/electron": "^2.5.0",
+    "@capacitor/ios": "^8.5.2",
+    "@capacitor/splash-screen": "latest",
+    "@capawesome/capacitor-electron": "^0.1.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.2",
+    "vite": "^7.3.1"
+  },
+  "author": "",
+  "license": "ISC"
+}

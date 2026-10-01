@@ -2,7 +2,7 @@
 
 namespace App\Providers\AppServiceProvider;
 
-use App\Database\MySqlProxyConnection\MySqlProxyConnection;
+use App\Enums\RuntimePlatform\RuntimePlatform;
 use App\Filament\Admin\Auth\Login\Login as AdminLogin;
 use App\Filament\Admin\Auth\OtpEmailVerificationPrompt\OtpEmailVerificationPrompt as AdminOtpEmailVerificationPrompt;
 use App\Filament\Admin\Auth\OtpRequestPasswordReset\OtpRequestPasswordReset as AdminOtpRequestPasswordReset;
@@ -48,6 +48,7 @@ use App\Models\PaymentMethod\PaymentMethod;
 use App\Models\PrivacyPolicy\PrivacyPolicy;
 use App\Models\Product\Product;
 use App\Models\ReferenceOption\ReferenceOption;
+use App\Services\GuestIdentity\GuestIdentity;
 use App\Models\Report\Report;
 use App\Models\Review\Review;
 use App\Models\ReviewReply\ReviewReply;
@@ -74,7 +75,7 @@ use App\Providers\Filament\UserPanelProvider\UserPanelProvider;
 use App\Providers\FirebaseServiceProvider\FirebaseServiceProvider;
 use App\Services\GeoLocationService\GeoLocationService;
 use App\Services\PlatformNotificationService\PlatformNotificationService;
-use App\Support\AndroidSdkEnvironment\AndroidSdkEnvironment;
+use App\Support\AppPlatform\AppPlatform;
 use App\Support\PlatformContext\PlatformContext;
 use Filament\Actions\Exports\ExportColumn;
 use Filament\Forms\Components\Field;
@@ -110,21 +111,21 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        if ($this->app->runningInConsole()) {
-            AndroidSdkEnvironment::apply();
-        }
+        // The resolved RuntimePlatform is memoised for the lifetime of one
+        // request/worker cycle so a single page render can never see two
+        // different answers. AppPlatform::current() reads it from here.
+        $this->app->scoped(RuntimePlatform::class, fn () => AppPlatform::detect());
 
-        // 🛠️ Development Shim for NativePHP Mobile
-        // Prevents "Undefined function nativephp_call" when running on Windows/Desktop
-        if (! function_exists('nativephp_call')) {
-            require_once __DIR__.'/../../../bootstrap/nativephp_shim.php';
-        }
+        // One guest identity per request, shared by every component that needs it.
+        // The welcome Messages pages serve guests alongside members and must not
+        // spin up a second cookie write or a second DB read for the same visit.
+        $this->app->singleton(GuestIdentity::class);
 
         // ═══════════════════════════════════════════════════════════
         // FIX: Filament LoginResponse / RegisterResponse / LogoutResponse
-        // returns Livewire\Redirector in NativePHP context which causes
-        // "setContent(): Argument must be of type ?string" fatal error.
-        // Override with implementations that always return RedirectResponse.
+        // Returning Livewire\Redirector instead of a RedirectResponse breaks
+        // the HTTP response contract ("setContent(): Argument must be of type
+        // ?string"). Bind implementations that always return RedirectResponse.
         // ═══════════════════════════════════════════════════════════
         $this->app->bind(LoginResponseContract::class, function () {
             return new class implements LoginResponseContract
@@ -169,20 +170,6 @@ class AppServiceProvider extends ServiceProvider
                     return redirect()->to($url);
                 }
             };
-        });
-
-        // 🌉 Register MySQL Proxy Driver (For Mobile without pdo_mysql)
-        $this->app->resolving('db', function ($db): void {
-            $db->extend('mysql_proxy', function ($config, $name) {
-                return new MySqlProxyConnection(
-                    function () {
-                        return new \stdClass;
-                    }, // Fake PDO callback
-                    $config['database'],
-                    $config['prefix'],
-                    $config
-                );
-            });
         });
 
         if (class_exists('ZipArchive')) {
@@ -329,12 +316,47 @@ class AppServiceProvider extends ServiceProvider
             $registerVendorViews('User');
         }
 
-        Event::listen(ServingFilament::class, function () use ($registerVendorViews): void {
+        // ═══════════════════════════════════════════════════════════
+        // PANEL VIEW OVERRIDES (resources/views/{Panel}/panel-overrides)
+        // A panel can drop or replace a single Filament component view without
+        // forking the whole package: each sub-folder of panel-overrides is
+        // prepended to that view namespace for the current panel only, so the
+        // override file is found first and every other Filament view still
+        // comes from the package.
+        //
+        // Currently only the 'welcome' panel uses this, for
+        // filament-panels::components.user-menu -- see the file's own comment.
+        // ═══════════════════════════════════════════════════════════
+        $registerPanelOverrides = function (string $panelType): void {
+            $overridesPath = resource_path("views/{$panelType}/panel-overrides");
+            if (! is_dir($overridesPath)) {
+                return;
+            }
+
+            foreach (scandir($overridesPath) as $folder) {
+                if ($folder === '.' || $folder === '..' || ! is_dir($overridesPath . '/' . $folder)) {
+                    continue;
+                }
+
+                // prependNamespace() unshifts onto the hint list, so a second
+                // call in the same request would register the same path twice.
+                if (in_array($overridesPath . '/' . $folder, View::getFinder()->getHints()[$folder] ?? [], true)) {
+                    continue;
+                }
+
+                View::prependNamespace($folder, $overridesPath . '/' . $folder);
+            }
+        };
+
+        Event::listen(ServingFilament::class, function () use ($registerPanelOverrides, $registerVendorViews): void {
             $panelId = filament()->getCurrentPanel()?->getId();
             if ($panelId === 'admin') {
                 $registerVendorViews('Admin');
             } elseif ($panelId === 'user') {
                 $registerVendorViews('User');
+            } elseif ($panelId === 'welcome') {
+                $registerVendorViews('User');
+                $registerPanelOverrides('Welcome');
             }
         });
 
@@ -529,7 +551,7 @@ class AppServiceProvider extends ServiceProvider
             PanelsRenderHook::BODY_END,
             function () use ($isMobile): string {
                 $isMobileCheck = $isMobile || (bool) preg_match(
-                    '/android|iphone|ipad|ipod|mobile|blackberry|windows phone|nativephp/i',
+                    '/android|iphone|ipad|ipod|mobile|blackberry|windows phone|capacitor/i',
                     request()->userAgent() ?? ''
                 );
 

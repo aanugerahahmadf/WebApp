@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <!--
+        app_name / title_activity_main track `appName` in capacitor.config.json.
+        package_name / custom_url_scheme track `appId` and must stay in sync with
+        the Android applicationId, which `npx cap sync` derives from appId.
+    -->
+    <string name="app_name">Dekorasi</string>
+    <string name="title_activity_main">Dekorasi</string>
+    <string name="package_name">id.dekorasi.pengantin.user</string>
+    <string name="custom_url_scheme">id.dekorasi.pengantin.user</string>
+</resources>

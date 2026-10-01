@@ -2,7 +2,7 @@
 
 namespace App\Observers\MediaObserver;
 
-use App\Providers\NativeServiceProvider\NativeServiceProvider;
+use App\Support\AppPlatform\AppPlatform;
 use App\Services\CBIRService\CBIRService;
 use Illuminate\Support\Facades\Log;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -22,7 +22,7 @@ class MediaObserver
 
         if (in_array($media->collection_name, $targetCollections)) {
             // Skip CBIR indexing di mobile — AI server tidak tersedia dari device
-            if (NativeServiceProvider::isNativeMobile()) {
+            if (AppPlatform::isNativeMobile()) {
                 return;
             }
 
@@ -37,7 +37,7 @@ class MediaObserver
     public function deleted(Media $media)
     {
         // Skip di mobile
-        if (NativeServiceProvider::isNativeMobile()) {
+        if (AppPlatform::isNativeMobile()) {
             return;
         }
 

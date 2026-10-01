@@ -15,7 +15,7 @@
  *
  * The preservation property states:
  * FOR ALL application runs that are NOT desktop app startup (including mobile app via
- * `php artisan native:run`, web app via `php artisan serve`, production builds, and
+ * `php artisan serve:mobile`, web app via `php artisan serve:web`, production builds, and
  * configuration loading for other platforms), the fixed code SHALL produce exactly the
  * same behavior as the original code.
  *
@@ -34,6 +34,12 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 
 describe('Property 2: Preservation - Non-Desktop Platform Functionality', function () {
+
+    afterEach(function () {
+        // Clear platform.mode binding to avoid state pollution between tests
+        app()->forgetInstance('platform.mode');
+        app()->forgetInstance('runtime.platform');
+    });
 
     // ── Helper Functions ─────────────────────────────────────────────────────
 
@@ -169,8 +175,8 @@ describe('Property 2: Preservation - Non-Desktop Platform Functionality', functi
             'baseline' => 'This behavior should be preserved after desktop fixes',
         ]);
     })->with([
-        'mobile platform' => ['mobile', 'native:run'],
-        'web platform' => ['web', 'serve'],
+        'mobile platform' => ['mobile', 'serve:mobile'],
+        'web platform' => ['web', 'serve:web'],
     ]);
 
     test('Preservation 3.2: Platform-specific features work correctly', function (string $feature, PlatformMode $platform) {
@@ -240,7 +246,8 @@ describe('Property 2: Preservation - Non-Desktop Platform Functionality', functi
         $config = getEnvConfig($platform);
 
         // Verify key configurations exist
-        $expectedKeys = ['APP_URL', 'APP_PORT', 'SESSION_DRIVER', 'CACHE_DRIVER'];
+        // Note: APP_PORT removed in Capacitor migration - serve commands use --port flag directly
+        $expectedKeys = ['APP_URL', 'SESSION_DRIVER', 'CACHE_DRIVER', 'VITE_PLATFORM'];
         foreach ($expectedKeys as $key) {
             $hasKey = array_key_exists($key, $config);
             expect($hasKey)->toBeTrue(
@@ -307,11 +314,11 @@ describe('Property 2: Preservation - Non-Desktop Platform Functionality', functi
     })->with([
         // Test different config keys across platforms
         'mobile APP_URL' => ['mobile', 'APP_URL'],
-        'mobile APP_PORT' => ['mobile', 'APP_PORT'],
         'mobile SESSION_DRIVER' => ['mobile', 'SESSION_DRIVER'],
+        'mobile VITE_PLATFORM' => ['mobile', 'VITE_PLATFORM'],
         'web APP_URL' => ['web', 'APP_URL'],
-        'web APP_PORT' => ['web', 'APP_PORT'],
         'web SESSION_DRIVER' => ['web', 'SESSION_DRIVER'],
+        'web VITE_PLATFORM' => ['web', 'VITE_PLATFORM'],
     ]);
 
     test('Preservation 3.5: Development hot reload configuration preserved', function (string $platform) {
@@ -373,8 +380,8 @@ describe('Property 2: Preservation - Non-Desktop Platform Functionality', functi
         // **EXPECTED TO PASS on unfixed code**
 
         $results = [
-            'mobile_command_available' => isPlatformCommandAvailable('native:run'),
-            'web_command_available' => isPlatformCommandAvailable('serve'),
+            'mobile_command_available' => isPlatformCommandAvailable('serve:mobile'),
+            'web_command_available' => isPlatformCommandAvailable('serve:web'),
             'mobile_env_exists' => hasEnvFile('mobile'),
             'web_env_exists' => hasEnvFile('web'),
             'mobile_config_loaded' => ! empty(getEnvConfig('mobile')),
@@ -423,7 +430,7 @@ describe('Property 2: Preservation - Non-Desktop Platform Functionality', functi
         $baseline = [
             'Requirement 3.1: Mobile/Web Launch' => [
                 'description' => 'Mobile and web platforms launch successfully',
-                'mobile_command' => 'php artisan native:run',
+                'mobile_command' => 'php artisan serve:mobile',
                 'web_command' => 'php artisan serve',
                 'expected' => 'Commands available and functional',
             ],

@@ -1,6 +1,41 @@
 # Panduan Distribusi Aplikasi Desktop
 
-Panduan ini mencakup proses membangun dan mendistribusikan aplikasi Laravel Wedding Organizer CBIR sebagai aplikasi desktop native untuk Windows dan macOS menggunakan [NativePHP Electron](https://nativephp.com).
+Panduan ini mencakup proses membangun dan mendistribusikan aplikasi Wedding Organizer
+CBIR sebagai aplikasi desktop native untuk Windows dan macOS menggunakan
+[Capacitor Electron](https://capacitorjs.com/docs/electron).
+
+---
+
+## Arsitektur: shell Capacitor Electron
+
+Aplikasi desktop ini **bukan** aplikasi yang menyematkan PHP. Sama seperti shell
+mobile, ini adalah *WebView shell* yang memuat URL server Laravel Anda di dalam
+Electron `BrowserWindow`.
+
+```
+┌─────────────────────────────────────────────┐
+│  app/Capacitor/{UserApp,AdminApp}/electron  │
+│  ├─ capacitor.config.json  → server.url     │
+│  └─ src/js/launcher.js     → PANEL_URL      │
+└──────────────┬──────────────────────────────┘
+               │  https://domain-anda.com/welcome (atau /admin)
+               ▼
+┌─────────────────────────────────────────────┐
+│  Server Laravel  (berada di server/host)    │
+│  ├─ public/build/desktop  (bundle Vite)     │
+│  ├─ /welcome → Filament panel (Storefront)  │
+│  └─ /api     → REST API                     │
+└─────────────────────────────────────────────┘
+```
+
+Konsekuensi:
+
+- **Tidak ada PHP di dalam aplikasi.** `composer install` tidak perlu dijalankan
+  di mesin build Electron; server Laravel berdiri sendiri.
+- **Rilis aplikasi dan rilis server terpisah.** Anda dapat mem-build
+  installer `.exe`/`.dmg` kapan saja tanpa men-deploy ulang server.
+- **Semua fitur web bekerja.** WebRTC, WebSocket, File API, Notifications —
+  karena Electron `BrowserView` mendukungnya semua, asalkan URLnya `https`.
 
 ---
 
@@ -8,22 +43,47 @@ Panduan ini mencakup proses membangun dan mendistribusikan aplikasi Laravel Wedd
 
 | Persyaratan | Detail |
 |---|---|
-| Paket `nativephp/electron` | `composer require nativephp/electron` |
-| Paket `nativephp/laravel` | `composer require nativephp/laravel` |
-| PHP 8.2+ CLI | Diperlukan di mesin build |
-| Node.js 18+ | Diperlukan (toolchain Electron) |
-| Electron Builder | Diinstal secara otomatis oleh `nativephp/electron` |
-| **Build Windows:** Windows 10+  | Cross-compilation dari macOS/Linux terbatas |
-| **Build macOS:** macOS 12+ + Xcode | Diperlukan untuk packaging `.app` dan penandatanganan kode |
-| Akun Apple Developer | Diperlukan untuk notarization macOS dan distribusi |
-| Sertifikat Penandatanganan Kode Windows | Diperlukan untuk penandatanganan Authenticode Windows (opsional namun direkomendasikan) |
+| Node.js 18+ | Untuk toolchain Electron, Vite, TypeScript |
+| Electron 43+ | Sudah ada di `package.json` shell |
+| **Build Windows:** Windows 10+ | Direkomendasikan native build |
+| **Build macOS:** macOS 12+ + Xcode | Wajib untuk notarization & `.dmg` |
+| Sertifikat Authenticode Windows | Opsional, untuk menghindari SmartScreen |
+| Sertifikat Developer ID Apple | Wajib untuk distribusi macOS di luar App Store |
+| Server Laravel publik | HTTPS, sudah ter-deploy |
 
-Instal dan siapkan NativePHP Desktop sekali per proyek:
+> **Build macOS wajib di macOS.** Tidak ada jalur dari Windows/Linux karena
+> notarization membutuhkan `xcrun notarytool`.
 
-```bash
-composer require nativephp/electron nativephp/laravel
-php artisan native:install
+---
+
+## Struktur Shell
+
+Ada dua shell (satu per panel), keduanya memiliki folder `electron/`:
+
+| Shell | Panel | appId | Path server |
+|---|---|---|---|
+| `app/Capacitor/UserApp` | Pelanggan (Storefront) | `id.dekorasi.pengantin.user` | `/welcome` |
+| `app/Capacitor/AdminApp` | Admin | `id.dekorasi.pengantin.admin` | `/admin` |
+
+Setiap shell memiliki proyek Electron sendiri di `electron/`:
+
 ```
+app/Capacitor/UserApp/
+├── capacitor.config.json
+├── package.json
+├── src/
+│   └── js/launcher.js         # fallback loader untuk Electron
+├── electron/
+│   ├── package.json
+│   ├── main.ts                # entry point Electron (tsc → build/main.js)
+│   ├── electron-builder.config.js
+│   └── icon.icns / icon.ico
+└── dist/                      # output Vite build (webDir)
+```
+
+`capacitor.config.json` menentukan `server.url` yang digunakan Android/iOS.
+Electron membaca `src/js/launcher.js` → `PANEL_URL` (di-update oleh
+`npm run set:url`).
 
 ---
 
@@ -35,74 +95,98 @@ Buat `.env.desktop` dari file contoh:
 cp .env.desktop.example .env.desktop
 ```
 
-Variabel yang diperlukan di `.env.desktop`:
+Variabel yang dibaca di `.env.desktop`:
 
 ```dotenv
 APP_ENV=production
 APP_KEY=base64:...           # Buat dengan: php artisan key:generate
-APP_URL=http://localhost:8002
+APP_URL=https://dekorasi.example.com
 
 # Session file lokal pengguna tunggal ideal untuk desktop
 SESSION_DRIVER=file
 SESSION_LIFETIME=10080
 
-# Penanda platform desktop
+# Memilih bundle public/build/desktop saat runtime
 VITE_PLATFORM=desktop
 
-# Port server PHP tertanam
-NATIVEPHP_HTTP_PORT=8002
-
-# Identitas aplikasi NativePHP
-NATIVEPHP_APP_ID=com.yourcompany.weddingorganizer
-NATIVEPHP_APP_NAME="Wedding Flower Decorations"
-NATIVEPHP_APP_VERSION=1.0.0
+# Cermin dari shell, untuk helper sisi PHP
+CAPACITOR_USER_URL=https://dekorasi.example.com/user
+CAPACITOR_ADMIN_URL=https://dekorasi.example.com/admin
+CAPACITOR_USER_APP_ID=id.dekorasi.pengantin.user
+CAPACITOR_ADMIN_APP_ID=id.dekorasi.pengantin.admin
 ```
 
-### Referensi Variabel yang Diperlukan
+### Referensi Variabel
 
 | Variabel | Wajib | Deskripsi |
 |---|---|---|
-| `APP_ENV` | Ya | Harus `production` untuk build yang didistribusikan |
+| `APP_ENV` | Ya | `production` untuk build distribusi |
 | `APP_KEY` | Ya | Kunci enkripsi base64 32-byte |
-| `APP_URL` | Ya | Harus cocok dengan `http://localhost:{NATIVEPHP_HTTP_PORT}` |
-| `SESSION_DRIVER` | Ya | Gunakan `file` untuk desktop (lokal pengguna tunggal) |
+| `APP_URL` | Ya | URL server produksi (`https`) |
+| `SESSION_DRIVER` | Ya | `file` untuk desktop (single user) |
 | `VITE_PLATFORM` | Ya | Harus `desktop` |
-| `NATIVEPHP_HTTP_PORT` | Ya | Port yang didengarkan server PHP tertanam (default 8002) |
-| `NATIVEPHP_APP_ID` | Ya | Identifier bundle reverse-DNS yang unik |
-| `NATIVEPHP_APP_VERSION` | Ya | String versi semantik (mis. `1.0.0`) |
+| `CAPACITOR_*_URL` | Tidak | Cermin `server.url`; default `APP_URL` |
+| `CAPACITOR_*_APP_ID` | Tidak | Cermin `appId`; untuk deep link FCM |
+
+> **Tidak ada lagi variabel `NATIVEPHP_*`.** Versi aplikasi, ikon, target
+> build, dan penandatanganan dikonfigurasi **di dalam shell Electron** (
+> `electron-builder.config.js`, `electron/package.json`), bukan di server
+> Laravel.
+
+---
+
+## Menunjuk Shell ke Server Produksi
+
+```bash
+cd app/Capacitor/UserApp
+npm install
+npm run set:url -- https://dekorasi.example.com/user
+```
+
+Skrip ini menulis `capacitor.config.json` (Android/iOS) **dan**
+`src/js/launcher.js` (Electron) sekaligus. Ulangi untuk AdminApp dengan
+`/admin`.
 
 ---
 
 ## Langkah Build
 
-### 1. Instal dependensi
+### 1. Build aset di server (server-side)
 
 ```bash
 composer install --no-dev --optimize-autoloader
 npm ci
-```
-
-### 2. Kompilasi aset desktop
-
-```bash
-npm run build:desktop
-```
-
-Aset di-output ke `public/build/desktop/`.
-
-### 3. Cache konfigurasi Laravel
-
-```bash
+npm run build:desktop         # → public/build/desktop
 php artisan optimize
+php artisan migrate --force
 ```
 
-### 4. Build aplikasi Electron
+### 2. Build aplikasi Electron (client-side)
+
+Masuk ke shell, install deps Electron, build TypeScript, package dengan
+`electron-builder`:
 
 ```bash
-php artisan native:build
+cd app/Capacitor/UserApp
+
+# Install deps shell + Electron
+npm install
+
+# Build Vite bundle untuk desktop (sudah di server, tapi shell butuh dist/ lokal)
+npm run build                 # → dist/
+
+# Compile TypeScript entry point
+npx tsc -p electron/tsconfig.json   # → electron/build/main.js
+
+# Package
+npx electron-builder --config electron/electron-builder.config.js
 ```
 
-Perintah build NativePHP Electron mengemas runtime PHP, aplikasi Laravel, dan shell Electron ke dalam bundel yang dapat didistribusikan.
+Output berada di `electron/dist/` (NSIS installer, portable zip, `.dmg`, dll.
+tergantung target).
+
+> `npx cap sync` **tidak diperlukan** untuk Electron; `electron-builder`
+> langsung memaketkan `dist/` sebagai aset web.
 
 ---
 
@@ -110,53 +194,66 @@ Perintah build NativePHP Electron mengemas runtime PHP, aplikasi Laravel, dan sh
 
 ### Pengembangan
 
-Mulai aplikasi dalam mode pengembangan dengan live reloading:
-
 ```bash
-php artisan native:serve
+cd app/Capacitor/UserApp
+npm run build
+npx tsc -p electron/tsconfig.json
+npx electron-builder --config electron/electron-builder.config.js --win --dir
+# --dir = unpacked folder, cepat untuk testing
 ```
 
-### Installer `.exe` Produksi
+### Installer `.exe` Produksi (NSIS)
 
 ```bash
-php artisan native:build --os=win
+cd app/Capacitor/UserApp
+npm run build
+npx tsc -p electron/tsconfig.json
+npx electron-builder --config electron/electron-builder.config.js --win
 ```
 
-Output: `dist/Wedding-Organizer-Setup-{version}.exe` (installer NSIS) dan `dist/Wedding-Organizer-{version}-win.zip` (portable).
+Output: `electron/dist/Wedding-Organizer-Setup-1.0.0.exe` (NSIS installer) dan
+`electron/dist/Wedding-Organizer-1.0.0-win.zip` (portable).
 
 ### Penandatanganan Kode Windows (Authenticode)
 
-Installer Windows yang tidak ditandatangani akan memicu peringatan SmartScreen. Tandatangani dengan sertifikat Authenticode dari CA tepercaya (DigiCert, Sectigo, dll.):
+Installer yang tidak ditandatangani memicu SmartScreen. Tandatangani dengan
+sertifikat PFX:
 
-```dotenv
-NATIVEPHP_WINDOWS_CERT_FILE=/path/to/certificate.pfx
-NATIVEPHP_WINDOWS_CERT_PASSWORD=your-cert-password
+```bash
+# Di CI, sertifikat biasanya di base64-encode ke secret
+export CSC_LINK="base64-encoded-pfx"
+export CSC_KEY_PASSWORD="cert-password"
+
+npx electron-builder --config electron/electron-builder.config.js --win
 ```
 
-Atau gunakan layanan penandatanganan HSM berbasis cloud (Trusted Signing, SignPath):
-
-```yaml
-# Dalam konfigurasi electron-builder (nativephp.config.js atau package.json)
-win:
-  certificateSubjectName: "Your Company Name"
-  signingHashAlgorithms: ["sha256"]
-  sign: "./scripts/sign-windows.js"
-```
+Atau gunakan `electron-builder` custom sign script (HSM cloud: Trusted Signing,
+SignPath, Azure Key Vault).
 
 ### Konfigurasi Build Windows
 
-Pengaturan utama di `config/nativephp.php`:
+Di `electron/electron-builder.config.js`:
 
-```php
-'app_id'      => env('NATIVEPHP_APP_ID', 'com.yourcompany.weddingorganizer'),
-'app_name'    => env('NATIVEPHP_APP_NAME', 'Wedding Flowers Decorasi'),
-'version'     => env('NATIVEPHP_APP_VERSION', '1.0.0'),
-'windows'     => [
-    'target'        => ['nsis', 'portable'],
-    'icon'          => 'resources/icons/icon.ico',
-    'request_elevation' => false,
-],
+```js
+const config = {
+  appId: 'id.dekorasi.pengantin.user',
+  productName: 'Dekorasi User',
+  win: {
+    target: ['nsis', 'portable'],
+    icon: 'electron/icon.ico',
+    signAndEditExecutable: true,   // requires CSC_LINK
+    rfc3161TimeStampServer: 'http://timestamp.digicert.com',
+  },
+  nsis: {
+    oneClick: false,
+    perMachine: false,
+    allowToChangeInstallationDirectory: true,
+  },
+};
 ```
+
+Versi ditentukan oleh `electron/package.json` → `version` (naikkan manual atau
+via script CI).
 
 ---
 
@@ -165,49 +262,64 @@ Pengaturan utama di `config/nativephp.php`:
 ### Pengembangan
 
 ```bash
-php artisan native:serve
+cd app/Capacitor/UserApp
+npm run build
+npx tsc -p electron/tsconfig.json
+npx electron-builder --config electron/electron-builder.config.js --mac --dir
 ```
 
-### Produksi `.dmg` / `.app`
+### Produksi `.dmg` / `.zip`
 
 ```bash
-php artisan native:build --os=mac
+cd app/Capacitor/UserApp
+npm run build
+npx tsc -p electron/tsconfig.json
+npx electron-builder --config electron/electron-builder.config.js --mac
 ```
 
-Output: `dist/Wedding-Organizer-{version}.dmg` dan `dist/Wedding-Organizer-{version}-mac.zip`.
+Output: `electron/dist/Dekorasi User-1.0.0.dmg` dan
+`electron/dist/Dekorasi User-1.0.0-mac.zip`.
 
 ### Penandatanganan Kode dan Notarisasi macOS
 
-macOS memerlukan penandatanganan kode dengan sertifikat Apple Developer ID. Tanpanya, Gatekeeper akan memblokir aplikasi saat pertama kali diluncurkan. **Notarisasi** diperlukan untuk distribusi di luar Mac App Store pada macOS 10.15+.
+Wajib untuk distribusi di luar Mac App Store (Gatekeeper akan menolak
+aplikasi tidak ditandatangani/notarisasi di macOS 10.15+).
 
-Siapkan kredensial:
+Siapkan di environment CI:
 
-```dotenv
-NATIVEPHP_MACOS_IDENTITY="Developer ID Application: Your Name (TEAMID)"
-NATIVEPHP_APPLE_ID=your@apple.com
-NATIVEPHP_APPLE_APP_SPECIFIC_PASSWORD=xxxx-xxxx-xxxx-xxxx
-NATIVEPHP_APPLE_TEAM_ID=ABCDE12345
+```bash
+export CSC_LINK="base64-encoded-p12"          # Developer ID Application cert
+export CSC_KEY_PASSWORD="cert-password"
+export APPLE_ID="your@apple.com"
+export APPLE_APP_SPECIFIC_PASSWORD="xxxx-xxxx-xxxx-xxxx"
+export APPLE_TEAM_ID="ABCDE12345"
 ```
 
-Pipeline build akan secara otomatis:
-1. Menandatangani semua biner dengan sertifikat Developer ID Anda.
-2. Mengirimkan `.dmg` ke layanan notarisasi Apple.
-3. Melampirkan tiket notarisasi ke `.dmg` sehingga dapat dibuka secara offline.
+`electron-builder` akan otomatis:
+
+1. Menandatangani semua biner dengan sertifikat Developer ID (`codesign --deep`).
+2. Mengirimkan `.dmg` ke layanan notarisasi Apple (`xcrun notarytool submit`).
+3. Melampirkan tiket notarisasi (`xcrun stapler staple`) sehingga aplikasi
+   dapat dibuka offline.
 
 ### Konfigurasi Build macOS
 
-```php
-'macos' => [
-    'target'              => ['dmg', 'zip'],
-    'icon'                => 'resources/icons/icon.icns',
-    'minimum_system_version' => '12.0',
-    'entitlements'        => 'resources/entitlements.mac.plist',
-    'hardened_runtime'    => true,
-    'category'            => 'public.app-category.lifestyle',
-],
+Di `electron/electron-builder.config.js`:
+
+```js
+mac: {
+  target: ['dmg', 'zip'],
+  icon: 'electron/icon.icns',
+  entitlements: 'electron/entitlements.mac.plist',
+  entitlementsInherit: 'electron/entitlements.mac.plist',
+  hardenedRuntime: true,
+  gatekeeperAssess: true,
+  category: 'public.app-category.lifestyle',
+  minimumSystemVersion: '12.0',
+},
 ```
 
-`entitlements.mac.plist` yang diperlukan untuk akses kamera:
+`entitlements.mac.plist` untuk akses kamera & file:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -227,87 +339,94 @@ Pipeline build akan secara otomatis:
 
 ## Build Lintas Platform
 
-Electron Builder mendukung cross-compilation, tetapi dengan keterbatasan:
-
 | Target build | Mesin build | Catatan |
 |---|---|---|
-| Windows `.exe` | Windows (direkomendasikan) | Juga memungkinkan di Linux melalui Wine |
-| Windows `.exe` | macOS | Terbatas — tidak ada dukungan NSIS native |
-| macOS `.dmg` | Hanya macOS | Apple memerlukan macOS untuk notarisasi |
-| Linux `.AppImage` | Linux atau macOS/Windows melalui Docker | |
+| Windows `.exe` | Windows (direkomendasikan) | Linux via Wine/Docker terbatas |
+| macOS `.dmg` | **Hanya macOS** | Notarisasi memerlukan macOS + Xcode |
+| Linux `.AppImage` | Linux | Tidak dipakai proyek ini |
 
-Untuk CI/CD, gunakan runner khusus platform (GitHub Actions `windows-latest`, `macos-latest`) — lihat contoh pipeline CI/CD.
+Untuk CI/CD, gunakan runner khusus platform (GitHub Actions
+`windows-latest`, `macos-latest`). Lihat contoh pipeline CI/CD.
 
 ---
 
 ## Strategi Distribusi
 
-### Unduhan Langsung
+### Unduh Langsung
 
-Host installer di website Anda atau bucket S3. Pengguna mengunduh dan menjalankannya secara manual. Cocok untuk distribusi enterprise internal.
+Host installer di website/bucket S3. Cocok untuk enterprise internal:
 
 ```
-https://downloads.yourcompany.com/wedding-organizer/
-  ├── Wedding-Organizer-Setup-1.0.0.exe      ← Installer Windows
-  ├── Wedding-Organizer-1.0.0.dmg            ← Disk image macOS
-  └── latest.yml                              ← Manifest auto-updater
+https://downloads.dekorasi.example.com/
+  ├── Dekorasi-User-Setup-1.0.0.exe
+  ├── Dekorasi-User-1.0.0.dmg
+  └── latest.yml / latest-mac.yml     ← manifest auto-updater
 ```
 
-### Pembaruan Otomatis (NativePHP Electron)
+### Pembaruan Otomatis (electron-updater)
 
-NativePHP Electron mengintegrasikan modul `autoUpdater` Electron. Terbitkan `latest.yml` (Windows) dan `latest-mac.yml` (macOS) bersama installer Anda, dan aplikasi akan memeriksa pembaruan saat startup.
+`electron-builder` menghasilkan `latest.yml` / `latest-mac.yml`. Taruh di
+server unduh bersamaan dengan installer. Aplikasi memeriksa update saat
+startup:
 
-```dotenv
-# URL tempat NativePHP memeriksa pembaruan
-NATIVEPHP_UPDATER_URL=https://downloads.yourcompany.com/wedding-organizer/
+```js
+// electron/main.ts
+import { autoUpdater } from 'electron-updater';
+autoUpdater.checkForUpdatesAndNotify();
 ```
 
-Pemeriksaan pembaruan manual di PHP:
+Konfigurasi URL update di `electron-builder.config.js`:
 
-```php
-if (platform_feature('auto_updates')) {
-    \Native\Laravel\Facades\Updater::check();
-}
+```js
+publish: {
+  provider: 'generic',
+  url: 'https://downloads.dekorasi.example.com/',
+},
 ```
 
-### Microsoft Store
-
-Build paket MSIX untuk distribusi Microsoft Store:
+### Microsoft Store (MSIX)
 
 ```bash
-php artisan native:build --os=win --target=appx
+npx electron-builder --config electron/electron-builder.config.js --win --target=msix
 ```
 
-Memerlukan akun Microsoft Partner Center dan sertifikat penandatanganan kode yang dipercaya oleh Store.
+Memerlukan akun Microsoft Partner Center dan sertifikat Store-trusted.
 
 ### Mac App Store
 
-Build Mac App Store memerlukan sertifikat `Mac App Store Distribution` terpisah dan menggunakan entitlement yang di-sandbox. Konsultasikan [dokumentasi NativePHP](https://nativephp.com) untuk konfigurasi khusus MAS.
+Target terpisah (`mas`), sertifikat `Mac App Store Distribution`, entitlement
+sandbox. Baca [dokumentasi Electron Forge](https://www.electronforge.io/config/plugins/maker-mas) atau [electron-builder MAS](https://www.electron.build/configuration/mas).
 
 ---
 
 ## Verifikasi Pasca-Build
 
-Setelah build, verifikasi paket sebelum distribusi:
-
 ```bash
-# Konfirmasi manifest aset desktop ada
-ls -la public/build/desktop/manifest.json
+# Bundle desktop benar-benar terbangun
+ls -la public/build/desktop/.vite/manifest.json
 
-# Inspeksi bundel aplikasi yang dibangun (macOS)
-codesign -dvv dist/Wedding-Organizer-1.0.0.dmg
+# Server dapat dijangkau dan TLS-nya sehat
+curl -I https://dekorasi.example.com/user
+curl -I https://dekorasi.example.com/api/health
 
-# Verifikasi notarisasi (macOS)
-spctl --assess --type open --context context:primary-signature -v dist/Wedding-Organizer-1.0.0.dmg
+# Inspeksi installer Windows
+# (di Windows) Right-click → Properties → Digital Signatures
 
-# Jalankan installer di mesin bersih untuk memverifikasi berfungsi tanpa dependensi pengembangan
+# Verifikasi notarisasi macOS
+spctl --assess --type open --context context:primary-signature -v \
+  electron/dist/Dekorasi\ User-1.0.0.dmg
+
+# Jalankan installer di mesin bersih untuk memverifikasi berfungsi tanpa
+# dependensi pengembangan
 ```
 
 ---
 
 ## Dokumentasi Terkait
 
+- [Panduan Mobile](../mobile/mobile.md) — shell Android/iOS
 - [Kompilasi Aset](../asset-compilation.md) — cara kerja `npm run build:desktop`
-- [Konfigurasi Lingkungan](../environment-configuration.md) — referensi variabel `.env.desktop`
+- [Konfigurasi Lingkungan](../environment-configuration.md) — referensi `.env.desktop`
+- [Dukungan Platform](../platform-support.md) — nilai `RuntimePlatform` per shell
 - `.env.desktop.example` — file starter beranotasi
-- [Contoh Pipeline CI/CD](../ci-cd.md) — alur kerja build otomatis untuk ketiga platform
+- `app/Capacitor/UserApp/electron/README.md` — dokumentasi shell Electron

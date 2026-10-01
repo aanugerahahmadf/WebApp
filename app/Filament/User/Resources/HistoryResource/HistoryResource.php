@@ -92,6 +92,7 @@ class HistoryResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->paginated(false)
             ->emptyStateHeading(__('Belum ada histori transaksi'))
             ->emptyStateDescription(__('Temukan layanan pernikahan impianmu dan mulai transaksi pertama hari ini!'))
             ->emptyStateIcon('heroicon-o-clock')

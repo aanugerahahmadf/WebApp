@@ -1,0 +1,24 @@
+{
+  "appId": "id.dekorasi.pengantin.admin",
+  "appName": "Dekorasi Admin",
+  "webDir": "dist",
+
+  "server": {
+    "url": "http://10.0.2.2:8000/admin",
+    "androidScheme": "https",
+    "iosScheme": "https",
+    "cleartext": true
+  },
+
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "launchShowDuration": 0,
+      "backgroundColor": "#4f46e5",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false,
+      "splashFullScreen": true,
+      "splashImmersive": false
+    }
+  }
+}

@@ -6,7 +6,6 @@ use App\Enums\PlatformMode\PlatformMode;
 use App\Enums\RuntimePlatform\RuntimePlatform;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Native\Mobile\Device;
 
 class RuntimePlatformDetector
 {
@@ -22,8 +21,8 @@ class RuntimePlatformDetector
         try {
             return match ($mode) {
                 PlatformMode::Web => $this->detectWebPlatform($request),
-                PlatformMode::Mobile => $this->detectMobilePlatform(),
-                PlatformMode::Desktop => $this->detectDesktopPlatform(),
+                PlatformMode::Mobile => $this->detectMobilePlatform($request),
+                PlatformMode::Desktop => $this->detectDesktopPlatform($request),
             };
         } catch (\Throwable $e) {
             Log::warning('Platform detection failed', [
@@ -73,50 +72,44 @@ class RuntimePlatformDetector
     }
 
     /**
-     * Detect the mobile platform using NativePHP Mobile Device API.
+     * Detect the platform of the Capacitor mobile shell (Android or iOS).
      *
-     * @return RuntimePlatform The detected mobile app platform
+     * The shell reaches this server over plain HTTP, so there is no on-device
+     * API to ask. The User-Agent is the only signal that distinguishes the
+     * WebView from a real mobile browser, and `CAPACITOR_PLATFORM` is the
+     * explicit override for builds whose WebView sends nothing distinctive.
      */
-    private function detectMobilePlatform(): RuntimePlatform
+    private function detectMobilePlatform(?Request $request): RuntimePlatform
     {
-        // Check for NativePHP Mobile APIs
-        if (class_exists(Device::class)) {
-            try {
-                $platform = Device::platform();
+        $forced = config('app-platform.force_platform') ?: env('CAPACITOR_PLATFORM');
 
-                return $platform === 'ios'
-                    ? RuntimePlatform::MobileAppIos
-                    : RuntimePlatform::MobileAppAndroid;
-            } catch (\Throwable $e) {
-                Log::debug('Failed to detect mobile platform from NativePHP API', [
-                    'error' => $e->getMessage(),
-                ]);
-            }
+        if (is_string($forced) && $forced !== '' && str_contains(strtolower($forced), 'ios')) {
+            return RuntimePlatform::MobileAppIos;
         }
 
-        // Fallback detection from environment or config
-        $platform = config('native.platform', 'android');
+        if ($request && preg_match('/iPhone|iPad|iPod/i', (string) $request->userAgent()) === 1) {
+            return RuntimePlatform::MobileAppIos;
+        }
 
-        return $platform === 'ios'
-            ? RuntimePlatform::MobileAppIos
-            : RuntimePlatform::MobileAppAndroid;
+        return RuntimePlatform::MobileAppAndroid;
     }
 
     /**
-     * Detect the desktop platform using PHP_OS_FAMILY constant.
-     *
-     * @return RuntimePlatform The detected desktop app platform
+     * Detect the platform of the Capacitor desktop shell (Electron).
      */
-    private function detectDesktopPlatform(): RuntimePlatform
+    private function detectDesktopPlatform(?Request $request): RuntimePlatform
     {
-        // Check PHP_OS_FAMILY constant for the operating system
-        $os = PHP_OS_FAMILY;
+        if ($request) {
+            $userAgent = (string) $request->userAgent();
 
-        if ($os === 'Darwin') {
-            return RuntimePlatform::DesktopAppMacOS;
+            if (str_contains($userAgent, 'Macintosh') || str_contains($userAgent, 'Mac OS X')) {
+                return RuntimePlatform::DesktopAppMacOS;
+            }
         }
 
-        // Default to Windows for Windows, Linux, and other operating systems
-        return RuntimePlatform::DesktopAppWindows;
+        // No request (queue worker, scheduler): fall back to the server's OS.
+        return PHP_OS_FAMILY === 'Darwin'
+            ? RuntimePlatform::DesktopAppMacOS
+            : RuntimePlatform::DesktopAppWindows;
     }
 }

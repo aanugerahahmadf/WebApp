@@ -18,7 +18,7 @@ use App\Models\Order\Order;
 use App\Models\Package\Package;
 use App\Models\Product\Product;
 use App\Models\Voucher\Voucher;
-use App\Providers\NativeServiceProvider\NativeServiceProvider;
+use App\Support\AppPlatform\AppPlatform;
 use App\Services\CBIRService\CBIRService;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
@@ -48,7 +48,6 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithPagination;
-use Native\Mobile\Facades\Camera;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
@@ -689,21 +688,17 @@ class Messages extends Component implements HasActions, HasForms
     }
 
     /**
-     * Open native gallery / file picker (Android/iOS) for CBIR browse modal.
+     * Open the gallery / file picker for the CBIR browse modal.
+     *
+     * The Capacitor shell is a real browser, so this just triggers the hidden
+     * `<input type="file">` the browse modal renders — the same path the website
+     * uses. There is no on-device picker API to call from PHP.
      *
      * @param  'image'|'video'|'all'  $mediaType
      */
     public function openBrowseSource(string $mediaType = 'all', ?string $sourceId = null): void
     {
-        if (! NativeServiceProvider::isNativeMobile()) {
-            return;
-        }
-
-        $mediaType = in_array($mediaType, ['image', 'video', 'all'], true) ? $mediaType : 'all';
-
-        Camera::pickImages($mediaType, false)
-            ->id('cbir-browse-'.($sourceId ?? $mediaType))
-            ->start();
+        $this->dispatch('capacitor-camera-open-input', mode: $mediaType === 'image' ? 'photo-back' : 'gallery');
     }
 
     public function selectNewItem(string $type, int $id, int $orderId): void

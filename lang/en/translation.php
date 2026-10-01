@@ -1,7 +1,6 @@
 <?php
 
 /** @return array<string, mixed> */
-
 return [
     'change' => 'Change Language',
     'lang' => [
@@ -43,4 +42,208 @@ return [
         'et' => 'Estonian',
     ],
     'notification' => 'Language has been changed successfully',
+
+    // Navigation & General
+    'Belanja & Jelajahi' => 'Shop & Explore',
+    'Katalog Paket Dekorasi Bunga' => 'Flower Decoration Package Catalog',
+    'Katalog Bunga' => 'Flower Catalog',
+
+    // Empty States
+    'Belum ada paket tersedia' => 'No packages available yet',
+    'Tidak ada paket yang cocok dengan foto Anda. Silakan coba foto lain.' => 'No packages match your photo. Please try another photo.',
+    'Temukan paket impianmu di sini!' => 'Find your dream package here!',
+    'Belum ada product tersedia' => 'No products available yet',
+    'Tidak ada product yang cocok dengan foto Anda. Silakan coba foto lain.' => 'No products match your photo. Please try another photo.',
+    'Temukan product impianmu di sini!' => 'Find your dream product here!',
+
+    // Actions
+    'Tampilkan Semua' => 'Show All',
+    'Kategori' => 'Category',
+    'Diskon' => 'Discount',
+    'Ada Diskon' => 'Has Discount',
+    'Tanpa Diskon' => 'No Discount',
+    'Rating Minimum' => 'Minimum Rating',
+    'Bintang' => 'Stars',
+    'Urutkan' => 'Sort By',
+    'Terbaru' => 'Latest',
+    'Harga: Terendah' => 'Price: Lowest',
+    'Harga: Tertinggi' => 'Price: Highest',
+    'Rating Tertinggi' => 'Highest Rating',
+    'Paling Banyak Dipesan' => 'Most Ordered',
+    'Filter' => 'Filter',
+
+    // Share & Report
+    'Bagikan' => 'Share',
+    'Bagikan Item Ini' => 'Share This Item',
+    'Tutup' => 'Close',
+    'Link' => 'Link',
+    'Salin ke Clipboard' => 'Copy to Clipboard',
+    'Tautan berhasil disalin!' => 'Link copied successfully!',
+    'Buka di Tab Baru' => 'Open in New Tab',
+    'Lapor' => 'Report',
+    'Paket' => 'Package',
+    'Produk' => 'Product',
+    'Laporan berhasil dikirim' => 'Report sent successfully',
+    'Anda akan diarahkan ke Messages untuk melanjutkan percakapan dengan admin dan bot.' => 'You will be redirected to Messages to continue the conversation with admin and bot.',
+
+    // Rating & Badges
+    'Belum ada rating' => 'No rating yet',
+    'DISKON' => 'DISCOUNT',
+
+    // Sections
+    'Tentang Layanan Ini' => 'About This Service',
+    'Tentang Product Ini' => 'About This Product',
+    'Fitur' => 'Features',
+
+    // Buttons
+    'Pesan Sekarang' => 'Order Now',
+    'Layanan Habis' => 'Service Sold Out',
+    'Stok Habis' => 'Out of Stock',
+    'Masukkan ke Keranjang' => 'Add to Cart',
+    'Jumlah yang ingin dibeli' => 'Quantity to purchase',
+    'Berhasil masuk keranjang' => 'Successfully added to cart',
+    'Berhasil menambahkan :count paket ke keranjang.' => 'Successfully added :count packages to cart.',
+    'Berhasil menambahkan :count item ke keranjang.' => 'Successfully added :count items to cart.',
+    'Chat Admin' => 'Chat Admin',
+    'Tidak dapat memulai chat' => 'Cannot start chat',
+    'Hapus dari Favorit' => 'Remove from Favorites',
+    'Tambah ke Favorit' => 'Add to Favorites',
+    'Dihapus dari Favorit' => 'Removed from Favorites',
+    'Disimpan ke Favorit' => 'Saved to Favorites',
+    'Tulis Ulasan' => 'Write Review',
+
+    // Review Modal
+    'Tulis Ulasan' => 'Write Review',
+    'Bagikan pengalaman Anda tentang paket ini.' => 'Share your experience about this package.',
+    'Bagikan pengalaman Anda tentang produk ini.' => 'Share your experience about this product.',
+    'Anda sudah menulis ulasan untuk paket ini.' => 'You have already written a review for this package.',
+    'Anda sudah menulis ulasan untuk produk ini.' => 'You have already written a review for this product.',
+    'Terima kasih atas ulasan Anda!' => 'Thank you for your review!',
+    'Ulasan' => 'Reviews',
+    'Penilaian Paket' => 'Package Rating',
+    'Penilaian Produk' => 'Product Rating',
+    'Tidak ada ulasan untuk filter ini.' => 'No reviews for this filter.',
+    'Pengguna' => 'User',
+
+    // Checkout Wizard
+    'Detail Acara' => 'Event Details',
+    'Pilih Waktu & Kebutuhan' => 'Select Time & Needs',
+    'Rencana Tanggal Acara' => 'Event Date Plan',
+    'Waktu Pelaksanaan' => 'Execution Time',
+    'Alamat Lokasi' => 'Location Address',
+    'Info Kontak' => 'Contact Info',
+    'Verifikasi Data Anda' => 'Verify Your Data',
+    'Nama Lengkap' => 'Full Name',
+    'Nomor WhatsApp' => 'WhatsApp Number',
+    'Notifikasi pembayaran akan dikirim ke nomor ini.' => 'Payment notification will be sent to this number.',
+    'Voucher & Diskon' => 'Voucher & Discount',
+    'Pilih Voucher Anda' => 'Select Your Voucher',
+    'Gunakan voucher yang telah Anda klaim di menu Voucher.' => 'Use vouchers you have claimed in the Voucher menu.',
+    'Voucher Tersedia' => 'Available Vouchers',
+    'Diskon' => 'Discount',
+    'Voucher Berhasil Dipasang!' => 'Voucher Successfully Applied!',
+    'Voucher tidak valid' => 'Voucher is not valid',
+    'Hanya voucher yang memenuhi syarat minimum belanja yang akan muncul di sini. Jika kosong, silakan ke menu Voucher untuk Klaim.' => 'Only vouchers meeting minimum purchase requirements will appear here. If empty, please go to Voucher menu to Claim.',
+    'Harga Paket' => 'Package Price',
+    'Harga Produk' => 'Product Price',
+    'Diskon Voucher' => 'Voucher Discount',
+    'Total Bayar' => 'Total Pay',
+    'Metode Pembayaran' => 'Payment Method',
+    'Pilih Metode Pembayaran' => 'Select Payment Method',
+    'Pilih cara pembayaran yang Anda inginkan.' => 'Choose the payment method you prefer.',
+    'Setelah pesanan dibuat, instruksi pembayaran akan tampil di halaman "Pesanan Saya".' => 'After order is created, payment instructions will appear on "My Orders" page.',
+    'Konfirmasi' => 'Confirmation',
+    'Ringkasan Pembayaran' => 'Payment Summary',
+    'Paket Dekorasi' => 'Decoration Package',
+    'Produk Bunga' => 'Flower Product',
+    'Total Harga' => 'Total Price',
+
+    // Errors & Success
+    'Stok Tidak Cukup' => 'Insufficient Stock',
+    'Mohon maaf, stok tersedia hanya :count.' => 'Sorry, only :count available in stock.',
+    'Pembayaran kartu kredit / debit oleh pengguna.' => 'Credit / debit card payment by user.',
+    'Menunggu konfirmasi pembayaran manual.' => 'Waiting for manual payment confirmation.',
+    'Pesanan Berhasil Dibuat' => 'Order Successfully Created',
+    'Pembayaran Anda telah berhasil.' => 'Your payment was successful.',
+    'Silakan lakukan pembayaran di halaman "Pesanan Saya".' => 'Please make payment on the "My Orders" page.',
+
+    // Global Search
+    'Harga' => 'Price',
+    'Stok' => 'Stock',
+    'Rating' => 'Rating',
+    'Item' => 'Item',
+
+    // Review Summary
+    'dari 5' => 'out of 5',
+    'Rating rata-rata' => 'Average rating',
+    'Filter penilaian' => 'Rating filter',
+    'Semua' => 'All',
+    'Dengan Komentar' => 'With Comments',
+    'Dengan Media' => 'With Media',
+
+    // Catalog Image Gallery
+    'Foto' => 'Photo',
+    'untuk' => 'for',
+    'Pilih foto' => 'Choose photo',
+    'Thumbnail foto' => 'Photo thumbnail',
+    'Foto sebelumnya' => 'Previous photo',
+    'Foto berikutnya' => 'Next photo',
+
+    // Share & Voucher
+    'Copied!' => 'Copied!',
+    'Copy' => 'Copy',
+    'Buka di Tab Baru' => 'Open in New Tab',
+
+    // Review Detail
+    'Rating' => 'Rating',
+    'Foto ulasan dari :name' => 'Review photo from :name',
+    'Foto ulasan' => 'Review photo',
+
+    // QRIS
+    'Scan untuk Pembayaran QRIS' => 'Scan for QRIS Payment',
+
+    // Camera & Upload
+    'Pilih Sumber Foto' => 'Choose Photo Source',
+    'Ambil Foto' => 'Take Photo',
+    'Foto Kamera Belakang' => 'Rear Camera Photo',
+    'Foto Kamera Depan' => 'Front Camera Photo',
+    'Buka Album Foto' => 'Open Photo Album',
+    'Foto Selfie + Dokumen' => 'Selfie + Document',
+    'Foto Dokumen Identitas' => 'Identity Document Photo',
+    'Gunakan Foto' => 'Use Photo',
+    'Ubah Foto' => 'Change Photo',
+    'Ambil Selfie' => 'Take Selfie',
+    'Foto Dokumen' => 'Document Photo',
+    'Tampilkan Semua' => 'Show All',
+
+    // Voucher Carousel
+    'Persen' => 'Percent',
+    'Fixed' => 'Fixed',
+    'Min. pembelian' => 'Min. purchase',
+    'Berlaku hingga' => 'Valid until',
+    'Belum ada promo' => 'No promo yet',
+
+    // Wishlist
+    'Favorit Saya' => 'My Favorites',
+    'Favorit Baru' => 'New Favorite',
+    'Pilih Paket' => 'Select Package',
+    'Tambah Favorit' => 'Add Favorite',
+
+    // Review
+    'Ulasan Saya' => 'My Reviews',
+    'Pilih Layanan' => 'Select Service',
+    'Layanan Paket' => 'Package Service',
+    'Informasi Studio' => 'Studio Information',
+    'Judul Ulasan' => 'Review Title',
+    'Komentar Anda' => 'Your Comment',
+    'Foto Ulasan' => 'Review Photo',
+    'Belanja Bunga' => 'Flower Shopping',
+    'Rating Terendah' => 'Lowest Rating',
+
+    // Voucher
+    'Voucher Promo' => 'Promo Voucher',
+    'Berlaku s/d' => 'Valid until',
+    'Berlaku Selamanya' => 'Valid Forever',
+    'Tanya Admin' => 'Ask Admin',
+    'Klaim Voucher' => 'Claim Voucher',
 ];

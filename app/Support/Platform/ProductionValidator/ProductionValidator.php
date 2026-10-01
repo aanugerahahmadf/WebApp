@@ -37,6 +37,12 @@ class ProductionValidator
     /**
      * Additional environment variables required per platform mode.
      *
+     * The Capacitor app id and version are not required here: they live in each
+     * shell's own `app/Capacitor/{UserApp,AdminApp}/capacitor.config.json` and
+     * are read by the Capacitor CLI at build time, not by the PHP process at
+     * runtime. All this server needs per mode is a session driver and the
+     * Vite platform that selects which bundle was built.
+     *
      * @var array<string, string[]>
      */
     private const PLATFORM_REQUIRED = [
@@ -45,15 +51,10 @@ class ProductionValidator
         ],
         PlatformMode::Mobile->value => [
             'SESSION_DRIVER',
-            'NATIVEPHP_APP_ID',
-            'NATIVEPHP_APP_VERSION',
             'VITE_PLATFORM',
         ],
         PlatformMode::Desktop->value => [
             'SESSION_DRIVER',
-            'NATIVEPHP_APP_ID',
-            'NATIVEPHP_APP_VERSION',
-            'NATIVEPHP_HTTP_PORT',
             'VITE_PLATFORM',
         ],
     ];

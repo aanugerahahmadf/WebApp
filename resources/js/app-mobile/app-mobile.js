@@ -1,11 +1,24 @@
 /**
  * Mobile Platform Entry Point
  *
- * Optimized for NativePHP Mobile (Android / iOS) with native camera and
- * file-system support.
- * Used when running: php artisan native:run
+ * Bundle for the Capacitor mobile shell (app/Capacitor/UserApp and
+ * app/Capacitor/AdminApp, Android + iOS).
  *
- * Requirements: 4.1, 4.5
+ * There is no PHP in this bundle and no native bridge. The shell is a WebView
+ * pointed at this Laravel server (see each shell's `capacitor.config.json`
+ * `server.url`), so every web feature works exactly as it does in a mobile
+ * browser — including WebRTC, once the page is served over https or from
+ * localhost, both of which the shell provides as a secure context.
+ *
+ * Camera capture is the one deliberate difference from the web bundle: instead
+ * of the in-page WebRTC viewfinder, the shell opens a hidden
+ * `<input type="file" capture>` and the upload arrives through `wire:model`.
+ * The server side of that handshake is the `capacitor-camera-open-input`
+ * dispatch, handled by the `cbir-camera-options` partial under
+ * resources/views/{User,Welcome}/components/.
+ *
+ * Built with: npm run build:mobile   (→ public/build/mobile)
+ * Served against with: php artisan serve:mobile
  */
 
 // ===================================
@@ -19,15 +32,8 @@ import '../emoji-picker/emoji-picker';
 import '../pdf-preview-plugin/pdf-preview-plugin';
 import '../firebase-client/firebase-client';
 
-// ===================================
-// Mobile-Specific Components (Req 4.5)
-// ===================================
-// iOS php:// protocol adapter — required for NativePHP Mobile on iOS (Req 6.1)
-// This module is NOT imported in the web or desktop entry points.
-import '../phpProtocolAdapter/phpProtocolAdapter';
-
-// WebRTC is intentionally excluded — the native NativePHP Mobile Camera API
-// is used instead (Req 4.5, 6.1).
+// No phpProtocolAdapter import: that existed only for NativePHP's iOS build,
+// which served the app over a `php://` scheme. This shell uses plain http(s).
 
 // ===================================
 // Dark Mode Synchronization
@@ -46,10 +52,10 @@ syncTheme();
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncTheme);
 
 // ===================================
-// Platform Capabilities (Req 4.5, 5.1–5.9)
+// Platform Capabilities
 // ===================================
-// Sub-platform detection (Android vs iOS) is done at runtime from the UA
-// string because both devices share the same JS bundle.
+// Android vs iOS is read at runtime from the UA string, because both platforms
+// share this one bundle.
 const ua = window.navigator.userAgent.toLowerCase();
 const isIOS = /ipad|iphone|ipod/.test(ua);
 const isAndroid = ua.includes('android');
@@ -62,54 +68,24 @@ window.__PLATFORM__ = {
     isAndroid,
     isIOS,
 
-    // Feature flags — mirrors PlatformFeatureRegistry (Req 5.1–5.9)
-    supportsWebRTC: false,               // Native camera preferred over WebRTC
-    supportsNativeCamera: true,          // NativePHP Mobile Camera API (Req 6.1)
-    supportsFileSystem: true,            // Native file-system access (Req 5.8)
-    supportsPushNotifications: true,     // Mobile push notifications (Req 5.7)
-    supportsDesktopNotifications: false, // Desktop notifications — Desktop only
-    supportsAppBadge: true,              // App-badge updates (Req 5.7)
-    supportsAutoUpdates: true,           // Auto-update via app stores
+    // Feature flags — mirrors PlatformFeatureRegistry on the PHP side.
+    supportsWebRTC: true,                 // The shell's WebView is a real browser
+    supportsShellCamera: true,            // Camera via hidden file inputs
+    supportsFileSystem: true,             // <input type="file"> reaches the OS picker
+    supportsPushNotifications: true,      // FCM, via the registered device token
+    supportsDesktopNotifications: false,  // Desktop notifications — Desktop only
+    supportsAppBadge: true,
+    supportsAutoUpdates: true,            // Updated through the app stores
 
-    // Camera mode for CBIR feature (Req 6.4)
-    cameraMode: 'native-mobile',        // Uses NativePHP Mobile Camera API
+    // Camera mode for the CBIR feature. Matches RuntimePlatform::cbirCameraMode(),
+    // where 'native' means "let the shell pick the file" rather than "run WebRTC".
+    cameraMode: 'native',
 };
-
-// ===================================
-// Conditional: Native Camera Helper (Req 4.5, 6.1)
-// ===================================
-// Expose a unified camera-open helper that delegates to the NativePHP
-// Mobile Camera API when available, with a graceful degradation message.
-if (window.__PLATFORM__.supportsNativeCamera) {
-    /**
-     * Triggers the native mobile camera via the NativePHP Bridge.
-     * Falls back with a user-facing error when the bridge is unavailable.
-     *
-     * @returns {Promise<string>} Base64-encoded image data URI
-     */
-    window.__PLATFORM__.openCamera = async () => {
-        if (window.NativePHP && window.NativePHP.camera) {
-            try {
-                return await window.NativePHP.camera.capture();
-            } catch (err) {
-                console.error('[Mobile Platform] Native camera error:', err);
-                throw new Error(
-                    'Camera permission required. Please enable camera access in ' +
-                    'Settings \u203A Privacy.'
-                );
-            }
-        }
-        // Bridge not yet injected (e.g., dev browser preview)
-        throw new Error(
-            'Native camera bridge not available in this context.'
-        );
-    };
-}
 
 if (import.meta.env.DEV) {
     console.log(
         '[Mobile Platform] Initialized —',
         isIOS ? 'iOS' : isAndroid ? 'Android' : 'unknown',
-        '— native camera & file system enabled'
+        '— Capacitor shell, shell-driven camera'
     );
 }

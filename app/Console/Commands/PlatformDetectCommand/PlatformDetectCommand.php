@@ -28,7 +28,7 @@ class PlatformDetectCommand extends Command
             ['Mobile shell UI', $platform->isMobileShell() ? 'yes' : 'no'],
             ['CBIR camera mode', PlatformContext::cbirCameraMode()],
             ['User-Agent', request()->userAgent() ?? '(cli)'],
-            ['NATIVEPHP_PLATFORM', env('NATIVEPHP_PLATFORM') ?: '-'],
+            ['CAPACITOR_PLATFORM', env('CAPACITOR_PLATFORM') ?: '-'],
         ]);
 
         return self::SUCCESS;

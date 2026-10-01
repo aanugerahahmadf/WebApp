@@ -8,18 +8,14 @@ use Illuminate\Console\Command;
 /**
  * Wrapper command for `php artisan serve` in Web platform mode.
  *
- * Validates platform mode context and delegates to the built-in `serve`
- * command. Web mode requires no additional platform-specific dependencies.
- *
- * Requirements: 7.2, 7.5, 7.6
+ * Uses `serve:web` to avoid conflict with the built-in `serve` command.
+ * See DelegatesToServeCommand for why all three modes just delegate to `serve`.
  */
 class ServePlatformCommand extends Command
 {
+    use DelegatesToServeCommand;
+
     /**
-     * The name and signature of the console command.
-     *
-     * Uses `serve:web` to avoid conflict with the built-in `serve` command.
-     *
      * @var string
      */
     protected $signature = 'serve:web
@@ -28,27 +24,12 @@ class ServePlatformCommand extends Command
         {--tries= : The max number of ports to attempt to serve from}';
 
     /**
-     * The console command description.
-     *
      * @var string
      */
     protected $description = 'Serve the application in Web platform mode (delegates to `php artisan serve`)';
 
-    /**
-     * Execute the console command.
-     *
-     * Web mode has no additional platform-specific package requirements, so
-     * this command simply delegates to the built-in `serve` command after
-     * confirming the platform context.
-     */
     public function handle(): int
     {
-        $this->line('Starting Laravel in <info>'.PlatformMode::Web->label().'</info> mode...');
-
-        return $this->call('serve', array_filter([
-            '--host' => $this->option('host'),
-            '--port' => $this->option('port'),
-            '--tries' => $this->option('tries'),
-        ]));
+        return $this->serveInMode(PlatformMode::Web);
     }
 }

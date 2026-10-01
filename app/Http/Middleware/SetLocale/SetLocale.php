@@ -4,7 +4,7 @@ namespace App\Http\Middleware\SetLocale;
 
 use App\Models\User\User;
 use App\Models\UserLanguage\UserLanguage;
-use App\Providers\NativeServiceProvider\NativeServiceProvider;
+use App\Support\AppPlatform\AppPlatform;
 use Closure;
 use Filament\Facades\Filament;
 use Illuminate\Http\Request;
@@ -60,7 +60,7 @@ class SetLocale
         // 4. Cek autentikasi user di semua guards untuk mendapatkan preferensi bahasa dari database
         //    Hanya digunakan jika locale belum ditentukan dari param/session/header
         $user = null;
-        $guards = ['web', 'filament', 'admin', 'mobile', 'nativephp', 'api', 'sanctum'];
+        $guards = ['web', 'filament', 'admin', 'mobile', 'api', 'sanctum'];
         foreach ($guards as $guard) {
             try {
                 $guardInstance = Auth::guard($guard);
@@ -74,18 +74,15 @@ class SetLocale
         }
 
         if ($user) {
-            $isMobile = NativeServiceProvider::isNativeMobile();
             $dbLocale = null;
 
-            if (! $isMobile) {
-                try {
-                    $dbLocale = $user->lang;
-                } catch (\Throwable $e) {
-                    $dbLocale = null;
-                }
+            try {
+                $dbLocale = $user->lang;
+            } catch (\Throwable $e) {
+                $dbLocale = null;
             }
 
-            if ($locale && $locale !== $dbLocale && ! $isMobile) {
+            if ($locale && $locale !== $dbLocale) {
                 try {
                     UserLanguage::updateOrCreate(
                         ['model_id' => (string) $user->id, 'model_type' => get_class($user)],
@@ -103,7 +100,9 @@ class SetLocale
 
         // 5. Fallback Default jika belum terdeteksi
         if (! $locale) {
-            if (NativeServiceProvider::isNativeMobile()) {
+            if (AppPlatform::isNativeMobile()) {
+                // The Capacitor shells ship an Indonesian-first bundle; don't
+                // let a system language other than the app default take over.
                 $locale = 'id';
             } else {
                 $localsConfig = config('filament-language-switcher.locals', ['id' => [], 'en' => []]);

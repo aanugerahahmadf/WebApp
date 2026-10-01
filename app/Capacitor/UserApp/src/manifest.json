@@ -1,0 +1,16 @@
+{
+  "name": "Dekorasi",
+  "short_name": "Dekorasi",
+  "start_url": "index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "assets/imgs/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "background_color": "#eab308",
+  "theme_color": "#eab308"
+}

@@ -5,7 +5,6 @@ namespace App\Http\Controllers\LanguageController;
 use App\Http\Controllers\Controller;
 
 use App\Models\UserLanguage\UserLanguage;
-use App\Providers\NativeServiceProvider\NativeServiceProvider;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -47,7 +46,7 @@ class LanguageController extends Controller
 
             // 2. Multi-Guard Authentication Check
             $user = null;
-            $guards = ['web', 'filament', 'admin', 'mobile', 'nativephp', 'api'];
+            $guards = ['web', 'filament', 'admin', 'mobile', 'api'];
             foreach ($guards as $guard) {
                 try {
                     $guardInstance = Auth::guard($guard);
@@ -60,10 +59,8 @@ class LanguageController extends Controller
                 }
             }
 
-            // 3. Database Persistence — skip on NativePHP mobile to avoid proxy errors
-            $isMobile = NativeServiceProvider::isNativeMobile();
-
-            if ($user && ! $isMobile) {
+            // 3. Database Persistence
+            if ($user) {
                 try {
                     UserLanguage::updateOrCreate(
                         ['model_id' => (string) $user->id, 'model_type' => get_class($user)],
@@ -71,14 +68,6 @@ class LanguageController extends Controller
                     );
 
                     // Purge caches to ensure the new locale is used in next request
-                    cache()->forget("user_lang_{$user->id}");
-                    cache()->forget("active_trans_map_{$locale}");
-                } catch (\Exception $e) {
-                    // Fail silently
-                }
-            } elseif ($user && $isMobile) {
-                // On mobile: only clear cache, skip DB write
-                try {
                     cache()->forget("user_lang_{$user->id}");
                     cache()->forget("active_trans_map_{$locale}");
                 } catch (\Exception $e) {

@@ -109,7 +109,7 @@
                     $groupedReactions = collect($reactions)->groupBy('emoji');
                     $myReactionEmojis = collect($reactions)->where('user_id', (string) auth()->id())->pluck('emoji')->all();
                     $isStarred = in_array((string) auth()->id(), array_map('strval', $meta['starred_by'] ?? []));
-                    $canDeleteEveryone = $isMine || auth()->user()->hasRole('super_admin');
+                    $canDeleteEveryone = $isMine || auth()->user()?->hasRole('super_admin');
                     $quickEmojis = ['👍', '❤️', '😂', '😮', '😢', '😡'];
                 @endphp
 
@@ -152,7 +152,7 @@
                             @php
                                 $itemImage = $meta['image'] ?? null;
                                 if ($itemImage) {
-                                    $itemImage = \App\Providers\NativeServiceProvider\NativeServiceProvider::normalizeUrl($itemImage);
+                                    $itemImage = \App\Support\AppPlatform\AppPlatform::normalizeUrl($itemImage);
                                 }
                                 if (!$itemImage || str_contains($itemImage, 'placeholder') || str_contains((string) $itemImage, 'placeholders')) {
                                     $modelClass = $meta['type'] === 'product' ? \App\Models\Product\Product::class : \App\Models\Package\Package::class;
@@ -572,7 +572,7 @@
 
             {{-- Modal components for attach & camera --}}
             @include('User.components.cbir-browse-modal.cbir-browse-modal', [
-                'isNative' => \App\Providers\NativeServiceProvider\NativeServiceProvider::isAnyMobile(),
+                'isNative' => \App\Support\AppPlatform\AppPlatform::isAnyMobile(),
             ])
             @include('User.components.messages-camera-modal.messages-camera-modal')
 

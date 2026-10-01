@@ -42,4 +42,208 @@ return [
         'et' => 'Estonia',
     ],
     'notification' => 'Bahasa telah berhasil diubah',
+
+    // Navigation & General
+    'Belanja & Jelajahi' => 'Belanja & Jelajahi',
+    'Katalog Paket Dekorasi Bunga' => 'Katalog Paket Dekorasi Bunga',
+    'Katalog Bunga' => 'Katalog Bunga',
+
+    // Empty States
+    'Belum ada paket tersedia' => 'Belum ada paket tersedia',
+    'Tidak ada paket yang cocok dengan foto Anda. Silakan coba foto lain.' => 'Tidak ada paket yang cocok dengan foto Anda. Silakan coba foto lain.',
+    'Temukan paket impianmu di sini!' => 'Temukan paket impianmu di sini!',
+    'Belum ada product tersedia' => 'Belum ada product tersedia',
+    'Tidak ada product yang cocok dengan foto Anda. Silakan coba foto lain.' => 'Tidak ada product yang cocok dengan foto Anda. Silakan coba foto lain.',
+    'Temukan product impianmu di sini!' => 'Temukan product impianmu di sini!',
+
+    // Actions
+    'Tampilkan Semua' => 'Tampilkan Semua',
+    'Kategori' => 'Kategori',
+    'Diskon' => 'Diskon',
+    'Ada Diskon' => 'Ada Diskon',
+    'Tanpa Diskon' => 'Tanpa Diskon',
+    'Rating Minimum' => 'Rating Minimum',
+    'Bintang' => 'Bintang',
+    'Urutkan' => 'Urutkan',
+    'Terbaru' => 'Terbaru',
+    'Harga: Terendah' => 'Harga: Terendah',
+    'Harga: Tertinggi' => 'Harga: Tertinggi',
+    'Rating Tertinggi' => 'Rating Tertinggi',
+    'Paling Banyak Dipesan' => 'Paling Banyak Dipesan',
+    'Filter' => 'Filter',
+
+    // Share & Report
+    'Bagikan' => 'Bagikan',
+    'Bagikan Item Ini' => 'Bagikan Item Ini',
+    'Tutup' => 'Tutup',
+    'Link' => 'Link',
+    'Salin ke Clipboard' => 'Salin ke Clipboard',
+    'Tautan berhasil disalin!' => 'Tautan berhasil disalin!',
+    'Buka di Tab Baru' => 'Buka di Tab Baru',
+    'Lapor' => 'Lapor',
+    'Paket' => 'Paket',
+    'Produk' => 'Produk',
+    'Laporan berhasil dikirim' => 'Laporan berhasil dikirim',
+    'Anda akan diarahkan ke Messages untuk melanjutkan percakapan dengan admin dan bot.' => 'Anda akan diarahkan ke Messages untuk melanjutkan percakapan dengan admin dan bot.',
+
+    // Rating & Badges
+    'Belum ada rating' => 'Belum ada rating',
+    'DISKON' => 'DISKON',
+
+    // Sections
+    'Tentang Layanan Ini' => 'Tentang Layanan Ini',
+    'Tentang Product Ini' => 'Tentang Product Ini',
+    'Fitur' => 'Fitur',
+
+    // Buttons
+    'Pesan Sekarang' => 'Pesan Sekarang',
+    'Layanan Habis' => 'Layanan Habis',
+    'Stok Habis' => 'Stok Habis',
+    'Masukkan ke Keranjang' => 'Masukkan ke Keranjang',
+    'Jumlah yang ingin dibeli' => 'Jumlah yang ingin dibeli',
+    'Berhasil masuk keranjang' => 'Berhasil masuk keranjang',
+    'Berhasil menambahkan :count paket ke keranjang.' => 'Berhasil menambahkan :count paket ke keranjang.',
+    'Berhasil menambahkan :count item ke keranjang.' => 'Berhasil menambahkan :count item ke keranjang.',
+    'Chat Admin' => 'Chat Admin',
+    'Tidak dapat memulai chat' => 'Tidak dapat memulai chat',
+    'Hapus dari Favorit' => 'Hapus dari Favorit',
+    'Tambah ke Favorit' => 'Tambah ke Favorit',
+    'Dihapus dari Favorit' => 'Dihapus dari Favorit',
+    'Disimpan ke Favorit' => 'Disimpan ke Favorit',
+    'Tulis Ulasan' => 'Tulis Ulasan',
+
+    // Review Modal
+    'Tulis Ulasan' => 'Tulis Ulasan',
+    'Bagikan pengalaman Anda tentang paket ini.' => 'Bagikan pengalaman Anda tentang paket ini.',
+    'Bagikan pengalaman Anda tentang produk ini.' => 'Bagikan pengalaman Anda tentang produk ini.',
+    'Anda sudah menulis ulasan untuk paket ini.' => 'Anda sudah menulis ulasan untuk paket ini.',
+    'Anda sudah menulis ulasan untuk produk ini.' => 'Anda sudah menulis ulasan untuk produk ini.',
+    'Terima kasih atas ulasan Anda!' => 'Terima kasih atas ulasan Anda!',
+    'Ulasan' => 'Ulasan',
+    'Penilaian Paket' => 'Penilaian Paket',
+    'Penilaian Produk' => 'Penilaian Produk',
+    'Tidak ada ulasan untuk filter ini.' => 'Tidak ada ulasan untuk filter ini.',
+    'Pengguna' => 'Pengguna',
+
+    // Checkout Wizard
+    'Detail Acara' => 'Detail Acara',
+    'Pilih Waktu & Kebutuhan' => 'Pilih Waktu & Kebutuhan',
+    'Rencana Tanggal Acara' => 'Rencana Tanggal Acara',
+    'Waktu Pelaksanaan' => 'Waktu Pelaksanaan',
+    'Alamat Lokasi' => 'Alamat Lokasi',
+    'Info Kontak' => 'Info Kontak',
+    'Verifikasi Data Anda' => 'Verifikasi Data Anda',
+    'Nama Lengkap' => 'Nama Lengkap',
+    'Nomor WhatsApp' => 'Nomor WhatsApp',
+    'Notifikasi pembayaran akan dikirim ke nomor ini.' => 'Notifikasi pembayaran akan dikirim ke nomor ini.',
+    'Voucher & Diskon' => 'Voucher & Diskon',
+    'Pilih Voucher Anda' => 'Pilih Voucher Anda',
+    'Gunakan voucher yang telah Anda klaim di menu Voucher.' => 'Gunakan voucher yang telah Anda klaim di menu Voucher.',
+    'Voucher Tersedia' => 'Voucher Tersedia',
+    'Diskon' => 'Diskon',
+    'Voucher Berhasil Dipasang!' => 'Voucher Berhasil Dipasang!',
+    'Voucher tidak valid' => 'Voucher tidak valid',
+    'Hanya voucher yang memenuhi syarat minimum belanja yang akan muncul di sini. Jika kosong, silakan ke menu Voucher untuk Klaim.' => 'Hanya voucher yang memenuhi syarat minimum belanja yang akan muncul di sini. Jika kosong, silakan ke menu Voucher untuk Klaim.',
+    'Harga Paket' => 'Harga Paket',
+    'Harga Produk' => 'Harga Produk',
+    'Diskon Voucher' => 'Diskon Voucher',
+    'Total Bayar' => 'Total Bayar',
+    'Metode Pembayaran' => 'Metode Pembayaran',
+    'Pilih Metode Pembayaran' => 'Pilih Metode Pembayaran',
+    'Pilih cara pembayaran yang Anda inginkan.' => 'Pilih cara pembayaran yang Anda inginkan.',
+    'Setelah pesanan dibuat, instruksi pembayaran akan tampil di halaman "Pesanan Saya".' => 'Setelah pesanan dibuat, instruksi pembayaran akan tampil di halaman "Pesanan Saya".',
+    'Konfirmasi' => 'Konfirmasi',
+    'Ringkasan Pembayaran' => 'Ringkasan Pembayaran',
+    'Paket Dekorasi' => 'Paket Dekorasi',
+    'Produk Bunga' => 'Produk Bunga',
+    'Total Harga' => 'Total Harga',
+
+    // Errors & Success
+    'Stok Tidak Cukup' => 'Stok Tidak Cukup',
+    'Mohon maaf, stok tersedia hanya :count.' => 'Mohon maaf, stok tersedia hanya :count.',
+    'Pembayaran kartu kredit / debit oleh pengguna.' => 'Pembayaran kartu kredit / debit oleh pengguna.',
+    'Menunggu konfirmasi pembayaran manual.' => 'Menunggu konfirmasi pembayaran manual.',
+    'Pesanan Berhasil Dibuat' => 'Pesanan Berhasil Dibuat',
+    'Pembayaran Anda telah berhasil.' => 'Pembayaran Anda telah berhasil.',
+    'Silakan lakukan pembayaran di halaman "Pesanan Saya".' => 'Silakan lakukan pembayaran di halaman "Pesanan Saya".',
+
+    // Global Search
+    'Harga' => 'Harga',
+    'Stok' => 'Stok',
+    'Rating' => 'Rating',
+    'Item' => 'Item',
+
+    // Review Summary
+    'dari 5' => 'dari 5',
+    'Rating rata-rata' => 'Rating rata-rata',
+    'Filter penilaian' => 'Filter penilaian',
+    'Semua' => 'Semua',
+    'Dengan Komentar' => 'Dengan Komentar',
+    'Dengan Media' => 'Dengan Media',
+
+    // Catalog Image Gallery
+    'Foto' => 'Foto',
+    'untuk' => 'untuk',
+    'Pilih foto' => 'Pilih foto',
+    'Thumbnail foto' => 'Thumbnail foto',
+    'Foto sebelumnya' => 'Foto sebelumnya',
+    'Foto berikutnya' => 'Foto berikutnya',
+
+    // Share & Voucher
+    'Copied!' => 'Tersalin!',
+    'Copy' => 'Salin',
+    'Buka di Tab Baru' => 'Buka di Tab Baru',
+
+    // Review Detail
+    'Rating' => 'Rating',
+    'Foto ulasan dari :name' => 'Foto ulasan dari :name',
+    'Foto ulasan' => 'Foto ulasan',
+
+    // QRIS
+    'Scan untuk Pembayaran QRIS' => 'Scan untuk Pembayaran QRIS',
+
+    // Camera & Upload
+    'Pilih Sumber Foto' => 'Pilih Sumber Foto',
+    'Ambil Foto' => 'Ambil Foto',
+    'Foto Kamera Belakang' => 'Foto Kamera Belakang',
+    'Foto Kamera Depan' => 'Foto Kamera Depan',
+    'Buka Album Foto' => 'Buka Album Foto',
+    'Foto Selfie + Dokumen' => 'Foto Selfie + Dokumen',
+    'Foto Dokumen Identitas' => 'Foto Dokumen Identitas',
+    'Gunakan Foto' => 'Gunakan Foto',
+    'Ubah Foto' => 'Ubah Foto',
+    'Ambil Selfie' => 'Ambil Selfie',
+    'Foto Dokumen' => 'Foto Dokumen',
+    'Tampilkan Semua' => 'Tampilkan Semua',
+
+    // Voucher Carousel
+    'Persen' => 'Persen',
+    'Fixed' => 'Fixed',
+    'Min. pembelian' => 'Min. pembelian',
+    'Berlaku hingga' => 'Berlaku hingga',
+    'Belum ada promo' => 'Belum ada promo',
+
+    // Wishlist
+    'Favorit Saya' => 'Favorit Saya',
+    'Favorit Baru' => 'Favorit Baru',
+    'Pilih Paket' => 'Pilih Paket',
+    'Tambah Favorit' => 'Tambah Favorit',
+
+    // Review
+    'Ulasan Saya' => 'Ulasan Saya',
+    'Pilih Layanan' => 'Pilih Layanan',
+    'Layanan Paket' => 'Layanan Paket',
+    'Informasi Studio' => 'Informasi Studio',
+    'Judul Ulasan' => 'Judul Ulasan',
+    'Komentar Anda' => 'Komentar Anda',
+    'Foto Ulasan' => 'Foto Ulasan',
+    'Belanja Bunga' => 'Belanja Bunga',
+    'Rating Terendah' => 'Rating Terendah',
+
+    // Voucher
+    'Voucher Promo' => 'Voucher Promo',
+    'Berlaku s/d' => 'Berlaku s/d',
+    'Berlaku Selamanya' => 'Berlaku Selamanya',
+    'Tanya Admin' => 'Tanya Admin',
+    'Klaim Voucher' => 'Klaim Voucher',
 ];

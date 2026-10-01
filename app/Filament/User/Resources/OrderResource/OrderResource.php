@@ -17,7 +17,7 @@ use App\Models\PaymentMethod\PaymentMethod;
 use App\Models\Review\Review;
 use App\Models\Transaction\Transaction;
 use App\Models\Voucher\Voucher;
-use App\Providers\NativeServiceProvider\NativeServiceProvider;
+use App\Support\AppPlatform\AppPlatform;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -292,7 +292,8 @@ class OrderResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->poll(NativeServiceProvider::isNativeMobile() ? null : '30s')
+            ->paginated(false)
+            ->poll(AppPlatform::isNativeMobile() ? null : '30s')
             ->emptyStateHeading(__('Belum ada pesanan'))
             ->emptyStateDescription(__('Wujudkan acara impianmu dengan paket terbaik dari kami. Mulai pesan sekarang!'))
             ->emptyStateIcon('heroicon-o-shopping-bag')
@@ -483,7 +484,7 @@ class OrderResource extends Resource
                             OrderStatus::COMPLETED,
                         ]))
                         ->action(function ($record) {
-                            // Update status ke cancelled (trigger observer → notifikasi + payment_status)
+                            // Update status ke cancelled (trigger observer â†’ notifikasi + payment_status)
                             $record->update(['status' => OrderStatus::CANCELLED]);
 
                             // 3. Hapus order dari tabel

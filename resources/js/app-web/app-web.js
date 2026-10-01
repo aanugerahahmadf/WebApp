@@ -2,9 +2,8 @@
  * Web Platform Entry Point
  *
  * Optimized for browser environments with WebRTC support.
- * Used when running: php artisan serve
- *
- * Requirements: 4.1, 4.5
+ * Built with: npm run build:web   (→ public/build/web)
+ * Served against with: php artisan serve:web
  */
 
 // ===================================
@@ -21,10 +20,8 @@ import '../firebase-client/firebase-client';
 // ===================================
 // Scan Modal OCR Utilities
 // ===================================
-// Exposed on window so the Alpine-based document / face scan modals
-// (resources/views/filament/user/components/*-scan-modal.blade.php) can invoke
-// client-side OCR without needing a network round-trip (parity with the mobile
-// app's on-device ML Kit text recognition).
+// Exposed on window so the Alpine-based document / face scan modals can invoke
+// client-side OCR without needing a network round-trip.
 import * as ocr from '../ocr/document-ocr/document-ocr';
 import * as scannerUi from '../ocr/scanner-ui/scanner-ui';
 
@@ -34,11 +31,9 @@ window.ScannerUI = scannerUi;
 // ===================================
 // Web-Specific Components
 // ===================================
-// Web platform uses WebRTC getUserMedia for camera access (Req 6.3)
-// Native camera / file-system APIs are intentionally excluded here (Req 4.5)
-//
-// phpProtocolAdapter is NOT imported — it is only needed by the Mobile entry
-// point for iOS php:// protocol handling.
+// The web build is the reference: it uses WebRTC getUserMedia for camera access.
+// The Capacitor shell bundles (app-mobile.js / app-desktop.js) deliberately
+// deviate, opening a hidden `<input type="file" capture>` instead.
 
 // ===================================
 // Dark Mode Synchronization
@@ -57,32 +52,31 @@ syncTheme();
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncTheme);
 
 // ===================================
-// Platform Capabilities (Req 4.5, 5.1–5.9)
+// Platform Capabilities
 // ===================================
-// Exposes a consistent __PLATFORM__ object so Blade views and Livewire
-// components can conditionally render platform-specific UI without requiring
-// knowledge of the PHP-side PlatformMode.
+// Consistent shape with app-mobile.js / app-desktop.js so views can branch on
+// the platform without knowing anything about the PHP-side PlatformMode.
 window.__PLATFORM__ = {
     type: 'web',
     mode: 'web',
 
-    // Feature flags — mirrors PlatformFeatureRegistry (Req 5.1–5.9)
-    supportsWebRTC: true,               // Browser WebRTC getUserMedia API (Req 6.3)
-    supportsNativeCamera: false,        // Native camera APIs — Mobile/Desktop only
-    supportsFileSystem: false,          // Native file-system access — Mobile/Desktop only
-    supportsPushNotifications: false,   // Native push notifications — Mobile only
-    supportsDesktopNotifications: false,// Desktop system notifications — Desktop only
-    supportsAppBadge: false,            // App-badge updates — Mobile only
-    supportsAutoUpdates: false,         // Auto-update functionality — Mobile/Desktop only
+    // Feature flags — mirrors PlatformFeatureRegistry on the PHP side.
+    supportsWebRTC: true,                 // Browser WebRTC getUserMedia
+    supportsShellCamera: false,           // Shell-driven camera — app builds only
+    supportsFileSystem: false,            // OS file access via <input type="file">
+    supportsPushNotifications: false,     // Push notifications — Mobile only
+    supportsDesktopNotifications: false,  // Desktop notifications — Desktop only
+    supportsAppBadge: false,              // App-badge updates — Mobile only
+    supportsAutoUpdates: false,           // Auto-update functionality — app builds only
 
-    // Camera mode for CBIR feature (Req 6.4)
-    cameraMode: 'webrtc',              // Uses WebRTC getUserMedia
+    // Camera mode for the CBIR feature. Matches RuntimePlatform::cbirCameraMode().
+    cameraMode: 'webrtc',
 };
 
 // ===================================
 // Conditional: WebRTC Camera Helper
 // ===================================
-// Lazy-load WebRTC utilities only when the browser supports them (Req 4.5)
+// Lazy-load WebRTC utilities only when the browser supports them.
 if (window.__PLATFORM__.supportsWebRTC && navigator.mediaDevices) {
     /**
      * Opens the user's camera and returns a MediaStream.

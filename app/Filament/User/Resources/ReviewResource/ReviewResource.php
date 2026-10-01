@@ -205,7 +205,7 @@ class ReviewResource extends Resource
                             ->disk('public')
                             ->visibility('public')
                             ->maxSize(5120)
-                            ->helperText(__('Opsional — unggah foto hasil dekorasi Anda.'))
+                            ->helperText(__('Opsional â€” unggah foto hasil dekorasi Anda.'))
                             ->columnSpanFull(),
                     ]),
             ]);
@@ -248,7 +248,7 @@ class ReviewResource extends Resource
                 ->disk('public')
                 ->visibility('public')
                 ->maxSize(5120)
-                ->helperText(__('Opsional — unggah foto hasil dekorasi Anda.'))
+                ->helperText(__('Opsional â€” unggah foto hasil dekorasi Anda.'))
                 ->columnSpanFull(),
         ];
     }
@@ -283,13 +283,14 @@ class ReviewResource extends Resource
                 ->disk('public')
                 ->visibility('public')
                 ->maxSize(5120)
-                ->helperText(__('Opsional — unggah foto hasil dekorasi Anda.')),
+                ->helperText(__('Opsional â€” unggah foto hasil dekorasi Anda.')),
         ];
     }
 
     public static function table(Table $table): Table
     {
         return $table
+            ->paginated(false)
             ->emptyStateHeading(__('Belum ada ulasan'))
             ->emptyStateDescription(__('Bagikan pengalamanmu dengan kami!'))
             ->emptyStateActions([
@@ -384,11 +385,11 @@ class ReviewResource extends Resource
                     ->searchable()
                     ->label(__('Rating'))
                     ->options([
-                        5 => '★★★★★ (5)',
-                        4 => '★★★★☆ (4)',
-                        3 => '★★★☆☆ (3)',
-                        2 => '★★☆☆☆ (2)',
-                        1 => '★☆☆☆☆ (1)',
+                        5 => 'â˜…â˜…â˜…â˜…â˜… (5)',
+                        4 => 'â˜…â˜…â˜…â˜…â˜† (4)',
+                        3 => 'â˜…â˜…â˜…â˜†â˜† (3)',
+                        2 => 'â˜…â˜…â˜†â˜†â˜† (2)',
+                        1 => 'â˜…â˜†â˜†â˜†â˜† (1)',
                     ]),
 
                 SelectFilter::make('sort_by')

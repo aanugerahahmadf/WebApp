@@ -10,7 +10,6 @@ return RectorConfig::configure()
         __DIR__.'/bootstrap',
         __DIR__.'/config',
         __DIR__.'/lang',
-        __DIR__.'/nativephp',
         __DIR__.'/public',
         __DIR__.'/resources',
         __DIR__.'/routes',

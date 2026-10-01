@@ -97,7 +97,7 @@ class AutoTranslationService
     protected int $apiCallCount = 0;
 
     /**
-     * Cache terjemahan aktif di memory (Static agar awet di NativePHP/Octane).
+     * Cache terjemahan aktif di memory (Static agar awet di long-lived worker/Octane).
      */
     protected static array $activeMap = [];
 

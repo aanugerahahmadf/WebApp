@@ -1,10 +1,9 @@
 <?php
 
 use App\Http\Controllers\Api\User\AppSettingsController\AppSettingsController;
-use App\Http\Controllers\DatabaseProxyController\DatabaseProxyController;
 use App\Http\Middleware\SuperAdmin\SuperAdmin;
 use App\Models\User\User;
-use App\Providers\NativeServiceProvider\NativeServiceProvider;
+use App\Support\AppPlatform\AppPlatform;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
 
@@ -34,8 +33,8 @@ Route::get('/settings', [AppSettingsController::class, 'index']);
 // DIAGNOSTIC PING — test sinkronisasi mobile (GET /api/ping)
 // -----------------------------------------------------------------------------
 Route::get('/ping', function () {
-    $isMobile = NativeServiceProvider::isNativeMobile();
-    $hostIp = NativeServiceProvider::mobileHostIp();
+    $isMobile = AppPlatform::isNativeMobile();
+    $hostIp = AppPlatform::mobileHostIp();
 
     $dbStatus = 'unknown';
     $userCount = 0;
@@ -65,15 +64,9 @@ Route::get('/ping', function () {
     ]);
 });
 
-// NativePHP Mobile DB Proxy — lokal/testing saja, dilindungi X-DB-PROXY-SECRET
-if (App::environment('local', 'testing')) {
-    Route::post('/db-proxy', [DatabaseProxyController::class, 'proxy']);
-}
-
 // -----------------------------------------------------------------------------
 // ROOT CONTROLLERS
 // -----------------------------------------------------------------------------
-require __DIR__.'/DatabaseProxyController/DatabaseProxyController/DatabaseProxyController.php';
 require __DIR__.'/PusherAuthController/PusherAuthController/PusherAuthController.php';
 
 // -----------------------------------------------------------------------------

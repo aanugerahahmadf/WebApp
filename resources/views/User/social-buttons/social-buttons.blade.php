@@ -1,5 +1,5 @@
 @php
-    use App\Providers\NativeServiceProvider\NativeServiceProvider;
+    use App\Support\AppPlatform\AppPlatform;
     // Pakai path relatif untuk semua platform — WebView dan browser sama-sama handle ini.
     // normalizeUrl() tidak dipakai untuk navigasi halaman agar tidak buka Chrome di mobile.
     $googleRedirectUrl = '/auth/google/redirect';

@@ -3,7 +3,7 @@
 namespace App\Livewire\Admin\PersonalInfoComponentSuperAdmin;
 
 use App\Models\WhatsappOtp\WhatsappOtp;
-use App\Providers\NativeServiceProvider\NativeServiceProvider;
+use App\Support\AppPlatform\AppPlatform;
 use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Section;
@@ -252,13 +252,6 @@ class PersonalInfoComponentSuperAdmin extends Component implements HasForms
                 ->title(__('Profil berhasil diperbarui!'))
                 ->success()
                 ->send();
-
-            if (app()->environment('mobile') || NativeServiceProvider::isNativeMobile()) {
-                \Native\Mobile\Notification::new()
-                    ->title(__('Profil Diperbarui'))
-                    ->message(__('Data pribadi Anda telah berhasil disimpan.'))
-                    ->show();
-            }
 
             $this->dispatch('profile-updated');
         } catch (\Exception $e) {

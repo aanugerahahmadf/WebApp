@@ -1,0 +1,16 @@
+{
+  "name": "Dekorasi Admin",
+  "short_name": "Admin",
+  "start_url": "index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "assets/imgs/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "background_color": "#4f46e5",
+  "theme_color": "#4f46e5"
+}

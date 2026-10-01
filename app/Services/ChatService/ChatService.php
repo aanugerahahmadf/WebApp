@@ -15,20 +15,23 @@ class ChatService
 {
     /**
      * Get or create an inbox between a user and the first super admin.
+     * Returns null if no admin exists (graceful degradation).
      */
-    public static function getOrCreateInboxWithAdmin(int $userId): Inbox
+    public static function getOrCreateInboxWithAdmin(int $userId): ?Inbox
     {
         $admin = User::whereHas('roles', function ($q) {
             $q->where('name', 'super_admin');
         })->first();
 
         if (! $admin) {
-            throw new \Exception('Super Admin not found.');
+            // Log warning but don't throw - allows chat to work when admin is configured later
+            logger()->warning('Super Admin not found. Chat admin feature unavailable.');
+            return null;
         }
 
         $inbox = Inbox::query()
-            ->whereJsonContains('user_ids', $userId, 'and', false)
-            ->whereJsonContains('user_ids', $admin->id, 'and', false)
+            ->whereJsonContains('user_ids', $userId)
+            ->whereJsonContains('user_ids', $admin->id)
             ->first();
 
         if (! $inbox) {
@@ -42,8 +45,9 @@ class ChatService
 
     /**
      * Send a context message (product/package card) to an inbox.
+     * Accepts optional sender user_id (for guest users).
      */
-    public static function sendContextMessage(Inbox $inbox, array $meta): Message
+    public static function sendContextMessage(Inbox $inbox, array $meta, ?int $senderUserId = null): Message
     {
         // Avoid sending duplicate context cards for the same item in a short time
         // Only skip if the last message is also a context card (not an order card) for the same item
@@ -59,7 +63,7 @@ class ChatService
 
         $message = Message::create([
             'inbox_id' => $inbox->id,
-            'user_id' => Auth::id(),
+            'user_id' => $senderUserId ?? Auth::id(),
             'message' => __('Saya menanyakan tentang :itemType ini: :name', [
                 'itemType' => __($meta['type'] == 'product' ? 'Produk' : 'Paket'),
                 'name' => $meta['name'] ?? '',
@@ -68,7 +72,8 @@ class ChatService
         ]);
 
         // Dispatch bot reply if user is not admin
-        if (Auth::user() && ! Auth::user()->hasRole('super_admin')) {
+        $sender = $senderUserId ? User::find($senderUserId) : Auth::user();
+        if ($sender && ! $sender->hasRole('super_admin')) {
             SendBotReply::dispatch($message->id)->delay(now()->addSeconds(5));
         }
 

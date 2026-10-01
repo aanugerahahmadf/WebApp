@@ -3,7 +3,7 @@
 namespace App\Filament\User\Widgets\VoucherCarouselWidget;
 
 use App\Models\Voucher\Voucher;
-use App\Providers\NativeServiceProvider\NativeServiceProvider;
+use App\Support\AppPlatform\AppPlatform;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Illuminate\Contracts\Support\Htmlable;
@@ -29,7 +29,7 @@ class VoucherCarouselWidget extends BaseWidget
                             ->orWhere('expires_at', '>', now());
                     })
             )
-            ->poll(NativeServiceProvider::isNativeMobile() ? null : '60s')
+            ->poll(AppPlatform::isNativeMobile() ? null : '60s')
             ->content(view('User.components.voucher-carousel.voucher-carousel'))
             ->paginated(false);
     }

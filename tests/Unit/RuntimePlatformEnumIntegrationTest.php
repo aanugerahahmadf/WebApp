@@ -318,7 +318,7 @@ describe('RuntimePlatform Feature Integration', function () {
         });
 
         test('desktop platforms use native camera mode and have native camera capability', function () {
-            // Desktop platforms have native camera (NativePHP Desktop Camera API)
+            // Desktop platforms have native camera (the app shell's file inputs)
             expect(RuntimePlatform::DesktopAppWindows->cbirCameraMode())->toBe('native');
             expect(RuntimePlatform::DesktopAppMacOS->cbirCameraMode())->toBe('native');
 

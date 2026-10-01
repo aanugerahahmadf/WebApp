@@ -15,7 +15,7 @@ use Spatie\Permission\Models\Role;
 /**
  * Firebase Auth login — replaces Google Socialite.
  *
- * The client (web browser or NativePHP WebView) signs in with
+ * The client (web browser or Capacitor shell WebView) signs in with
  * Firebase Auth and sends the resulting ID token here. This controller
  * verifies the token via the Firebase Auth REST API (accounts:lookup)
  * without requiring a service account, then find-or-creates the local

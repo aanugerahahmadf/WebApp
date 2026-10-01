@@ -3,7 +3,7 @@
 namespace App\Livewire\User\PersonalInfoComponent;
 
 use App\Models\WhatsappOtp\WhatsappOtp;
-use App\Providers\NativeServiceProvider\NativeServiceProvider;
+use App\Support\AppPlatform\AppPlatform;
 use App\Support\Phone\CountryCallingCodeOptions;
 use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Components\FileUpload;
@@ -274,13 +274,6 @@ class PersonalInfoComponent extends Component implements HasForms
                 ->title(__('Profil berhasil diperbarui!'))
                 ->success()
                 ->send();
-
-            if (app()->environment('mobile') || NativeServiceProvider::isNativeMobile()) {
-                \Native\Mobile\Notification::new()
-                    ->title(__('Profil Diperbarui'))
-                    ->message(__('Data pribadi Anda telah berhasil disimpan.'))
-                    ->show();
-            }
 
             $this->dispatch('profile-updated');
         } catch (\Exception $e) {

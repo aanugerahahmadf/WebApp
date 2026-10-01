@@ -201,7 +201,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName, 
             return $this->hasRole('super_admin') || $this->hasRole('vendor');
         }
 
-        if ($panel->getId() === 'user') {
+        // 'user' is the account panel, 'welcome' the storefront that leads to it.
+        // Same audience: anyone who may browse the storefront may browse the
+        // account it fronts, and the storefront additionally admits guests
+        // (see AuthenticateWelcome).
+        if (in_array($panel->getId(), ['user', 'welcome'], true)) {
             return true;
         }
 

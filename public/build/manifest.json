@@ -21,6 +21,15 @@
       "User.css"
     ]
   },
+  "resources/css/Welcome/Welcome.css": {
+    "file": "assets/Welcome-BTTUuzja.css",
+    "src": "resources/css/Welcome/Welcome.css",
+    "isEntry": true,
+    "name": "Welcome",
+    "names": [
+      "Welcome.css"
+    ]
+  },
   "resources/js/app/app.js": {
     "file": "assets/app-DD_cqFJG.js",
     "name": "app",

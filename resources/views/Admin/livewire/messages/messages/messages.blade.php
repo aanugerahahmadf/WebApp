@@ -98,7 +98,7 @@
                             @php
                                 $itemImage = $meta['image'] ?? null;
                                 if ($itemImage) {
-                                    $itemImage = \App\Providers\NativeServiceProvider\NativeServiceProvider::normalizeUrl($itemImage);
+                                    $itemImage = \App\Support\AppPlatform\AppPlatform::normalizeUrl($itemImage);
                                 }
                                 if (!$itemImage || str_contains($itemImage, 'placeholder') || str_contains((string) $itemImage, 'placeholders')) {
                                     $modelClass = $meta['type'] === 'product' ? \App\Models\Product\Product::class : \App\Models\Package\Package::class;
@@ -380,7 +380,7 @@
 
             {{-- Modal components for attach & camera --}}
             @include('User.components.cbir-browse-modal.cbir-browse-modal', [
-                'isNative' => \App\Providers\NativeServiceProvider\NativeServiceProvider::isAnyMobile(),
+                'isNative' => \App\Support\AppPlatform\AppPlatform::isAnyMobile(),
             ])
             @include('User.components.messages-camera-modal.messages-camera-modal')
 

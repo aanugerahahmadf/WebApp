@@ -30,28 +30,33 @@ describe('PlatformCommandDetector', function () {
             expect($mode)->toBe(PlatformMode::Web);
         });
 
-        test('detects Mobile mode from "native:run" command', function () {
-            $_SERVER['argv'] = ['artisan', 'native:run'];
+        test('detects Mobile mode from "serve:mobile" command', function () {
+            $_SERVER['argv'] = ['artisan', 'serve:mobile'];
 
             $mode = PlatformCommandDetector::detectMode();
 
             expect($mode)->toBe(PlatformMode::Mobile);
         });
 
-        test('detects Desktop mode from "native:serve" command', function () {
-            $_SERVER['argv'] = ['artisan', 'native:serve'];
+        test('detects Desktop mode from "serve:desktop" command', function () {
+            $_SERVER['argv'] = ['artisan', 'serve:desktop'];
 
             $mode = PlatformCommandDetector::detectMode();
 
             expect($mode)->toBe(PlatformMode::Desktop);
         });
 
-        test('detects Desktop mode from other native: commands', function () {
-            $_SERVER['argv'] = ['artisan', 'native:build'];
+        test('defaults to Web mode for the removed native: commands', function () {
+            // NativePHP's `native:run` / `native:serve` / `native:build` are
+            // gone. Nothing in this codebase defines them any more, so they
+            // must fall through to the default rather than selecting a mode
+            // that would then look for a shell that no longer exists.
+            foreach (['native:run', 'native:serve', 'native:build'] as $command) {
+                $_SERVER['argv'] = ['artisan', $command];
 
-            $mode = PlatformCommandDetector::detectMode();
-
-            expect($mode)->toBe(PlatformMode::Desktop);
+                expect(PlatformCommandDetector::detectMode())
+                    ->toBe(PlatformMode::Web, "'{$command}' should not select a platform mode");
+            }
         });
 
         test('defaults to Web mode for unknown commands', function () {
@@ -95,7 +100,7 @@ describe('PlatformCommandDetector', function () {
         });
 
         test('recognizes artisan from Windows path', function () {
-            $_SERVER['argv'] = ['C:\\xampp\\htdocs\\project\\artisan', 'native:run'];
+            $_SERVER['argv'] = ['C:\\xampp\\htdocs\\project\\artisan', 'serve:mobile'];
 
             $mode = PlatformCommandDetector::detectMode();
 
@@ -120,31 +125,32 @@ describe('PlatformCommandDetector', function () {
             expect($mode)->toBe(PlatformMode::Web);
         });
 
-        test('maps native:run to Mobile mode', function () {
-            $_SERVER['argv'] = ['artisan', 'native:run', 'android'];
+        test('maps serve:mobile to Mobile mode', function () {
+            $_SERVER['argv'] = ['artisan', 'serve:mobile', '--port=8000'];
 
             $mode = PlatformCommandDetector::detectMode();
 
             expect($mode)->toBe(PlatformMode::Mobile);
         });
 
-        test('maps native:serve to Desktop mode', function () {
-            $_SERVER['argv'] = ['artisan', 'native:serve'];
+        test('maps serve:desktop to Desktop mode', function () {
+            $_SERVER['argv'] = ['artisan', 'serve:desktop'];
 
             $mode = PlatformCommandDetector::detectMode();
 
             expect($mode)->toBe(PlatformMode::Desktop);
         });
 
-        test('maps any native: prefixed command to Desktop mode', function () {
-            $nativeCommands = ['native:install', 'native:build', 'native:minify'];
+        test('maps no other command away from Web mode', function () {
+            // Only the two shell wrappers imply a non-Web mode. Everything else
+            // — including every legacy native: command — is Web.
+            $otherCommands = ['serve:web', 'serve', 'migrate', 'queue:work', 'native:run', 'native:serve'];
 
-            foreach ($nativeCommands as $command) {
+            foreach ($otherCommands as $command) {
                 $_SERVER['argv'] = ['artisan', $command];
 
-                $mode = PlatformCommandDetector::detectMode();
-
-                expect($mode)->toBe(PlatformMode::Desktop);
+                expect(PlatformCommandDetector::detectMode())
+                    ->toBe(PlatformMode::Web, "'{$command}' should resolve to Web mode");
             }
         });
     });
@@ -173,13 +179,14 @@ describe('PlatformCommandDetector', function () {
                 // Define command-to-mode mappings
                 $commandMappings = [
                     'serve' => PlatformMode::Web,
-                    'native:run' => PlatformMode::Mobile,
-                    'native:serve' => PlatformMode::Desktop,
-                    'native:build' => PlatformMode::Desktop,
-                    'native:install' => PlatformMode::Desktop,
+                    'serve:web' => PlatformMode::Web,
+                    'serve:mobile' => PlatformMode::Mobile,
+                    'serve:desktop' => PlatformMode::Desktop,
                     'migrate' => PlatformMode::Web, // default for unknown commands
                     'queue:work' => PlatformMode::Web,
                     'cache:clear' => PlatformMode::Web,
+                    'native:run' => PlatformMode::Web,    // removed, now just an unknown command
+                    'native:serve' => PlatformMode::Web,
                 ];
 
                 $commands = array_keys($commandMappings);
@@ -224,27 +231,27 @@ describe('PlatformCommandDetector', function () {
                 $testSequences = [
                     // Web -> Mobile -> Desktop
                     [
-                        'commands' => ['serve', 'native:run', 'native:serve'],
+                        'commands' => ['serve', 'serve:mobile', 'serve:desktop'],
                         'expectedFinal' => PlatformMode::Desktop,
                     ],
                     // Desktop -> Web -> Mobile
                     [
-                        'commands' => ['native:serve', 'serve', 'native:run'],
+                        'commands' => ['serve:desktop', 'serve', 'serve:mobile'],
                         'expectedFinal' => PlatformMode::Mobile,
                     ],
                     // Mobile -> Desktop -> Web
                     [
-                        'commands' => ['native:run', 'native:build', 'serve'],
+                        'commands' => ['serve:mobile', 'serve:desktop', 'serve'],
                         'expectedFinal' => PlatformMode::Web,
                     ],
                     // Multiple same commands ending with different one
                     [
-                        'commands' => ['serve', 'serve', 'serve', 'native:run'],
+                        'commands' => ['serve', 'serve', 'serve', 'serve:mobile'],
                         'expectedFinal' => PlatformMode::Mobile,
                     ],
                     // Alternating commands
                     [
-                        'commands' => ['serve', 'native:run', 'serve', 'native:run', 'serve'],
+                        'commands' => ['serve', 'serve:mobile', 'serve', 'serve:mobile', 'serve'],
                         'expectedFinal' => PlatformMode::Web,
                     ],
                 ];
@@ -275,8 +282,9 @@ describe('PlatformCommandDetector', function () {
                 // Property: For a sequence of length 1, the mode matches that single command
                 $commandMappings = [
                     'serve' => PlatformMode::Web,
-                    'native:run' => PlatformMode::Mobile,
-                    'native:serve' => PlatformMode::Desktop,
+                    'serve:web' => PlatformMode::Web,
+                    'serve:mobile' => PlatformMode::Mobile,
+                    'serve:desktop' => PlatformMode::Desktop,
                 ];
 
                 // Test 50 times to ensure consistency
@@ -294,18 +302,18 @@ describe('PlatformCommandDetector', function () {
                 // Test with very long sequences (50 commands)
                 $allCommands = [
                     'serve',
-                    'native:run',
-                    'native:serve',
-                    'native:build',
+                    'serve:web',
+                    'serve:mobile',
+                    'serve:desktop',
                     'migrate',
                     'cache:clear',
                 ];
 
                 $commandModes = [
                     'serve' => PlatformMode::Web,
-                    'native:run' => PlatformMode::Mobile,
-                    'native:serve' => PlatformMode::Desktop,
-                    'native:build' => PlatformMode::Desktop,
+                    'serve:web' => PlatformMode::Web,
+                    'serve:mobile' => PlatformMode::Mobile,
+                    'serve:desktop' => PlatformMode::Desktop,
                     'migrate' => PlatformMode::Web,
                     'cache:clear' => PlatformMode::Web,
                 ];
@@ -338,8 +346,8 @@ describe('PlatformCommandDetector', function () {
                 // Commands may have flags/arguments - mode should still be detected correctly
                 $commandsWithArgs = [
                     ['serve', '--port=8000', '--host=127.0.0.1'],
-                    ['native:run', 'android', '--device=emulator'],
-                    ['native:serve', '--dev'],
+                    ['serve:mobile', '--port=8000', '--host=0.0.0.0'],
+                    ['serve:desktop', '--dev'],
                     ['serve'],
                 ];
 
@@ -1658,9 +1666,10 @@ describe('RuntimePlatformDetector', function () {
         });
 
         test('all platform modes handle missing classes gracefully', function () {
-            // This tests the recovery behavior when NativePHP classes don't exist
-            // Since we can't easily make classes disappear, we test that detection
-            // works regardless of class availability
+            // This tests the recovery behavior when a platform's optional
+            // dependencies are absent (a shell workspace that has not had
+            // `npm install` run, say). Since we can't easily make classes
+            // disappear, we test that detection works regardless of availability.
 
             $allModes = [
                 PlatformMode::Web,

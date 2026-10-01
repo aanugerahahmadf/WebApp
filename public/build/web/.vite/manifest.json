@@ -4,7 +4,7 @@
     "name": "popper"
   },
   "resources/css/Admin/Admin.css": {
-    "file": "assets/Admin-CMzf6MAn.css",
+    "file": "assets/Admin-D5SDrSlj.css",
     "src": "resources/css/Admin/Admin.css",
     "isEntry": true,
     "name": "Admin",
@@ -13,7 +13,7 @@
     ]
   },
   "resources/css/User/User.css": {
-    "file": "assets/User-53CXCaTT.css",
+    "file": "assets/User-BKH7gLrV.css",
     "src": "resources/css/User/User.css",
     "isEntry": true,
     "name": "User",
@@ -21,8 +21,17 @@
       "User.css"
     ]
   },
+  "resources/css/Welcome/Welcome.css": {
+    "file": "assets/Welcome-Er9iJrCE.css",
+    "src": "resources/css/Welcome/Welcome.css",
+    "isEntry": true,
+    "name": "Welcome",
+    "names": [
+      "Welcome.css"
+    ]
+  },
   "resources/js/app-web/app-web.js": {
-    "file": "assets/app-web-FpxjQ11a.js",
+    "file": "assets/app-web-DcVwAtFx.js",
     "name": "app-web",
     "src": "resources/js/app-web/app-web.js",
     "isEntry": true,

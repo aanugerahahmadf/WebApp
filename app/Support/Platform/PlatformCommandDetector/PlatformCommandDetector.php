@@ -14,6 +14,15 @@ class PlatformCommandDetector
      */
     public static function detectMode(): PlatformMode
     {
+        // An explicit override always wins: `PLATFORM_MODE=mobile php artisan serve`
+        // is how a dev points a shell at the server without picking a wrapper
+        // command. Useful for queue workers, which have no meaningful argv[1].
+        $override = self::fromEnvironment();
+
+        if ($override !== null) {
+            return $override;
+        }
+
         $argv = $_SERVER['argv'] ?? [];
 
         if (self::isRunningArtisan($argv)) {
@@ -21,6 +30,20 @@ class PlatformCommandDetector
         }
 
         return self::detectFromRuntime();
+    }
+
+    /**
+     * Read an explicit mode from `PLATFORM_MODE`, if set and recognised.
+     */
+    private static function fromEnvironment(): ?PlatformMode
+    {
+        $value = $_ENV['PLATFORM_MODE'] ?? $_SERVER['PLATFORM_MODE'] ?? null;
+
+        if (! is_string($value) || $value === '') {
+            return null;
+        }
+
+        return PlatformMode::tryFrom(strtolower(trim($value)));
     }
 
     /**
@@ -34,51 +57,41 @@ class PlatformCommandDetector
     /**
      * Detect platform mode from the executed Artisan command.
      *
-     * Maps specific Artisan commands to their corresponding platform modes:
-     * - serve → Web
-     * - native:run → Mobile
-     * - native:serve → Desktop
+     * Maps the platform serve wrappers to their corresponding platform modes:
+     * - serve / serve:web     → Web
+     * - serve:mobile          → Mobile
+     * - serve:desktop         → Desktop
+     *
+     * Anything else runs in Web mode: there is no longer an embedded runtime
+     * that a command could spin up, so no other command implies a mode.
      */
     private static function detectFromCommand(array $argv): PlatformMode
     {
         $command = $argv[1] ?? null;
 
-        return match (true) {
-            $command === 'serve' => PlatformMode::Web,
-            $command === 'native:run' => PlatformMode::Mobile,
-            $command === 'native:serve' => PlatformMode::Desktop,
-            str_starts_with($command ?? '', 'native:') => PlatformMode::Desktop,
-            default => PlatformMode::Web
+        return match ($command) {
+            'serve:mobile' => PlatformMode::Mobile,
+            'serve:desktop' => PlatformMode::Desktop,
+            default => PlatformMode::Web,
         };
     }
 
     /**
      * Detect platform mode from the current runtime environment.
      *
-     * Used when not running via Artisan CLI (e.g., HTTP requests, native runtime).
-     * Checks if we're actually running in a native context by examining environment
-     * variables and the running process, not just class availability.
+     * Used when not running via Artisan CLI (e.g. HTTP requests, queue workers
+     * started through a supervisor, PHP-FPM).
+     *
+     * The Capacitor shells are ordinary HTTP clients — each one's
+     * `capacitor.config.json` points its WebView at this server over the
+     * network — so there is no runtime marker that distinguishes an app shell
+     * from a browser here. That distinction is made per-request by
+     * `RuntimePlatform`/`AppPlatform` from the User-Agent and the
+     * `CAPACITOR_PLATFORM` hint, not by the process-wide mode. Which *bundle*
+     * to serve stays a build/serve-time choice (`serve:mobile`, `serve:desktop`).
      */
     private static function detectFromRuntime(): PlatformMode
     {
-        // Check if running in NativePHP Desktop context
-        // NativePHP sets NATIVEPHP_RUNNING environment variable when active
-        if (isset($_ENV['NATIVEPHP_RUNNING']) || isset($_SERVER['NATIVEPHP_RUNNING'])) {
-            return PlatformMode::Desktop;
-        }
-
-        // Check if running in Laravel Native Mobile context
-        // Laravel Native Mobile sets specific environment variables
-        if (isset($_ENV['NATIVE_MOBILE_RUNNING']) || isset($_SERVER['NATIVE_MOBILE_RUNNING'])) {
-            return PlatformMode::Mobile;
-        }
-
-        // Check if we're in an Electron environment (alternative detection)
-        if (isset($_ENV['ELECTRON_RUN_AS_NODE']) || isset($_SERVER['ELECTRON_RUN_AS_NODE'])) {
-            return PlatformMode::Desktop;
-        }
-
-        // Default to Web mode for HTTP requests and other contexts
         return PlatformMode::Web;
     }
 }

@@ -1,11 +1,15 @@
 /**
  * Desktop Platform Entry Point
  *
- * Optimized for NativePHP Electron (Windows / macOS) with native desktop
- * camera, file-system, and notification support.
- * Used when running: php artisan native:serve
+ * Bundle for the Capacitor desktop shell (the `electron` folder under
+ * app/Capacitor/UserApp and app/Capacitor/AdminApp, Windows + macOS).
  *
- * Requirements: 4.1, 4.5
+ * Same shape as the mobile entry: the shell is a Chromium window pointed at
+ * this Laravel server, so there is no PHP in this bundle and no native bridge.
+ * Ordinary web APIs — WebRTC included — are available as-is.
+ *
+ * Built with: npm run build:desktop  (→ public/build/desktop)
+ * Served against with: php artisan serve:desktop
  */
 
 // ===================================
@@ -19,16 +23,9 @@ import '../emoji-picker/emoji-picker';
 import '../pdf-preview-plugin/pdf-preview-plugin';
 import '../firebase-client/firebase-client';
 
-// ===================================
-// Desktop-Specific Components (Req 4.5)
-// ===================================
-// phpProtocolAdapter is NOT imported — it is only needed by the Mobile entry
-// point for iOS php:// protocol handling.
-//
-// WebRTC is intentionally excluded — the NativePHP Electron Camera API
-// is used instead (Req 4.5, 6.2).
-//
-// echo.js is already imported by bootstrap.js so no duplicate import here.
+// No phpProtocolAdapter import: it was only needed by NativePHP's iOS build,
+// which served the app over a `php://` scheme.
+// No echo.js import either — bootstrap.js already pulls it in.
 
 // ===================================
 // Dark Mode Synchronization
@@ -47,67 +44,33 @@ syncTheme();
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncTheme);
 
 // ===================================
-// Platform Capabilities (Req 4.5, 5.1–5.9)
+// Platform Capabilities
 // ===================================
-// Exposes a consistent __PLATFORM__ object so Blade views and Livewire
-// components can conditionally render platform-specific UI without requiring
-// knowledge of the PHP-side PlatformMode.
+// Consistent shape with app-web.js / app-mobile.js so views can branch on the
+// platform without knowing anything about the PHP-side PlatformMode.
 window.__PLATFORM__ = {
     type: 'desktop',
     mode: 'desktop',
 
-    // Sub-platform detection from navigator.platform (available in Electron)
+    // Sub-platform detection
     isWindows: navigator.platform.toLowerCase().includes('win'),
     isMacOS: navigator.platform.toLowerCase().includes('mac'),
 
-    // Feature flags — mirrors PlatformFeatureRegistry (Req 5.1–5.9)
-    supportsWebRTC: false,               // Native camera preferred over WebRTC
-    supportsNativeCamera: true,          // NativePHP Electron Camera API (Req 6.2)
-    supportsFileSystem: true,            // Native file-system access (Req 5.8)
-    supportsPushNotifications: false,    // Push notifications — Mobile only
-    supportsDesktopNotifications: true,  // Desktop system notifications (Req 5.6)
-    supportsAppBadge: false,             // App-badge updates — Mobile only
-    supportsAutoUpdates: true,           // Auto-update via NativePHP Electron updater
+    // Feature flags — mirrors PlatformFeatureRegistry on the PHP side.
+    supportsWebRTC: true,                 // The shell's renderer is a real browser
+    supportsShellCamera: true,            // Camera via hidden file inputs
+    supportsFileSystem: true,             // <input type="file"> reaches the OS picker
+    supportsPushNotifications: false,     // Push notifications — Mobile only
+    supportsDesktopNotifications: true,   // OS notifications, delivered over WebSocket
+    supportsAppBadge: false,              // App-badge updates — Mobile only
+    supportsAutoUpdates: true,            // electron-updater, in the shell package
 
-    // Camera mode for CBIR feature (Req 6.4)
-    cameraMode: 'native-desktop',       // Uses NativePHP Electron Camera API
+    // Camera mode for the CBIR feature. Matches RuntimePlatform::cbirCameraMode(),
+    // where 'native' means "let the shell pick the file" rather than "run WebRTC".
+    cameraMode: 'native',
 };
-
-// ===================================
-// Conditional: Native Camera Helper (Req 4.5, 6.2)
-// ===================================
-// Expose a unified camera-open helper that delegates to the NativePHP
-// Electron Camera API when available, with a graceful degradation message.
-if (window.__PLATFORM__.supportsNativeCamera) {
-    /**
-     * Triggers the native desktop camera via the NativePHP Electron Bridge.
-     * Falls back with a user-facing error when the bridge is unavailable.
-     *
-     * @returns {Promise<string>} Base64-encoded image data URI
-     */
-    window.__PLATFORM__.openCamera = async () => {
-        if (window.NativePHP && window.NativePHP.camera) {
-            try {
-                return await window.NativePHP.camera.capture();
-            } catch (err) {
-                console.error('[Desktop Platform] Native camera error:', err);
-                throw new Error(
-                    'Camera access denied. Please grant camera permission to this application.'
-                );
-            }
-        }
-        // Electron bridge not yet injected (e.g., dev browser preview)
-        throw new Error(
-            'Native camera bridge not available in this context.'
-        );
-    };
-}
 
 if (import.meta.env.DEV) {
     const os = window.__PLATFORM__.isMacOS ? 'macOS' : window.__PLATFORM__.isWindows ? 'Windows' : 'unknown';
-    console.log(
-        '[Desktop Platform] Initialized —',
-        os,
-        '— native camera, file system & desktop notifications enabled'
-    );
+    console.log('[Desktop Platform] Initialized —', os, '— Capacitor shell');
 }

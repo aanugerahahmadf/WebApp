@@ -7,27 +7,23 @@ use function Pest\Laravel\get;
 
 test('home page (welcome) is accessible', function () {
     get('/')
-        ->assertStatus(200)
-        ->assertSee('Wedding');
-});
+        ->assertRedirect('/welcome/home');
 
-test('user can access product list', function () {
-    $user = User::factory()->create();
-
-    actingAs($user)
-        ->get('/user/products')
+    get('/welcome/home')
         ->assertStatus(200);
 });
 
-test('user can access package list', function () {
-    $user = User::factory()->create();
-
-    actingAs($user)
-        ->get('/user/packages')
+test('visitor can access welcome product list', function () {
+    get('/welcome/products')
         ->assertStatus(200);
 });
 
-test('guest is redirected when accessing user panel', function () {
-    get('/user')
-        ->assertStatus(302);
+test('visitor can access welcome package list', function () {
+    get('/welcome/packages')
+        ->assertStatus(200);
+});
+
+test('guest can access welcome storefront root', function () {
+    get('/welcome')
+        ->assertRedirect('/welcome/home');
 });

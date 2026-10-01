@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Auth\SocialiteController;
 
 use App\Http\Controllers\Controller;
 use App\Models\User\User;
-use App\Providers\NativeServiceProvider\NativeServiceProvider;
+use App\Support\AppPlatform\AppPlatform;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -13,8 +13,6 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
-use Native\Mobile\Browser;
-use Native\Mobile\Notification as NativeNotification;
 use Spatie\Permission\Models\Role;
 
 class SocialiteController extends Controller
@@ -25,17 +23,20 @@ class SocialiteController extends Controller
 
     public function redirect(string $provider, Request $request)
     {
-        $isMobile = NativeServiceProvider::isNativeMobile()
-            || $request->boolean('native')
-            || $request->header('X-NativePHP') === '1';
+        $isMobileApp = AppPlatform::isMobileApp();
 
-        Log::info("[Socialite] Redirect to $provider | mobile=$isMobile");
+        Log::info("[Socialite] Redirect to $provider | mobile_app=$isMobileApp");
 
-        if ($isMobile) {
-            return $this->redirectMobile($provider, $request);
+        // A Capacitor shell is a WebView pointing at this same server, so it
+        // shares the origin — and therefore the session cookie jar. The only
+        // difference from a desktop browser is that Google refuses to render its
+        // consent screen inside an embedded user agent, so the auth URL is
+        // handed back to the shell to open in a Custom Tab / system browser
+        // rather than navigated to in-place.
+        if ($isMobileApp) {
+            return $this->redirectMobileApp($provider, $request);
         }
 
-        // Web: alur standar Socialite
         config(["services.$provider.redirect" => route('auth.callback', $provider)]);
 
         return Socialite::driver($provider)
@@ -52,28 +53,20 @@ class SocialiteController extends Controller
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // MOBILE REDIRECT — Buka Google OAuth via Browser::auth()
-    // Menggunakan reverse client ID scheme agar tidak perlu server publik.
-    // Google redirect ke: com.googleusercontent.apps.CLIENT_ID:/oauth2redirect
-    // NativePHP tangkap deep link ini dan load /auth/mobile/google/callback
+    // MOBILE APP REDIRECT
+    // Google hanya boleh dibuka di Custom Tab / browser sistem, bukan di dalam
+    // WebView. Server tidak bisa memaksa itu, jadi URL-nya dikembalikan ke shell
+    // (JSON saat dipanggil via fetch, atau redirect biasa sebagai fallback) dan
+    // shell yang membukanya. Callback tetap mendarat di server ini.
     // ─────────────────────────────────────────────────────────────────────
 
-    private function redirectMobile(string $provider, Request $request)
+    private function redirectMobileApp(string $provider, Request $request)
     {
-        $clientId = config("services.{$provider}.client_id");
-
-        // Reverse client ID scheme — tidak perlu server publik, Google redirect
-        // langsung ke app Android via custom URI scheme.
-        // Format: com.googleusercontent.apps.CLIENT_ID:/oauth2redirect
-        $reverseClientId = 'com.googleusercontent.apps.'.str_replace('.apps.googleusercontent.com', '', $clientId);
-        $callbackUrl = $reverseClientId.':/oauth2redirect';
-
+        $callbackUrl = route('auth.callback', $provider);
         config(["services.$provider.redirect" => $callbackUrl]);
 
-        // Dapatkan URL OAuth Google
         $authUrl = Socialite::driver($provider)
             ->stateless()
-            ->with(['redirect_uri' => $callbackUrl])
             ->scopes([
                 'openid',
                 'profile',
@@ -82,27 +75,18 @@ class SocialiteController extends Controller
             ->redirect()
             ->getTargetUrl();
 
-        Log::info("[Socialite Mobile] Auth URL: $authUrl");
-        Log::info("[Socialite Mobile] Callback URL: $callbackUrl");
+        Log::info("[Socialite Mobile App] Auth URL: $authUrl");
+        Log::info("[Socialite Mobile App] Callback URL: $callbackUrl");
 
-        // Buka di in-app browser (Custom Tabs Android / SFSafariViewController iOS)
-        $opened = false;
-        if (class_exists(Browser::class) && function_exists('nativephp_call')) {
-            $browser = new Browser;
-            $opened = $browser->auth($authUrl);
-            Log::info('[Socialite Mobile] Browser::auth opened: '.($opened ? 'yes' : 'no'));
-        }
-
-        // Jika dipanggil via fetch (AJAX), return JSON
+        // Dipanggil via fetch (AJAX) — shell akan buka URL ini di Custom Tab.
         if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
             return response()->json([
                 'success' => true,
-                'opened' => $opened,
                 'url' => $authUrl,
             ]);
         }
 
-        // Fallback: redirect biasa
+        // Fallback: navigasi biasa. Berfungsi di Custom Tab dan di browser.
         return redirect($authUrl);
     }
 
@@ -140,122 +124,36 @@ class SocialiteController extends Controller
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // CALLBACK MOBILE via Reverse Client ID Scheme
-    // NativePHP intercept deep link: com.googleusercontent.apps.xxx:/oauth2redirect
-    // dan load route ini dengan query params dari Google
+    // LEGACY CALLBACK ROUTES — kept so stale redirect URIs don't 404
+    //
+    // These existed only for NativePHP: the app declared a reverse client-id
+    // scheme, stashed the user id in a short-lived cache token, then bounced
+    // the browser to weddingapp:// so the native layer could translate it back
+    // into a WebView load. A Capacitor shell has no such translation step — its
+    // WebView loads this server directly, so the callback response already
+    // carries the session cookie. Both routes therefore just run the ordinary
+    // session-based callback().
     // ─────────────────────────────────────────────────────────────────────
 
     public function callbackMobileScheme(string $provider, Request $request)
     {
-        Log::info('[Socialite Mobile Scheme] Callback received', $request->all());
+        Log::info('[Socialite] Legacy scheme callback received', $request->only(['code', 'error']));
 
-        $code = $request->query('code');
-
-        if (! $code) {
-            Log::error('[Socialite Mobile Scheme] No code in callback');
-
-            return redirect()->route('filament.user.auth.login')
-                ->with('error', __('Gagal login dengan Google. Tidak ada kode otorisasi.'));
-        }
-
-        try {
-            $clientId = config("services.{$provider}.client_id");
-            $reverseId = 'com.googleusercontent.apps.'.str_replace('.apps.googleusercontent.com', '', $clientId);
-            $callbackUrl = $reverseId.':/oauth2redirect';
-
-            config(["services.$provider.redirect" => $callbackUrl]);
-
-            $socialUser = Socialite::driver($provider)
-                ->stateless()
-                ->with(['redirect_uri' => $callbackUrl])
-                ->userFromCode($code);
-
-        } catch (\Exception $e) {
-            Log::error("[Socialite Mobile Scheme] Error: {$e->getMessage()}");
-
-            return redirect()->route('filament.user.auth.login')
-                ->with('error', __('Gagal mengambil data dari Google.'));
-        }
-
-        $user = $this->findOrCreateUser($socialUser, $provider);
-
-        if (! $user) {
-            return redirect()->route('filament.user.auth.login')
-                ->with('error', __('Gagal membuat akun.'));
-        }
-
-        if (is_null($user->email_verified_at)) {
-            Auth::login($user, remember: true);
-
-            return redirect()->route('filament.user.auth.email-verification.prompt');
-        }
-
-        Auth::login($user, remember: true);
-
-        Log::info("[Socialite Mobile Scheme] User {$user->id} logged in");
-
-        if (NativeServiceProvider::isNativeMobile()) {
-            try {
-                NativeNotification::new()
-                    ->title(__('Berhasil Masuk!'))
-                    ->message(__('Halo :name, selamat datang kembali.', ['name' => $user->first_name ?? $user->full_name]))
-                    ->show();
-            } catch (\Throwable) {
-            }
-        }
-
-        return $this->redirectAfterLogin($user);
+        return $this->callback($provider, $request);
     }
-
-    // ─────────────────────────────────────────────────────────────────────
-    // CALLBACK MOBILE — Dipanggil setelah Google redirect ke server
-    // Server simpan token sementara, lalu redirect ke deep link
-    // ─────────────────────────────────────────────────────────────────────
 
     public function callbackMobile(string $provider, Request $request)
     {
-        try {
-            $callbackUrl = route('auth.callback.mobile', $provider);
-            config(["services.$provider.redirect" => $callbackUrl]);
+        Log::info('[Socialite] Legacy mobile callback received', $request->only(['code', 'error']));
 
-            $socialUser = Socialite::driver($provider)->stateless()->user();
-        } catch (\Exception $e) {
-            Log::error("[Socialite Mobile] Callback error: {$e->getMessage()}");
-
-            // Redirect ke deep link dengan error
-            $scheme = config('nativephp.deeplink_scheme', 'weddingapp');
-
-            return redirect("{$scheme}://auth/error?message=".urlencode(__('Gagal login dengan Google.')));
-        }
-
-        $user = $this->findOrCreateUser($socialUser, $provider);
-
-        if (! $user) {
-            $scheme = config('nativephp.deeplink_scheme', 'weddingapp');
-
-            return redirect("{$scheme}://auth/error?message=".urlencode(__('Gagal membuat akun.')));
-        }
-
-        // Simpan token sementara di cache (60 detik) — mobile app akan ambil ini
-        $token = Str::random(64);
-        Cache::put("mobile_auth_token_{$token}", $user->id, now()->addMinutes(2));
-
-        Log::info("[Socialite Mobile] Token created for user {$user->id}: $token");
-
-        // Redirect ke deep link — NativePHP akan tangkap ini dan load di WebView
-        // Format: weddingapp://auth/google/success?token=xxx
-        // NativePHP akan translate ini ke: http://localhost/auth/google/success?token=xxx
-        $scheme = config('nativephp.deeplink_scheme', 'weddingapp');
-
-        // Juga simpan token di session sebagai fallback
-        session(['mobile_auth_pending_token' => $token]);
-
-        return redirect("{$scheme}://auth/google/success?token={$token}");
+        return $this->callback($provider, $request);
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // DEEP LINK HANDLER — Dipanggil saat app menerima deep link callback
-    // Route: /auth/mobile/verify?token=xxx
+    // TOKEN HANDOFF — Route: /auth/mobile/verify?token=xxx
+    //
+    // No longer part of the OAuth path (see above), but still honoured: when a
+    // valid token is presented, log that user in.
     // ─────────────────────────────────────────────────────────────────────
 
     public function verifyMobileToken(Request $request)
@@ -286,14 +184,6 @@ class SocialiteController extends Controller
         }
 
         Auth::login($user, remember: true);
-
-        // Notifikasi Native jika di mobile
-        if (app()->environment('mobile') || NativeServiceProvider::isNativeMobile()) {
-            NativeNotification::new()
-                ->title(__('Berhasil Masuk!'))
-                ->message(__('Halo :name, selamat datang kembali.', ['name' => $user->first_name ?? $user->full_name]))
-                ->show();
-        }
 
         Log::info("[Socialite Mobile] User {$user->id} logged in via mobile token");
 

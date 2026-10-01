@@ -3,44 +3,61 @@
 namespace App\Support\Platform\PlatformDependencyValidator;
 
 use App\Enums\PlatformMode\PlatformMode;
-use Native\Laravel\Facades\Window;
-use Native\Laravel\NativeServiceProvider;
-use Native\Mobile\Dialog;
 
+/**
+ * Validates that the workspace needed to build a platform shell is present.
+ *
+ * The shells in `app/Capacitor/{AdminApp,UserApp}` are Node projects, not PHP
+ * packages: Capacitor compiles the same Laravel server that already runs
+ * everywhere and wraps it in a WebView, so there is no Composer package to
+ * require and no embedded PHP to bundle. What can be missing is the shell
+ * workspace itself — the directory, its `capacitor.config.json`, or the
+ * installed `node_modules` holding `@capacitor/cli`.
+ *
+ * Historically this class checked for `nativephp/electron`, `nativephp/laravel`
+ * and `nativephp/mobile`; those are gone.
+ */
 class PlatformDependencyValidator
 {
     /**
-     * Validate that all required packages for the given platform mode are installed.
+     * Which Capacitor shell backs each platform mode.
      *
-     * Returns an array of missing Composer package names. An empty array means
-     * all required dependencies are present.
+     * @var array<string, string>
+     */
+    private const SHELL_BY_MODE = [
+        'mobile' => 'UserApp',
+        'desktop' => 'UserApp',
+    ];
+
+    /**
+     * Validate the prerequisites for a platform mode.
      *
-     * Requirements: 7.1, 7.2, 7.3, 7.4
-     *
-     * @param  PlatformMode  $mode  The platform mode to validate dependencies for.
-     * @return string[] Array of missing package names (e.g. ['nativephp/electron']).
+     * @return string[] Human-readable list of problems; empty means all good.
      */
     public function validateDependencies(PlatformMode $mode): array
     {
+        // Web mode has no shell: the Laravel server is the whole product.
+        if ($mode === PlatformMode::Web) {
+            return [];
+        }
+
+        $shell = self::SHELL_BY_MODE[$mode->value] ?? 'UserApp';
+        $shellPath = base_path("app/Capacitor/{$shell}");
+
+        if (! is_dir($shellPath)) {
+            return ["Capacitor shell not found: app/Capacitor/{$shell}"];
+        }
+
         $missing = [];
 
-        if ($mode === PlatformMode::Desktop) {
-            if (! class_exists(Window::class)) {
-                $missing[] = 'nativephp/electron';
-            }
-
-            if (! class_exists(NativeServiceProvider::class)) {
-                $missing[] = 'nativephp/laravel';
-            }
+        if (! file_exists($shellPath.'/capacitor.config.json')) {
+            $missing[] = "Capacitor config missing: app/Capacitor/{$shell}/capacitor.config.json";
         }
 
-        if ($mode === PlatformMode::Mobile) {
-            if (! class_exists(Dialog::class)) {
-                $missing[] = 'nativephp/mobile';
-            }
+        if (! is_dir($shellPath.'/node_modules/@capacitor/cli')) {
+            $missing[] = "Capacitor CLI not installed. Run: cd app/Capacitor/{$shell} && npm install";
         }
 
-        // Web mode requires no additional platform-specific packages.
         return $missing;
     }
 }

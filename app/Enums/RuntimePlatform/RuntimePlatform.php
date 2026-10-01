@@ -64,11 +64,18 @@ enum RuntimePlatform: string
     /**
      * Returns the camera mode used by the CBIR feature for this platform.
      *
-     * - 'native' → NativePHP Mobile Camera API (MobileApp) or NativePHP Desktop Camera API (DesktopApp)
+     * - 'native' → the Capacitor app shell: camera is opened through the shell's
+     *   hidden `<input type="file" capture>` inputs (MobileApp / DesktopApp)
      * - 'webrtc' → browser MediaDevices.getUserMedia() API (Website)
      *
+     * 'native' no longer means a server-side native camera bridge — NativePHP's
+     * `Native\Mobile\Camera` facade is gone. It means "this is an app shell, so
+     * let the shell's file inputs handle picking", as opposed to running the
+     * in-page WebRTC viewfinder. See AppPlatform::cbirCameraMode(), which is the
+     * single source of truth and delegates here.
+     *
      * Aligns with the 'camera' and 'webrtc' features in PlatformFeatureRegistry:
-     * platforms that have native camera capability ('camera' feature) return 'native',
+     * platforms in the app shells ('camera' feature) return 'native',
      * while platforms that rely on WebRTC ('webrtc' feature) return 'webrtc'.
      *
      * @return 'native'|'webrtc'

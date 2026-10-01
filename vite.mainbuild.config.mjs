@@ -15,7 +15,6 @@ export default defineConfig({
                 'resources/js/app/app.js',
                 'resources/js/firebase-auth/firebase-auth.js',
                 'resources/js/echo/echo.js',
-                './vendor/nativephp/mobile/resources/js/phpProtocolAdapter.js',
                 './vendor/tangodev-it/filament-emoji-picker/resources/js/index.js',
             ],
             buildDirectory: 'build',

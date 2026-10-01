@@ -20,7 +20,7 @@ use App\Models\Review\Review;
 use App\Models\Transaction\Transaction;
 use App\Models\Voucher\Voucher;
 use App\Models\Wishlist\Wishlist;
-use App\Providers\NativeServiceProvider\NativeServiceProvider;
+use App\Support\AppPlatform\AppPlatform;
 use App\Services\ChatService\ChatService;
 use Filament\Facades\Filament;
 use Filament\Forms;
@@ -116,7 +116,7 @@ class PackageResource extends Resource
         return $table
             ->recordUrl(fn ($record) => static::getUrl('view', ['record' => $record]))
             ->paginated(false)
-            ->poll(NativeServiceProvider::isNativeMobile() ? null : '30s')
+            ->poll(AppPlatform::isNativeMobile() ? null : '30s')
             ->emptyStateHeading(__('Belum ada paket tersedia'))
             ->emptyStateDescription(function () {
                 if (session()->has('cbir_package_results_ids')) {
@@ -250,11 +250,42 @@ class PackageResource extends Resource
                                             ->modalHeading(__('Bagikan Item Ini'))
                                             ->modalSubmitAction(false)
                                             ->modalCancelActionLabel(__('Tutup'))
-                                            ->modalContent(fn ($record) => view('User.components.share-item-modal.share-item-modal', [
-                                                'name' => __($record->name),
-                                                'price' => 'Rp '.number_format($record->final_price, 0, ',', '.'),
-                                                'url' => static::getUrl('view', ['record' => $record->id]),
-                                            ])),
+                                            ->form(fn ($record) => [
+                                                Forms\Components\Placeholder::make('item_info')
+                                                    ->hiddenLabel()
+                                                    ->content(new HtmlString(
+                                                        '<div class="rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-4">' .
+                                                        '<div class="text-base font-bold text-gray-900 dark:text-white">' . e($record->name) . '</div>' .
+                                                        '<div class="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mt-1">Rp ' . number_format($record->final_price, 0, ',', '.') . '</div>' .
+                                                        '</div>'
+                                                    )),
+                                                Forms\Components\TextInput::make('share_url')
+                                                    ->label(__('Link'))
+                                                    ->default(static::getUrl('view', ['record' => $record->id]))
+                                                    ->readOnly()
+                                                    ->suffixAction(
+                                                        Forms\Components\Actions\Action::make('copy')
+                                                            ->icon('heroicon-m-clipboard-document')
+                                                            ->color('primary')
+                                                            ->tooltip(__('Salin ke Clipboard'))
+                                                            ->action(function ($livewire, $state) {
+                                                                $livewire->js('window.navigator.clipboard.writeText(' . json_encode($state) . ')');
+                                                                Notification::make()
+                                                                    ->title(__('Tautan berhasil disalin!'))
+                                                                    ->success()
+                                                                    ->send();
+                                                            })
+                                                    ),
+                                                Forms\Components\Actions::make([
+                                                    Forms\Components\Actions\Action::make('open_in_new_tab')
+                                                        ->label(__('Buka di Tab Baru'))
+                                                        ->icon('heroicon-m-arrow-top-right-on-square')
+                                                        ->color('primary')
+                                                        ->outlined()
+                                                        ->url(static::getUrl('view', ['record' => $record->id]), shouldOpenInNewTab: true)
+                                                        ->extraAttributes(['class' => 'w-full justify-center']),
+                                                ]),
+                                            ]),
 
                                         Action::make('report_item')
                                             ->label(__('Lapor'))
@@ -354,7 +385,7 @@ class PackageResource extends Resource
                                                 ->label('')
                                                 ->html()
                                                 ->prose()
-                                                ->extraAttributes(['class' => 'text-gray-600 dark:text-gray-300 leading-relaxed text-lg']),
+                                                ->extraAttributes(['class' => 'leading-relaxed text-lg']),
                                         ])->icon('heroicon-o-document-text')->iconColor('primary'),
 
                                     // FEATURES (mobile "Fitur" section parity)
@@ -368,7 +399,7 @@ class PackageResource extends Resource
                                                 ->label('')
                                                 ->hiddenLabel()
                                                 ->bulleted()
-                                                ->extraAttributes(['class' => 'text-gray-600 dark:text-gray-300 leading-relaxed']),
+                                                ->extraAttributes(['class' => 'leading-relaxed']),
                                         ]),
 
                                     // REVIEWS (mobile _buildReviewCard parity)
@@ -433,6 +464,17 @@ class PackageResource extends Resource
                                             ->extraAttributes(['class' => 'w-full flex-1 rounded-xl py-3 text-lg shadow-sm transition-all'])
                                             ->action(function ($record) {
                                                 $inbox = ChatService::getOrCreateInboxWithAdmin(auth()->id());
+
+                                                if (! $inbox) {
+                                                    Notification::make()
+                                                        ->title(__('Fitur chat belum tersedia'))
+                                                        ->body(__('Admin belum dikonfigurasi. Silakan hubungi administrator.'))
+                                                        ->warning()
+                                                        ->send();
+
+                                                    return null;
+                                                }
+
                                                 ChatService::sendContextMessage($inbox, [
                                                     'type' => 'package',
                                                     'id' => $record->id,
@@ -440,7 +482,7 @@ class PackageResource extends Resource
                                                     'price' => $record->price,
                                                     'image' => $record->image_url,
                                                     'url' => PackageResource::getUrl('view', ['record' => $record->id]),
-                                                ]);
+                                                ], auth()->id());
 
                                                 return redirect(MessagesPage::getUrl(['id' => $inbox->id]));
                                             }),
@@ -453,6 +495,9 @@ class PackageResource extends Resource
                                             ->outlined(fn ($record) => ! $record->is_wishlisted)
                                             ->size(ActionSize::Large)
                                             ->extraAttributes(['class' => 'w-full flex-1 rounded-xl py-3 text-lg shadow-sm transition-all duration-300'])
+                                            ->form([
+                                                Forms\Components\Hidden::make('confirm')->default(true),
+                                            ])
                                             ->action(function ($record) {
                                                 $userId = Filament::auth()->id();
                                                 $deleted = Wishlist::query()->where('user_id', $userId)

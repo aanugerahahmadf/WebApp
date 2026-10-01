@@ -4,7 +4,7 @@ namespace App\Filament\User\Pages\CbirSearchPage;
 
 use App\Models\Package\Package;
 use App\Models\Product\Product;
-use App\Providers\NativeServiceProvider\NativeServiceProvider;
+use App\Support\AppPlatform\AppPlatform;
 use App\Services\CBIRService\CBIRService;
 use App\Support\PlatformContext\PlatformContext;
 use emmanpbarrameda\FilamentTakePictureField\Forms\Components\TakePicture;
@@ -17,17 +17,8 @@ use Filament\Pages\Page;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\HtmlString;
-use Livewire\Attributes\On;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
-use Native\Mobile\Events\Camera\PermissionDenied;
-use Native\Mobile\Events\Camera\PhotoCancelled;
-use Native\Mobile\Events\Camera\PhotoTaken;
-use Native\Mobile\Events\Camera\VideoCancelled;
-use Native\Mobile\Events\Camera\VideoRecorded;
-use Native\Mobile\Events\Gallery\MediaSelected;
-use Native\Mobile\Facades\Camera;
-use Native\Mobile\Facades\File as NativeFile;
 use Symfony\Component\HttpFoundation\File\File;
 
 class CbirSearchPage extends Page implements HasForms
@@ -69,24 +60,25 @@ class CbirSearchPage extends Page implements HasForms
     }
 
     /**
-     * Open native camera / gallery on NativePHP apps (Android/iOS)
+     * Open the camera / gallery.
+     *
+     * In a Capacitor shell this just asks the hidden `<input type="file">`
+     * elements rendered by the CBIR partials to open; the resulting upload
+     * arrives back through updatedCameraUpload()/updatedBrowseUpload(). There
+     * is no server-side native bridge to call.
      */
     public function openCamera(string $mode = 'photo-back'): void
     {
-        if (! NativeServiceProvider::isNativeMobile()) {
+        if (! AppPlatform::isNativeMobile()) {
             return;
         }
 
-        $this->isProcessing = true;
         $this->statusMessage = __('Membuka kamera...');
 
-        match ($mode) {
-            'video' => Camera::recordVideo(['maxDuration' => 120])->id('cbir-search-video')->start(),
-            'gallery' => Camera::pickImages('all', false)->id('cbir-search-gallery')->start(),
-            default => Camera::getPhoto(['camera' => $mode === 'photo-front' ? 'front' : 'rear'])
-                ->id('cbir-search-photo')
-                ->start(),
-        };
+        $this->dispatch(
+            'capacitor-camera-open-input',
+            mode: in_array($mode, ['photo-front', 'photo-back', 'video', 'gallery'], true) ? $mode : 'photo-back',
+        );
     }
 
     public function updatedCameraUpload(): void
@@ -114,79 +106,22 @@ class CbirSearchPage extends Page implements HasForms
     }
 
     /**
-     * Open native gallery / file picker (Android/iOS).
+     * Open the gallery / file picker.
      *
      * @param  'image'|'video'|'all'  $mediaType
      */
     public function openBrowseSource(string $mediaType = 'all', ?string $sourceId = null): void
     {
-        if (! NativeServiceProvider::isNativeMobile()) {
+        if (! AppPlatform::isNativeMobile()) {
             return;
         }
-
-        $this->isProcessing = true;
-        $this->statusMessage = __('Membuka pemilih file...');
 
         $mediaType = in_array($mediaType, ['image', 'video', 'all'], true) ? $mediaType : 'all';
 
-        Camera::pickImages($mediaType, false)
-            ->id('cbir-browse-'.($sourceId ?? $mediaType))
-            ->start();
-    }
-
-    /**
-     * Listen for PhotoTaken event from NativePHP native camera
-     */
-    #[On('native:'.PhotoTaken::class)]
-    public function onPhotoTaken(string $path, string $mimeType = 'image/jpeg'): void
-    {
-        $this->isProcessing = false;
-        $this->processNativeFile($path, $mimeType);
-    }
-
-    #[On('native:'.VideoRecorded::class)]
-    public function onVideoRecorded(string $path, string $mimeType = 'video/mp4', ?string $id = null): void
-    {
-        $this->isProcessing = false;
-        $this->processNativeFile($path, $mimeType);
-    }
-
-    #[On('native:'.MediaSelected::class)]
-    public function onMediaSelected(bool $success, array $files = [], int $count = 0, ?string $error = null, bool $cancelled = false): void
-    {
-        $this->isProcessing = false;
-
-        if ($cancelled || ! $success || empty($files)) {
-            return;
-        }
-
-        $file = $files[0];
-        $path = is_string($file) ? $file : ($file['path'] ?? null);
-        $mimeType = is_array($file) ? ($file['mimeType'] ?? $file['mime_type'] ?? null) : null;
-
-        if ($path) {
-            $this->processNativeFile($path, $mimeType);
-        }
-    }
-
-    #[On('native:'.PhotoCancelled::class)]
-    #[On('native:'.VideoCancelled::class)]
-    public function onCaptureCancelled(?string $id = null): void
-    {
-        $this->isProcessing = false;
-        $this->statusMessage = null;
-    }
-
-    #[On('native:'.PermissionDenied::class)]
-    public function onPermissionDenied(string $action, ?string $id = null): void
-    {
-        $this->isProcessing = false;
-
-        Notification::make()
-            ->title(__('Izin Kamera Diperlukan'))
-            ->body(__('Harap aktifkan izin kamera di Pengaturan > Izin Aplikasi.'))
-            ->warning()
-            ->send();
+        $this->dispatch(
+            'capacitor-camera-open-input',
+            mode: $mediaType === 'image' ? 'photo-back' : 'gallery',
+        );
     }
 
     public function form(Form $form): Form
@@ -332,47 +267,6 @@ class CbirSearchPage extends Page implements HasForms
             $this->runCbirSearch(new File($absolutePath), app(CBIRService::class));
         } else {
             $this->statusMessage = __('File berhasil diunggah. Hanya gambar yang dapat digunakan untuk pencarian visual.');
-        }
-    }
-
-    private function processNativeFile(string $path, ?string $mimeType): void
-    {
-        if (! file_exists($path)) {
-            $this->statusMessage = __('Gagal membaca file. Silakan coba lagi.');
-
-            return;
-        }
-
-        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-
-        if (! $this->isAllowedExtension($extension)) {
-            $this->notifyUnsupportedFile();
-
-            return;
-        }
-
-        $storedPath = 'cbir-camera/'.uniqid('native-', true).'.'.$extension;
-        $destination = Storage::disk('public')->path($storedPath);
-
-        if (! is_dir(dirname($destination))) {
-            mkdir(dirname($destination), 0755, true);
-        }
-
-        $copied = NativeServiceProvider::isNativeMobile()
-            ? NativeFile::copy($path, $destination)
-            : copy($path, $destination);
-
-        if (! $copied) {
-            $this->statusMessage = __('Gagal menyimpan file.');
-
-            return;
-        }
-
-        if ($this->isImageExtension($extension)) {
-            $this->statusMessage = __('Memproses foto...');
-            $this->runCbirSearch(new File($destination), app(CBIRService::class));
-        } else {
-            $this->statusMessage = __('Video berhasil diunggah.');
         }
     }
 

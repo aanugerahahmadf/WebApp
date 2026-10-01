@@ -11,7 +11,7 @@ use App\Models\Review\Review;
 use App\Models\Vendor\Vendor;
 use App\Models\Wishlist\Wishlist;
 
-use App\Providers\NativeServiceProvider\NativeServiceProvider;
+use App\Support\AppPlatform\AppPlatform;
 use App\Traits\HasTranslations\HasTranslations;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -93,7 +93,7 @@ class Product extends Model implements HasMedia
 
     public function getImageUrlAttribute()
     {
-        $fallback = NativeServiceProvider::normalizeUrl(asset('images/placeholders/image-placeholder.png'));
+        $fallback = AppPlatform::normalizeUrl(asset('images/placeholders/image-placeholder.png'));
         $url = $this->getFirstMediaUrl('product_image') ?: null;
         $url = $url ? str_replace('/storage/', '/media/', $url) : $url;
 
@@ -104,7 +104,7 @@ class Product extends Model implements HasMedia
     {
         $url = $this->getFirstMediaUrl('videos') ?: null;
 
-        return $url ? NativeServiceProvider::normalizeUrl($url) : null;
+        return $url ? AppPlatform::normalizeUrl($url) : null;
     }
 
     public function getIsOutOfStockAttribute(): bool
@@ -199,15 +199,15 @@ class Product extends Model implements HasMedia
         }
 
         if (Str::startsWith($url, ['http://', 'https://', 'data:image'])) {
-            return NativeServiceProvider::normalizeUrl($url);
+            return AppPlatform::normalizeUrl($url);
         }
 
         if (Str::startsWith($url, '/')) {
-            return NativeServiceProvider::normalizeUrl(url($url));
+            return AppPlatform::normalizeUrl(url($url));
         }
 
         $resolved = asset('media/'.ltrim($url, '/'));
 
-        return NativeServiceProvider::normalizeUrl($resolved);
+        return AppPlatform::normalizeUrl($resolved);
     }
 }

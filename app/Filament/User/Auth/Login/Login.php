@@ -41,6 +41,64 @@ class Login extends BaseLogin
         return __('Masuk');
     }
 
+    /**
+     * Tujuan tombol back di halaman login: kembali ke halaman yang
+     * diklik pengguna sebelum diarahkan ke login (detail package /
+     * product), bukan selalu ke beranda.
+     *
+     * Sumber: `url.intended` yang disimpan saat guest membuka modal
+     * Add to Cart (atau aksi guest lain), plus `url()->previous()`
+     * sebagai sinyal terbaru. Kandidat yang menunjuk ke livewire atau
+     * halaman auth/admin dilewati; fallback ke beranda welcome.
+     */
+    public function getBackUrl(): string
+    {
+        $fallback = route('filament.welcome.pages.home');
+
+        $candidates = [];
+
+        $previous = url()->previous();
+        if (is_string($previous) && $previous !== '') {
+            $candidates[] = $previous;
+        }
+
+        $intended = session()->get('url.intended');
+        if (is_string($intended) && $intended !== '') {
+            $candidates[] = $intended;
+        }
+
+        $isUnusable = fn (string $url): bool => str_contains($url, 'livewire')
+            || str_contains($url, '/user/login')
+            || str_contains($url, '/user/register')
+            || str_contains($url, 'password-reset')
+            || str_contains($url, 'verify-otp')
+            || str_contains($url, '/admin');
+
+        // Prioritas: detail / index paket & produk welcome.
+        foreach ($candidates as $url) {
+            if ($isUnusable($url)) {
+                continue;
+            }
+
+            if (str_contains($url, '/welcome/packages') || str_contains($url, '/welcome/products')) {
+                return $url;
+            }
+        }
+
+        // Cadangan: halaman welcome lain yang valid.
+        foreach ($candidates as $url) {
+            if ($isUnusable($url)) {
+                continue;
+            }
+
+            if (str_contains($url, '/welcome')) {
+                return $url;
+            }
+        }
+
+        return $fallback;
+    }
+
     public function form(Form $form): Form
     {
         return $form

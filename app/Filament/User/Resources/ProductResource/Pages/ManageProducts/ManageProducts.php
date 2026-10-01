@@ -2,7 +2,6 @@
 
 namespace App\Filament\User\Resources\ProductResource\Pages\ManageProducts;
 
-use App\Filament\User\Concerns\HasMobilePagination\HasMobilePagination;
 use App\Filament\User\Resources\ProductResource\ProductResource;
 use App\Models\Cart\Cart;
 use App\Models\Product\Product;
@@ -16,8 +15,6 @@ use Illuminate\Support\Facades\DB;
 
 class ManageProducts extends ManageRecords
 {
-    use HasMobilePagination;
-
     protected static string $resource = ProductResource::class;
 
     // public function getTabs(): array

@@ -1,22 +1,25 @@
-# Panduan Penggunaan Perintah
+# Panduan Penggunaan Perintah (Capacitor)
 
-Panduan ini membantu Anda memilih perintah Artisan yang tepat untuk platform target Anda, menjelaskan apa yang dibutuhkan setiap perintah agar dapat berfungsi, dan menyediakan referensi pemecahan masalah untuk masalah paling umum yang akan Anda temui.
+Panduan ini menjelaskan perintah Artisan untuk platform target Anda, apa yang
+dibutuhkan setiap perintah, dan referensi pemecahan masalah.
+
+> **Catatan:** Aplikasi mobile dan desktop sekarang menggunakan **shell Capacitor**
+> (WebView loader), bukan NativePHP. Server Laravel sama untuk semua platform —
+> perbedaan hanya file `.env.{mode}` dan bundle Vite `public/build/{web,mobile,desktop}`.
 
 ---
 
 ## Pohon Keputusan Cepat
 
-Gunakan diagram alur di bawah ini untuk memilih perintah yang tepat. Untuk dokumen pohon keputusan mandiri dengan diagram Mermaid lengkap dan referensi cepat pemecahan masalah, lihat [command-decision-tree.md](./command-decision-tree.md).
-
 ```mermaid
 flowchart TD
     START([Apa yang sedang Anda bangun?])
     START --> Q1{Apakah pengguna akan membuka aplikasi\ndalam browser web?}
-    Q1 -- YA --> WEB["✅ php artisan serve\nMode Browser Web"]
-    Q1 -- TIDAK --> Q2{Aplikasi mobile native\nuntuk Android atau iOS?}
-    Q2 -- YA --> MOB["✅ php artisan native:run\nMode Mobile Native\nMemerlukan: nativephp/mobile"]
-    Q2 -- TIDAK --> Q3{Aplikasi desktop untuk\nWindows atau macOS?}
-    Q3 -- YA --> DESK["✅ php artisan native:serve\nMode Aplikasi Desktop\nMemerlukan: nativephp/electron\nnativephp/laravel"]
+    Q1 -- YA --> WEB["✅ php artisan serve:web\nMode Browser Web"]
+    Q1 -- TIDAK --> Q2{Apakah ini aplikasi mobile\nCapacitor shell untuk\nAndroid atau iOS?}
+    Q2 -- YA --> MOB["✅ php artisan serve:mobile\nMode Mobile (Capacitor)\nShell: app/Capacitor/UserApp|AdminApp"]
+    Q2 -- TIDAK --> Q3{Apakah ini aplikasi desktop\nCapacitor Electron untuk\nWindows atau macOS?}
+    Q3 -- YA --> DESK["✅ php artisan serve:desktop\nMode Desktop (Capacitor Electron)\nShell: app/Capacitor/*/electron"]
     Q3 -- TIDAK --> HELP["❓ Jalankan: php artisan platform:status\natau lihat command-decision-tree.md"]
 
     style WEB fill:#d4edda,stroke:#28a745,color:#155724
@@ -28,30 +31,30 @@ flowchart TD
 Masih bingung? Tanyakan pada diri sendiri:
 
 1. **Apakah pengguna akan membuka aplikasi di browser (Chrome, Safari, Firefox)?**
-   → `php artisan serve`
+   → `php artisan serve:web`
 
-2. **Apakah aplikasi akan diinstal di ponsel Android atau iPhone / iPad?**
-   → `php artisan native:run`
+2. **Apakah aplikasi akan diinstal di ponsel Android atau iPhone/iPad via Capacitor?**
+   → `php artisan serve:mobile`
 
-3. **Apakah aplikasi akan dikirimkan sebagai program desktop `.exe` (Windows) atau `.app` (macOS)?**
-   → `php artisan native:serve`
+3. **Apakah aplikasi akan dikirimkan sebagai program desktop `.exe` (Windows) atau `.dmg` (macOS) via Capacitor Electron?**
+   → `php artisan serve:desktop`
 
 ---
 
 ## Referensi Perintah
 
-### `php artisan serve` — Mode Browser Web
+### `php artisan serve:web` — Mode Browser Web
 
 Memulai server HTTP pengembangan Laravel standar di `http://localhost:8000`.
 
 ```bash
-php artisan serve
+php artisan serve:web
 
 # Ganti port
-php artisan serve --port=8080
+php artisan serve:web --port=8080
 
 # Dengarkan di semua antarmuka (berguna untuk akses LAN)
-php artisan serve --host=0.0.0.0 --port=8000
+php artisan serve:web --host=0.0.0.0 --port=8000
 ```
 
 **Mode platform yang diinisialisasi:** `PlatformMode::Web`
@@ -84,31 +87,13 @@ Tidak diperlukan paket Composer tambahan di luar instalasi Laravel standar.
 
 ---
 
-### `php artisan native:run` — Mode Mobile Native (Android / iOS)
+### `php artisan serve:mobile` — Mode Mobile (Capacitor Shell)
 
-Membangun, mengemas, dan men-deploy aplikasi ke perangkat/emulator Android atau perangkat/simulator iOS. Server HTTP Laravel berjalan tertanam di dalam proses aplikasi native.
+Menjalankan server Laravel yang diload oleh shell Capacitor mobile
+(`app/Capacitor/UserApp` atau `AdminApp`) di Android/iOS.
 
 ```bash
-# Deteksi otomatis platform (Android di Windows/Linux, prompt di macOS)
-php artisan native:run
-
-# Target Android secara eksplisit (lebih memilih perangkat fisik yang terhubung)
-php artisan native:run android
-
-# Target iOS secara eksplisit (hanya macOS)
-php artisan native:run ios
-
-# Target perangkat tertentu berdasarkan serial ADB
-php artisan native:run android <udid>
-
-# Aktifkan hot reloading selama pengembangan
-php artisan native:run --watch
-
-# Release build
-php artisan native:run android --build=release
-
-# Android App Bundle (untuk Play Store)
-php artisan native:run android --build=bundle
+php artisan serve:mobile --port=8001
 ```
 
 **Mode platform yang diinisialisasi:** `PlatformMode::Mobile`
@@ -123,40 +108,47 @@ php artisan native:run android --build=bundle
 - Lingkungan: menggabungkan `.env.mobile` (jika ada) di atas `.env`
 - Aset: membaca `public/build/mobile/manifest.json`
 - Driver sesi: `database` (direkomendasikan untuk mobile — bertahan saat aplikasi di-restart)
-- Kamera: NativePHP Mobile Camera API (bukan WebRTC)
-- Rute: memuat `routes/mobile.php` selain rute standar
+- Kamera: shell membuka `<input type="file" capture>` (bukan WebRTC)
+- Push Notifications: FCM (saat app background)
 
-**Prasyarat:**
+**Prasyarat (di SERVER):**
 
 | Persyaratan | Detail |
 |-------------|---------| 
-| Paket Composer `nativephp/mobile` | `composer require nativephp/mobile` |
-| `NATIVEPHP_APP_ID` di `.env` | mis. `com.example.weddingorganizer` — tidak boleh default |
-| Android SDK + ADB | Diperlukan untuk target Android; tambahkan ke `PATH` |
-| Xcode + `devicectl` | Diperlukan untuk target iOS; hanya macOS |
 | Aset mobile dikompilasi | `npm run build:mobile` (atau `npm run dev:mobile` untuk HMR) |
-| Opsional: `.env.mobile` | Override `APP_URL`, `SESSION_DRIVER`, port, dll. |
+| `.env.mobile` | Override `APP_URL`, `SESSION_DRIVER=database`, `VITE_PLATFORM=mobile` |
 
-Jalankan `php artisan platform:native:run` (wrapper validasi) untuk mendapatkan daftar error yang mudah dibaca tentang paket yang hilang sebelum perintah sesungguhnya dijalankan.
+**Prasyarat (di SHELL — `app/Capacitor/UserApp` atau `AdminApp`):**
+
+| Persyaratan | Detail |
+|-------------|---------| 
+| Node.js 18+ | `npm install` sudah dijalankan |
+| `capacitor.config.json` → `server.url` | Menunjuk ke URL server ini (mis. `http://10.0.2.2:8001/user`) |
+| Android SDK + ADB | Diperlukan untuk `cap run android` / build APK |
+| Xcode + `devicectl` | Diperlukan untuk `cap run ios` / build IPA; hanya macOS |
+| `cap sync` sudah dijalankan | Menyalin `dist/` ke project native |
+
+> Server dan shell **terpisah**. Build shell (`npx cap run android`) dilakukan
+> di folder shell, bukan di server.
 
 ---
 
-### `php artisan native:serve` — Mode Aplikasi Desktop (Windows / macOS)
+### `php artisan serve:desktop` — Mode Desktop (Capacitor Electron)
 
-Memulai aplikasi desktop NativePHP Electron. Electron membungkus server HTTP PHP tertanam dan membuka jendela aplikasi yang mengarah ke backend Laravel.
+Menjalankan server Laravel yang diload oleh shell Capacitor Electron
+(`app/Capacitor/UserApp/electron` atau `AdminApp/electron`) di Windows/macOS.
 
 ```bash
-# Mulai aplikasi desktop
-php artisan native:serve
+php artisan serve:desktop --port=8002
 
 # Lewati queue worker
-php artisan native:serve --without-queue
+php artisan serve:desktop --without-queue
 
 # Lewati scheduler
-php artisan native:serve --without-schedule
+php artisan serve:desktop --without-schedule
 
 # Sembunyikan output log Laravel dari konsol
-php artisan native:serve --quiet-logs
+php artisan serve:desktop --quiet-logs
 ```
 
 **Mode platform yang diinisialisasi:** `PlatformMode::Desktop`
@@ -171,71 +163,76 @@ php artisan native:serve --quiet-logs
 - Lingkungan: menggabungkan `.env.desktop` (jika ada) di atas `.env`
 - Aset: membaca `public/build/desktop/manifest.json`
 - Driver sesi: `file` (proses lokal pengguna tunggal)
-- Kamera: NativePHP Electron Camera API (bukan WebRTC)
-- Rute: memuat `routes/desktop.php` selain rute standar
+- Kamera: shell membuka `<input type="file" capture>` (bukan WebRTC)
+- Desktop Notifications: Web Notifications API (standar browser, tersedia di Electron)
+- Auto-updater: `electron-updater` (di shell, bukan server)
 
-**Prasyarat:**
+**Prasyarat (di SERVER):**
 
 | Persyaratan | Detail |
 |-------------|---------| 
-| Paket Composer `nativephp/electron` | `composer require nativephp/electron` |
-| Paket Composer `nativephp/laravel` | `composer require nativephp/laravel` |
-| Node.js + toolchain Electron | Diinstal secara otomatis oleh `nativephp/electron` |
 | Aset desktop dikompilasi | `npm run build:desktop` (atau `npm run dev:desktop` untuk HMR) |
-| Opsional: `.env.desktop` | Override `APP_URL`, `NATIVEPHP_HTTP_PORT`, driver sesi, dll. |
+| `.env.desktop` | Override `APP_URL`, `SESSION_DRIVER=file`, `VITE_PLATFORM=desktop` |
 
-Jalankan `php artisan platform:native:serve` (wrapper validasi) untuk mendapatkan daftar error yang mudah dibaca tentang paket yang hilang sebelum perintah sesungguhnya dijalankan.
+**Prasyarat (di SHELL — `app/Capacitor/*/electron`):**
+
+| Persyaratan | Detail |
+|-------------|---------| 
+| Node.js 18+ | `npm install` sudah dijalankan |
+| Electron 43+ | Sudah di `package.json` |
+| `electron-builder` | Untuk build `.exe`/`.dmg` |
+| Sertifikat Authenticode / Developer ID | Untuk distribusi produksi |
 
 ---
 
 ## Perbandingan Berdampingan
 
-| | `artisan serve` | `artisan native:run` | `artisan native:serve` |
+| | `serve:web` | `serve:mobile` | `serve:desktop` |
 |---|---|---|---|
-| Target | Browser web | Android / iOS | Desktop Windows / macOS |
-| PlatformMode | `Web` | `Mobile` | `Desktop` |
-| RuntimePlatform | WebsiteWindows/MacOS/Android/Ios | MobileAppAndroid/Ios | DesktopAppWindows/MacOS |
-| File override env | `.env.web` | `.env.mobile` | `.env.desktop` |
-| Direktori aset | `public/build/web` | `public/build/mobile` | `public/build/desktop` |
-| API Kamera | WebRTC getUserMedia | NativePHP Mobile Camera | NativePHP Electron Camera |
-| Port default | 8000 | 8001 | 8002 |
-| Paket tambahan yang diperlukan | Tidak ada | `nativephp/mobile` | `nativephp/electron`, `nativephp/laravel` |
-| Rute khusus platform | `routes/web.php` | `routes/mobile.php` | `routes/desktop.php` |
+| **Target** | Browser web | Android / iOS (Capacitor) | Windows / macOS (Capacitor Electron) |
+| **PlatformMode** | `Web` | `Mobile` | `Desktop` |
+| **RuntimePlatform** | WebsiteWindows/MacOS/Android/Ios | MobileAppAndroid/Ios | DesktopAppWindows/MacOS |
+| **File override env** | `.env.web` | `.env.mobile` | `.env.desktop` |
+| **Direktori aset** | `public/build/web` | `public/build/mobile` | `public/build/desktop` |
+| **API Kamera** | WebRTC `getUserMedia` | Shell: `<input capture>` | Shell: `<input capture>` |
+| **Port konvensi** | 8000 | 8001 | 8002 |
+| **Paket Composer tambahan** | Tidak ada | Tidak ada | Tidak ada |
+| **Push Notifications** | ❌ | ✅ FCM | ❌ |
+| **Desktop Notifications** | Web Notif API | ❌ | Web Notif API (Electron) |
+| **Auto-updater** | ❌ | ❌ | ✅ `electron-updater` (shell) |
+
+> **Semua tiga perintah mendelegasikan ke `php artisan serve` internal.**
+> Lihat `app/Console/Commands/ServePlatformCommand/DelegatesToServeCommand.php`.
 
 ---
 
 ## Alur Kerja Pengembangan yang Direkomendasikan
 
-Selama pengembangan Anda dapat menjalankan ketiga platform secara bersamaan dengan membuka tiga jendela terminal, satu per platform. Masing-masing menggunakan port berbeda sehingga tidak saling konflik.
+Tiga terminal, satu per platform, port berbeda:
 
 ### Terminal 1 — Web (port 8000)
 
 ```bash
-# Mulai server dev Vite dengan HMR untuk web
 npm run dev:web
-
-# Di tab terpisah: mulai server HTTP Laravel
-php artisan serve --port=8000
+php artisan serve:web --port=8000
 ```
 
 ### Terminal 2 — Mobile (port 8001)
 
 ```bash
-# Mulai server dev Vite dengan HMR untuk mobile
 npm run dev:mobile
-
-# Build dan deploy ke perangkat Android yang terhubung (dengan hot reload)
-php artisan native:run android --watch
+php artisan serve:mobile --port=8001
+# Di shell terpisah:
+cd app/Capacitor/UserApp && npm run android   # atau ios
 ```
 
 ### Terminal 3 — Desktop (port 8002)
 
 ```bash
-# Mulai server dev Vite dengan HMR untuk desktop
 npm run dev:desktop
-
-# Mulai aplikasi desktop Electron
-php artisan native:serve
+php artisan serve:desktop --port=8002
+# Di shell terpisah:
+cd app/Capacitor/UserApp && npx electron-builder --config electron/electron-builder.config.js --dir
 ```
 
 ### Konvensi Penugasan Port
@@ -246,7 +243,7 @@ php artisan native:serve
 | Mobile | 8001 | 5174 |
 | Desktop | 8002 | 5175 |
 
-Port diatur di `.env.web`, `.env.mobile`, dan `.env.desktop`. Override port Vite melalui `VITE_PORT` sebelum perintah npm:
+Port diatur di `.env.web`, `.env.mobile`, `.env.desktop`. Override port Vite:
 
 ```bash
 VITE_PORT=5200 npm run dev:web
@@ -254,29 +251,19 @@ VITE_PORT=5200 npm run dev:web
 
 ### Periksa Apa yang Sedang Aktif
 
-Kapan saja Anda dapat memeriksa mode platform aktif dan kumpulan fitur:
-
 ```bash
 php artisan platform:status
 ```
 
-Ini menampilkan mode yang terdeteksi, runtime platform, file lingkungan yang dimuat, direktori aset aktif, dan fitur yang tersedia.
-
 ### Beralih Mode Selama Pengembangan
-
-Saat beralih antara platform, bersihkan rute yang di-cache dan status deteksi platform agar data lama tidak terbawa:
 
 ```bash
 php artisan platform:clear
 ```
 
-Ini memflush rute yang di-cache dan singleton deteksi platform mana pun.
-
 ---
 
 ## Referensi Perintah Build
-
-Kompilasi aset untuk platform sebelum melayani di produksi, atau saat memulai sesi pengembangan baru tanpa HMR:
 
 ```bash
 # Build hanya bundel web
@@ -297,209 +284,224 @@ Direktori output:
 ```
 public/
   build/
-    web/        ← digunakan oleh php artisan serve
-    mobile/     ← digunakan oleh php artisan native:run
-    desktop/    ← digunakan oleh php artisan native:serve
+    web/        ← serve:web
+    mobile/     ← serve:mobile
+    desktop/    ← serve:desktop
+```
+
+---
+
+## Shell Capacitor: Perintah Build & Deploy
+
+> Perintah di bawah ini dijalankan **di dalam folder shell**, bukan di root server.
+
+### Mobile (Android)
+
+```bash
+cd app/Capacitor/UserApp
+npm run build              # Vite build → dist/
+npx cap sync android       # Copy dist + update native project
+npx cap run android        # Deploy ke emulator/device
+npx cap run android --watch # Hot reload (dev)
+```
+
+### Mobile (iOS — hanya macOS)
+
+```bash
+cd app/Capacitor/UserApp
+npm run build
+npx cap sync ios
+npx cap run ios
+```
+
+### Desktop (Windows)
+
+```bash
+cd app/Capacitor/UserApp
+npm run build
+npx tsc -p electron/tsconfig.json
+npx electron-builder --config electron/electron-builder.config.js --win
+# Output: electron/dist/*.exe, *.zip
+```
+
+### Desktop (macOS)
+
+```bash
+cd app/Capacitor/UserApp
+npm run build
+npx tsc -p electron/tsconfig.json
+npx electron-builder --config electron/electron-builder.config.js --mac
+# Output: electron/dist/*.dmg, *.zip
+```
+
+### Set URL Shell (wajib sebelum build produksi)
+
+```bash
+cd app/Capacitor/UserApp
+npm run set:url -- https://dekorasi.example.com/user
+
+cd app/Capacitor/AdminApp
+npm run set:url -- https://dekorasi.example.com/admin
 ```
 
 ---
 
 ## Pemecahan Masalah
 
-### 1. Dependensi NativePHP yang Hilang
+### 1. Aset Tidak Dikompilasi — 404 pada JS/CSS atau Halaman Kosong
 
 **Gejala:**
-
 ```
-Error: Required dependencies for Mobile Native mode are not installed.
-
-Missing packages:
-  - nativephp/mobile
-
-To install, run:
-  composer require nativephp/mobile
+GET /build/mobile/assets/app-mobile.abc12345.js  404 Not Found
 ```
-
-Atau untuk mode Desktop:
-
-```
-Error: Required dependencies for Desktop Application mode are not installed.
-
-Missing packages:
-  - nativephp/electron
-  - nativephp/laravel
-
-To install, run:
-  composer require nativephp/electron nativephp/laravel
-```
-
-**Penyebab:** Anda menjalankan `native:run` atau `native:serve` sebelum menginstal paket Composer yang diperlukan.
 
 **Solusi:**
-
 ```bash
-# Untuk mode Mobile
-composer require nativephp/mobile
-
-# Untuk mode Desktop
-composer require nativephp/electron nativephp/laravel
+npm run build:web       # untuk serve:web
+npm run build:mobile    # untuk serve:mobile
+npm run build:desktop   # untuk serve:desktop
 ```
 
-Setelah menginstal, jalankan `php artisan native:install` untuk menyiapkan struktur proyek NativePHP, lalu coba perintah Anda lagi.
-
-Gunakan wrapper validasi untuk mendapatkan error ini lebih awal dengan instruksi yang jelas:
-
+**Konfirmasi:**
 ```bash
-php artisan platform:native:run     # wrapper validasi untuk native:run
-php artisan platform:native:serve   # wrapper validasi untuk native:serve
+php artisan platform:status
+# Asset directory: public/build/<platform>
+# Manifest exists: true/false
 ```
 
 ---
 
-### 2. Port Salah — Alamat Sudah Digunakan
+### 2. File Lingkungan Tidak Ditemukan
 
-**Gejala:**
+**Gejala:** Pengaturan khusus platform tidak diterapkan.
 
-```
-Failed to listen on 127.0.0.1:8000 (reason: Address already in use)
-```
-
-Atau dalam aplikasi NativePHP, server tertanam diam-diam gagal dimulai dan aplikasi menampilkan halaman kosong.
-
-**Penyebab:** Proses lain sudah terikat ke port — sering instance `php artisan serve` lain atau sesi NativePHP sebelumnya.
+**Penyebab:** File tidak ada di root proyek, atau nama/casing salah.
 
 **Solusi:**
-
 ```bash
-# Cari apa yang menggunakan port (Windows)
-netstat -ano | findstr :8000
-
-# Cari apa yang menggunakan port (macOS / Linux)
-lsof -i :8000
-
-# Hentikan proses yang konflik (Windows, PID dari atas)
-taskkill /PID <pid> /F
-
-# Hentikan proses yang konflik (macOS / Linux)
-kill -9 <pid>
-```
-
-Alternatifnya, tentukan port yang berbeda:
-
-```bash
-php artisan serve --port=8080
-```
-
-Untuk mode NativePHP, ubah `APP_PORT` dan `NATIVEPHP_HTTP_PORT` (Desktop) atau `NATIVE_SERVER_PORT` (Mobile) di file `.env.*` yang relevan.
-
----
-
-### 3. File Lingkungan Tidak Ditemukan
-
-**Gejala:** Pengaturan khusus platform (driver sesi, `APP_URL`, port) tidak diterapkan meskipun Anda telah membuat file `.env.mobile` atau `.env.desktop`.
-
-Atau dalam log:
-
-```
-[debug] Platform environment file not found, using base environment  {"file":".env.mobile","mode":"mobile"}
-```
-
-**Penyebab:** File env platform tidak ada di root proyek, atau memiliki nama yang salah. Kesalahan umum:
-
-- File ditempatkan di subdirektori alih-alih root proyek.
-- Typo dalam nama file (`.env.Mobile` vs `.env.mobile`).
-- Hanya file `.example` yang disalin tetapi tidak diubah namanya.
-
-**Solusi:**
-
-```bash
-# Salin file contoh (jalankan dari root proyek)
 cp .env.web.example .env.web
 cp .env.mobile.example .env.mobile
 cp .env.desktop.example .env.desktop
 ```
 
-Verifikasi lokasi: keempat file (`.env`, `.env.web`, `.env.mobile`, `.env.desktop`) harus berada di level yang sama dengan `composer.json`.
-
-Periksa log debug `EnvironmentManager` di `storage/logs/laravel.log` untuk mengkonfirmasi file mana yang dicari dan apakah ditemukan.
+Verifikasi lokasi: keempat file (`.env`, `.env.web`, `.env.mobile`, `.env.desktop`) harus di level yang sama dengan `composer.json`.
 
 ---
 
-### 4. Aset Tidak Dikompilasi — 404 pada JS/CSS atau Halaman Kosong
+### 3. Port Salah — Alamat Sudah Digunakan
 
 **Gejala:**
-
 ```
-GET /build/mobile/assets/app-mobile.abc12345.js  404 Not Found
+Failed to listen on 127.0.0.1:8000 (reason: Address already in use)
 ```
-
-Atau halaman dimuat tetapi tanpa gaya, tanpa interaktivitas, atau error manifest Vite di konsol browser.
-
-**Penyebab:** Bundel aset untuk mode platform aktif belum dikompilasi, atau dikompilasi untuk platform yang berbeda.
 
 **Solusi:**
-
 ```bash
-# Kompilasi aset untuk platform yang Anda layani
-npm run build:web      # untuk php artisan serve
-npm run build:mobile   # untuk php artisan native:run
-npm run build:desktop  # untuk php artisan native:serve
+# Windows
+netstat -ano | findstr :8000
+taskkill /PID <pid> /F
+
+# macOS / Linux
+lsof -i :8000
+kill -9 <pid>
 ```
 
-Untuk pengembangan dengan live reloading, jalankan server dev yang sesuai sebagai gantinya:
-
+**Alternatif — port berbeda:**
 ```bash
-npm run dev:web        # port 5173
-npm run dev:mobile     # port 5174
-npm run dev:desktop    # port 5175
+php artisan serve:web --port=8080
+php artisan serve:mobile --port=8003
+php artisan serve:desktop --port=8004
 ```
-
-Untuk mengkonfirmasi jalur manifest mana yang dibaca aplikasi:
-
-```bash
-php artisan platform:status
-```
-
-Output menampilkan `Asset directory: public/build/<platform>` dan apakah `manifest.json` ada di jalur tersebut.
 
 ---
 
-### 5. Deteksi Platform Defaulting ke Web (Unexpected `WebsiteWindows`)
+### 4. Deteksi Platform Defaulting ke Web (`WebsiteWindows`)
 
-**Gejala:** Aplikasi berperilaku seolah berjalan dalam mode Web meskipun Anda memulainya dengan `native:run` atau `native:serve`. Fitur seperti akses kamera native tidak tersedia, dan `php artisan platform:status` melaporkan `PlatformMode: Web`.
+**Gejala:** `php artisan platform:status` melaporkan `PlatformMode: Web` meskipun menjalankan `serve:mobile` atau `serve:desktop`.
 
-**Penyebab:** `PlatformCommandDetector` membaca `$_SERVER['argv']` untuk mengidentifikasi perintah Artisan. Jika nama perintah di `argv[1]` tidak cocok persis dengan `serve`, `native:run`, atau `native:serve`, deteksi jatuh kembali ke mode Web. Ini dapat terjadi ketika:
-
-- Perintah tidak dijalankan melalui Artisan CLI (mis. diluncurkan langsung sebagai proses HTTP).
-- Skrip wrapper mengubah `argv[0]` sehingga `artisan` tidak terdeteksi.
-- Variabel lingkungan `NATIVEPHP_RUNNING`, `ELECTRON_RUN_AS_NODE`, atau `NATIVE_MOBILE_RUNNING` tidak diatur saat berjalan di dalam runtime native.
+**Penyebab:** `PlatformCommandDetector` membaca `$_SERVER['argv']`. Deteksi jatuh ke Web ketika:
+- Nama perintah di `argv[1]` tidak cocok `serve:web|serve:mobile|serve:desktop|serve`.
+- Proses bukan lewat Artisan CLI (queue worker, scheduler).
 
 **Solusi:**
+1. Periksa log:
+```bash
+tail -n 50 storage/logs/laravel.log | grep "Platform detection"
+```
 
-1. Periksa `storage/logs/laravel.log` untuk entri warning `Platform detection failed` — berisi exception yang mendasarinya.
+2. Untuk proses non-CLI (worker, scheduler), set `PLATFORM_MODE`:
+```bash
+# Supervisor example
+[program:laravel-queue-mobile]
+command=php artisan queue:work --queue=default
+environment=PLATFORM_MODE="mobile"
+```
 
-2. Untuk fallback server HTTP / tertanam, pastikan runtime native menetapkan variabel lingkungan yang benar:
+3. Bersihkan cache:
+```bash
+php artisan platform:clear
+```
 
-   ```dotenv
-   # Di .env.desktop — diatur secara otomatis oleh NativePHP Electron
-   NATIVEPHP_RUNNING=true
+---
 
-   # Di .env.mobile — diatur secara otomatis oleh NativePHP Mobile
-   NATIVE_MOBILE_RUNNING=true
-   ```
+### 5. Shell Capacitor Menampilkan Halaman Putih / Tidak Bisa Konek
 
-3. Jalankan ulang perintah langsung dari terminal alih-alih melalui launcher atau konfigurasi run IDE, yang mungkin menghapus atau mengubah `argv`.
+**Diagnosa:**
+```bash
+# 1. Server Laravel hidup?
+curl -I http://10.0.2.2:8001/user   # mobile emulator
+curl -I http://localhost:8002/user  # desktop
 
-4. Jalankan `php artisan platform:clear` lalu coba lagi. File rute yang di-cache dari sesi mode Web sebelumnya dapat menyebabkan aplikasi berperilaku seolah modenya Web bahkan setelah perintah berubah.
+# 2. Aset platform ada?
+ls public/build/mobile/.vite/manifest.json
+ls public/build/desktop/.vite/manifest.json
+
+# 3. capacitor.config.json URL benar?
+cat app/Capacitor/UserApp/capacitor.config.json
+# "server": { "url": "http://10.0.2.2:8001/user", "cleartext": true }
+
+# 4. Cleartext diizinkan untuk http dev?
+```
+
+**Solusi:**
+```bash
+# Build aset
+npm run build:mobile
+npm run build:desktop
+
+# Set URL shell ke server yang benar
+cd app/Capacitor/UserApp && npm run set:url -- http://10.0.2.2:8001/user
+
+# Sync Capacitor
+cd app/Capacitor/UserApp && npm run sync
+```
+
+---
+
+### 6. Kamera Tidak Muncul di Shell Mobile
+
+**Periksa:**
+- `CbirSearchPage` dispatch `capacitor-camera-open-input`?
+- Partial `cbir-camera-options` punya `x-on:capacitor-camera-open-input.window`?
+- Input tersembunyi `photo` dan `photoFront` ada di partial?
+
+---
+
+### 7. Push Notification FCM Tidak Masuk di Mobile
+
+**Periksa:**
+- `fcm_token` tersimpan di tabel `users`?
+- `FIREBASE_CREDENTIALS` / `FCM_SERVER_KEY` dikonfigurasi?
+- `PlatformNotificationService::send()` memanggil `sendFcmPush()`?
 
 ---
 
 ## Lihat Juga
 
-- [Pohon Keputusan Penggunaan Perintah](./command-decision-tree.md) — diagram alur untuk memilih perintah yang tepat dengan referensi cepat pemecahan masalah
+- [Pohon Keputusan Penggunaan Perintah](./command-decision-tree.md) — diagram alur lengkap
 - [Arsitektur Dukungan Platform](./platform-support.md) — ikhtisar komponen dan alur data
-- [Strategi Konfigurasi Lingkungan](./environment-configuration.md) — struktur file `.env.*` dan aturan penggabungan
-- [Proses Kompilasi Aset](./asset-compilation.md) — pipeline build Vite dan pengaturan HMR
+- [Strategi Konfigurasi Lingkungan](./environment-configuration.md) — struktur file `.env.*`
+- [Proses Kompilasi Aset](./asset-compilation.md) — pipeline build Vite dan HMR
 - [Matriks Fitur Platform](./platform-features.md) — ketersediaan fitur per platform
-- `php artisan platform:status` — periksa mode aktif, runtime platform, dan fitur
-- `php artisan platform:clear` — flush rute yang di-cache dan status platform
+- [Panduan Deployment Mobile](../deployment/mobile/mobile.md) — build APK/AAB/IPA
+- [Panduan Deployment Desktop](../deployment/desktop/desktop.md) — build .exe/.dmg

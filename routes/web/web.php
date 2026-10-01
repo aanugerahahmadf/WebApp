@@ -14,23 +14,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use Laravel\Sanctum\PersonalAccessToken;
+
 // Legal Pages — HTML untuk mobile browser / HP fisik
-use Native\Mobile\Facades\System;
 
 Route::get('/legal/terms', [LegalWebController::class, 'terms'])->name('legal.terms');
 Route::get('/legal/privacy', [LegalWebController::class, 'privacy'])->name('legal.privacy');
 Route::get('/legal/help', [LegalWebController::class, 'help'])->name('legal.help');
 
-Route::get('/', function () {
-    return view('User.welcome.welcome');
-})->middleware(SetLocale::class);
+// The storefront is the 'welcome' Filament panel, and '/' is its front door.
+// The old marketing page that used to live here has been removed: guests browse
+// the landing page and the catalog, and anything account-shaped sends them to
+// the user panel's login (see AuthenticateWelcome).
+Route::redirect('/', '/welcome/home')->middleware(SetLocale::class);
 
 Route::redirect('/admin/inbox', '/admin/inbox/messages');
-Route::get('/mobile/settings', function () {
-    System::appSettings();
-
-    return back();
-})->name('mobile.settings')->middleware(['auth']);
 Route::get('/language/switch/{locale}', [LanguageController::class, 'switch'])
     ->name('language.switch');
 Route::post('/language/locale/{locale}', [LanguageController::class, 'update'])
@@ -41,22 +38,23 @@ Route::get('/auth/{provider}/redirect', [SocialiteController::class, 'redirect']
     ->name('auth.redirect');
 Route::get('/auth/{provider}/callback', [SocialiteController::class, 'callback'])
     ->name('auth.callback');
-// Mobile OAuth via reverse client ID scheme (tidak perlu server publik)
+// Callback OAuth untuk shell Capacitor. Redirect-nya tetap mendarat di server
+// ini dan session cookie-nya langsung dipakai WebView — tidak ada token/deep
+// link bridging seperti dulu. Rute lama sengaja dibiarkan supaya redirect URI
+// yang masih terdaftar di konsol Google tidak berubah jadi 404.
 Route::get('/auth/{provider}/callback/scheme', [SocialiteController::class, 'callbackMobileScheme'])
     ->name('auth.callback.scheme');
-// Mobile OAuth: callback dari Google → simpan token → redirect ke deep link
 Route::get('/auth/{provider}/callback/mobile', [SocialiteController::class, 'callbackMobile'])
     ->name('auth.callback.mobile');
-// Mobile OAuth: deep link handler → verifikasi token → login user
+// Token handoff — bukan lagi bagian dari alur OAuth, tetap diterima bila ada token.
 Route::get('/auth/mobile/verify', [SocialiteController::class, 'verifyMobileToken'])
     ->name('auth.mobile.verify');
-// NativePHP Deep Link Handler — weddingapp://auth/google/success?token=xxx
-// NativePHP intercepts the deep link and loads this URL in the WebView
+// Jalur lama dari bridging deep link NativePHP; masih dilayani, bukan dihapus.
 Route::get('/auth/deeplink/google/success', [SocialiteController::class, 'verifyMobileToken'])
     ->name('auth.deeplink.success');
 
-// NativePHP juga bisa load path langsung dari deep link
-// weddingapp://auth/google/success → /auth/google/success di WebView
+// Jalur alias dari bridging deep link lama; shell Capacitor memuat URL
+// server secara langsung, jadi tidak ada terjemahan scheme di sisi klien.
 Route::get('/auth/google/success', [SocialiteController::class, 'verifyMobileToken'])
     ->name('auth.google.success');
 
