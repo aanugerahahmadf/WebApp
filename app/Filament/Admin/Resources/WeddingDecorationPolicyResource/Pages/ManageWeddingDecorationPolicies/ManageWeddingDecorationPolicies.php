@@ -2,6 +2,8 @@
 
 namespace App\Filament\Admin\Resources\WeddingDecorationPolicyResource\Pages\ManageWeddingDecorationPolicies;
 
+use App\Filament\Admin\Exports\WeddingDecorationPolicyExporter\WeddingDecorationPolicyExporter;
+use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\WeddingDecorationPolicyResource\WeddingDecorationPolicyResource;
 use Filament\Actions;
 use Filament\Notifications\Notification;
@@ -19,6 +21,11 @@ class ManageWeddingDecorationPolicies extends ManageRecords
     protected function getHeaderActions(): array
     {
         return [
+            Actions\ExportAction::make()
+                ->exporter(WeddingDecorationPolicyExporter::class)
+                ->label(__('Ekspor Data'))
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('success'),
             Actions\CreateAction::make()
                 ->label(__('Tambah Kebijakan'))
                 ->icon('heroicon-o-plus')
@@ -28,6 +35,14 @@ class ManageWeddingDecorationPolicies extends ManageRecords
                         ->title(__('Kebijakan Ditambahkan'))
                         ->body(__('Kebijakan baru telah berhasil ditambahkan.'))
                 ),
+        ];
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            WeddingDecorationPolicyResource::getUrl('index') => WeddingDecorationPolicyResource::getNavigationLabel(),
         ];
     }
 }

@@ -4,6 +4,7 @@ namespace App\Filament\Admin\Resources\OrderResource\Pages\ListOrders;
 
 use App\Enums\OrderStatus\OrderStatus;
 use App\Filament\Admin\Exports\OrderExporter\OrderExporter;
+use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\OrderResource\OrderResource;
 use App\Models\Order\Order;
 use Filament\Actions;
@@ -18,6 +19,14 @@ class ListOrders extends ListRecords
     public function getTitle(): string
     {
         return static::$title ?? static::getResource()::getTitleCasePluralModelLabel();
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            OrderResource::getUrl('index') => OrderResource::getNavigationLabel(),
+        ];
     }
 
     protected function getHeaderActions(): array

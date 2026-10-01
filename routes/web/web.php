@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\ConsultationFormPdfController\ConsultationFormPdfController as AdminConsultationFormPdfController;
+use App\Http\Controllers\Admin\DataExportDownloadController\DataExportDownloadController;
 use App\Http\Controllers\Admin\InvoicePdfController\InvoicePdfController as AdminInvoicePdfController;
 use App\Http\Controllers\Admin\ReportPdfController\ReportPdfController as AdminReportPdfController;
 use App\Http\Controllers\Admin\ReviewVoteController\ReviewVoteController as AdminReviewVoteController;
@@ -11,14 +12,17 @@ use App\Http\Controllers\User\InvoicePdfController\InvoicePdfController;
 use App\Http\Controllers\User\LanguageController\LanguageController;
 use App\Http\Controllers\User\MediaController\MediaController;
 use App\Http\Controllers\User\ReportPdfController\ReportPdfController;
+use App\Http\Controllers\User\ReviewReportController\ReviewReportController;
 use App\Http\Controllers\User\ReviewVoteController\ReviewVoteController;
 use App\Http\Controllers\User\SocialiteController\SocialiteController;
 use App\Http\Controllers\Welcome\ConsultationFormPdfController\ConsultationFormPdfController as WelcomeConsultationFormPdfController;
 use App\Http\Controllers\Welcome\InvoicePdfController\InvoicePdfController as WelcomeInvoicePdfController;
 use App\Http\Controllers\Welcome\LegalWebController\LegalWebController as WelcomeLegalWebController;
 use App\Http\Controllers\Welcome\ReportPdfController\ReportPdfController as WelcomeReportPdfController;
+use App\Http\Controllers\Welcome\ReviewReportController\ReviewReportController as WelcomeReviewReportController;
 use App\Http\Controllers\Welcome\ReviewVoteController\ReviewVoteController as WelcomeReviewVoteController;
 use App\Http\Middleware\SetLocale\SetLocale;
+use App\Http\Middleware\SuperAdmin\SuperAdmin;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -156,6 +160,8 @@ Route::get('/reports/{report}/pdf', [ReportPdfController::class, 'download'])
 // -----------------------------------------------------------------------------
 Route::post('/reviews/{review}/helpful', [ReviewVoteController::class, 'toggle'])
     ->name('reviews.vote');
+Route::post('/reviews/{review}/report', [ReviewReportController::class, 'store'])
+    ->name('reviews.report');
 
 // -----------------------------------------------------------------------------
 // ADMIN — cermin PDF di bawah prefix /admin (middleware auth; cek role di controller)
@@ -171,6 +177,10 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function ():
         ->name('reports.pdf');
     Route::post('/reviews/{review}/helpful', [AdminReviewVoteController::class, 'toggle'])
         ->name('reviews.vote');
+    Route::get('/data-exports/download/{file}', [DataExportDownloadController::class, 'download'])
+        ->middleware(SuperAdmin::class)
+        ->where('file', '[A-Za-z0-9\-.]+\.zip')
+        ->name('data-exports.download');
 });
 
 // -----------------------------------------------------------------------------
@@ -187,4 +197,6 @@ Route::middleware(['auth'])->prefix('welcome')->name('welcome.')->group(function
         ->name('reports.pdf');
     Route::post('/reviews/{review}/helpful', [WelcomeReviewVoteController::class, 'toggle'])
         ->name('reviews.vote');
+    Route::post('/reviews/{review}/report', [WelcomeReviewReportController::class, 'store'])
+        ->name('reviews.report');
 });

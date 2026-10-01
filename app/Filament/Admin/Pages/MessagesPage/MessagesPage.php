@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Pages\MessagesPage;
 
+use App\Filament\Admin\Pages\Home\Home;
 use App\Models\Inbox\Inbox;
 use Filament\Pages\Page;
 use Filament\Support\Enums\MaxWidth;
@@ -112,5 +113,13 @@ class MessagesPage extends Page
     public function getHeading(): string|Htmlable
     {
         return __('Messages');
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            $this->getTitle(),
+        ];
     }
 }

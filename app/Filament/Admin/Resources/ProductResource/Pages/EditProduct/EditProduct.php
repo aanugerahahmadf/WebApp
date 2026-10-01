@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\ProductResource\Pages\EditProduct;
 
+use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\ProductResource\ProductResource;
 use Filament\Actions;
 use Filament\Notifications\Notification;
@@ -22,6 +23,14 @@ class EditProduct extends EditRecord
     public function getTitle(): string
     {
         return $this->record->name;
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            ...parent::getBreadcrumbs(),
+        ];
     }
 
     protected function getHeaderActions(): array

@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources\ProductResource\Pages\ListProducts;
 
 use App\Filament\Admin\Exports\ProductExporter\ProductExporter;
+use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\ProductResource\ProductResource;
 use Filament\Actions;
 use Filament\Notifications\Notification;
@@ -15,6 +16,14 @@ class ListProducts extends ListRecords
     public function getTitle(): string
     {
         return static::$title ?? static::getResource()::getTitleCasePluralModelLabel();
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            ProductResource::getUrl('index') => ProductResource::getNavigationLabel(),
+        ];
     }
 
     protected function getHeaderActions(): array

@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources\VoucherResource\Pages\ManageVouchers;
 
 use App\Filament\Admin\Exports\VoucherExporter\VoucherExporter;
+use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\VoucherResource\VoucherResource;
 use Filament\Actions;
 use Filament\Notifications\Notification;
@@ -37,6 +38,14 @@ class ManageVouchers extends ManageRecords
                         ->title(__('Voucher Ditambahkan'))
                         ->body(__('Voucher baru telah berhasil ditambahkan.'))
                 ),
+        ];
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            VoucherResource::getUrl('index') => VoucherResource::getNavigationLabel(),
         ];
     }
 }

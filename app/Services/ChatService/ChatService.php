@@ -89,7 +89,7 @@ class ChatService
      * `Saya ingin melaporkan ini: Jenis: {category} Item: {item}` + optional
      * [details] + the standard report closing prompt.
      */
-    public static function sendReportMessage(Inbox $inbox, string $category, string $itemName, ?string $details = null, array $meta = []): Message
+    public static function sendReportMessage(Inbox $inbox, string $category, string $itemName, ?string $details = null, array $meta = [], ?int $senderUserId = null): Message
     {
         $csCategory = match ($category) {
             'order', 'payment' => 'order_help',
@@ -124,15 +124,19 @@ class ChatService
         }
         $messageText .= "\n\n".__('Mohon bantu tindak lanjuti laporan ini, terima kasih.');
 
+        $senderId = $senderUserId ?? Auth::id();
+
         $message = Message::create([
             'inbox_id' => $inbox->id,
-            'user_id' => Auth::id(),
+            'user_id' => $senderId,
             'message' => $messageText,
             'meta' => $meta ?: null,
         ]);
 
-        // Dispatch bot reply if user is not admin
-        if (Auth::user() && ! Auth::user()->hasRole('super_admin')) {
+        // Dispatch bot reply if sender is not admin. Null-safe because a
+        // guest row always counts as "not admin".
+        $sender = $senderId ? User::find($senderId) : Auth::user();
+        if ($sender && ! $sender->hasRole('super_admin')) {
             SendBotReply::dispatch($message->id)->delay(now()->addSeconds(5));
         }
 

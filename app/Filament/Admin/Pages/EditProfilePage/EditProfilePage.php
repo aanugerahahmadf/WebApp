@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Pages\EditProfilePage;
 
+use App\Filament\Admin\Pages\Home\Home;
 use App\Livewire\Admin\PersonalInfoComponentSuperAdmin\PersonalInfoComponentSuperAdmin;
 use App\Livewire\Admin\UsernameComponent\UsernameComponent;
 use App\Livewire\Admin\BrowserSessionsComponent\BrowserSessionsComponent;
@@ -42,5 +43,13 @@ class EditProfilePage extends Page
         return collect($components)
             ->sortBy(fn (string $component) => $component::getSort())
             ->all();
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            $this->getTitle(),
+        ];
     }
 }

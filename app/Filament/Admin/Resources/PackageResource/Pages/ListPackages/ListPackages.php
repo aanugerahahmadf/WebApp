@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources\PackageResource\Pages\ListPackages;
 
 use App\Filament\Admin\Exports\PackageExporter\PackageExporter;
+use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\PackageResource\PackageResource;
 use Filament\Actions;
 use Filament\Notifications\Notification;
@@ -15,6 +16,14 @@ class ListPackages extends ListRecords
     public function getTitle(): string
     {
         return static::$title ?? static::getResource()::getTitleCasePluralModelLabel();
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            PackageResource::getUrl('index') => PackageResource::getNavigationLabel(),
+        ];
     }
 
     protected function getHeaderActions(): array

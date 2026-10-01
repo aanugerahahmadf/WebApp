@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\PackageResource\Pages\ViewPackage;
 
+use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\PackageResource\PackageResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ViewRecord;
@@ -13,6 +14,14 @@ class ViewPackage extends ViewRecord
     public function getTitle(): string
     {
         return $this->record->name;
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            ...parent::getBreadcrumbs(),
+        ];
     }
 
     protected function getHeaderActions(): array

@@ -2,7 +2,10 @@
 
 namespace App\Filament\Admin\Resources\PaymentGatewayResource\Pages\ManagePaymentGateways;
 
+use App\Filament\Admin\Exports\PaymentGatewayExporter\PaymentGatewayExporter;
+use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\PaymentGatewayResource\PaymentGatewayResource;
+use Filament\Actions;
 use Filament\Resources\Pages\ManageRecords;
 
 class ManagePaymentGateways extends ManageRecords
@@ -16,6 +19,20 @@ class ManagePaymentGateways extends ManageRecords
 
     protected function getHeaderActions(): array
     {
-        return [];
+        return [
+            Actions\ExportAction::make()
+                ->exporter(PaymentGatewayExporter::class)
+                ->label(__('Ekspor Data'))
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('success'),
+        ];
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            PaymentGatewayResource::getUrl('index') => PaymentGatewayResource::getNavigationLabel(),
+        ];
     }
 }

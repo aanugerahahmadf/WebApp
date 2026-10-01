@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources\WishlistResource\Pages\ManageWishlists;
 
 use App\Filament\Admin\Exports\WishlistExporter\WishlistExporter;
+use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\WishlistResource\WishlistResource;
 use Filament\Actions;
 use Filament\Notifications\Notification;
@@ -37,6 +38,14 @@ class ManageWishlists extends ManageRecords
                         ->title(__('Wishlist Ditambahkan'))
                         ->body(__('Wishlist baru telah berhasil ditambahkan.'))
                 ),
+        ];
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            WishlistResource::getUrl('index') => WishlistResource::getNavigationLabel(),
         ];
     }
 }

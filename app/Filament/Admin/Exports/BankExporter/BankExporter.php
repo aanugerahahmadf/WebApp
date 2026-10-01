@@ -22,14 +22,12 @@ class BankExporter extends Exporter
                 ->label(__('Kode')),
             ExportColumn::make('type')
                 ->label(__('Tipe')),
-            ExportColumn::make('logo')
-                ->label(__('Logo')),
-            ExportColumn::make('qris_payload')
-                ->label(__('Payload QRIS')),
-            ExportColumn::make('qris_image')
-                ->label(__('Gambar QRIS')),
+            ExportColumn::make('account_number')
+                ->label(__('No. Rekening')),
+            ExportColumn::make('account_holder')
+                ->label(__('Pemilik')),
             ExportColumn::make('is_active')
-                ->label(__('Status Aktif')),
+                ->label(__('Aktif')),
             ExportColumn::make('created_at')
                 ->label(__('Dibuat Pada')),
             ExportColumn::make('updated_at')

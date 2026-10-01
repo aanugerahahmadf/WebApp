@@ -12,7 +12,7 @@
         @if ($breadcrumbs)
             <x-filament::breadcrumbs
                 :breadcrumbs="$breadcrumbs"
-                class="mb-2 hidden sm:block"
+                class="mb-2"
             />
         @endif
 

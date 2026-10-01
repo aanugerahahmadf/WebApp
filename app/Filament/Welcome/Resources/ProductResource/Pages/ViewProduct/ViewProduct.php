@@ -2,10 +2,8 @@
 
 namespace App\Filament\Welcome\Resources\ProductResource\Pages\ViewProduct;
 
-use App\Filament\Welcome\Pages\CbirSearchPage\CbirSearchPage;
 use App\Filament\Welcome\Pages\Home\Home;
 use App\Filament\Welcome\Resources\ProductResource\ProductResource;
-use Filament\Actions;
 use Filament\Resources\Pages\ViewRecord;
 
 class ViewProduct extends ViewRecord
@@ -27,22 +25,6 @@ class ViewProduct extends ViewRecord
 
     protected function getHeaderActions(): array
     {
-        return [
-            Actions\Action::make('back')
-                ->label(__('Kembali'))
-                ->url(function () {
-                    $prev = url()->previous();
-                    if (str_contains($prev, 'cbir-search')) {
-                        return CbirSearchPage::getUrl();
-                    }
-                    if (str_contains($prev, 'packages') || str_contains($prev, 'products')) {
-                        return static::getResource()::getUrl('index');
-                    }
-
-                    return Home::getUrl();
-                })
-                ->color('gray')->button()
-                ->icon('heroicon-o-arrow-left'),
-        ];
+        return [];
     }
 }

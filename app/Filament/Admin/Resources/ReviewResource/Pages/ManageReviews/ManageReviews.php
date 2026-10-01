@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources\ReviewResource\Pages\ManageReviews;
 
 use App\Filament\Admin\Exports\ReviewExporter\ReviewExporter;
+use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\ReviewResource\ReviewResource;
 use Filament\Actions;
 use Filament\Notifications\Notification;
@@ -37,6 +38,14 @@ class ManageReviews extends ManageRecords
                         ->title(__('Review Ditambahkan'))
                         ->body(__('Review baru telah berhasil ditambahkan.'))
                 ),
+        ];
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            ReviewResource::getUrl('index') => ReviewResource::getNavigationLabel(),
         ];
     }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Filament\Admin\Resources\HelpResource\Pages\ManageHelps;
 
+use App\Filament\Admin\Exports\HelpExporter\HelpExporter;
+use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\HelpResource\HelpResource;
 use Filament\Actions;
 use Filament\Notifications\Notification;
@@ -19,6 +21,11 @@ class ManageHelps extends ManageRecords
     protected function getHeaderActions(): array
     {
         return [
+            Actions\ExportAction::make()
+                ->exporter(HelpExporter::class)
+                ->label(__('Ekspor Data'))
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('success'),
             Actions\CreateAction::make()
                 ->label(__('Tambah Pusat Bantuan'))
                 ->icon('heroicon-o-plus')
@@ -28,6 +35,14 @@ class ManageHelps extends ManageRecords
                         ->title(__('Pusat Bantuan Ditambahkan'))
                         ->body(__('Pusat bantuan baru telah berhasil ditambahkan.'))
                 ),
+        ];
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            HelpResource::getUrl('index') => HelpResource::getNavigationLabel(),
         ];
     }
 }

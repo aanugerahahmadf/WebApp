@@ -2,6 +2,8 @@
 
 namespace App\Filament\Admin\Resources\TermsOfServiceResource\Pages\ManageTermsOfServices;
 
+use App\Filament\Admin\Exports\TermsOfServiceExporter\TermsOfServiceExporter;
+use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\TermsOfServiceResource\TermsOfServiceResource;
 use Filament\Actions;
 use Filament\Notifications\Notification;
@@ -19,6 +21,11 @@ class ManageTermsOfServices extends ManageRecords
     protected function getHeaderActions(): array
     {
         return [
+            Actions\ExportAction::make()
+                ->exporter(TermsOfServiceExporter::class)
+                ->label(__('Ekspor Data'))
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('success'),
             Actions\CreateAction::make()
                 ->label(__('Tambah Ketentuan Layanan'))
                 ->icon('heroicon-o-plus')
@@ -28,6 +35,14 @@ class ManageTermsOfServices extends ManageRecords
                         ->title(__('Ketentuan Layanan Ditambahkan'))
                         ->body(__('Ketentuan layanan baru telah berhasil ditambahkan.'))
                 ),
+        ];
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            TermsOfServiceResource::getUrl('index') => TermsOfServiceResource::getNavigationLabel(),
         ];
     }
 }

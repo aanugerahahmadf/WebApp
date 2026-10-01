@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\ReportResource\Pages\ManageReports;
 
+use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\ReportResource\ReportResource;
 use Filament\Resources\Pages\ManageRecords;
 
@@ -17,5 +18,13 @@ class ManageReports extends ManageRecords
     protected function getHeaderActions(): array
     {
         return [];
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            ReportResource::getUrl('index') => ReportResource::getNavigationLabel(),
+        ];
     }
 }

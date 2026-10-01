@@ -123,6 +123,14 @@ class AppServiceProvider extends ServiceProvider
         // spin up a second cookie write or a second DB read for the same visit.
         $this->app->singleton(GuestIdentity::class);
 
+        // FIX: model autentikasi aplikasi (App\Models\User\User), bukan
+        // bawaan Filament (App\Models\User) — dipakai relasi user() pada
+        // Filament Export agar tombol "Ekspor Data" native berfungsi.
+        $this->app->bind(
+            \Illuminate\Contracts\Auth\Authenticatable::class,
+            \App\Models\User\User::class
+        );
+
         // ═══════════════════════════════════════════════════════════
         // FIX: Filament LoginResponse / RegisterResponse / LogoutResponse
         // Returning Livewire\Redirector instead of a RedirectResponse breaks

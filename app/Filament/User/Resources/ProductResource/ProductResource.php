@@ -354,7 +354,7 @@ class ProductResource extends Resource
                                             ->color('danger')
                                             ->state(fn ($record) => $record->discount_price > 0 ? __('DISKON') : '')
                                             ->visible(fn ($record) => $record->discount_price > 0),
-                                    ])->extraAttributes(['class' => 'flex products-center gap-4 mb-4']),
+                                    ])->extraAttributes(['class' => 'flex items-center gap-4 mb-4']),
 
                                     // PRICE DISPLAY
                                     Group::make([
@@ -373,7 +373,7 @@ class ProductResource extends Resource
                                             ->color('gray')
                                             ->extraAttributes(['class' => 'line-through opacity-50 ml-4'])
                                             ->visible(fn ($record) => $record?->discount_price > 0),
-                                    ])->extraAttributes(['class' => 'flex products-baseline mb-6']),
+                                    ])->extraAttributes(['class' => 'flex items-baseline flex-wrap mb-6']),
 
                                     // DESCRIPTION
                                     Infolists\Components\Section::make(__('Tentang Product Ini'))
@@ -565,126 +565,21 @@ class ProductResource extends Resource
                                                     ->label('')
                                                     ->hiddenLabel()
                                                     ->view('User.components.review-summary.review-summary', fn (Product $record): array => ReviewResource::summaryData($record, __('Penilaian Produk'))),
-                                                Infolists\Components\RepeatableEntry::make('reviews')
+                                                Infolists\Components\ViewEntry::make('reviews_list')
                                                     ->label('')
                                                     ->hiddenLabel()
-                                                    ->contained(false)
-                                                    ->state(fn (Product $record) => ReviewResource::filteredReviews($record))
-                                                    ->placeholder(__('Tidak ada ulasan untuk filter ini.'))
-                                                    ->extraAttributes([
-                                                        'class' => '[&>ul>div]:!gap-2',
-                                                        'x-data' => "{ reviewFilter: '".ReviewResource::activeReviewFilter()."' }",
-                                                        'x-on:review-filter.window' => 'reviewFilter = $event.detail',
+                                                    ->view('User.components.review-list.review-list', fn (Product $record): array => [
+                                                        'reviews' => ReviewResource::filteredReviews($record),
+                                                        'activeFilter' => ReviewResource::activeReviewFilter(),
                                                     ])
-                                                    ->schema([
-                                                        Infolists\Components\Grid::make(12)
-                                                            ->schema([
-                                                            Infolists\Components\ImageEntry::make('user.avatar_url')
-                                                                ->label('')
-                                                                ->hiddenLabel()
-                                                                ->circular()
-                                                                ->height('2.5rem')
-                                                                ->columnSpan(1)
-                                                                ->defaultImageUrl(fn ($record) => 'https://ui-avatars.com/api/?name='.urlencode($record->user?->full_name ?? 'U')),
-
-                                                            Infolists\Components\Group::make([
-                                                                Infolists\Components\TextEntry::make('user.full_name')
-                                                                    ->label('')
-                                                                    ->hiddenLabel()
-                                                                    ->weight('semibold')
-                                                                    ->size('sm')
-                                                                    ->extraEntryWrapperAttributes(['class' => '!p-0 !m-0']),
-
-                                                                Infolists\Components\TextEntry::make('rating')
-                                                                    ->label('')
-                                                                    ->hiddenLabel()
-                                                                    ->html()
-                                                                    ->formatStateUsing(fn ($state): HtmlString => new HtmlString(ReviewResource::ratingStarsHtml((int) $state, 'h-4 w-4')))
-                                                                    ->extraEntryWrapperAttributes(['class' => '!p-0 !m-0']),
-                                                            ])->columnSpan(11)->extraAttributes(['class' => '!gap-y-1']),
-
-                                                            Infolists\Components\Actions::make([
-                                                                Action::make('report_review')
-                                                                    ->label(__('Lapor'))
-                                                                    ->icon('heroicon-m-flag')
-                                                                    ->color('danger')
-                                                                    ->outlined()
-                                                                    ->size(ActionSize::ExtraSmall)
-                                                                    ->action(function (Review $record) {
-                                                                        $inbox = ChatService::getOrCreateInboxWithAdmin(auth()->id());
-                                                                        ChatService::sendReportMessage($inbox, 'review', (string) ($record->user?->full_name ?? __('Pengguna')));
-
-                                                                        return redirect(MessagesPage::getUrl(['id' => $inbox->id]));
-                                                                    })
-                                                                    ->extraAttributes(['x-on:click.stop' => '']),
-                                                            ])->extraAttributes(['class' => 'absolute right-3 top-3 z-10']),
-
-                                                            Infolists\Components\TextEntry::make('title')
-                                                                ->label('')
-                                                                ->hiddenLabel()
-                                                                ->weight('bold')
-                                                                ->size('sm')
-                                                                ->columnSpanFull()
-                                                                ->extraEntryWrapperAttributes(['class' => '!p-0 !m-0'])
-                                                                ->visible(fn ($record) => filled($record->title)),
-
-                                                            Infolists\Components\TextEntry::make('comment')
-                                                                ->label('')
-                                                                ->hiddenLabel()
-                                                                    ->size('sm')
-                                                                    ->columnSpan(12)
-                                                                    ->extraEntryWrapperAttributes(['class' => '!p-0 !m-0'])
-                                                                    ->visible(fn ($record) => filled($record->comment)),
-
-                                                                Infolists\Components\ImageEntry::make('photo_urls')
-                                                                ->label('')
-                                                                ->hiddenLabel()
-                                                                    ->height('4rem')
-                                                                    ->columnSpan(12)
-                                                                    ->extraAttributes(['class' => '!gap-x-2'])
-                                                                ->extraImgAttributes(['class' => 'h-16 w-16 rounded-lg object-cover'])
-                                                                ->extraEntryWrapperAttributes(['class' => '!p-0 !m-0'])
-                                                                ->visible(fn ($record) => filled($record->photo_urls)),
-
-                                                            Infolists\Components\TextEntry::make('created_at')
-                                                                ->label('')
-                                                                ->hiddenLabel()
-                                                                ->dateTime('d M Y H:i')
-                                                                ->color('gray')
-                                                                ->size('xs')
-                                                                ->columnSpanFull()
-                                                                ->extraEntryWrapperAttributes(['class' => '!p-0 !m-0 !mt-1']),
-
-                                                            Infolists\Components\ViewEntry::make('vote_helpful')
-                                                                ->label('')
-                                                                ->hiddenLabel()
-                                                                ->view('User.components.review-vote-button.review-vote-button', fn (Review $record): array => ['review' => $record])
-                                                                ->columnSpanFull()
-                                                                ->extraEntryWrapperAttributes(['class' => '!p-0 !m-0 !mt-1']),
-
-                                                            Infolists\Components\ViewEntry::make('review_modal')
-                                                                ->label('')
-                                                                ->hiddenLabel()
-                                                                ->view('User.components.review-card-modal.review-card-modal', fn (Review $record): array => ['review' => $record])
-                                                                ->columnSpanFull(),
-                                                            ])
-                                                            ->extraAttributes(fn (Review $record): array => [
-                                                                'x-data' => '{ openReview: false }',
-                                                                'x-show' => "reviewFilter === 'all' || reviewFilter === 'rating_".(int) $record->rating."' || (reviewFilter === 'comment' && ".(filled($record->comment) ? 'true' : 'false').") || (reviewFilter === 'media' && ".(filled($record->photo_urls) ? 'true' : 'false').')',
-                                                                'x-on:click' => 'openReview = true',
-                                                                'x-on:keydown.enter' => 'openReview = true',
-                                                                'role' => 'button',
-                                                                'tabindex' => '0',
-                                                                'class' => 'relative items-start !gap-x-2 !gap-y-0 cursor-pointer rounded-xl bg-white p-3 text-gray-950 shadow-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:text-white dark:ring-white/10',
-                                                            ]),
-                                                ]),
+                                                    ->columnSpanFull(),
                                         ]),
                                 ])->columnSpan([
                                     'default' => 12,
                                     'md' => 7,
                                 ]),
                             ])
-                            ->extraAttributes(['class' => 'gap-10 p-2']),
+                            ->extraAttributes(['class' => 'gap-6 p-2 sm:p-3 md:gap-10']),
                     ])
                     ->extraAttributes(['class' => 'border-none bg-transparent shadow-none']),
             ]);
@@ -935,7 +830,7 @@ class ProductResource extends Resource
                                                 '<span class="font-semibold">Rp '.number_format($product->final_price, 2, ',', '.').'</span>'.
                                             '</div>'.
                                             '<div class="flex justify-between text-sm text-success-600 dark:text-success-400">'.
-                                                '<span class="flex products-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" /></svg> '.__('Diskon Voucher').'</span>'.
+                                                '<span class="flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" /></svg> '.__('Diskon Voucher').'</span>'.
                                                 '<span class="font-bold">- Rp '.number_format($discount, 2, ',', '.').'</span>'.
                                             '</div>'.
                                             '<div class="flex justify-between text-base font-bold border-t border-success-300 dark:border-success-700 pt-2">'.

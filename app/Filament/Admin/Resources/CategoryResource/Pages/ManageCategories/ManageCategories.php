@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources\CategoryResource\Pages\ManageCategories;
 
 use App\Filament\Admin\Exports\CategoryExporter\CategoryExporter;
+use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\CategoryResource\CategoryResource;
 use Filament\Actions;
 use Filament\Notifications\Notification;
@@ -37,6 +38,14 @@ class ManageCategories extends ManageRecords
                         ->title(__('Kategori Ditambahkan'))
                         ->body(__('Kategori baru telah berhasil ditambahkan.'))
                 ),
+        ];
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            CategoryResource::getUrl('index') => CategoryResource::getNavigationLabel(),
         ];
     }
 }

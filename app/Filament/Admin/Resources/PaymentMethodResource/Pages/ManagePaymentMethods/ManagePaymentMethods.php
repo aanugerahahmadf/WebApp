@@ -2,6 +2,8 @@
 
 namespace App\Filament\Admin\Resources\PaymentMethodResource\Pages\ManagePaymentMethods;
 
+use App\Filament\Admin\Exports\PaymentMethodExporter\PaymentMethodExporter;
+use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\PaymentMethodResource\PaymentMethodResource;
 use Filament\Actions;
 use Filament\Notifications\Notification;
@@ -19,6 +21,11 @@ class ManagePaymentMethods extends ManageRecords
     protected function getHeaderActions(): array
     {
         return [
+            Actions\ExportAction::make()
+                ->exporter(PaymentMethodExporter::class)
+                ->label(__('Ekspor Data'))
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('success'),
             Actions\CreateAction::make()
                 ->label(__('Tambah Metode Pembayaran'))
                 ->icon('heroicon-o-plus')
@@ -34,6 +41,14 @@ class ManagePaymentMethods extends ManageRecords
                         ->title(__('Metode Pembayaran Ditambahkan'))
                         ->body(__('Metode pembayaran baru berhasil ditambahkan.'))
                 ),
+        ];
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            PaymentMethodResource::getUrl('index') => PaymentMethodResource::getNavigationLabel(),
         ];
     }
 }

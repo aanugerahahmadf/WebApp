@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\OrderResource\Pages\EditOrder;
 
+use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\OrderResource\OrderResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
@@ -13,6 +14,14 @@ class EditOrder extends EditRecord
     public function getTitle(): string
     {
         return (string) ($this->record->order_number ?? '');
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            ...parent::getBreadcrumbs(),
+        ];
     }
 
     protected function getHeaderActions(): array

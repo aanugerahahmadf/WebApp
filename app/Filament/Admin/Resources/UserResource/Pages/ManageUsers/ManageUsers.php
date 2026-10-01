@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources\UserResource\Pages\ManageUsers;
 
 use App\Filament\Admin\Exports\UserExporter\UserExporter;
+use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\UserResource\UserResource;
 use Filament\Actions;
 use Filament\Notifications\Notification;
@@ -37,6 +38,14 @@ class ManageUsers extends ManageRecords
                         ->title(__('Pengguna Ditambahkan'))
                         ->body(__('Data pengguna baru telah berhasil ditambahkan.'))
                 ),
+        ];
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            UserResource::getUrl('index') => UserResource::getNavigationLabel(),
         ];
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\PackageResource\Pages\CreatePackage;
 
+use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\PackageResource\PackageResource;
 use Filament\Actions;
 use Filament\Notifications\Notification;
@@ -17,6 +18,14 @@ class CreatePackage extends CreateRecord
             ->success()
             ->title(__('Paket Ditambahkan'))
             ->body(__('Paket baru telah berhasil ditambahkan.'));
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            ...parent::getBreadcrumbs(),
+        ];
     }
 
     protected function getHeaderActions(): array
