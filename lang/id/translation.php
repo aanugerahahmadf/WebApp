@@ -63,7 +63,6 @@ return [
     'Ada Diskon' => 'Ada Diskon',
     'Tanpa Diskon' => 'Tanpa Diskon',
     'Rating Minimum' => 'Rating Minimum',
-    'Bintang' => 'Bintang',
     'Urutkan' => 'Urutkan',
     'Terbaru' => 'Terbaru',
     'Harga: Terendah' => 'Harga: Terendah',

@@ -2,6 +2,7 @@
 
 namespace App\Filament\User\Resources\ProductResource\Pages\ManageProducts;
 
+use App\Filament\User\Pages\Home\Home;
 use App\Filament\User\Resources\ProductResource\ProductResource;
 use App\Models\Cart\Cart;
 use App\Models\Product\Product;
@@ -129,6 +130,14 @@ class ManageProducts extends ManageRecords
             'toggle_wishlist' => 'toggleWishlist',
             'book_now' => 'bookNow',
             'clear_visual_search' => 'clearVisualSearch',
+        ];
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            ProductResource::getUrl('index') => ProductResource::getNavigationLabel(),
         ];
     }
 }

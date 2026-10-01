@@ -103,6 +103,6 @@ class OtpRequestPasswordReset extends BaseRequestPasswordReset
     public function loginAction(): Action
     {
         return parent::loginAction()
-            ->label(__('Kembali ke Halaman Masuk'));
+            ->label(__('Kembali ke Halaman Sign In'));
     }
 }

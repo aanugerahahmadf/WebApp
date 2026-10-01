@@ -2,6 +2,7 @@
 
 namespace App\Filament\Welcome\Pages\PrivacyPolicyPage;
 
+use App\Filament\Welcome\Pages\Home\Home;
 use App\Models\PrivacyPolicy\PrivacyPolicy;
 use Filament\Pages\Page;
 
@@ -41,6 +42,14 @@ class PrivacyPolicyPage extends Page
                 'updated_at' => $privacy?->updated_at,
                 'content' => $content,
             ],
+        ];
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            $this->getTitle(),
         ];
     }
 }

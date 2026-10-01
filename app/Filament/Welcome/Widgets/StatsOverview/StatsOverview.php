@@ -42,8 +42,11 @@ class StatsOverview extends BaseWidget
 
     protected function getStats(): array
     {
+        // Panel welcome bisa dijelajahi guest: semua lookup user di-null-kan
+        // dengan aman sehingga widget tetap tampil (angka 0) tanpa fatal.
         $user = Auth::user();
-        $name = $user->full_name ?? $user->username ?? __('User');
+        $userId = $user?->id;
+        $name = $user?->full_name ?? $user?->username ?? __('Tamu');
 
         $stats = [
             Stat::make(__('filament-panels::widgets/account-widget.welcome'), $name)
@@ -56,7 +59,7 @@ class StatsOverview extends BaseWidget
                 ]),
         ];
 
-        $stats[] = Stat::make(__('Pesanan Saya'), Order::query()->where('user_id', $user->id)->count('id'))
+        $stats[] = Stat::make(__('Pesanan Saya'), $userId ? Order::query()->where('user_id', $userId)->count('id') : 0)
             ->description(__('Transaksi'))
             ->descriptionIcon('heroicon-m-shopping-bag', IconPosition::Before)
             ->color('info')
@@ -65,7 +68,7 @@ class StatsOverview extends BaseWidget
                 'onclick' => "window.location.href='".route('filament.welcome.resources.orders.index')."'",
             ]);
 
-        $stats[] = Stat::make(__('Favorit'), Wishlist::query()->where('user_id', $user->id)->count('id'))
+        $stats[] = Stat::make(__('Favorit'), $userId ? Wishlist::query()->where('user_id', $userId)->count('id') : 0)
             ->description(__('Tersimpan'))
             ->descriptionIcon('heroicon-m-heart', IconPosition::Before)
             ->color('danger')
@@ -74,7 +77,7 @@ class StatsOverview extends BaseWidget
                 'onclick' => "window.location.href='".route('filament.welcome.resources.wishlists.index')."'",
             ]);
 
-        $stats[] = Stat::make(__('Voucher Aktif'), $user->vouchers()->whereNull('user_vouchers.used_at')->count())
+        $stats[] = Stat::make(__('Voucher Aktif'), $user ? $user->vouchers()->whereNull('user_vouchers.used_at')->count() : 0)
             ->description(__('Diskon'))
             ->descriptionIcon('heroicon-m-ticket', IconPosition::Before)
             ->color('warning')
@@ -83,7 +86,7 @@ class StatsOverview extends BaseWidget
                 'onclick' => "window.location.href='".route('filament.welcome.resources.vouchers.index')."'",
             ]);
 
-        $stats[] = Stat::make(__('Keranjang'), Cart::query()->where('user_id', $user->id)->count())
+        $stats[] = Stat::make(__('Keranjang'), $userId ? Cart::query()->where('user_id', $userId)->count() : 0)
             ->description(__('Checkout'))
             ->descriptionIcon('heroicon-m-shopping-cart', IconPosition::Before)
             ->color('success')

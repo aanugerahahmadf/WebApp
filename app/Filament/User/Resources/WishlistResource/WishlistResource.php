@@ -29,6 +29,8 @@ class WishlistResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-heart';
 
+    protected static bool $shouldRegisterNavigation = false;
+
     public static function getGloballySearchableAttributes(): array
     {
         return ['package.name', 'package.category.name', 'product.name', 'product.category.name'];

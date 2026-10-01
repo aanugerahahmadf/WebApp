@@ -2,14 +2,14 @@
 
 namespace App\Providers\Filament\UserPanelProvider;
 
-use App\Filament\User\Auth\Login\Login;
+use App\Filament\User\Auth\SignIn\SignIn;
 use App\Filament\User\Auth\OtpEmailVerificationPrompt\OtpEmailVerificationPrompt;
 use App\Filament\User\Auth\OtpRequestPasswordReset\OtpRequestPasswordReset;
 use App\Filament\User\Auth\OtpResetPassword\OtpResetPassword;
-use App\Filament\User\Auth\Register\Register;
+use App\Filament\User\Auth\SignUp\SignUp;
 use App\Filament\User\Auth\VerifyOtp\VerifyOtp;
 use App\Filament\User\Pages\CompleteProfilePage\CompleteProfilePage;
-use App\Filament\User\Pages\Dashboard\Dashboard;
+use App\Filament\User\Pages\Home\Home;
 use App\Filament\User\Pages\EditProfilePage\EditProfilePage;
 use App\Filament\User\Pages\HelpCenterPage\HelpCenterPage;
 use App\Filament\User\Pages\PrivacyTermsPage\PrivacyTermsPage;
@@ -47,8 +47,8 @@ class UserPanelProvider extends PanelProvider
         $panel = $panel
             ->id('user')
             ->path('user')
-            ->login(Login::class)
-            ->registration(Register::class)
+            ->login(SignIn::class)
+            ->registration(SignUp::class)
             ->passwordReset(
                 OtpRequestPasswordReset::class,
                 OtpResetPassword::class
@@ -92,7 +92,7 @@ class UserPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/User/Resources'), for: 'App\\Filament\\User\\Resources')
             ->discoverPages(in: app_path('Filament/User/Pages'), for: 'App\\Filament\\User\\Pages')
             ->pages([
-                Dashboard::class,
+                Home::class,
                 CompleteProfilePage::class,
             ])
             ->discoverWidgets(in: app_path('Filament/User/Widgets'), for: 'App\\Filament\\User\\Widgets')

@@ -17,7 +17,7 @@
         <p class="text-sm text-gray-500 dark:text-gray-400">
             {{ __('Ingat kata sandi Anda?') }}
             <x-filament::link :href="filament()->getLoginUrl()" color="primary" class="font-semibold ml-1">
-                {{ __('Masuk') }}
+                {{ __('Sign In') }}
             </x-filament::link>
         </p>
     </div>

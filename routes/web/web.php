@@ -1,25 +1,65 @@
 <?php
 
-use App\Http\Controllers\Auth\FirebaseAuthController\FirebaseAuthController;
-use App\Http\Controllers\Auth\SocialiteController\SocialiteController;
-use App\Http\Controllers\LanguageController\LanguageController;
-use App\Http\Controllers\LegalWebController\LegalWebController;
+use App\Http\Controllers\Admin\ConsultationFormPdfController\ConsultationFormPdfController as AdminConsultationFormPdfController;
+use App\Http\Controllers\Admin\InvoicePdfController\InvoicePdfController as AdminInvoicePdfController;
+use App\Http\Controllers\Admin\ReportPdfController\ReportPdfController as AdminReportPdfController;
+use App\Http\Controllers\Admin\ReviewVoteController\ReviewVoteController as AdminReviewVoteController;
+use App\Http\Controllers\User\ClerkLoginController\ClerkLoginController;
+use App\Http\Controllers\User\ConsultationFormPdfController\ConsultationFormPdfController;
+use App\Http\Controllers\User\FirebaseAuthController\FirebaseAuthController;
+use App\Http\Controllers\User\InvoicePdfController\InvoicePdfController;
+use App\Http\Controllers\User\LanguageController\LanguageController;
+use App\Http\Controllers\User\MediaController\MediaController;
+use App\Http\Controllers\User\ReportPdfController\ReportPdfController;
+use App\Http\Controllers\User\ReviewVoteController\ReviewVoteController;
+use App\Http\Controllers\User\SocialiteController\SocialiteController;
+use App\Http\Controllers\Welcome\ConsultationFormPdfController\ConsultationFormPdfController as WelcomeConsultationFormPdfController;
+use App\Http\Controllers\Welcome\InvoicePdfController\InvoicePdfController as WelcomeInvoicePdfController;
+use App\Http\Controllers\Welcome\LegalWebController\LegalWebController as WelcomeLegalWebController;
+use App\Http\Controllers\Welcome\ReportPdfController\ReportPdfController as WelcomeReportPdfController;
+use App\Http\Controllers\Welcome\ReviewVoteController\ReviewVoteController as WelcomeReviewVoteController;
 use App\Http\Middleware\SetLocale\SetLocale;
-use App\Models\Order\Order;
-use App\Models\Inbox\Inbox;
-use App\Models\User\User;
-use App\Models\Report\Report;
-use Dompdf\Dompdf;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
-use Laravel\Sanctum\PersonalAccessToken;
 
-// Legal Pages — HTML untuk mobile browser / HP fisik
+/*
+|--------------------------------------------------------------------------
+| Web Routes — lengkap per scope: Shared / Welcome / User / Admin
+|--------------------------------------------------------------------------
+|
+| Struktur controller web mengikuti pola API:
+|
+|   app/Http/Controllers/User/<Name>/<Name>.php       → namespace App\Http\Controllers\User\<Name>
+|   app/Http/Controllers/Admin/<Name>/<Name>.php      → namespace App\Http\Controllers\Admin\<Name>
+|   app/Http/Controllers/Welcome/<Name>/<Name>.php    → namespace App\Http\Controllers\Welcome\<Name>
+|
+|   - User/*    : implementasi kanonis (logika penuh).
+|   - Admin/*   : extends User/* (perilaku identik, scope admin).
+|   - Welcome/* : extends User/* (Legal memakai view Welcome.* dengan fallback User.*).
+|
+| Namespace lama sudah dihapus total (tidak ada alias):
+|
+|   App\Http\Controllers\Auth\SocialiteController + FirebaseAuthController
+|     — diganti User/SocialiteController & User/FirebaseAuthController
+|   App\Http\Controllers\LanguageController — diganti User/Admin/Welcome LanguageController
+|   App\Http\Controllers\LegalWebController — diganti User/Admin/Welcome LegalWebController
+|   App\Http\Controllers\PusherAuthController — diganti User/Admin/Welcome PusherAuthController
+|
+| Semua URI & nama route lama dipertahankan 100% agar tidak breaking.
+|
+*/
 
-Route::get('/legal/terms', [LegalWebController::class, 'terms'])->name('legal.terms');
-Route::get('/legal/privacy', [LegalWebController::class, 'privacy'])->name('legal.privacy');
-Route::get('/legal/help', [LegalWebController::class, 'help'])->name('legal.help');
+// -----------------------------------------------------------------------------
+// SHARED / WELCOME — halaman publik (storefront)
+// -----------------------------------------------------------------------------
+// Legal Pages — HTML untuk mobile browser / HP fisik (scope Welcome).
+Route::get('/legal/terms', [WelcomeLegalWebController::class, 'terms'])->name('legal.terms');
+Route::get('/legal/privacy', [WelcomeLegalWebController::class, 'privacy'])->name('legal.privacy');
+Route::get('/legal/help', [WelcomeLegalWebController::class, 'help'])->name('legal.help');
+
+// Alias ber-prefix /welcome untuk scope Welcome (tambahan, tidak menghapus yang lama).
+Route::get('/welcome/legal/terms', [WelcomeLegalWebController::class, 'terms'])->name('welcome.legal.terms');
+Route::get('/welcome/legal/privacy', [WelcomeLegalWebController::class, 'privacy'])->name('welcome.legal.privacy');
+Route::get('/welcome/legal/help', [WelcomeLegalWebController::class, 'help'])->name('welcome.legal.help');
 
 // The storefront is the 'welcome' Filament panel, and '/' is its front door.
 // The old marketing page that used to live here has been removed: guests browse
@@ -28,12 +68,21 @@ Route::get('/legal/help', [LegalWebController::class, 'help'])->name('legal.help
 Route::redirect('/', '/welcome/home')->middleware(SetLocale::class);
 
 Route::redirect('/admin/inbox', '/admin/inbox/messages');
+
+// -----------------------------------------------------------------------------
+// SHARED — bahasa (kanonis: User\LanguageController; Admin & Welcome tersedia)
+// -----------------------------------------------------------------------------
 Route::get('/language/switch/{locale}', [LanguageController::class, 'switch'])
     ->name('language.switch');
 Route::post('/language/locale/{locale}', [LanguageController::class, 'update'])
     ->name('language.update');
 Route::get('/lang/switch/{locale}', [LanguageController::class, 'switch'])
     ->name('lang.switch');
+
+// -----------------------------------------------------------------------------
+// USER — OAuth web & mobile (kanonis: User\SocialiteController)
+// (Admin\SocialiteController & Welcome\SocialiteController tersedia via extends)
+// -----------------------------------------------------------------------------
 Route::get('/auth/{provider}/redirect', [SocialiteController::class, 'redirect'])
     ->name('auth.redirect');
 Route::get('/auth/{provider}/callback', [SocialiteController::class, 'callback'])
@@ -58,131 +107,84 @@ Route::get('/auth/deeplink/google/success', [SocialiteController::class, 'verify
 Route::get('/auth/google/success', [SocialiteController::class, 'verifyMobileToken'])
     ->name('auth.google.success');
 
-// Clerk login bridge — exchanges Sanctum token for session auth (for Filament access)
-Route::get('/clerk/login', function (Request $request) {
-    $token = $request->query('token');
-    if (! $token) {
-        return redirect('/admin/login')->with('error', 'Token tidak ditemukan');
-    }
-
-    $accessToken = PersonalAccessToken::findToken($token);
-    if (! $accessToken) {
-        return redirect('/admin/login')->with('error', 'Token tidak valid');
-    }
-
-    $user = $accessToken->tokenable;
-    if (! $user || ! $user instanceof User) {
-        return redirect('/admin/login')->with('error', 'Pengguna tidak ditemukan');
-    }
-
-    Auth::login($user);
-
-    $panel = $user->hasRole('super_admin') ? 'admin' : 'user';
-
-    return redirect("/{$panel}");
-})->name('clerk.login');
-
-// Firebase Auth: client sends ID token, backend verifies via REST API
-Route::post('/auth/firebase/callback', [FirebaseAuthController::class, 'callback'])
-    ->name('auth.firebase.callback');
-
 // Google OAuth reverse client ID scheme callback
 // com.googleusercontent.apps.xxx:/oauth2redirect?code=... → /auth/google/oauth2redirect?code=...
 Route::get('/auth/{provider}/oauth2redirect', [SocialiteController::class, 'callbackMobileScheme'])
     ->name('auth.oauth2redirect');
-Route::get('/media/{path}', function (string $path) {
-    if (str_contains($path, '../')) {
-        abort(403);
-    }
-    $file = storage_path('app/public/'.$path);
-    if (! file_exists($file)) {
-        abort(404);
-    }
 
-    return response()->file($file, ['Content-Type' => File::mimeType($file)]);
-})->where('path', '.*')->name('media.serve');
+// -----------------------------------------------------------------------------
+// USER — Firebase Auth (kanonis: User\FirebaseAuthController)
+// -----------------------------------------------------------------------------
+// Firebase Auth: client sends ID token, backend verifies via REST API
+Route::post('/auth/firebase/callback', [FirebaseAuthController::class, 'callback'])
+    ->name('auth.firebase.callback');
+
+// -----------------------------------------------------------------------------
+// SHARED — Clerk login bridge (kanonis: User\ClerkLoginController)
+// exchanges Sanctum token for session auth (for Filament access)
+// (Admin\ClerkLoginController & Welcome\ClerkLoginController tersedia)
+// -----------------------------------------------------------------------------
+Route::get('/clerk/login', [ClerkLoginController::class, 'login'])
+    ->name('clerk.login');
+
+// -----------------------------------------------------------------------------
+// SHARED — media publik (kanonis: User\MediaController)
+// -----------------------------------------------------------------------------
+Route::get('/media/{path}', [MediaController::class, 'serve'])
+    ->where('path', '.*')->name('media.serve');
 
 require __DIR__.'/../debug/debug.php';
 
+// -----------------------------------------------------------------------------
+// USER — PDF & dokumen (auth; pemilik atau super_admin)
+// -----------------------------------------------------------------------------
 // Invoice PDF — hanya untuk user yang login dan punya order tersebut
-Route::get('/invoice/{order}/pdf', function (Order $order) {
-    // Pastikan hanya pemilik order yang bisa akses
-    if (auth()->id() !== $order->user_id && ! auth()->user()?->hasRole('super_admin')) {
-        abort(403);
-    }
-
-    $order->load(['user', 'package.category', 'package.media',
-        'product.category', 'product.media',
-        'latestTransaction']);
-
-    $html = view('User.pdf.order-invoice.order-invoice', compact('order'))->render();
-
-    $dompdf = new Dompdf;
-    $dompdf->loadHtml($html);
-    $dompdf->setPaper('A4', 'portrait');
-    $dompdf->render();
-
-    $filename = 'invoice-'.$order->order_number.'.pdf';
-    $inline = request()->boolean('download') ? 'attachment' : 'inline';
-
-    return response($dompdf->output(), 200, [
-        'Content-Type' => 'application/pdf',
-        'Content-Disposition' => "{$inline}; filename=\"{$filename}\"",
-    ]);
-})->middleware(['auth'])->name('invoice.pdf');
+Route::get('/invoice/{order}/pdf', [InvoicePdfController::class, 'download'])
+    ->middleware(['auth'])->name('invoice.pdf');
 
 // Downloadable summary of the event-needs form shown after a bot reply.
-Route::get('/messages/{inbox}/consultation-form.pdf', function (Inbox $inbox) {
-    $userId = auth()->id();
-    if (! in_array($userId, $inbox->user_ids ?? []) && ! auth()->user()?->hasRole('super_admin')) {
-        abort(403);
-    }
+Route::get('/messages/{inbox}/consultation-form.pdf', [ConsultationFormPdfController::class, 'download'])
+    ->middleware(['auth'])->name('messages.consultation-form.pdf');
 
-    $forms = $inbox->meta['consultation_forms'] ?? [];
-    $form = $forms[(string) $userId] ?? null;
-    if (! is_array($form)) {
-        abort(404, 'Formulir belum diisi.');
-    }
+Route::get('/reports/{report}/pdf', [ReportPdfController::class, 'download'])
+    ->middleware(['auth'])->name('user.reports.pdf');
 
-    $html = view('User.pdf.consultation-form.consultation-form', compact('form', 'inbox'))->render();
-    $dompdf = new Dompdf;
-    $dompdf->loadHtml($html);
-    $dompdf->setPaper('A4', 'portrait');
-    $dompdf->render();
+// -----------------------------------------------------------------------------
+// SHARED — vote "Membantu" via form POST biasa (bukan Livewire action),
+// supaya guest tidak pernah memicu POST /livewire/update yang rawan 419.
+// Guest ditolak di controller dan diarahkan ke halaman login.
+// -----------------------------------------------------------------------------
+Route::post('/reviews/{review}/helpful', [ReviewVoteController::class, 'toggle'])
+    ->name('reviews.vote');
 
-    return response($dompdf->output(), 200, [
-        'Content-Type' => 'application/pdf',
-        'Content-Disposition' => 'attachment; filename="formulir-kebutuhan-acara-'.$inbox->id.'.pdf"',
-    ]);
-})->middleware(['auth'])->name('messages.consultation-form.pdf');
+// -----------------------------------------------------------------------------
+// ADMIN — cermin PDF di bawah prefix /admin (middleware auth; cek role di controller)
+// Memakai Admin\*Controller agar scope Admin lengkap & eksplisit.
+// URI & nama route USER di atas tetap dipertahankan; ini tambahan.
+// -----------------------------------------------------------------------------
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function (): void {
+    Route::get('/invoice/{order}/pdf', [AdminInvoicePdfController::class, 'download'])
+        ->name('invoice.pdf');
+    Route::get('/messages/{inbox}/consultation-form.pdf', [AdminConsultationFormPdfController::class, 'download'])
+        ->name('messages.consultation-form.pdf');
+    Route::get('/reports/{report}/pdf', [AdminReportPdfController::class, 'download'])
+        ->name('reports.pdf');
+    Route::post('/reviews/{review}/helpful', [AdminReviewVoteController::class, 'toggle'])
+        ->name('reviews.vote');
+});
 
-Route::get('/reports/{report}/pdf', function (Report $report) {
-    abort_unless((int) $report->user_id === (int) auth()->id(), 403);
-
-    $categoryLabels = [
-        'bug_report' => __('Lapor Bug'),
-        'account_issue' => __('Masalah Akun'),
-        'order_help' => __('Bantuan Pesanan'),
-        'payment_issue' => __('Masalah Pembayaran'),
-        'decor_consultation' => __('Konsultasi Dekorasi'),
-        'general_question' => __('Pertanyaan Umum'),
-    ];
-    $userName = e($report->user?->full_name ?? '-');
-    $category = e($categoryLabels[$report->category] ?? $report->category);
-    $reason = e($report->reason ?? '-');
-    $description = nl2br(e($report->description ?? '-'));
-    $createdAt = e($report->created_at?->format('d/m/Y H:i') ?? '-');
-    $attachments = collect($report->attachment_urls)
-        ->map(fn ($url) => '<p><a href="'.e($url).'">'.e($url).'</a></p>')
-        ->implode('');
-    $html = "<html><meta charset='utf-8'><style>body{font-family:DejaVu Sans,sans-serif;font-size:12px}h1{font-size:20px}</style><h1>Formulir Laporan #{$report->id}</h1><p><b>Pelapor:</b> {$userName}</p><p><b>Kategori:</b> {$category}</p><p><b>Judul:</b> {$reason}</p><p><b>Tanggal:</b> {$createdAt}</p><p><b>Detail:</b><br>{$description}</p><h3>Lampiran</h3>{$attachments}</html>";
-    $dompdf = new Dompdf;
-    $dompdf->loadHtml($html, 'UTF-8');
-    $dompdf->setPaper('A4', 'portrait');
-    $dompdf->render();
-
-    return response($dompdf->output(), 200, [
-        'Content-Type' => 'application/pdf',
-        'Content-Disposition' => 'attachment; filename="laporan-'.$report->id.'.pdf"',
-    ]);
-})->middleware(['auth'])->name('user.reports.pdf');
+// -----------------------------------------------------------------------------
+// WELCOME — cermin PDF di bawah prefix /welcome (middleware auth; cek di controller)
+// Memakai Welcome\*Controller agar scope Welcome lengkap & eksplisit.
+// URI & nama route USER di atas tetap dipertahankan; ini tambahan.
+// -----------------------------------------------------------------------------
+Route::middleware(['auth'])->prefix('welcome')->name('welcome.')->group(function (): void {
+    Route::get('/invoice/{order}/pdf', [WelcomeInvoicePdfController::class, 'download'])
+        ->name('invoice.pdf');
+    Route::get('/messages/{inbox}/consultation-form.pdf', [WelcomeConsultationFormPdfController::class, 'download'])
+        ->name('messages.consultation-form.pdf');
+    Route::get('/reports/{report}/pdf', [WelcomeReportPdfController::class, 'download'])
+        ->name('reports.pdf');
+    Route::post('/reviews/{review}/helpful', [WelcomeReviewVoteController::class, 'toggle'])
+        ->name('reviews.vote');
+});

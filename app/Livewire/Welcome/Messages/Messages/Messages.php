@@ -706,11 +706,12 @@ class Messages extends Component implements HasActions, HasForms
                 Select::make('rating')
                     ->label(__('Rating'))
                     ->options([
-                        1 => '1 Ô¡É',
-                        2 => '2 Ô¡É',
-                        3 => '3 Ô¡É',
-                        4 => '4 Ô¡É',
-                        5 => '5 Ô¡É',
+                        // Jumlah ikon ⭐ = nilai rating — tanpa angka, jangan dimasukkan ke language.
+                        1 => '⭐',
+                        2 => '⭐⭐',
+                        3 => '⭐⭐⭐',
+                        4 => '⭐⭐⭐⭐',
+                        5 => '⭐⭐⭐⭐⭐',
                     ])
                     ->native(false)
                     ->required(),
@@ -1374,7 +1375,7 @@ class Messages extends Component implements HasActions, HasForms
     //                         <div class="pt-2 space-y-1">
     //                             <p class="text-xs text-primary-600 dark:text-primary-400 font-semibold">­ƒôà '.($order->booking_date?->translatedFormat('d M Y') ?? '-').'</p>
     //                             <p class="text-xs font-black text-primary-600 dark:text-primary-400">Rp '.number_format($order->total_price, 2, ',', '.').'</p>
-    //                             <p class="text-xs text-gray-400">Ô¡É '.$avgRating.'</p>
+    //                             <p class="text-xs text-gray-400">⭐ '.$avgRating.'</p>
     //                         </div>
     //                     </div>
     //                 </div>

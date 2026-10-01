@@ -33,31 +33,25 @@
 
         {{-- Name prompt for guests --}}
         @if ($needsName)
-            <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
-                <div class="flex items-start gap-3">
-                    <x-filament::icon icon="heroicon-o-user-circle" class="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                    <div class="flex-1 min-w-0">
-                        <p class="font-medium text-amber-800 dark:text-amber-200">
-                            {{ __('Sebelum memulai, silakan beri tahu kami nama Anda') }}
-                        </p>
-                        <p class="mt-1 text-sm text-amber-700 dark:text-amber-300">
-                            {{ __('Nama ini akan ditampilkan kepada tim CS agar mereka tahu bagaimana memanggil Anda.') }}
-                        </p>
-                        <x-filament::form
-                            wire:submit.prevent="setGuestName"
-                            class="mt-3 flex gap-2"
-                            action="{{ $messagesPage::getUrl(panel: 'welcome') }}">
-                            <x-filament::input type="text" wire:model.live="guestName"
-                                placeholder="{{ __('Nama Anda') }}"
-                                class="flex-1 min-w-0"
-                                required />
-                            <x-filament::button type="submit" class="shrink-0">
-                                {{ __('Simpan') }}
-                            </x-filament::button>
-                        </x-filament::form>
-                    </div>
-                </div>
-            </div>
+            <x-filament::section
+                :heading="__('Sebelum memulai, silakan beri tahu kami nama Anda')"
+                :description="__('Nama ini akan ditampilkan kepada tim CS agar mereka tahu bagaimana memanggil Anda.')"
+                icon="heroicon-o-user-circle"
+                icon-color="warning"
+            >
+                <form
+                    wire:submit.prevent="setGuestName"
+                    class="flex gap-2"
+                    action="{{ $messagesPage::getUrl(panel: 'welcome') }}">
+                    <x-filament::input type="text" wire:model.live="guestName"
+                        placeholder="{{ __('Nama Anda') }}"
+                        class="flex-1 min-w-0"
+                        required />
+                    <x-filament::button type="submit" color="warning" class="shrink-0">
+                        {{ __('Simpan') }}
+                    </x-filament::button>
+                </form>
+            </x-filament::section>
         @endif
 
         {{-- Your conversations --}}

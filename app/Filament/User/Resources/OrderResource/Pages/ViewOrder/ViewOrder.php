@@ -4,6 +4,7 @@ namespace App\Filament\User\Resources\OrderResource\Pages\ViewOrder;
 
 use App\Enums\OrderPaymentStatus\OrderPaymentStatus;
 use App\Enums\OrderStatus\OrderStatus;
+use App\Filament\User\Pages\Home\Home;
 use App\Filament\User\Pages\MessagesPage\MessagesPage;
 use App\Filament\User\Resources\OrderResource\OrderResource;
 use Filament\Actions;
@@ -16,6 +17,14 @@ class ViewOrder extends ViewRecord
     public function getTitle(): string
     {
         return __('Pesanan').' #'.($this->record->order_number ?? $this->record->id);
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            ...parent::getBreadcrumbs(),
+        ];
     }
 
     public function mount(int|string $record): void

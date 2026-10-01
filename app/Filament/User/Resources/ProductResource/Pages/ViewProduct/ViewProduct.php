@@ -3,7 +3,7 @@
 namespace App\Filament\User\Resources\ProductResource\Pages\ViewProduct;
 
 use App\Filament\User\Pages\CbirSearchPage\CbirSearchPage;
-use App\Filament\User\Pages\Dashboard\Dashboard;
+use App\Filament\User\Pages\Home\Home;
 use App\Filament\User\Resources\ProductResource\ProductResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ViewRecord;
@@ -15,6 +15,14 @@ class ViewProduct extends ViewRecord
     public function getTitle(): string
     {
         return $this->record->name;
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            ...parent::getBreadcrumbs(),
+        ];
     }
 
     protected function getHeaderActions(): array
@@ -31,7 +39,7 @@ class ViewProduct extends ViewRecord
                         return static::getResource()::getUrl('index');
                     }
 
-                    return Dashboard::getUrl();
+                    return Home::getUrl();
                 })
                 ->color('gray')->button()
                 ->icon('heroicon-o-arrow-left'),

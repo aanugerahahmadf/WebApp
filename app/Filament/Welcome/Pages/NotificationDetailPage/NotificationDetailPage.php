@@ -2,7 +2,7 @@
 
 namespace App\Filament\Welcome\Pages\NotificationDetailPage;
 
-use App\Filament\Welcome\Pages\Dashboard\Dashboard;
+use App\Filament\Welcome\Pages\Home\Home;
 use App\Filament\Welcome\Pages\SettingsPage\PasswordSecurityPage\PasswordSecurityPage;
 use App\Models\User\User;
 use Filament\Actions\Action;
@@ -86,7 +86,7 @@ class NotificationDetailPage extends Page
                 ->label(__('Kembali ke Beranda'))
                 ->icon('heroicon-m-arrow-left')
                 ->color('gray')
-                ->url(Dashboard::getUrl(panel: 'welcome')),
+                ->url(Home::getUrl(panel: 'welcome')),
         ];
 
         $actionUrl = $this->notificationDetail['action_url'] ?? null;
@@ -138,5 +138,13 @@ class NotificationDetailPage extends Page
         return $actionUrl.$separator.http_build_query([
             'returnTo' => static::getUrl(['id' => $this->notificationId], panel: 'welcome'),
         ]);
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            $this->getTitle(),
+        ];
     }
 }

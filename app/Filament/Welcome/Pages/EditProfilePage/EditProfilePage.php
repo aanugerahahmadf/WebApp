@@ -2,6 +2,7 @@
 
 namespace App\Filament\Welcome\Pages\EditProfilePage;
 
+use App\Filament\Welcome\Pages\Home\Home;
 use App\Livewire\Welcome\PersonalInfoComponent\PersonalInfoComponent;
 use Filament\Pages\Page;
 
@@ -32,5 +33,13 @@ class EditProfilePage extends Page
         return collect($components)
             ->sortBy(fn (string $component) => $component::getSort())
             ->all();
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            $this->getTitle(),
+        ];
     }
 }

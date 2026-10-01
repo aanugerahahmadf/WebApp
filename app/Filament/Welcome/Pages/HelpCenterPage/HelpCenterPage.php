@@ -2,6 +2,7 @@
 
 namespace App\Filament\Welcome\Pages\HelpCenterPage;
 
+use App\Filament\Welcome\Pages\Home\Home;
 use App\Models\Help\Help;
 use Filament\Pages\Page;
 
@@ -39,6 +40,14 @@ class HelpCenterPage extends Page
             'subtitle' => $help?->subtitle,
             'faqs' => $faqs,
             'contactOptions' => $help?->contact_options ?? [],
+        ];
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            $this->getTitle(),
         ];
     }
 }

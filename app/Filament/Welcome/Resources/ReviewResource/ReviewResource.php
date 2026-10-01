@@ -5,6 +5,7 @@ namespace App\Filament\Welcome\Resources\ReviewResource;
 use App\Filament\Welcome\Resources\ReviewResource\Pages\ManageReviews\ManageReviews;
 use App\Filament\Welcome\Resources\PackageResource\PackageResource;
 use App\Filament\Welcome\Resources\ProductResource\ProductResource;
+use App\Forms\Components\StarRating\StarRating;
 use App\Models\Review\Review;
 use App\Models\Order\Order;
 use Filament\Facades\Filament;
@@ -50,21 +51,10 @@ class ReviewResource extends Resource
         ];
     }
 
-    private static function ratingOptions(): array
-    {
-        return [
-            5 => self::ratingStarsHtml(5),
-            4 => self::ratingStarsHtml(4),
-            3 => self::ratingStarsHtml(3),
-            2 => self::ratingStarsHtml(2),
-            1 => self::ratingStarsHtml(1),
-        ];
-    }
-
-    private static function ratingStarsHtml(int $rating): string
+    public static function ratingStarsHtml(int $rating, string $starClass = 'h-5 w-5'): string
     {
         $rating = max(0, min(5, $rating));
-        $star = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="h-5 w-5"><path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005Z" clip-rule="evenodd"/></svg>';
+        $star = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="'.$starClass.'"><path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005Z" clip-rule="evenodd"/></svg>';
         $stars = '';
 
         for ($index = 1; $index <= 5; $index++) {
@@ -177,16 +167,8 @@ class ReviewResource extends Resource
                         Forms\Components\Placeholder::make('organizer_info')
                             ->label(__('Informasi Studio'))
                             ->content(__('Wedding Flowers Decorasi Devi')),
-                        Forms\Components\Select::make('rating')
-                            ->searchable()
-                            ->label(__('Berikan Rating Bintang'))
-                            ->options(self::ratingOptions())
-                            ->allowHtml()
-                            ->required()
-
-                            ->native(false)
-                            ->prefixIcon('heroicon-o-star')
-                            ->extraAttributes(['class' => 'text-warning-600 font-bold']),
+                        StarRating::make('rating')
+                            ->label(__('Berikan Rating Bintang')),
                         Forms\Components\TextInput::make('title')
                             ->label(__('Judul Ulasan'))
                             ->maxLength(255)
@@ -204,7 +186,7 @@ class ReviewResource extends Resource
                             ->disk('public')
                             ->visibility('public')
                             ->maxSize(5120)
-                            ->helperText(__('Opsional Ã”Ã‡Ã¶ unggah foto hasil dekorasi Anda.'))
+                            ->helperText(__('Opsional — unggah foto hasil dekorasi Anda.'))
                             ->columnSpanFull(),
                     ]),
             ]);
@@ -221,15 +203,8 @@ class ReviewResource extends Resource
             Forms\Components\Placeholder::make('item_name')
                 ->label(__('Layanan'))
                 ->content(fn () => $order->package?->name ?? $order->product?->name ?? '-'),
-            Forms\Components\Select::make('rating')
-                ->searchable()
+            StarRating::make('rating')
                 ->label(__('Berikan Rating Bintang'))
-                ->options(self::ratingOptions())
-                ->allowHtml()
-                ->required()
-                ->native(false)
-                ->prefixIcon('heroicon-o-star')
-                ->extraAttributes(['class' => 'text-warning-600 font-bold'])
                 ->columnSpanFull(),
             Forms\Components\TextInput::make('title')
                 ->label(__('Judul Ulasan'))
@@ -247,7 +222,7 @@ class ReviewResource extends Resource
                 ->disk('public')
                 ->visibility('public')
                 ->maxSize(5120)
-                ->helperText(__('Opsional Ã”Ã‡Ã¶ unggah foto hasil dekorasi Anda.'))
+                ->helperText(__('Opsional — unggah foto hasil dekorasi Anda.'))
                 ->columnSpanFull(),
         ];
     }
@@ -261,13 +236,8 @@ class ReviewResource extends Resource
 
         return [
             Forms\Components\Hidden::make($itemField)->default($itemId),
-            Forms\Components\Select::make('rating')
-                ->label(__('Berikan Rating Bintang'))
-                ->options(self::ratingOptions())
-                ->allowHtml()
-                ->required()
-                ->native(false)
-                ->prefixIcon('heroicon-o-star'),
+            StarRating::make('rating')
+                ->label(__('Berikan Rating Bintang')),
             Forms\Components\TextInput::make('title')
                 ->label(__('Judul Ulasan'))
                 ->maxLength(255),
@@ -282,7 +252,7 @@ class ReviewResource extends Resource
                 ->disk('public')
                 ->visibility('public')
                 ->maxSize(5120)
-                ->helperText(__('Opsional Ã”Ã‡Ã¶ unggah foto hasil dekorasi Anda.')),
+                ->helperText(__('Opsional — unggah foto hasil dekorasi Anda.')),
         ];
     }
 
@@ -396,11 +366,12 @@ class ReviewResource extends Resource
                     ->searchable()
                     ->label(__('Rating'))
                     ->options([
-                        5 => 'Ã”Ã¿Ã Ã”Ã¿Ã Ã”Ã¿Ã Ã”Ã¿Ã Ã”Ã¿Ã  (5)',
-                        4 => 'Ã”Ã¿Ã Ã”Ã¿Ã Ã”Ã¿Ã Ã”Ã¿Ã Ã”Ã¿Ã¥ (4)',
-                        3 => 'Ã”Ã¿Ã Ã”Ã¿Ã Ã”Ã¿Ã Ã”Ã¿Ã¥Ã”Ã¿Ã¥ (3)',
-                        2 => 'Ã”Ã¿Ã Ã”Ã¿Ã Ã”Ã¿Ã¥Ã”Ã¿Ã¥Ã”Ã¿Ã¥ (2)',
-                        1 => 'Ã”Ã¿Ã Ã”Ã¿Ã¥Ã”Ã¿Ã¥Ã”Ã¿Ã¥Ã”Ã¿Ã¥ (1)',
+                        // Ikon ★☆ murni hardcoded — bukan teks, tanpa angka, jangan dimasukkan ke language.
+                        5 => '★★★★★',
+                        4 => '★★★★☆',
+                        3 => '★★★☆☆',
+                        2 => '★★☆☆☆',
+                        1 => '★☆☆☆☆',
                     ]),
 
                 SelectFilter::make('sort_by')

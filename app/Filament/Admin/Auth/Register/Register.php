@@ -22,7 +22,7 @@ class Register extends BaseRegister
 {
     public function getHeading(): string|Htmlable
     {
-        return __('Daftar Akun Baru');
+        return __('Sign Up');
     }
 
     public function getSubheading(): string|Htmlable|null
@@ -88,7 +88,7 @@ class Register extends BaseRegister
                                 ->rows(3),
                         ]),
                 ])
-                    ->submitAction(new HtmlString('<button type="submit" style="background-color: #e11d48; color: white; padding: 0.5rem 1.5rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; border: none; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor=\'#be123c\'" onmouseout="this.style.backgroundColor=\'#e11d48\'">'.__('Daftar').'</button>')),
+                    ->submitAction(new HtmlString('<button type="submit" style="background-color: #e11d48; color: white; padding: 0.5rem 1.5rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; border: none; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor=\'#be123c\'" onmouseout="this.style.backgroundColor=\'#e11d48\'">'.__('Sign Up').'</button>')),
             ])
             ->statePath('data');
     }

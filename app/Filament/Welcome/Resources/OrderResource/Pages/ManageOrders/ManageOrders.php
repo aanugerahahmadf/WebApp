@@ -3,6 +3,7 @@
 namespace App\Filament\Welcome\Resources\OrderResource\Pages\ManageOrders;
 
 use App\Enums\OrderStatus\OrderStatus;
+use App\Filament\Welcome\Pages\Home\Home;
 use App\Filament\Welcome\Resources\OrderResource\OrderResource;
 use App\Models\Order\Order;
 use Filament\Facades\Filament;
@@ -45,6 +46,14 @@ class ManageOrders extends ManageRecords
     {
         return [
             // No creation action for user
+        ];
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            OrderResource::getUrl('index') => OrderResource::getNavigationLabel(),
         ];
     }
 }

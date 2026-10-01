@@ -3,7 +3,7 @@
 namespace App\Providers\Filament\WelcomePanelProvider;
 
 use App\Filament\Welcome\Pages\CompleteProfilePage\CompleteProfilePage;
-use App\Filament\Welcome\Pages\Dashboard\Dashboard;
+use App\Filament\Welcome\Pages\Home\Home;
 use App\Http\Middleware\AuthenticateWelcome\AuthenticateWelcome;
 use App\Http\Middleware\ClerkFilamentAuth\ClerkFilamentAuth;
 use App\Http\Middleware\SetLocale\SetLocale;
@@ -157,7 +157,7 @@ class WelcomePanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Welcome/Resources'), for: 'App\\Filament\\Welcome\\Resources')
             ->discoverPages(in: app_path('Filament/Welcome/Pages'), for: 'App\\Filament\\Welcome\\Pages')
             ->pages([
-                Dashboard::class,
+                Home::class,
                 CompleteProfilePage::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Welcome/Widgets'), for: 'App\\Filament\\Welcome\\Widgets')

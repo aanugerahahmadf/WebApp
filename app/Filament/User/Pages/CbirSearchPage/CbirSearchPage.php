@@ -2,6 +2,7 @@
 
 namespace App\Filament\User\Pages\CbirSearchPage;
 
+use App\Filament\User\Pages\Home\Home;
 use App\Models\Package\Package;
 use App\Models\Product\Product;
 use App\Support\AppPlatform\AppPlatform;
@@ -428,5 +429,13 @@ session()->forget(['cbir_mixed_results', 'cbir_package_results_ids', 'cbir_searc
     public function getTitle(): string
     {
         return __('Pencarian Visual');
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            $this->getTitle(),
+        ];
     }
 }

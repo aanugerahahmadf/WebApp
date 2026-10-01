@@ -3,6 +3,7 @@
 namespace App\Filament\Welcome\Resources\ProductResource\Pages\CheckoutProduct;
 
 use App\Filament\Welcome\Resources\ProductResource\ProductResource;
+use App\Filament\Welcome\Pages\Home\Home;
 use App\Http\Middleware\AuthenticateWelcome\AuthenticateWelcome;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Wizard;
@@ -75,5 +76,13 @@ class CheckoutProduct extends Page implements HasForms
     public function getTitle(): string
     {
         return $this->record->name;
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            ...parent::getBreadcrumbs(),
+        ];
     }
 }

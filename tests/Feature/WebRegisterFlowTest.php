@@ -1,6 +1,6 @@
 <?php
 
-use App\Filament\User\Auth\Register\Register;
+use App\Filament\User\Auth\SignUp\SignUp;
 use App\Livewire\User\CompleteProfileComponent\CompleteProfileComponent;
 use App\Models\User\User;
 use Filament\Facades\Filament;
@@ -17,7 +17,7 @@ beforeEach(function () {
 });
 
 it('registers a new user through the panel form', function () {
-    Livewire::test(Register::class)
+    Livewire::test(SignUp::class)
         ->fillForm([
             'username' => 'john.doe',
             'email' => 'john.doe@example.com',
@@ -64,7 +64,7 @@ it('registers a new user through the panel form', function () {
 });
 
 it('rejects registration when agreement is not checked', function () {
-    Livewire::test(Register::class)
+    Livewire::test(SignUp::class)
         ->fillForm([
             'username' => 'jane.doe',
             'email' => 'jane.doe@example.com',

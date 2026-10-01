@@ -2,13 +2,12 @@
 
 namespace App\Providers\Filament\AdminPanelProvider;
 
-use App\Filament\Admin\Auth\Login\Login;
+use App\Filament\Admin\Auth\SignIn\SignIn;
 use App\Filament\Admin\Auth\OtpEmailVerificationPrompt\OtpEmailVerificationPrompt;
 use App\Filament\Admin\Auth\OtpRequestPasswordReset\OtpRequestPasswordReset;
 use App\Filament\Admin\Auth\OtpResetPassword\OtpResetPassword;
-use App\Filament\Admin\Auth\Register\Register;
 use App\Filament\Admin\Auth\VerifyOtp\VerifyOtp;
-use App\Filament\Admin\Pages\Dashboard\Dashboard;
+use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Pages\EditProfilePage\EditProfilePage;
 use App\Filament\Admin\Widgets\OrdersChart\OrdersChart;
 use App\Filament\Admin\Widgets\RecentOrders\RecentOrders;
@@ -47,8 +46,8 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->authGuard('web')
-            ->login(Login::class)
-            // ->registration(Register::class)
+            ->login(SignIn::class)
+            // ->registration(SignUp::class)
             ->passwordReset(
                 OtpRequestPasswordReset::class,
                 OtpResetPassword::class
@@ -94,7 +93,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\\Filament\\Admin\\Resources')
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\\Filament\\Admin\\Pages')
             ->pages([
-                Dashboard::class,
+                Home::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Admin/Widgets'), for: 'App\\Filament\\Admin\\Widgets')
             ->widgets([

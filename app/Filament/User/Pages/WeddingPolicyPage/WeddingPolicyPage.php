@@ -2,6 +2,7 @@
 
 namespace App\Filament\User\Pages\WeddingPolicyPage;
 
+use App\Filament\User\Pages\Home\Home;
 use App\Models\WeddingDecorationPolicy\WeddingDecorationPolicy;
 use Filament\Pages\Page;
 
@@ -41,6 +42,14 @@ class WeddingPolicyPage extends Page
                 'updated_at' => $policy?->updated_at,
                 'content' => $content,
             ],
+        ];
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            $this->getTitle(),
         ];
     }
 }

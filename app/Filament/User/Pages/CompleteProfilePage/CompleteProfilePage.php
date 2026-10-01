@@ -2,6 +2,7 @@
 
 namespace App\Filament\User\Pages\CompleteProfilePage;
 
+use App\Filament\User\Pages\Home\Home;
 use Filament\Pages\Page;
 
 class CompleteProfilePage extends Page
@@ -25,5 +26,13 @@ class CompleteProfilePage extends Page
     public static function getNavigationLabel(): string
     {
         return __('Lengkapi Profil');
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            $this->getTitle(),
+        ];
     }
 }

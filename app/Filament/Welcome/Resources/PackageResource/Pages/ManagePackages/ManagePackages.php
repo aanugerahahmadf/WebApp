@@ -3,6 +3,7 @@
 namespace App\Filament\Welcome\Resources\PackageResource\Pages\ManagePackages;
 
 use App\Enums\OrderStatus\OrderStatus;
+use App\Filament\Welcome\Pages\Home\Home;
 use App\Filament\Welcome\Resources\PackageResource\PackageResource;
 use App\Http\Middleware\AuthenticateWelcome\AuthenticateWelcome;
 use App\Models\Cart\Cart;
@@ -168,6 +169,14 @@ class ManagePackages extends ManageRecords
             'book_now' => 'bookNow',
             'toggle_wishlist' => 'toggleWishlist',
             'clear_visual_search' => 'clearVisualSearch',
+        ];
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            PackageResource::getUrl('index') => PackageResource::getNavigationLabel(),
         ];
     }
 

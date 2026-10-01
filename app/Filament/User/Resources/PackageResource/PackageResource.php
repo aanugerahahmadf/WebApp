@@ -54,6 +54,8 @@ class PackageResource extends Resource
 
     protected static ?string $navigationIcon = 'ri-gift-line';
 
+    protected static bool $shouldRegisterNavigation = false;
+
     public static function getGloballySearchableAttributes(): array
     {
         return ['name', 'description', 'category.name', 'price', 'discount_price'];
@@ -157,11 +159,12 @@ class PackageResource extends Resource
                     ->searchable()
                     ->label(__('Rating Minimum'))
                     ->options([
-                        '5' => '⭐⭐⭐⭐⭐ 5 '.__('Bintang'),
-                        '4' => '⭐⭐⭐⭐ 4+ '.__('Bintang'),
-                        '3' => '⭐⭐⭐ 3+ '.__('Bintang'),
-                        '2' => '⭐⭐ 2+ '.__('Bintang'),
-                        '1' => '⭐ 1+ '.__('Bintang'),
+                        // Ikon ⭐ murni hardcoded — bukan teks, tanpa angka, jangan dimasukkan ke language.
+                        '5' => '⭐⭐⭐⭐⭐',
+                        '4' => '⭐⭐⭐⭐',
+                        '3' => '⭐⭐⭐',
+                        '2' => '⭐⭐',
+                        '1' => '⭐',
                     ])
                     ->query(fn (Builder $query, array $data) => filled($data['value'])
                         ? $query->withAvg('reviews', 'rating')->having('reviews_avg_rating', '>=', (int) $data['value'])
@@ -595,14 +598,16 @@ class PackageResource extends Resource
                                                                     ->label('')
                                                                     ->hiddenLabel()
                                                                     ->weight('semibold')
-                                                                    ->size('sm'),
+                                                                    ->size('sm')
+                                                                    ->extraEntryWrapperAttributes(['class' => '!p-0 !m-0']),
 
                                                                 Infolists\Components\TextEntry::make('rating')
                                                                     ->label('')
                                                                     ->hiddenLabel()
-                                                                    ->color('warning')
-                                                                    ->formatStateUsing(fn ($state) => str_repeat('⭐', (int) $state)),
-                                                            ])->columnSpan(11)->extraAttributes(['class' => '!gap-y-0']),
+                                                                    ->html()
+                                                                    ->formatStateUsing(fn ($state): HtmlString => new HtmlString(ReviewResource::ratingStarsHtml((int) $state, 'h-4 w-4')))
+                                                                    ->extraEntryWrapperAttributes(['class' => '!p-0 !m-0']),
+                                                            ])->columnSpan(11)->extraAttributes(['class' => '!gap-y-1']),
 
                                                             Infolists\Components\Actions::make([
                                                                 Action::make('report_review')
@@ -620,13 +625,14 @@ class PackageResource extends Resource
                                                                     ->extraAttributes(['x-on:click.stop' => '']),
                                                             ])->extraAttributes(['class' => 'absolute right-3 top-3 z-10']),
 
-                                                            Infolists\Components\TextEntry::make('created_at')
+                                                            Infolists\Components\TextEntry::make('title')
                                                                 ->label('')
                                                                 ->hiddenLabel()
-                                                                ->dateTime('d M Y H:i')
-                                                                ->color('gray')
-                                                                ->size('xs')
-                                                                ->columnSpanFull(),
+                                                                ->weight('bold')
+                                                                ->size('sm')
+                                                                ->columnSpanFull()
+                                                                ->extraEntryWrapperAttributes(['class' => '!p-0 !m-0'])
+                                                                ->visible(fn ($record) => filled($record->title)),
 
                                                             Infolists\Components\TextEntry::make('comment')
                                                                 ->label('')
@@ -639,21 +645,28 @@ class PackageResource extends Resource
                                                                 Infolists\Components\ImageEntry::make('photo_urls')
                                                                 ->label('')
                                                                 ->hiddenLabel()
-                                                                    ->height('2.5rem')
+                                                                    ->height('4rem')
                                                                     ->columnSpan(12)
-                                                                    ->extraAttributes(['class' => '!gap-x-1'])
-                                                                ->extraImgAttributes(['class' => 'rounded-lg object-cover'])
+                                                                    ->extraAttributes(['class' => '!gap-x-2'])
+                                                                ->extraImgAttributes(['class' => 'h-16 w-16 rounded-lg object-cover'])
+                                                                ->extraEntryWrapperAttributes(['class' => '!p-0 !m-0'])
                                                                 ->visible(fn ($record) => filled($record->photo_urls)),
 
-                                                            Infolists\Components\TextEntry::make('helpful_count')
+                                                            Infolists\Components\TextEntry::make('created_at')
                                                                 ->label('')
                                                                 ->hiddenLabel()
-                                                                ->icon('heroicon-o-hand-thumb-up')
-                                                                ->formatStateUsing(fn ($state) => number_format((int) $state))
+                                                                ->dateTime('d M Y H:i')
                                                                 ->color('gray')
                                                                 ->size('xs')
                                                                 ->columnSpanFull()
-                                                                ->visible(fn ($record) => (int) $record->helpful_count > 0),
+                                                                ->extraEntryWrapperAttributes(['class' => '!p-0 !m-0 !mt-1']),
+
+                                                            Infolists\Components\ViewEntry::make('vote_helpful')
+                                                                ->label('')
+                                                                ->hiddenLabel()
+                                                                ->view('User.components.review-vote-button.review-vote-button', fn (Review $record): array => ['review' => $record])
+                                                                ->columnSpanFull()
+                                                                ->extraEntryWrapperAttributes(['class' => '!p-0 !m-0 !mt-1']),
 
                                                             Infolists\Components\ViewEntry::make('review_modal')
                                                                 ->label('')

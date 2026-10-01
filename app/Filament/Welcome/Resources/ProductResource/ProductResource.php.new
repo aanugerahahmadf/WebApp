@@ -153,11 +153,12 @@ class ProductResource extends Resource
                     ->searchable()
                     ->label(__('Rating Minimum'))
                     ->options([
-                        '5' => '⭐⭐⭐⭐⭐ 5 '.__('Bintang'),
-                        '4' => '⭐⭐⭐⭐ 4+ '.__('Bintang'),
-                        '3' => '⭐⭐⭐ 3+ '.__('Bintang'),
-                        '2' => '⭐⭐ 2+ '.__('Bintang'),
-                        '1' => '⭐ 1+ '.__('Bintang'),
+                        // Ikon ⭐ murni hardcoded — bukan teks, tanpa angka, jangan dimasukkan ke language.
+                        '5' => '⭐⭐⭐⭐⭐',
+                        '4' => '⭐⭐⭐⭐',
+                        '3' => '⭐⭐⭐',
+                        '2' => '⭐⭐',
+                        '1' => '⭐',
                     ])
                     ->query(fn (Builder $query, array $data) => filled($data['value'])
                         ? $query->withAvg('reviews', 'rating')->having('reviews_avg_rating', '>=', (int) $data['value'])

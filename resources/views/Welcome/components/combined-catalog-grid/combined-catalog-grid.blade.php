@@ -1,20 +1,12 @@
 @php
-    $items = collect();
-    if (isset($records) && $records->isNotEmpty()) {
-        $items = $records->map(function($item) {
-            $item->catalog_type = 'package';
-            return $item;
-        })->concat(
-            \App\Models\Product\Product::where('is_active', true)->with(['category'])->get()->map(function($item) {
-                $item->catalog_type = 'product';
-                return $item;
-            })
-        );
-    }
-    
-    $totalCount = count($items);
-    $packageCount = $records?->count() ?? 0;
-    $productCount = \App\Models\Product\Product::where('is_active', true)->count();
+    // $items + $packageCount + $productCount disediakan widget: paket & produk
+    // aktif sudah dicampur selang-seling, category + rata-rata rating
+    // di-eager-load — blade ini murni render, tanpa query tambahan.
+    $items = isset($items) ? collect($items) : collect();
+
+    $totalCount = $items->count();
+    $packageCount = $packageCount ?? $items->where('catalog_type', 'package')->count();
+    $productCount = $productCount ?? $items->where('catalog_type', 'product')->count();
 @endphp
 
 <style>
@@ -241,7 +233,7 @@
                 } else {
                     $img = $normalizeImageUrl(asset('storage/' . $imgUrl));
                 }
-                $rating = number_format($item->reviews()->avg('rating') ?: 0, 1);
+                $rating = number_format((float) ($item->reviews_avg_rating ?? 0), 1);
                 $stock = $item->stock ?? 0;
                 $stockClass = $stock <= 0 ? 'catalog-stock-out' : ($stock <= 3 ? 'catalog-stock-low' : 'catalog-stock-ok');
                 $stockLabel = $stock <= 0 ? __('Habis') : $stock . ' ' . __('Tersedia');

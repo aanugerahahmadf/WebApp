@@ -691,11 +691,12 @@ class Messages extends Component implements HasActions, HasForms
                 Select::make('rating')
                     ->label(__('Rating'))
                     ->options([
-                        1 => '1 ⭐',
-                        2 => '2 ⭐',
-                        3 => '3 ⭐',
-                        4 => '4 ⭐',
-                        5 => '5 ⭐',
+                        // Jumlah ikon ⭐ = nilai rating — tanpa angka, jangan dimasukkan ke language.
+                        1 => '⭐',
+                        2 => '⭐⭐',
+                        3 => '⭐⭐⭐',
+                        4 => '⭐⭐⭐⭐',
+                        5 => '⭐⭐⭐⭐⭐',
                     ])
                     ->native(false)
                     ->required(),

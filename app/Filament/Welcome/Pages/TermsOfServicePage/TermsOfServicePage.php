@@ -2,6 +2,7 @@
 
 namespace App\Filament\Welcome\Pages\TermsOfServicePage;
 
+use App\Filament\Welcome\Pages\Home\Home;
 use App\Models\TermsOfService\TermsOfService;
 use Filament\Pages\Page;
 
@@ -41,6 +42,14 @@ class TermsOfServicePage extends Page
                 'updated_at' => $terms?->updated_at,
                 'content' => $content,
             ],
+        ];
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            $this->getTitle(),
         ];
     }
 }

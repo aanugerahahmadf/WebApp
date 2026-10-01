@@ -63,7 +63,6 @@ return [
     'Ada Diskon' => 'Has Discount',
     'Tanpa Diskon' => 'No Discount',
     'Rating Minimum' => 'Minimum Rating',
-    'Bintang' => 'Stars',
     'Urutkan' => 'Sort By',
     'Terbaru' => 'Latest',
     'Harga: Terendah' => 'Price: Lowest',

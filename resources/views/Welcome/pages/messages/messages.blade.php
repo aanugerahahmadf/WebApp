@@ -2,9 +2,9 @@
     <div id="messages-container" class="messages-container flex flex-col lg:flex-row gap-6 w-full overflow-hidden">
         <div class="flex-1 min-w-0 h-full min-h-0">
             @if ($selectedConversation)
-                <livewire:fm-user-messages :selectedConversation="$selectedConversation" />
+                <livewire:fm-welcome-messages :selectedConversation="$selectedConversation" />
             @else
-                <livewire:fm-user-inbox />
+                <livewire:fm-welcome-inbox />
             @endif
         </div>
     </div>

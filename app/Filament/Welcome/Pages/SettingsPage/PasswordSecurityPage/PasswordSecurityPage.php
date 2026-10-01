@@ -2,6 +2,7 @@
 
 namespace App\Filament\Welcome\Pages\SettingsPage\PasswordSecurityPage;
 
+use App\Filament\Welcome\Pages\Home\Home;
 use App\Filament\Welcome\Pages\SettingsPage\SettingsPage;
 use App\Models\BackupCode\BackupCode;
 use App\Models\SecurityEmail\SecurityEmail;
@@ -453,5 +454,13 @@ class PasswordSecurityPage extends Page
     private function sections(): array
     {
         return ['index', 'change-password', 'two-factor', 'saved-login', 'sign-in-activity', 'recent-emails', 'checkup'];
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            $this->getTitle(),
+        ];
     }
 }

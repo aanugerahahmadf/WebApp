@@ -27,6 +27,8 @@ class VoucherResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-ticket';
 
+    protected static bool $shouldRegisterNavigation = false;
+
     public static function getGloballySearchableAttributes(): array
     {
         return ['code', 'description', 'discount_amount', 'min_purchase'];

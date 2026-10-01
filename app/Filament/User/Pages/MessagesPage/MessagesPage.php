@@ -2,8 +2,13 @@
 
 namespace App\Filament\User\Pages\MessagesPage;
 
+use App\Filament\User\Pages\Home\Home;
 use App\Filament\User\Pages\SettingsPage\SettingsPage;
+use App\Filament\User\Resources\PackageResource\PackageResource;
+use App\Filament\User\Resources\ProductResource\ProductResource;
 use App\Models\Inbox\Inbox;
+use App\Models\Package\Package;
+use App\Models\Product\Product;
 use Filament\Actions\Action;
 use Filament\Pages\Page;
 use Filament\Support\Enums\MaxWidth;
@@ -166,5 +171,71 @@ class MessagesPage extends Page
         $settingsUrl = SettingsPage::getUrl(panel: 'user');
 
         return $this->returnTo === $settingsUrl ? $settingsUrl : null;
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        $breadcrumbs = [
+            Home::getUrl() => __('Beranda'),
+        ];
+
+        if ($origin = $this->resolveOriginItem()) {
+            $resource = $origin['type'] === 'product' ? ProductResource::class : PackageResource::class;
+            $breadcrumbs[$resource::getUrl('index')] = $resource::getNavigationLabel();
+            $breadcrumbs[$resource::getUrl('view', ['record' => $origin['item']])] = $origin['item']->name;
+        }
+
+        $breadcrumbs[static::getUrl()] = __('Inbox');
+
+        if ($this->selectedConversation) {
+            $breadcrumbs[] = $this->selectedConversation->inbox_title ?: __('Pesan');
+        }
+
+        return $breadcrumbs;
+    }
+
+    /**
+     * Lacak item katalog asal percakapan dari kartu konteks / laporan item
+     * terbaru (meta type + id). Kartu pesanan (is_order) hanya jadi cadangan.
+     *
+     * @return array{type: string, item: Package|Product}|null
+     */
+    protected function resolveOriginItem(): ?array
+    {
+        $inbox = $this->selectedConversation;
+
+        if (! $inbox) {
+            return null;
+        }
+
+        $fallback = null;
+
+        $messages = $inbox->messages()->latest('id')->limit(50)->get(['id', 'meta']);
+
+        foreach ($messages as $message) {
+            $meta = $message->meta ?? [];
+
+            if (! in_array($meta['type'] ?? null, ['package', 'product'], true) || empty($meta['id'])) {
+                continue;
+            }
+
+            $item = $meta['type'] === 'product'
+                ? Product::query()->find($meta['id'])
+                : Package::query()->find($meta['id']);
+
+            if (! $item) {
+                continue;
+            }
+
+            if (! empty($meta['is_order'])) {
+                $fallback ??= ['type' => $meta['type'], 'item' => $item];
+
+                continue;
+            }
+
+            return ['type' => $meta['type'], 'item' => $item];
+        }
+
+        return $fallback;
     }
 }

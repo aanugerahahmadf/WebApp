@@ -43,6 +43,8 @@ class OrderResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
 
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?int $navigationSort = 2;
 
     public static function getGloballySearchableAttributes(): array
@@ -488,7 +490,7 @@ class OrderResource extends Resource
                             OrderStatus::COMPLETED,
                         ]))
                         ->action(function ($record) {
-                            // Update status ke cancelled (trigger observer Ã”Ã¥Ã† notifikasi + payment_status)
+                            // Update status ke cancelled (trigger observer → notifikasi + payment_status)
                             $record->update(['status' => OrderStatus::CANCELLED]);
 
                             // 3. Hapus order dari tabel

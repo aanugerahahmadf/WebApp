@@ -2,6 +2,7 @@
 
 namespace App\Filament\User\Pages\SettingsPage;
 
+use App\Filament\User\Pages\Home\Home;
 use App\Livewire\User\DeleteAccountComponent\DeleteAccountComponent;
 use Filament\Pages\Page;
 
@@ -30,6 +31,14 @@ class SettingsPage extends Page
     {
         return [
             DeleteAccountComponent::class,
+        ];
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            $this->getTitle(),
         ];
     }
 }

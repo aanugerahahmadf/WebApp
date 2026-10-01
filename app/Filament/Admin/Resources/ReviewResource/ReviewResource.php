@@ -105,11 +105,12 @@ class ReviewResource extends Resource
                             ->label(__('Skor Rating'))
                             ->searchable()
                             ->options([
-                                1 => __('1 Bintang'),
-                                2 => __('2 Bintang'),
-                                3 => __('3 Bintang'),
-                                4 => __('4 Bintang'),
-                                5 => __('5 Bintang'),
+                                // Ikon ★☆ murni — bukan teks, tanpa angka, jangan dimasukkan ke language.
+                                1 => '★☆☆☆☆',
+                                2 => '★★☆☆☆',
+                                3 => '★★★☆☆',
+                                4 => '★★★★☆',
+                                5 => '★★★★★',
                             ])
                             ->required(),
                         Forms\Components\Textarea::make('comment')
@@ -145,7 +146,7 @@ class ReviewResource extends Resource
                         $state >= 3 => 'warning',
                         default => 'danger',
                     })
-                    ->formatStateUsing(fn ($state) => '⭐ '.$state.'/5')
+                    ->formatStateUsing(fn ($state) => str_repeat('⭐', (int) $state))
                     ->alignment('center')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('comment')

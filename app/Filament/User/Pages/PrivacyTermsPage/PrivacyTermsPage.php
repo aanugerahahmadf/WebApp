@@ -2,6 +2,7 @@
 
 namespace App\Filament\User\Pages\PrivacyTermsPage;
 
+use App\Filament\User\Pages\Home\Home;
 use App\Filament\User\Pages\PrivacyPolicyPage\PrivacyPolicyPage;
 use App\Filament\User\Pages\TermsOfServicePage\TermsOfServicePage;
 use App\Filament\User\Pages\WeddingPolicyPage\WeddingPolicyPage;
@@ -41,5 +42,13 @@ class PrivacyTermsPage extends Page
     public function getWeddingPolicyUrl(): string
     {
         return WeddingPolicyPage::getUrl();
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl() => __('Beranda'),
+            $this->getTitle(),
+        ];
     }
 }

@@ -187,6 +187,6 @@ class OtpEmailVerificationPrompt extends EmailVerificationPrompt
     public function loginAction(): Action
     {
         return parent::loginAction()
-            ->label(__('Sudah punya akun? Masuk'));
+            ->label(__('Sudah punya akun? Sign In'));
     }
 }

@@ -120,7 +120,7 @@ class VerifyOtp extends SimplePage
     public function loginAction(): Action
     {
         return Action::make('login')
-            ->label(__('Sudah punya akun? Masuk'))
+            ->label(__('Sudah punya akun? Sign In'))
             ->url(Filament::getLoginUrl())
             ->color('gray');
     }

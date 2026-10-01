@@ -111,7 +111,7 @@ require __DIR__.'/user/PaymentWebhookController/PaymentWebhookController/Payment
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::prefix('admin')->middleware(SuperAdmin::class)->group(function (): void {
         require __DIR__.'/admin/SearchController/SearchController/SearchController.php';
-        require __DIR__.'/admin/DashboardController/DashboardController/DashboardController.php';
+        require __DIR__.'/admin/HomeController/HomeController/HomeController.php';
         require __DIR__.'/admin/UserController/UserController/UserController.php';
         require __DIR__.'/admin/PackageController/PackageController/PackageController.php';
         require __DIR__.'/admin/ProductController/ProductController/ProductController.php';
