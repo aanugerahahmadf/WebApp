@@ -50,7 +50,7 @@ class PackageResource extends Resource
 {
     protected static ?string $model = Package::class;
 
-    protected static ?string $slug = 'packages';
+    protected static ?string $slug = 'flowerdecorationspackagecatalog';
 
     protected static ?int $navigationSort = 2;
 

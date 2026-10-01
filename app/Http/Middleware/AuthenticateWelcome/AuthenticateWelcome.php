@@ -42,10 +42,10 @@ class AuthenticateWelcome extends Authenticate
     public const PUBLIC_PATHS = [
         'welcome',
         'welcome/home',
-        'welcome/products',
-        'welcome/products/*',
-        'welcome/packages',
-        'welcome/packages/*',
+        'welcome/flowerdecorationscatalog',
+        'welcome/flowerdecorationscatalog/*',
+        'welcome/flowerdecorationspackagecatalog',
+        'welcome/flowerdecorationspackagecatalog/*',
         'welcome/messages',
         'welcome/messages/*',
     ];

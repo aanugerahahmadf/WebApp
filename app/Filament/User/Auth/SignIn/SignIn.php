@@ -80,7 +80,7 @@ class SignIn extends BaseLogin
                 continue;
             }
 
-            if (str_contains($url, '/welcome/packages') || str_contains($url, '/welcome/products')) {
+            if (str_contains($url, '/welcome/flowerdecorationspackagecatalog') || str_contains($url, '/welcome/flowerdecorationscatalog')) {
                 return $url;
             }
         }

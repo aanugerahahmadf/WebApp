@@ -44,7 +44,7 @@ class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
 
-    protected static ?string $slug = 'products';
+    protected static ?string $slug = 'flowerdecorationscatalog';
 
     protected static ?int $navigationSort = 1;
 
@@ -96,17 +96,17 @@ class ProductResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return __('Katalog Bunga');
+        return __('Katalog Dekorasi Bunga');
     }
 
     public static function getPluralModelLabel(): string
     {
-        return __('Katalog Bunga');
+        return __('Katalog Dekorasi Bunga');
     }
 
     public static function getModelLabel(): string
     {
-        return __('Katalog Bunga');
+        return __('Katalog Dekorasi Bunga');
     }
 
     public static function table(Table $table): Table

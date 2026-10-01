@@ -26,9 +26,10 @@
         ])
     >
         <div
+            id="{{ $getId() }}"
             class="flex items-center gap-1"
             role="radiogroup"
-            aria-label="{{ __('Berikan Rating Bintang') }}"
+            aria-label="{{ $field->getLabel() }}"
         >
             <template x-for="star in [1, 2, 3, 4, 5]" :key="star">
                 <button

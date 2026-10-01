@@ -57,6 +57,13 @@ class CbirCameraButton extends Component implements HasForms
 
     public ?string $statusMessage = null;
 
+    public function mount(): void
+    {
+        // Inisialisasi state form agar entangle `data.camera_image` di blade
+        // selalu menemukan propertinya (tanpa ini: "Livewire Entangle Error").
+        $this->form->fill();
+    }
+
     private const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'heic'];
 
     private const VIDEO_EXTENSIONS = ['mp4', 'mov', 'avi', 'mkv'];

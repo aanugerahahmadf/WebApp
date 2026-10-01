@@ -108,6 +108,23 @@ class WelcomePanelProvider extends PanelProvider
                 },
             )
             ->renderHook(
+                PanelsRenderHook::SIDEBAR_NAV_START,
+                function (): View|string {
+                    // Kebalikan hook topbar di atas: sidebar bawaan Filament
+                    // hanya muncul sebagai menu geser di mobile (panel ini
+                    // pakai top navigation), sehingga switcher bahasa tampil
+                    // di atas item Home, rata kanan, khusus mobile. Dropdown-nya
+                    // teleport ke <body> jadi aman dari overflow sidebar.
+                    if (! AppPlatform::isAnyMobile()) {
+                        return '';
+                    }
+
+                    return '<div class="flex justify-end px-4 pb-2">'
+                        .view('Welcome.filament-language-switcher.language-switcher.language-switcher')->render()
+                        .'</div>';
+                },
+            )
+            ->renderHook(
                 'panels::global-search.after',
                 // Masuk / Beranda plus the theme switcher, rendered where Filament
                 // puts the user menu -- except for guests, who never get a user

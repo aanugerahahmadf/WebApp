@@ -46,7 +46,7 @@ class QuickAccessWidget extends BaseWidget
                 ->color('primary')
                 ->extraAttributes([
                     'class' => 'home-stat-card home-stat-action cursor-pointer hover:scale-105 transition-transform h-full',
-                    'onclick' => "window.location.href='" . route('filament.user.resources.packages.index') . "'",
+                    'onclick' => "window.location.href='" . route('filament.user.resources.flowerdecorationspackagecatalog.index') . "'",
                 ]),
 
             Stat::make(__('Produk'), null)
@@ -54,7 +54,7 @@ class QuickAccessWidget extends BaseWidget
                 ->color('info')
                 ->extraAttributes([
                     'class' => 'home-stat-card home-stat-action cursor-pointer hover:scale-105 transition-transform h-full',
-                    'onclick' => "window.location.href='" . route('filament.user.resources.products.index') . "'",
+                    'onclick' => "window.location.href='" . route('filament.user.resources.flowerdecorationscatalog.index') . "'",
                 ]),
 
             Stat::make(__('Ulasan'), null)

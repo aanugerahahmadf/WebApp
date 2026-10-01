@@ -45,7 +45,7 @@ class ProfileOverview extends BaseWidget
                     'onclick' => "window.location.href='".EditProfilePage::getUrl()."'",
                 ]),
 
-            // Row 2: 2 kolom — Katalog Paket | Katalog Bunga
+            // Row 2: 2 kolom — Katalog Paket | Katalog Dekorasi Bunga
 
             Stat::make(__('Katalog Paket Bunga'), '')
                 ->icon('heroicon-o-gift')
@@ -55,7 +55,7 @@ class ProfileOverview extends BaseWidget
                     'onclick' => "window.location.href='".PackageResource::getUrl()."'",
                 ]),
 
-            Stat::make(__('Katalog Bunga'), '')
+            Stat::make(__('Katalog Dekorasi Bunga'), '')
                 ->icon('heroicon-o-shopping-bag')
                 ->color('warning')
                 ->extraAttributes([

@@ -132,7 +132,7 @@ class StatsOverview extends BaseWidget
                 ->color($data['totalPackages'] > 0 ? 'success' : 'danger')
                 ->extraAttributes([
                     'class' => 'cursor-pointer hover:shadow-lg transition-all duration-300',
-                    'onclick' => "window.location.href='".route('filament.admin.resources.packages.index')."'",
+                    'onclick' => "window.location.href='".route('filament.admin.resources.flowerdecorationspackagecatalog.index')."'",
                 ]),
 
             Stat::make(__('Total Produk'), (string) $data['totalProducts'])
@@ -142,7 +142,7 @@ class StatsOverview extends BaseWidget
                 ->color($data['totalProducts'] > 0 ? 'purple' : 'danger')
                 ->extraAttributes([
                     'class' => 'cursor-pointer hover:shadow-lg transition-all duration-300',
-                    'onclick' => "window.location.href='".route('filament.admin.resources.products.index')."'",
+                    'onclick' => "window.location.href='".route('filament.admin.resources.flowerdecorationscatalog.index')."'",
                 ]),
 
             Stat::make(__('Total Pendapatan'), 'Rp '.number_format($data['totalRevenue'], 0, ',', '.'))
