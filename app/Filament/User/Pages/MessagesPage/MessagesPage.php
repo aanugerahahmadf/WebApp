@@ -2,6 +2,7 @@
 
 namespace App\Filament\User\Pages\MessagesPage;
 
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\User\Pages\Home\Home;
 use App\Filament\User\Pages\SettingsPage\SettingsPage;
 use App\Filament\User\Resources\PackageResource\PackageResource;
@@ -21,6 +22,8 @@ use Livewire\Attributes\Url;
 
 class MessagesPage extends Page
 {
+    use HasDynamicBreadcrumbs;
+
     protected static string $view = 'User.pages.messages.messages';
 
     protected static ?string $activeNavigationIcon = 'heroicon-o-chat-bubble-left-right';
@@ -176,7 +179,7 @@ class MessagesPage extends Page
     public function getBreadcrumbs(): array
     {
         $breadcrumbs = [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
         ];
 
         if ($origin = $this->resolveOriginItem()) {

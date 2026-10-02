@@ -16,19 +16,19 @@ class ClerkLoginController extends Controller
         $token = $request->query('token');
 
         if (! $token) {
-            return redirect('/admin/login')->with('error', 'Token tidak ditemukan');
+            return redirect(route('filament.admin.auth.login'))->with('error', 'Token tidak ditemukan');
         }
 
         $accessToken = PersonalAccessToken::findToken($token);
 
         if (! $accessToken) {
-            return redirect('/admin/login')->with('error', 'Token tidak valid');
+            return redirect(route('filament.admin.auth.login'))->with('error', 'Token tidak valid');
         }
 
         $user = $accessToken->tokenable;
 
         if (! $user || ! $user instanceof User) {
-            return redirect('/admin/login')->with('error', 'Pengguna tidak ditemukan');
+            return redirect(route('filament.admin.auth.login'))->with('error', 'Pengguna tidak ditemukan');
         }
 
         Auth::login($user);

@@ -5,12 +5,14 @@ namespace App\Filament\Admin\Resources\TermsOfServiceResource\Pages\ManageTermsO
 use App\Filament\Admin\Exports\TermsOfServiceExporter\TermsOfServiceExporter;
 use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\TermsOfServiceResource\TermsOfServiceResource;
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 
 class ManageTermsOfServices extends ManageRecords
 {
+    use HasDynamicBreadcrumbs;
     protected static string $resource = TermsOfServiceResource::class;
 
     public function getTitle(): string
@@ -41,7 +43,7 @@ class ManageTermsOfServices extends ManageRecords
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             TermsOfServiceResource::getUrl('index') => TermsOfServiceResource::getNavigationLabel(),
         ];
     }

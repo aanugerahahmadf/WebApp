@@ -5,11 +5,13 @@ namespace App\Filament\Admin\Resources\PaymentGatewayResource\Pages\ManagePaymen
 use App\Filament\Admin\Exports\PaymentGatewayExporter\PaymentGatewayExporter;
 use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\PaymentGatewayResource\PaymentGatewayResource;
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use Filament\Actions;
 use Filament\Resources\Pages\ManageRecords;
 
 class ManagePaymentGateways extends ManageRecords
 {
+    use HasDynamicBreadcrumbs;
     protected static string $resource = PaymentGatewayResource::class;
 
     public function getTitle(): string
@@ -31,7 +33,7 @@ class ManagePaymentGateways extends ManageRecords
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             PaymentGatewayResource::getUrl('index') => PaymentGatewayResource::getNavigationLabel(),
         ];
     }

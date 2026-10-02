@@ -192,10 +192,10 @@ test('the bottom navigation stays hidden in the electron desktop shell', functio
 test('the bottom navigation is suppressed on auth pages', function (): void {
     AppPlatform::fake(RuntimePlatform::MobileAppAndroid);
 
-    $this->get('/user/login')->assertOk()->assertDontSee('fi-bottom-nav');
-    $this->get('/user/register')->assertOk()->assertDontSee('fi-bottom-nav');
+    $this->get('/user/signin')->assertOk()->assertDontSee('fi-bottom-nav');
+    $this->get('/user/signup')->assertOk()->assertDontSee('fi-bottom-nav');
     $this->get('/user/password-reset/request')->assertOk()->assertDontSee('fi-bottom-nav');
-    $this->get('/admin/login')->assertOk()->assertDontSee('fi-bottom-nav');
+    $this->get('/admin/signin')->assertOk()->assertDontSee('fi-bottom-nav');
 });
 
 test('the bottom navigation renders on an authenticated page on mobile', function (): void {
@@ -276,17 +276,17 @@ test('a bottom navigation entry pointing at a missing class is dropped', functio
 
 test('the card-table script is emitted on mobile and omitted on desktop', function (): void {
     AppPlatform::fake(RuntimePlatform::MobileAppAndroid);
-    $this->get('/user/login')->assertOk()->assertSee('fi-table-cards', escape: false);
+    $this->get('/user/signin')->assertOk()->assertSee('fi-table-cards', escape: false);
 
     AppPlatform::fake(RuntimePlatform::WebsiteWindows);
-    $this->get('/user/login')->assertOk()->assertDontSee('fi-table-cards', escape: false);
+    $this->get('/user/signin')->assertOk()->assertDontSee('fi-table-cards', escape: false);
 });
 
 test('the card-table script can be turned off through config', function (): void {
     AppPlatform::fake(RuntimePlatform::MobileAppAndroid);
     config(['app-platform.responsive_tables.enabled' => false]);
 
-    $this->get('/user/login')->assertOk()->assertDontSee('fi-table-cards', escape: false);
+    $this->get('/user/signin')->assertOk()->assertDontSee('fi-table-cards', escape: false);
 });
 
 // ── The runtime probe ────────────────────────────────────────────────────────
@@ -294,7 +294,7 @@ test('the card-table script can be turned off through config', function (): void
 test('the runtime script reports the resolved platform to the client', function (): void {
     AppPlatform::fake(RuntimePlatform::MobileAppIos);
 
-    $response = $this->get('/user/login')->assertOk();
+    $response = $this->get('/user/signin')->assertOk();
 
     $response->assertSee('mobile_app_ios', escape: false)
         ->assertSee('window.AppPlatform', escape: false)

@@ -12,7 +12,7 @@ use Illuminate\Support\Collection;
 
 class CombinedCatalogWidget extends BaseWidget
 {
-    protected static ?int $sort = 2;
+    protected static ?int $sort = 3;
 
     protected int|string|array $columnSpan = 'full';
 

@@ -1,6 +1,5 @@
 <x-filament-panels::page>
     @php
-        $backUrl = \App\Filament\User\Pages\SettingsPage\SettingsPage::getUrl(panel: 'user');
         $passwordStrength = strlen($passwordData['password'] ?? '') >= 12 ? __('Kuat') : (strlen($passwordData['password'] ?? '') >= 8 ? __('Sedang') : __('Lemah'));
         $currentSessionId = request()->session()->getId();
     @endphp
@@ -81,9 +80,6 @@
                                 {{ __('Kirim Ulang OTP') }}
                             </x-filament::button>
                         @endif
-                        <x-filament::button tag="a" wire:navigate :href="$backUrl" color="gray">
-                            {{ __('Batal') }}
-                        </x-filament::button>
                         <x-filament::button type="submit" :icon="$emailOtpSent ? 'heroicon-m-check-circle' : 'heroicon-m-paper-airplane'">
                             {{ $emailOtpSent ? __('Verifikasi OTP') : __('Kirim Kode OTP') }}
                         </x-filament::button>

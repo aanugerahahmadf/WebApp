@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Auth\VerifyOtp;
 
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\TextInput;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\URL;
 
 class VerifyOtp extends SimplePage
 {
+    use HasDynamicBreadcrumbs;
     use InteractsWithFormActions;
 
     protected static string $view = 'Admin.auth.verify-otp.verify-otp';
@@ -96,6 +98,24 @@ class VerifyOtp extends SimplePage
     public function getHeading(): string
     {
         return __('Verifikasi Kode OTP');
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [...$this->breadcrumbParentCrumb(), $this->getAuthCrumbLabel()];
+    }
+
+    protected function getAuthCrumbLabel(): string
+    {
+        if (method_exists($this, 'getHeading')) {
+            return (string) $this->getHeading();
+        }
+
+        if (method_exists($this, 'getTitle')) {
+            return (string) $this->getTitle();
+        }
+
+        return class_basename(static::class);
     }
 
     public function getSubheading(): string

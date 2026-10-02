@@ -2,7 +2,8 @@
 
 namespace App\Filament\User\Auth\OtpEmailVerificationPrompt;
 
-use App\Filament\User\Pages\CompleteProfilePage\CompleteProfilePage;
+use App\Filament\User\Auth\CompleteProfile\CompleteProfilePage;
+use App\Filament\User\Auth\Concerns\HasAuthBreadcrumbs;
 use App\Models\User\User;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -21,6 +22,7 @@ use Illuminate\Support\Facades\Mail;
 
 class OtpEmailVerificationPrompt extends EmailVerificationPrompt
 {
+    use HasAuthBreadcrumbs;
     use InteractsWithFormActions;
 
     protected static string $view = 'User.pages.auth.otp-email-verification-prompt.otp-email-verification-prompt';
@@ -32,6 +34,16 @@ class OtpEmailVerificationPrompt extends EmailVerificationPrompt
     public function mount(): void
     {
         if (Filament::auth()->check() && $this->getVerifiable()->hasVerifiedEmail()) {
+            $user = Filament::auth()->user();
+
+            // Hanya akun Google (social) yang belum lengkap -> Complete Profile.
+            // Akun form (Sign Up) datanya sudah sama -> langsung home.
+            if ($user && method_exists($user, 'shouldCompleteProfile') && $user->shouldCompleteProfile()) {
+                redirect()->to(CompleteProfilePage::getUrl());
+
+                return;
+            }
+
             redirect()->intended(Filament::getUrl());
 
             return;
@@ -94,7 +106,13 @@ class OtpEmailVerificationPrompt extends EmailVerificationPrompt
 
             Notification::make()->title(__('Email berhasil diverifikasi!'))->success()->send();
 
-            $this->redirect(CompleteProfilePage::getUrl());
+            // Setelah OTP valid: hanya akun Google yang belum lengkap -> Complete Profile.
+            // Akun form (Sign Up) langsung ke home karena datanya sudah sama.
+            if (method_exists($user, 'shouldCompleteProfile') && $user->shouldCompleteProfile()) {
+                $this->redirect(CompleteProfilePage::getUrl());
+            } else {
+                $this->redirect(Filament::getUrl());
+            }
         } else {
             Notification::make()
                 ->title(__('Kode verifikasi tidak valid atau telah kadaluarsa.'))

@@ -5,12 +5,14 @@ namespace App\Filament\Admin\Resources\ReferenceOptionResource\Pages\ManageRefer
 use App\Filament\Admin\Exports\ReferenceOptionExporter\ReferenceOptionExporter;
 use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\ReferenceOptionResource\ReferenceOptionResource;
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 
 class ManageReferenceOptions extends ManageRecords
 {
+    use HasDynamicBreadcrumbs;
     protected static string $resource = ReferenceOptionResource::class;
 
     public function getTitle(): string
@@ -41,7 +43,7 @@ class ManageReferenceOptions extends ManageRecords
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             ReferenceOptionResource::getUrl('index') => ReferenceOptionResource::getNavigationLabel(),
         ];
     }

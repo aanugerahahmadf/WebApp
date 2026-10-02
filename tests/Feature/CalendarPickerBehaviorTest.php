@@ -15,7 +15,7 @@ beforeEach(function () {
 });
 
 it('renders birth_date calendar with semiboldAll and no minDate', function () {
-    $response = $this->get('/user/register');
+    $response = $this->get('/user/signup');
 
     $response->assertStatus(200);
 
@@ -33,7 +33,7 @@ it('renders birth_date calendar with semiboldAll and no minDate', function () {
         'birth_date calendar must have minDate: null (all dates selectable)'
     );
 
-    $this->assertStringContainsString('birth_date', $html);
+    $this->assertStringContainsString('birth_place_date', $html);
 });
 
 it('renders birth_date calendar on complete-profile with semiboldAll', function () {

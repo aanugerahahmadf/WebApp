@@ -13,6 +13,7 @@ use App\Filament\Admin\Widgets\OrdersChart\OrdersChart;
 use App\Filament\Admin\Widgets\RecentOrders\RecentOrders;
 use App\Filament\Admin\Widgets\RevenueChart\RevenueChart;
 use App\Filament\Admin\Widgets\StatsOverview\StatsOverview;
+use App\Filament\Concerns\RedirectsLogoutToWelcomeHome;
 use App\Http\Middleware\ClerkFilamentAuth\ClerkFilamentAuth;
 
 use App\Http\Middleware\SetLocale\SetLocale;
@@ -40,6 +41,9 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
 {
+    // SignOut / Logout panel admin diarahkan ke Welcome Home.
+    use RedirectsLogoutToWelcomeHome;
+
     public function panel(Panel $panel): Panel
     {
         return $panel
@@ -47,6 +51,11 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->authGuard('web')
             ->login(SignIn::class)
+            // Slug route sign-in panel admin = `signin` (bukan `login`), jadi
+            // URL utamanya `/admin/signin`. Nama route tetap
+            // `filament.admin.auth.login`; URL lama `/admin/login`
+            // dilayani redirect di routes/web/web.php.
+            ->loginRouteSlug('signin')
             // ->registration(SignUp::class)
             ->passwordReset(
                 OtpRequestPasswordReset::class,

@@ -2,12 +2,15 @@
 
 namespace App\Filament\Welcome\Resources\WishlistResource\Pages\ManageWishlists;
 
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\Welcome\Pages\Home\Home;
 use App\Filament\Welcome\Resources\WishlistResource\WishlistResource;
 use Filament\Resources\Pages\ManageRecords;
 
 class ManageWishlists extends ManageRecords
 {
+    use HasDynamicBreadcrumbs;
+
     protected static string $resource = WishlistResource::class;
 
     protected function getHeaderActions(): array
@@ -23,7 +26,7 @@ class ManageWishlists extends ManageRecords
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             WishlistResource::getUrl('index') => WishlistResource::getNavigationLabel(),
         ];
     }

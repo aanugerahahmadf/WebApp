@@ -3,6 +3,7 @@
 namespace App\Filament\Welcome\Resources\OrderResource\Pages\ManageOrders;
 
 use App\Enums\OrderStatus\OrderStatus;
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\Welcome\Pages\Home\Home;
 use App\Filament\Welcome\Resources\OrderResource\OrderResource;
 use App\Models\Order\Order;
@@ -12,6 +13,8 @@ use Filament\Resources\Pages\ManageRecords;
 
 class ManageOrders extends ManageRecords
 {
+    use HasDynamicBreadcrumbs;
+
     protected static string $resource = OrderResource::class;
 
     // public function getTabs(): array
@@ -52,7 +55,7 @@ class ManageOrders extends ManageRecords
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             OrderResource::getUrl('index') => OrderResource::getNavigationLabel(),
         ];
     }

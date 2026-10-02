@@ -5,6 +5,7 @@ namespace App\Filament\Admin\Resources\CategoryResource\Pages\ManageCategories;
 use App\Filament\Admin\Exports\CategoryExporter\CategoryExporter;
 use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\CategoryResource\CategoryResource;
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
@@ -14,6 +15,7 @@ use Filament\Resources\Pages\ManageRecords;
  */
 class ManageCategories extends ManageRecords
 {
+    use HasDynamicBreadcrumbs;
     protected static string $resource = CategoryResource::class;
 
     public function getTitle(): string
@@ -44,7 +46,7 @@ class ManageCategories extends ManageRecords
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             CategoryResource::getUrl('index') => CategoryResource::getNavigationLabel(),
         ];
     }

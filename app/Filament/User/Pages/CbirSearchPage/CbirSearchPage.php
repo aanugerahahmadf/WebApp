@@ -2,6 +2,7 @@
 
 namespace App\Filament\User\Pages\CbirSearchPage;
 
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\User\Pages\Home\Home;
 use App\Models\Package\Package;
 use App\Models\Product\Product;
@@ -24,6 +25,7 @@ use Symfony\Component\HttpFoundation\File\File;
 
 class CbirSearchPage extends Page implements HasForms
 {
+    use HasDynamicBreadcrumbs;
     use InteractsWithForms;
     use WithFileUploads;
 
@@ -434,7 +436,7 @@ session()->forget(['cbir_mixed_results', 'cbir_package_results_ids', 'cbir_searc
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             $this->getTitle(),
         ];
     }

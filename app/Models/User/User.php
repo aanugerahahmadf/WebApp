@@ -527,4 +527,13 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName, 
 
         return true;
     }
+
+    /**
+     * Complete Profile hanya untuk akun Google (social) yang belum lengkap.
+     * Akun form (Sign Up / Sign In) datanya sudah sama, langsung ke home.
+     */
+    public function shouldCompleteProfile(): bool
+    {
+        return filled($this->social_type) && ! $this->isProfileComplete();
+    }
 }

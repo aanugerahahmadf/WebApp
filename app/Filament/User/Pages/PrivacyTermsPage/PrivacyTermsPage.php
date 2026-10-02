@@ -2,6 +2,7 @@
 
 namespace App\Filament\User\Pages\PrivacyTermsPage;
 
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\User\Pages\Home\Home;
 use App\Filament\User\Pages\PrivacyPolicyPage\PrivacyPolicyPage;
 use App\Filament\User\Pages\TermsOfServicePage\TermsOfServicePage;
@@ -10,6 +11,8 @@ use Filament\Pages\Page;
 
 class PrivacyTermsPage extends Page
 {
+    use HasDynamicBreadcrumbs;
+
     protected static string $view = 'User.pages.privacy-terms-page.privacy-terms-page';
 
     protected static bool $shouldRegisterNavigation = false;
@@ -47,7 +50,7 @@ class PrivacyTermsPage extends Page
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             $this->getTitle(),
         ];
     }

@@ -5,12 +5,14 @@ namespace App\Filament\Admin\Resources\PaymentMethodResource\Pages\ManagePayment
 use App\Filament\Admin\Exports\PaymentMethodExporter\PaymentMethodExporter;
 use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\PaymentMethodResource\PaymentMethodResource;
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 
 class ManagePaymentMethods extends ManageRecords
 {
+    use HasDynamicBreadcrumbs;
     protected static string $resource = PaymentMethodResource::class;
 
     public function getTitle(): string
@@ -47,7 +49,7 @@ class ManagePaymentMethods extends ManageRecords
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             PaymentMethodResource::getUrl('index') => PaymentMethodResource::getNavigationLabel(),
         ];
     }

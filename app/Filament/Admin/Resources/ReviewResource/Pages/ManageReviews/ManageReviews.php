@@ -5,6 +5,7 @@ namespace App\Filament\Admin\Resources\ReviewResource\Pages\ManageReviews;
 use App\Filament\Admin\Exports\ReviewExporter\ReviewExporter;
 use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\ReviewResource\ReviewResource;
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
@@ -14,6 +15,7 @@ use Filament\Resources\Pages\ManageRecords;
  */
 class ManageReviews extends ManageRecords
 {
+    use HasDynamicBreadcrumbs;
     protected static string $resource = ReviewResource::class;
 
     public function getTitle(): string
@@ -44,7 +46,7 @@ class ManageReviews extends ManageRecords
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             ReviewResource::getUrl('index') => ReviewResource::getNavigationLabel(),
         ];
     }

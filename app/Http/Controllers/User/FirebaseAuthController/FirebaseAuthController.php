@@ -50,8 +50,13 @@ class FirebaseAuthController extends Controller
             ]);
         }
 
+        // Endpoint ini hanya dipanggil dari tombol "Masuk Dengan Google" yang
+        // ada di halaman auth panel user/welcome (panel admin punya halaman
+        // sign-in sendiri tanpa tombol Google). Jadi semua user — termasuk
+        // super_admin — diarahkan ke home panel user; sebelumnya super_admin
+        // dilempar ke /admin yang bukan tujuan dari halaman sign-in tsb.
         return response()->json([
-            'redirect' => $user->hasRole('super_admin') ? '/admin' : '/user',
+            'redirect' => route('filament.user.pages.home'),
         ]);
     }
 

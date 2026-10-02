@@ -2,6 +2,8 @@
 
 namespace App\Filament\User\Auth\SignIn;
 
+use App\Filament\User\Auth\Concerns\HasAuthBreadcrumbs;
+use App\Filament\Welcome\Pages\Home\Home;
 use App\Models\User\User;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Component;
@@ -18,6 +20,8 @@ use Illuminate\Validation\ValidationException;
 
 class SignIn extends BaseLogin
 {
+    use HasAuthBreadcrumbs;
+
     public function getView(): string
     {
         return 'User.auth.sign-in.sign-in';
@@ -39,6 +43,38 @@ class SignIn extends BaseLogin
     public function getHeading(): string|Htmlable
     {
         return __('Sign In');
+    }
+
+    /**
+     * Judul halaman ini juga jadi `<title>` di tab browser. Base class Filament
+     * mengembalikan `filament-panels::pages/auth/login.title` ("Login"), jadi
+     * tanpa override ini heading kartu sudah "Sign In" tapi tabnya tetap
+     * "Login". Ikut getHeading() supaya keduanya tidak bisa berbeda.
+     */
+    public function getTitle(): string|Htmlable
+    {
+        return $this->getHeading();
+    }
+
+    /**
+     * Parent crumb Sign-In selalu Welcome Home, bukan halaman asal klik.
+     *
+     * Sign In adalah pintu masuk auth dari storefront publik yang bisa dibuka
+     * semua orang, jadi parent crumb yang "mengikuti asal klik" dari trait
+     * HasAuthBreadcrumbs tidak pernah informatif di sini: kandidat /welcome/*
+     * apa pun hanya menghasilkan label generik "Kembali", dan kandidat lain
+     * ditolak. "Beranda" selalu benar, dan kliknya mengembalikan user ke
+     * storefront dari manapun mereka datang.
+     *
+     * Halaman auth lain tetap memakai trait apa adanya -- parent-nya memang
+     * bermakna di sana (Sign Up -> Sign In, OTP -> Lupa Kata Sandi, dst).
+     */
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Home::getUrl(panel: 'welcome') => __('Beranda'),
+            $this->getAuthBreadcrumbsCurrentLabel(),
+        ];
     }
 
     /**
@@ -68,8 +104,8 @@ class SignIn extends BaseLogin
         }
 
         $isUnusable = fn (string $url): bool => str_contains($url, 'livewire')
-            || str_contains($url, '/user/login')
-            || str_contains($url, '/user/register')
+            || str_contains($url, $this->authPagePath())
+            || str_contains($url, $this->registrationPagePath())
             || str_contains($url, 'password-reset')
             || str_contains($url, 'verify-otp')
             || str_contains($url, '/admin');

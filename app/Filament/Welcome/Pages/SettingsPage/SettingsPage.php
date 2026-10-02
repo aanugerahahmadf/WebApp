@@ -2,12 +2,15 @@
 
 namespace App\Filament\Welcome\Pages\SettingsPage;
 
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\Welcome\Pages\Home\Home;
 use App\Livewire\Welcome\DeleteAccountComponent\DeleteAccountComponent;
 use Filament\Pages\Page;
 
 class SettingsPage extends Page
 {
+    use HasDynamicBreadcrumbs;
+
     protected static string $view = 'Welcome.pages.settings-page.settings-page';
 
     protected static bool $shouldRegisterNavigation = false;
@@ -37,7 +40,7 @@ class SettingsPage extends Page
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             $this->getTitle(),
         ];
     }

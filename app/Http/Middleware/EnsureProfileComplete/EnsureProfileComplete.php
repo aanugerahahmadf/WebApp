@@ -21,7 +21,15 @@ class EnsureProfileComplete
             return $next($request);
         }
 
-        if (method_exists($user, 'isProfileComplete') && !$user->isProfileComplete()) {
+        // Complete Profile hanya untuk tombol Google yang belum terdaftar
+        // (akun social + profil belum lengkap). Akun form (Sign Up / Sign In)
+        // datanya sudah sama seperti Complete Profile, langsung ke home.
+        if (method_exists($user, 'shouldCompleteProfile') && $user->shouldCompleteProfile()) {
+            // Email belum verifikasi -> biarkan flow OTP dulu, jangan paksa ke complete-profile.
+            if (method_exists($user, 'hasVerifiedEmail') && ! $user->hasVerifiedEmail()) {
+                return $next($request);
+            }
+
             if ($request->routeIs('filament.user.pages.complete-profile')) {
                 return $next($request);
             }

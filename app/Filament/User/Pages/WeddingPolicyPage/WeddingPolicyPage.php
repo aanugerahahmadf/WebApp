@@ -2,12 +2,15 @@
 
 namespace App\Filament\User\Pages\WeddingPolicyPage;
 
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\User\Pages\Home\Home;
 use App\Models\WeddingDecorationPolicy\WeddingDecorationPolicy;
 use Filament\Pages\Page;
 
 class WeddingPolicyPage extends Page
 {
+    use HasDynamicBreadcrumbs;
+
     protected static string $view = 'User.pages.wedding-policy-page.wedding-policy-page';
 
     protected static bool $shouldRegisterNavigation = false;
@@ -48,7 +51,7 @@ class WeddingPolicyPage extends Page
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             $this->getTitle(),
         ];
     }

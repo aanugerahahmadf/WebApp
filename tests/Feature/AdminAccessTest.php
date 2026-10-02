@@ -11,11 +11,11 @@ beforeEach(function () {
 });
 
 test('admin login page is accessible', function (): void {
-    get('/admin/login')->assertStatus(200);
+    get('/admin/signin')->assertStatus(200);
 });
 
 test('unauthenticated users are redirected to login', function (): void {
-    get('/admin')->assertStatus(302)->assertRedirect('/admin/login');
+    get('/admin')->assertStatus(302)->assertRedirect('/admin/signin');
 });
 
 test('super admin can access dashboard', function (): void {

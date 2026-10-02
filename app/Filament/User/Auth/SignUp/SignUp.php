@@ -2,6 +2,7 @@
 
 namespace App\Filament\User\Auth\SignUp;
 
+use App\Filament\User\Auth\Concerns\HasAuthBreadcrumbs;
 use App\Forms\Components\BirthPlaceDatePicker\BirthPlaceDatePicker;
 use App\Forms\Components\CalendarPicker\CalendarPicker;
 use App\Models\User\User;
@@ -40,6 +41,8 @@ use Spatie\Permission\Models\Role;
 
 class SignUp extends BaseRegister
 {
+    use HasAuthBreadcrumbs;
+
     public function getView(): string
     {
         return 'User.auth.sign-up.sign-up';

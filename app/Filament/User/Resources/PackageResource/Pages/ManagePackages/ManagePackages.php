@@ -3,6 +3,7 @@
 namespace App\Filament\User\Resources\PackageResource\Pages\ManagePackages;
 
 use App\Enums\OrderStatus\OrderStatus;
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\User\Pages\Home\Home;
 use App\Filament\User\Resources\PackageResource\PackageResource;
 use App\Models\Cart\Cart;
@@ -17,6 +18,8 @@ use Illuminate\Support\Facades\DB;
 
 class ManagePackages extends ManageRecords
 {
+    use HasDynamicBreadcrumbs;
+
     protected static string $resource = PackageResource::class;
 
     // public function getTabs(): array
@@ -145,7 +148,7 @@ class ManagePackages extends ManageRecords
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             PackageResource::getUrl('index') => PackageResource::getNavigationLabel(),
         ];
     }

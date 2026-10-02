@@ -5,12 +5,14 @@ namespace App\Filament\Admin\Resources\ProductResource\Pages\ListProducts;
 use App\Filament\Admin\Exports\ProductExporter\ProductExporter;
 use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\ProductResource\ProductResource;
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 
 class ListProducts extends ListRecords
 {
+    use HasDynamicBreadcrumbs;
     protected static string $resource = ProductResource::class;
 
     public function getTitle(): string
@@ -21,7 +23,7 @@ class ListProducts extends ListRecords
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             ProductResource::getUrl('index') => ProductResource::getNavigationLabel(),
         ];
     }

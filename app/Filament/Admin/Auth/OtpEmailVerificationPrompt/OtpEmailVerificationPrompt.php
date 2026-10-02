@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Auth\OtpEmailVerificationPrompt;
 
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Models\User\User;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -18,6 +19,7 @@ use Illuminate\Support\Facades\Mail;
 
 class OtpEmailVerificationPrompt extends EmailVerificationPrompt
 {
+    use HasDynamicBreadcrumbs;
     use InteractsWithFormActions;
 
     protected static string $view = 'Admin.pages.auth.otp-email-verification-prompt.otp-email-verification-prompt';
@@ -117,6 +119,24 @@ class OtpEmailVerificationPrompt extends EmailVerificationPrompt
     public function getHeading(): string|Htmlable
     {
         return __('Verifikasi Email Anda');
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [...$this->breadcrumbParentCrumb(), $this->getAuthCrumbLabel()];
+    }
+
+    protected function getAuthCrumbLabel(): string
+    {
+        if (method_exists($this, 'getHeading')) {
+            return (string) $this->getHeading();
+        }
+
+        if (method_exists($this, 'getTitle')) {
+            return (string) $this->getTitle();
+        }
+
+        return class_basename(static::class);
     }
 
     public function getSubheading(): string

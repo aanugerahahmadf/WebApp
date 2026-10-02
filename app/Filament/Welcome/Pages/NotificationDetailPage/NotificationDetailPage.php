@@ -2,6 +2,7 @@
 
 namespace App\Filament\Welcome\Pages\NotificationDetailPage;
 
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\Welcome\Pages\Home\Home;
 use App\Filament\Welcome\Pages\SettingsPage\PasswordSecurityPage\PasswordSecurityPage;
 use App\Models\User\User;
@@ -12,6 +13,8 @@ use Illuminate\Support\Facades\Auth;
 
 class NotificationDetailPage extends Page
 {
+    use HasDynamicBreadcrumbs;
+
     protected static string $view = 'Welcome.pages.notification-detail-page.notification-detail-page';
 
     protected static bool $shouldRegisterNavigation = false;
@@ -143,7 +146,7 @@ class NotificationDetailPage extends Page
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             $this->getTitle(),
         ];
     }

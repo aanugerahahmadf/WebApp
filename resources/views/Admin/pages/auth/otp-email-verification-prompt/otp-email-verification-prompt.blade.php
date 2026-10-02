@@ -1,4 +1,5 @@
 <x-filament-panels::page.simple>
+    @include('Admin.auth.breadcrumbs.breadcrumbs')
     <x-filament-panels::form wire:submit="verify">
         {{ $this->form }}
     </x-filament-panels::form>

@@ -69,9 +69,31 @@ Route::get('/welcome/legal/help', [WelcomeLegalWebController::class, 'help'])->n
 // The old marketing page that used to live here has been removed: guests browse
 // the landing page and the catalog, and anything account-shaped sends them to
 // the user panel's login (see AuthenticateWelcome).
-Route::redirect('/', '/welcome/home')->middleware(SetLocale::class);
+// '/' sadar-auth: semua yang login (termasuk super_admin, yang bisa
+// memakai Admin Panel maupun User Panel) -> home akun user;
+// tamu -> storefront welcome.
+Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect('/user/home');
+    }
+
+    return redirect('/welcome/home');
+})->middleware(SetLocale::class);
 
 Route::redirect('/admin/inbox', '/admin/inbox/messages');
+
+// -----------------------------------------------------------------------------
+// SHARED — alias URL lama halaman auth
+// Slug route auth berubah mengikuti penamaan class: `login` -> `signin`,
+// `register` -> `signup` (loginRouteSlug / registrationRouteSlug di
+// UserPanelProvider & AdminPanelProvider). URL utamanya sekarang
+// `/user/signin`, `/user/signup`, `/admin/signin`. Bookmark & tautan lama
+// tetap dilayani redirect supaya tidak jadi 404.
+// Nama route tidak berubah, jadi route()/Filament::getLoginUrl() aman.
+// -----------------------------------------------------------------------------
+Route::redirect('/user/login', '/user/signin');
+Route::redirect('/user/register', '/user/signup');
+Route::redirect('/admin/login', '/admin/signin');
 
 // -----------------------------------------------------------------------------
 // SHARED — bahasa (kanonis: User\LanguageController; Admin & Welcome tersedia)
@@ -179,7 +201,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function ():
         ->name('reviews.vote');
     Route::get('/data-exports/download/{file}', [DataExportDownloadController::class, 'download'])
         ->middleware(SuperAdmin::class)
-        ->where('file', '[A-Za-z0-9\-.]+\.zip')
+        ->where('file', '[A-Za-z0-9\-.]+\.(zip|xlsx|pdf)')
         ->name('data-exports.download');
 });
 

@@ -5,12 +5,14 @@ namespace App\Filament\Admin\Resources\HelpResource\Pages\ManageHelps;
 use App\Filament\Admin\Exports\HelpExporter\HelpExporter;
 use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\HelpResource\HelpResource;
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 
 class ManageHelps extends ManageRecords
 {
+    use HasDynamicBreadcrumbs;
     protected static string $resource = HelpResource::class;
 
     public function getTitle(): string
@@ -41,7 +43,7 @@ class ManageHelps extends ManageRecords
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             HelpResource::getUrl('index') => HelpResource::getNavigationLabel(),
         ];
     }

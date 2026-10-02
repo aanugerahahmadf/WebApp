@@ -271,10 +271,16 @@ class SocialiteController extends Controller
 
     private function redirectAfterLogin(User $user)
     {
-        if ($user->hasRole('super_admin')) {
-            return redirect()->intended('/admin');
+        // Tombol Google yang belum terdaftar (akun social baru, data minimal)
+        // wajib lewat Complete Profile dulu sebelum ke home.
+        if (method_exists($user, 'shouldCompleteProfile') && $user->shouldCompleteProfile()) {
+            return redirect()->route('filament.user.pages.complete-profile');
         }
 
-        return redirect()->intended('/user');
+        // Callback ini hanya dilayani dari halaman auth panel user/welcome,
+        // jadi super_admin pun mendarat di home panel user. Sebelumnya role
+        // super_admin dipaksa ke `/admin`, padahal panel admin punya halaman
+        // sign-in sendiri (`/admin/signin`) tanpa tombol Google.
+        return redirect()->intended(route('filament.user.pages.home'));
     }
 }

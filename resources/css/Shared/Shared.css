@@ -361,6 +361,36 @@ select:focus[data-flux-control] {
     box-sizing: border-box !important;
 }
 
+/* ShortcutStats: selalu sebaris 4 kolom | My Orders | Favorite | Active Voucher | Cart |. */
+.user-home-shortcuts .fi-wi-stats-overview-stats-ctn:has(.home-stat-card) {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
+@media (max-width: 640px) {
+    /* Rapatkan kartu shortcut agar 4 muat sebaris di layar kecil */
+    .user-home-shortcuts .fi-wi-stats-overview-stats-ctn:has(.home-stat-card) {
+        gap: 0.5rem !important;
+    }
+
+    .user-home-shortcuts .home-stat-card {
+        min-height: 96px !important;
+        padding: 0.6rem 0.4rem !important;
+    }
+
+    .user-home-shortcuts .home-stat-card .fi-wi-stats-overview-stat-label,
+    .user-home-shortcuts .home-stat-card .fi-wi-stats-overview-stat-description {
+        white-space: normal !important;
+        text-align: center !important;
+        font-size: 0.7rem !important;
+        line-height: 0.95rem !important;
+    }
+
+    .user-home-shortcuts .home-stat-card .fi-wi-stats-overview-stat-value {
+        font-size: 1.4rem !important;
+        line-height: 1.6rem !important;
+    }
+}
+
 
 
 @media (min-width: 768px) {

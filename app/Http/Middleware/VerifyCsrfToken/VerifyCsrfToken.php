@@ -15,6 +15,12 @@ class VerifyCsrfToken extends Middleware
         'admin/*',
         'livewire/*',
 
+        // Logout itu idempotent (terburuk: korban ke-logout orang).
+        // Tanpa ini, sesi kedaluwarsa bikin klik SignOut mendarat di 419
+        // PAGE EXPIRED alih-alih welcome/home.
+        'user/logout',
+        'welcome/logout',
+
         'api/v1.0/payment/notify',
         'api/webhooks/fonnte',
         'api/webhooks/fonnte/connect',

@@ -9,10 +9,12 @@ use App\Livewire\Admin\BrowserSessionsComponent\BrowserSessionsComponent;
 use App\Livewire\Admin\DeleteAccountComponent\DeleteAccountComponent;
 use App\Livewire\Admin\EditPasswordComponent\EditPasswordComponent;
 use App\Livewire\Admin\MobileSettingsComponent\MobileSettingsComponent;
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use Filament\Pages\Page;
 
 class EditProfilePage extends Page
 {
+    use HasDynamicBreadcrumbs;
     protected static string $view = 'Admin.pages.edit-profile.edit-profile';
 
     protected static ?string $navigationIcon = 'heroicon-o-user-circle';
@@ -48,7 +50,7 @@ class EditProfilePage extends Page
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             $this->getTitle(),
         ];
     }

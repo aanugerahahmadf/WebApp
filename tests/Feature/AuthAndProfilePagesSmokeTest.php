@@ -6,7 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 it('renders register page without error', function () {
-    $response = $this->get('/user/register');
+    $response = $this->get('/user/signup');
 
     $response->assertStatus(200);
 

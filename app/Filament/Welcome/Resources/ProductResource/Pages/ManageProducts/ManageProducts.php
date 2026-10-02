@@ -2,6 +2,7 @@
 
 namespace App\Filament\Welcome\Resources\ProductResource\Pages\ManageProducts;
 
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\Welcome\Pages\Home\Home;
 use App\Filament\Welcome\Resources\ProductResource\ProductResource;
 use App\Http\Middleware\AuthenticateWelcome\AuthenticateWelcome;
@@ -18,6 +19,8 @@ use Illuminate\Support\Facades\DB;
 
 class ManageProducts extends ManageRecords
 {
+    use HasDynamicBreadcrumbs;
+
     protected static string $resource = ProductResource::class;
 
     // public function getTabs(): array
@@ -166,7 +169,7 @@ class ManageProducts extends ManageRecords
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             ProductResource::getUrl('index') => ProductResource::getNavigationLabel(),
         ];
     }

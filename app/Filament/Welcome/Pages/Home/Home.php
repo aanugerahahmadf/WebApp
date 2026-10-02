@@ -3,6 +3,7 @@
 namespace App\Filament\Welcome\Pages\Home;
 
 use App\Filament\Welcome\Widgets\CombinedCatalogWidget\CombinedCatalogWidget;
+use App\Filament\Welcome\Widgets\ShortcutStats\ShortcutStats;
 use App\Filament\Welcome\Widgets\StatsOverview\StatsOverview;
 use Filament\Pages\Dashboard as BaseDashboard;
 
@@ -50,6 +51,7 @@ class Home extends BaseDashboard
         // jadi selalu ditampilkan di storefront.
         return [
             StatsOverview::class,
+            ShortcutStats::class,
             CombinedCatalogWidget::class,
         ];
     }

@@ -1,4 +1,6 @@
 <x-filament-panels::page.simple>
+    {{-- Breadcrumb (di atas logo, rata kiri) dirender lewat render hook
+         panels::simple-page.start -- lihat UserPanelProvider. --}}
     {{-- Custom: Hidden the default login link area --}}
     {{-- <x-slot name="subheading">
         {{ __('filament-panels::pages/auth/register.actions.login.before') }}

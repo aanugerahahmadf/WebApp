@@ -7,6 +7,7 @@ use App\Filament\Admin\Exports\OrderExporter\OrderExporter;
 use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\OrderResource\OrderResource;
 use App\Models\Order\Order;
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Components\Tab;
@@ -14,6 +15,7 @@ use Filament\Resources\Pages\ListRecords;
 
 class ListOrders extends ListRecords
 {
+    use HasDynamicBreadcrumbs;
     protected static string $resource = OrderResource::class;
 
     public function getTitle(): string
@@ -24,7 +26,7 @@ class ListOrders extends ListRecords
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             OrderResource::getUrl('index') => OrderResource::getNavigationLabel(),
         ];
     }

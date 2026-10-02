@@ -5,6 +5,7 @@ namespace App\Filament\Admin\Resources\UserResource\Pages\ManageUsers;
 use App\Filament\Admin\Exports\UserExporter\UserExporter;
 use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\UserResource\UserResource;
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
@@ -14,6 +15,7 @@ use Filament\Resources\Pages\ManageRecords;
  */
 class ManageUsers extends ManageRecords
 {
+    use HasDynamicBreadcrumbs;
     protected static string $resource = UserResource::class;
 
     public function getTitle(): string
@@ -44,7 +46,7 @@ class ManageUsers extends ManageRecords
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             UserResource::getUrl('index') => UserResource::getNavigationLabel(),
         ];
     }

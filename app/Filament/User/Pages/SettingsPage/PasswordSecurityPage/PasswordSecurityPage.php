@@ -2,6 +2,7 @@
 
 namespace App\Filament\User\Pages\SettingsPage\PasswordSecurityPage;
 
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\User\Pages\Home\Home;
 use App\Filament\User\Pages\SettingsPage\SettingsPage;
 use App\Models\BackupCode\BackupCode;
@@ -26,6 +27,8 @@ use Livewire\Attributes\Url;
 
 class PasswordSecurityPage extends Page
 {
+    use HasDynamicBreadcrumbs;
+
     protected static string $view = 'User.pages.settings-page.password-security-page.password-security-page';
 
     protected static bool $shouldRegisterNavigation = false;
@@ -459,7 +462,7 @@ class PasswordSecurityPage extends Page
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             $this->getTitle(),
         ];
     }

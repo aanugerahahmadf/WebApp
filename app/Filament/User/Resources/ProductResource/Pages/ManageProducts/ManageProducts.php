@@ -2,6 +2,7 @@
 
 namespace App\Filament\User\Resources\ProductResource\Pages\ManageProducts;
 
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\User\Pages\Home\Home;
 use App\Filament\User\Resources\ProductResource\ProductResource;
 use App\Models\Cart\Cart;
@@ -16,6 +17,8 @@ use Illuminate\Support\Facades\DB;
 
 class ManageProducts extends ManageRecords
 {
+    use HasDynamicBreadcrumbs;
+
     protected static string $resource = ProductResource::class;
 
     // public function getTabs(): array
@@ -136,7 +139,7 @@ class ManageProducts extends ManageRecords
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             ProductResource::getUrl('index') => ProductResource::getNavigationLabel(),
         ];
     }

@@ -2,7 +2,6 @@
 
 namespace App\Providers\Filament\WelcomePanelProvider;
 
-use App\Filament\Welcome\Pages\CompleteProfilePage\CompleteProfilePage;
 use App\Filament\Welcome\Pages\Home\Home;
 use App\Http\Middleware\AuthenticateWelcome\AuthenticateWelcome;
 use App\Http\Middleware\ClerkFilamentAuth\ClerkFilamentAuth;
@@ -110,16 +109,16 @@ class WelcomePanelProvider extends PanelProvider
             ->renderHook(
                 PanelsRenderHook::SIDEBAR_NAV_START,
                 function (): View|string {
-                    // Kebalikan hook topbar di atas: sidebar bawaan Filament
-                    // hanya muncul sebagai menu geser di mobile (panel ini
-                    // pakai top navigation), sehingga switcher bahasa tampil
-                    // di atas item Home, rata kanan, khusus mobile. Dropdown-nya
-                    // teleport ke <body> jadi aman dari overflow sidebar.
-                    if (! AppPlatform::isAnyMobile()) {
-                        return '';
-                    }
-
-                    return '<div class="flex justify-end px-4 pb-2">'
+                    // Switcher tema + bahasa untuk menu geser. Sidebar
+                    // bawaan Filament hanya terbuka sebagai menu geser di
+                    // layar kecil (panel ini pakai top navigation), jadi aman
+                    // selalu dirender: di desktop tidak pernah terlihat.
+                    // Berbasis viewport (bukan UA) agar konsisten dengan
+                    // topbar yang menyembunyikan switcher-nya di bawah sm.
+                    // Dropdown-nya teleport ke <body> jadi aman dari
+                    // overflow sidebar.
+                    return '<div class="flex items-center justify-end gap-2 px-4 pb-2">'
+                        .view('Welcome.components.theme-switcher.theme-switcher')->render()
                         .view('Welcome.filament-language-switcher.language-switcher.language-switcher')->render()
                         .'</div>';
                 },
@@ -175,7 +174,6 @@ class WelcomePanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Welcome/Pages'), for: 'App\\Filament\\Welcome\\Pages')
             ->pages([
                 Home::class,
-                CompleteProfilePage::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Welcome/Widgets'), for: 'App\\Filament\\Welcome\\Widgets')
             ->widgets([])

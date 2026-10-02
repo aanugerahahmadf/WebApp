@@ -5,6 +5,7 @@ namespace App\Filament\Admin\Resources\VendorResource\Pages\ManageVendors;
 use App\Filament\Admin\Exports\VendorExporter\VendorExporter;
 use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\VendorResource\VendorResource;
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
@@ -14,6 +15,7 @@ use Filament\Resources\Pages\ManageRecords;
  */
 class ManageVendors extends ManageRecords
 {
+    use HasDynamicBreadcrumbs;
     protected static string $resource = VendorResource::class;
 
     public function getTitle(): string
@@ -44,7 +46,7 @@ class ManageVendors extends ManageRecords
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             VendorResource::getUrl('index') => VendorResource::getNavigationLabel(),
         ];
     }

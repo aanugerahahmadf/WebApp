@@ -2,12 +2,15 @@
 
 namespace App\Filament\Welcome\Resources\ReviewResource\Pages\ManageReviews;
 
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\Welcome\Pages\Home\Home;
 use App\Filament\Welcome\Resources\ReviewResource\ReviewResource;
 use Filament\Resources\Pages\ManageRecords;
 
 class ManageReviews extends ManageRecords
 {
+    use HasDynamicBreadcrumbs;
+
     protected static string $resource = ReviewResource::class;
 
     protected function getHeaderActions(): array
@@ -23,7 +26,7 @@ class ManageReviews extends ManageRecords
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             ReviewResource::getUrl('index') => ReviewResource::getNavigationLabel(),
         ];
     }

@@ -8,7 +8,8 @@ use App\Filament\User\Auth\OtpRequestPasswordReset\OtpRequestPasswordReset;
 use App\Filament\User\Auth\OtpResetPassword\OtpResetPassword;
 use App\Filament\User\Auth\SignUp\SignUp;
 use App\Filament\User\Auth\VerifyOtp\VerifyOtp;
-use App\Filament\User\Pages\CompleteProfilePage\CompleteProfilePage;
+use App\Filament\Concerns\RedirectsLogoutToWelcomeHome;
+use App\Filament\User\Auth\CompleteProfile\CompleteProfilePage;
 use App\Filament\User\Pages\Home\Home;
 use App\Filament\User\Pages\EditProfilePage\EditProfilePage;
 use App\Filament\User\Pages\HelpCenterPage\HelpCenterPage;
@@ -17,6 +18,7 @@ use App\Filament\User\Pages\SettingsPage\SettingsPage;
 use App\Filament\User\Resources\HistoryResource\HistoryResource;
 use App\Filament\User\Resources\ReviewResource\ReviewResource;
 use App\Http\Middleware\ClerkFilamentAuth\ClerkFilamentAuth;
+use App\Http\Middleware\EnsureProfileComplete\EnsureProfileComplete;
 use App\Http\Middleware\SetLocale\SetLocale;
 use App\Support\AppPlatform\AppPlatform;
 use Filament\Enums\ThemeMode;
@@ -30,6 +32,7 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Support\Enums\MaxWidth;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Contracts\View\View;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -39,16 +42,31 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Livewire\Livewire;
 
 class UserPanelProvider extends PanelProvider
 {
+    // SignOut / Logout panel user diarahkan ke Welcome Home.
+    use RedirectsLogoutToWelcomeHome;
+
     public function panel(Panel $panel): Panel
     {
         $panel = $panel
             ->id('user')
             ->path('user')
             ->login(SignIn::class)
+            // Slug route sign-in panel user = `signin` (bukan `login`),
+            // jadi URL utamanya `/user/signin`. Nama route tetap
+            // `filament.user.auth.login` sehingga semua pemanggilan
+            // route()/Filament::getLoginUrl() tetap aman. URL lama
+            // `/user/login` dilayani redirect di routes/web/web.php.
+            ->loginRouteSlug('signin')
             ->registration(SignUp::class)
+            // Sejalan dengan sign-in: slug route sign-up = `signup`, jadi URL
+            // utamanya `/user/signup`. Nama route tetap
+            // `filament.user.auth.register`; URL lama `/user/register`
+            // dilayani redirect di routes/web/web.php.
+            ->registrationRouteSlug('signup')
             ->passwordReset(
                 OtpRequestPasswordReset::class,
                 OtpResetPassword::class
@@ -88,6 +106,24 @@ class UserPanelProvider extends PanelProvider
             ->renderHook(
                 'panels::styles.after',
                 fn (): string => Blade::render('@vite(\'resources/css/User/User.css\')')
+            )
+            ->renderHook(
+                PanelsRenderHook::SIMPLE_PAGE_START,
+                // Breadcrumb halaman Auth (Sign In / Sign Up / OTP / Complete
+                // Profile) DI ATAS logo, rata kiri.
+                //
+                // Dipindah ke hook, bukan @include per view, karena
+                // `filament-panels::components.page.simple` menaruh slot di
+                // bawah header/logo -- hook ini dirender tepat sebelumnya, jadi
+                // posisinya benar tanpa tiap view harus tahu soalnya.
+                //
+                // Komponen dikirim eksplisit karena hook dijalankan di luar
+                // lifecycle Livewire; partial tetap jatuh ke $this sebagai
+                // fallback. Halaman tanpa trait HasAuthBreadcrumbs tidak punya
+                // getBreadcrumbs() -> partial tidak merender apa pun.
+                fn (): View|string => view('User.auth.breadcrumbs.breadcrumbs', [
+                    'authPage' => Livewire::current(),
+                ])
             )
             ->discoverResources(in: app_path('Filament/User/Resources'), for: 'App\\Filament\\User\\Resources')
             ->discoverPages(in: app_path('Filament/User/Pages'), for: 'App\\Filament\\User\\Pages')
@@ -145,6 +181,7 @@ class UserPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+                EnsureProfileComplete::class,
             ])
             ->routes(function (Panel $panel): void {
                 VerifyOtp::registerRoutes($panel);

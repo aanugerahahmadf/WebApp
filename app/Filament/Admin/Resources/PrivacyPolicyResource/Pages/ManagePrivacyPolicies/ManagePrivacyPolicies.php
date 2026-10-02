@@ -5,12 +5,14 @@ namespace App\Filament\Admin\Resources\PrivacyPolicyResource\Pages\ManagePrivacy
 use App\Filament\Admin\Exports\PrivacyPolicyExporter\PrivacyPolicyExporter;
 use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\PrivacyPolicyResource\PrivacyPolicyResource;
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 
 class ManagePrivacyPolicies extends ManageRecords
 {
+    use HasDynamicBreadcrumbs;
     protected static string $resource = PrivacyPolicyResource::class;
 
     public function getTitle(): string
@@ -41,7 +43,7 @@ class ManagePrivacyPolicies extends ManageRecords
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             PrivacyPolicyResource::getUrl('index') => PrivacyPolicyResource::getNavigationLabel(),
         ];
     }

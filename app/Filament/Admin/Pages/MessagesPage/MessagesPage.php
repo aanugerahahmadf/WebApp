@@ -4,6 +4,7 @@ namespace App\Filament\Admin\Pages\MessagesPage;
 
 use App\Filament\Admin\Pages\Home\Home;
 use App\Models\Inbox\Inbox;
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use Filament\Pages\Page;
 use Filament\Support\Enums\MaxWidth;
 use Illuminate\Contracts\Support\Htmlable;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 
 class MessagesPage extends Page
 {
+    use HasDynamicBreadcrumbs;
     protected static string $view = 'Admin.pages.messages.messages';
 
     protected static ?string $activeNavigationIcon = 'heroicon-o-chat-bubble-left-right';
@@ -118,7 +120,7 @@ class MessagesPage extends Page
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             $this->getTitle(),
         ];
     }

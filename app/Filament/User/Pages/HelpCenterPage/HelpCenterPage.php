@@ -2,12 +2,15 @@
 
 namespace App\Filament\User\Pages\HelpCenterPage;
 
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\User\Pages\Home\Home;
 use App\Models\Help\Help;
 use Filament\Pages\Page;
 
 class HelpCenterPage extends Page
 {
+    use HasDynamicBreadcrumbs;
+
     protected static string $view = 'User.pages.help-center-page.help-center-page';
 
     protected static bool $shouldRegisterNavigation = false;
@@ -46,7 +49,7 @@ class HelpCenterPage extends Page
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             $this->getTitle(),
         ];
     }

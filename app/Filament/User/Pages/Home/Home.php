@@ -3,6 +3,7 @@
 namespace App\Filament\User\Pages\Home;
 
 use App\Filament\User\Widgets\CombinedCatalogWidget\CombinedCatalogWidget;
+use App\Filament\User\Widgets\ShortcutStats\ShortcutStats;
 use App\Filament\User\Widgets\StatsOverview\StatsOverview;
 use Filament\Pages\Dashboard as BaseDashboard;
 
@@ -48,6 +49,7 @@ class Home extends BaseDashboard
     {
         return [
             StatsOverview::class,
+            ShortcutStats::class,
             CombinedCatalogWidget::class,
         ];
     }

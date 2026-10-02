@@ -5,6 +5,7 @@ namespace App\Filament\Admin\Resources\WishlistResource\Pages\ManageWishlists;
 use App\Filament\Admin\Exports\WishlistExporter\WishlistExporter;
 use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\WishlistResource\WishlistResource;
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
@@ -14,6 +15,7 @@ use Filament\Resources\Pages\ManageRecords;
  */
 class ManageWishlists extends ManageRecords
 {
+    use HasDynamicBreadcrumbs;
     protected static string $resource = WishlistResource::class;
 
     public function getTitle(): string
@@ -44,7 +46,7 @@ class ManageWishlists extends ManageRecords
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             WishlistResource::getUrl('index') => WishlistResource::getNavigationLabel(),
         ];
     }

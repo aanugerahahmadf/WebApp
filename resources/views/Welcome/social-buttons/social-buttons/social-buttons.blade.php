@@ -3,8 +3,8 @@
     // Pakai path relatif untuk semua platform — WebView dan browser sama-sama handle ini.
     // normalizeUrl() tidak dipakai untuk navigasi halaman agar tidak buka Chrome di mobile.
     $googleRedirectUrl = '/auth/google/redirect';
-    $registerUrl       = filament()->getRegistrationUrl() ?? '/user/register';
-    $loginUrl          = filament()->getLoginUrl() ?? '/user/login';
+    $registerUrl       = filament()->getRegistrationUrl() ?? route('filament.user.auth.register');
+    $loginUrl          = filament()->getLoginUrl() ?? route('filament.user.auth.login');
     $hasParentData     = $hasParentData ?? false;
     $hideCheckboxes    = $hideCheckboxes ?? false;
     $authMode          = $authMode ?? (

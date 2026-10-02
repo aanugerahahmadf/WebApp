@@ -2,12 +2,15 @@
 
 namespace App\Filament\User\Pages\TermsOfServicePage;
 
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\User\Pages\Home\Home;
 use App\Models\TermsOfService\TermsOfService;
 use Filament\Pages\Page;
 
 class TermsOfServicePage extends Page
 {
+    use HasDynamicBreadcrumbs;
+
     protected static string $view = 'User.pages.terms-of-service-page.terms-of-service-page';
 
     protected static bool $shouldRegisterNavigation = false;
@@ -48,7 +51,7 @@ class TermsOfServicePage extends Page
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             $this->getTitle(),
         ];
     }

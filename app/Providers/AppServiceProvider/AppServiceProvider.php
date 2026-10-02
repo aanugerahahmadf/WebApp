@@ -82,7 +82,6 @@ use App\Support\PlatformContext\PlatformContext;
 use Filament\Actions\Exports\ExportColumn;
 use Filament\Forms\Components\Field;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse as LoginResponseContract;
-use Filament\Http\Responses\Auth\Contracts\LogoutResponse as LogoutResponseContract;
 use Filament\Http\Responses\Auth\Contracts\RegistrationResponse as RegistrationResponseContract;
 use Filament\Infolists\Components\Entry;
 use Filament\Support\Facades\FilamentView;
@@ -167,20 +166,18 @@ class AppServiceProvider extends ServiceProvider
             };
         });
 
-        $this->app->bind(LogoutResponseContract::class, function () {
-            return new class implements LogoutResponseContract
-            {
-                public function toResponse($request)
-                {
-                    $panel = filament()->getCurrentPanel();
-                    $url = $panel
-                        ? $panel->getLoginUrl()
-                        : route('filament.user.auth.login');
-
-                    return redirect()->to($url);
-                }
-            };
-        });
+        // Catatan: redirect logout TIDAK diatur di sini.
+        //
+        // Filament\Http\Controllers\Auth\LogoutController mengembalikan
+        // `app(Filament\Http\Responses\Auth\LogoutResponse::class)` -- kelas
+        // NYATA, dan kelas itu sendiri tidak pernah me-resolve contract-nya. Jadi
+        // binding ke interface LogoutResponse ( seperti dua binding di atas)
+        // tidak akan pernah terpakai.
+        //
+        // Override yang benar ada di panel provider, lewat trait
+        // RedirectsLogoutToWelcomeHome -> WelcomeLogoutResponse:
+        // UserPanelProvider dan AdminPanelProvider (override `register()`),
+        // supaya SignOut dari kedua panel mendarat di Welcome Home.
 
         if (class_exists('ZipArchive')) {
             if (class_exists(BackupServiceProvider::class)) {
@@ -544,6 +541,9 @@ class AppServiceProvider extends ServiceProvider
         if (! $isMobile) {
             ExportColumn::configureUsing(function (ExportColumn $column): void {
                 $column->formatStateUsing(function ($state) {
+                    if (is_array($state)) {
+                        return $state === [] ? null : json_encode($state, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                    }
                     if (is_string($state) && ! filter_var($state, FILTER_VALIDATE_EMAIL) && ! str_contains($state, 'http')) {
                         if (! preg_match('/^[0-9.,\-+() ]+$/', $state)) {
                             $state = __($state);

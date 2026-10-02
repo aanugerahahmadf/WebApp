@@ -180,7 +180,7 @@ it('report_item action sends a report message through chat service (welcome)', f
 it('welcome product detail is accessible to a guest without 500', function (): void {
     $product = Product::factory()->create(['name' => 'Guest Visible', 'stock' => 1]);
 
-    $this->get("/welcome/products/{$product->getKey()}")
+    $this->get("/welcome/flowerdecorationscatalog/{$product->getKey()}")
         ->assertOk()
         ->assertSee('Guest Visible');
 });
@@ -188,7 +188,7 @@ it('welcome product detail is accessible to a guest without 500', function (): v
 it('welcome package detail is accessible to a guest without 500', function (): void {
     $package = Package::factory()->create(['name' => 'Guest Package', 'stock' => 1]);
 
-    $this->get("/welcome/packages/{$package->getKey()}")
+    $this->get("/welcome/flowerdecorationspackagecatalog/{$package->getKey()}")
         ->assertOk()
         ->assertSee('Guest Package');
 });

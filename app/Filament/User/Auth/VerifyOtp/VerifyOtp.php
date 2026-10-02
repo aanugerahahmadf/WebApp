@@ -2,6 +2,7 @@
 
 namespace App\Filament\User\Auth\VerifyOtp;
 
+use App\Filament\User\Auth\Concerns\HasAuthBreadcrumbs;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Section;
@@ -19,6 +20,7 @@ use Illuminate\Support\Facades\URL;
 
 class VerifyOtp extends SimplePage
 {
+    use HasAuthBreadcrumbs;
     use InteractsWithFormActions;
 
     protected static string $view = 'User.auth.verify-otp.verify-otp';

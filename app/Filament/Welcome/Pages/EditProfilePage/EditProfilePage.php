@@ -2,12 +2,15 @@
 
 namespace App\Filament\Welcome\Pages\EditProfilePage;
 
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\Welcome\Pages\Home\Home;
 use App\Livewire\Welcome\PersonalInfoComponent\PersonalInfoComponent;
 use Filament\Pages\Page;
 
 class EditProfilePage extends Page
 {
+    use HasDynamicBreadcrumbs;
+
     protected static string $view = 'Welcome.pages.edit-profile.edit-profile';
 
     protected static ?string $navigationIcon = 'heroicon-o-user-circle';
@@ -38,7 +41,7 @@ class EditProfilePage extends Page
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             $this->getTitle(),
         ];
     }

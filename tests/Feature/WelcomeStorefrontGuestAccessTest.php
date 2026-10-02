@@ -65,10 +65,10 @@ test('a guest can browse the storefront and the catalog', function (string $path
     ]))->assertOk();
 })->with([
     '/welcome/home',
-    '/welcome/products',
-    '/welcome/packages',
-    '/welcome/products/{product}',
-    '/welcome/packages/{package}',
+    '/welcome/flowerdecorationscatalog',
+    '/welcome/flowerdecorationspackagecatalog',
+    '/welcome/flowerdecorationscatalog/{product}',
+    '/welcome/flowerdecorationspackagecatalog/{package}',
 ]);
 
 test('a guest is sent to the user panel login from an account page', function (string $path): void {
@@ -86,9 +86,12 @@ test('a guest is sent to the user panel login from an account page', function (s
 test('the login route the gate redirects to exists', function (): void {
     // Otherwise every guest redirect above lands on a 404.
     expect(AuthenticateWelcome::LOGIN_ROUTE)->toBe('filament.user.auth.login')
-        ->and(route(AuthenticateWelcome::LOGIN_ROUTE))->toContain('/user/login');
+        ->and(route(AuthenticateWelcome::LOGIN_ROUTE))->toContain('/user/signin');
 
-    get('/user/login')->assertOk();
+    get('/user/signin')->assertOk();
+
+    // URL lama tidak boleh jadi 404 (bookmark lama), cukup redirect.
+    get('/user/login')->assertRedirect(route(AuthenticateWelcome::LOGIN_ROUTE));
 });
 
 /*
@@ -99,18 +102,18 @@ test('the login route the gate redirects to exists', function (): void {
  * user), which reads as "your order was placed" and is not.
  */
 test('a guest cannot reach the checkout wizard', function (): void {
-    get("/welcome/products/{$this->product->getKey()}/checkout")
+    get("/welcome/flowerdecorationscatalog/{$this->product->getKey()}/checkout")
         ->assertRedirect(route(AuthenticateWelcome::LOGIN_ROUTE));
 
-    get("/welcome/packages/{$this->package->getKey()}/checkout")
+    get("/welcome/flowerdecorationspackagecatalog/{$this->package->getKey()}/checkout")
         ->assertRedirect(route(AuthenticateWelcome::LOGIN_ROUTE));
 });
 
 test('a signed in customer can still reach the checkout wizard', function (): void {
     actingAs($this->customer, 'web');
 
-    get("/welcome/products/{$this->product->getKey()}/checkout")->assertOk();
-    get("/welcome/packages/{$this->package->getKey()}/checkout")->assertOk();
+    get("/welcome/flowerdecorationscatalog/{$this->product->getKey()}/checkout")->assertOk();
+    get("/welcome/flowerdecorationspackagecatalog/{$this->package->getKey()}/checkout")->assertOk();
 });
 
 /*
@@ -124,7 +127,7 @@ test('a signed in customer can still reach the checkout wizard', function (): vo
 test('the topbar offers Masuk to a guest instead of an avatar', function (): void {
     get('/welcome/home')
         ->assertOk()
-        ->assertSee(__('Masuk'))
+        ->assertSee(__('Sign In'))
         ->assertSee(route(AuthenticateWelcome::LOGIN_ROUTE), escape: false)
         ->assertDontSee(route('filament.user.auth.register'), escape: false)
         // No avatar / user menu for a guest to click through to.
@@ -176,31 +179,31 @@ test('the theme switcher is a dropdown offering all three modes', function (): v
  * button hidden instead.
  */
 test('a guest sees every product detail button, and each redirects to login', function (): void {
-    get("/welcome/products/{$this->product->getKey()}")
+    get("/welcome/flowerdecorationscatalog/{$this->product->getKey()}")
         ->assertOk()
         ->assertSee(__('Masukkan ke Keranjang'))
         ->assertSee(__('Tambah ke Favorit'))
         ->assertSee(__('Tulis Ulasan'))
         ->assertSee(__('Chat Admin')) // the one that works without an account
         ->assertSee(route(AuthenticateWelcome::LOGIN_ROUTE), escape: false)
-        ->assertDontSee("/welcome/products/{$this->product->getKey()}/checkout", escape: false);
+        ->assertDontSee("/welcome/flowerdecorationscatalog/{$this->product->getKey()}/checkout", escape: false);
 });
 
 test('a guest sees every package detail button, and each redirects to login', function (): void {
-    get("/welcome/packages/{$this->package->getKey()}")
+    get("/welcome/flowerdecorationspackagecatalog/{$this->package->getKey()}")
         ->assertOk()
         ->assertSee(__('Masukkan ke Keranjang'))
         ->assertSee(__('Tambah ke Favorit'))
         ->assertSee(__('Tulis Ulasan'))
         ->assertSee(__('Chat Admin'))
         ->assertSee(route(AuthenticateWelcome::LOGIN_ROUTE), escape: false)
-        ->assertDontSee("/welcome/packages/{$this->package->getKey()}/checkout", escape: false);
+        ->assertDontSee("/welcome/flowerdecorationspackagecatalog/{$this->package->getKey()}/checkout", escape: false);
 });
 
 test('a signed in customer still gets the account actions', function (): void {
     actingAs($this->customer, 'web');
 
-    get("/welcome/products/{$this->product->getKey()}")
+    get("/welcome/flowerdecorationscatalog/{$this->product->getKey()}")
         ->assertOk()
         ->assertSee(__('Masukkan ke Keranjang'))
         ->assertSee(__('Chat Admin'));
@@ -212,17 +215,17 @@ test('a signed in customer still gets the account actions', function (): void {
  * their hrefs from the App\Filament\User resources -- which looks wrong for a
  * public storefront. It is not: Filament resolves Resource::getUrl() against
  * the *current* panel, so the class namespace is not what decides the prefix,
- * and on /welcome/products the hrefs come out as /welcome/products/{id}.
+ * and on /welcome/flowerdecorationscatalog the hrefs come out as /welcome/flowerdecorationscatalog/{id}.
  *
  * This asserts the rendered outcome rather than the reason, so the storefront
  * cannot quietly start linking out to /user/ and bouncing guests off a login
  * wall in the middle of the public catalog.
  */
 test('catalog cards link within the welcome panel, not out to the user panel', function (): void {
-    get('/welcome/products')
+    get('/welcome/flowerdecorationscatalog')
         ->assertOk()
-        ->assertSee("/welcome/products/{$this->product->getKey()}", escape: false)
-        ->assertDontSee('/user/products', escape: false);
+        ->assertSee("/welcome/flowerdecorationscatalog/{$this->product->getKey()}", escape: false)
+        ->assertDontSee('/user/flowerdecorationscatalog', escape: false);
 });
 
 test('the dashboard catalog grid links within the welcome panel too', function (): void {
@@ -232,13 +235,16 @@ test('the dashboard catalog grid links within the welcome panel too', function (
     Filament::setCurrentPanel(Filament::getPanel('welcome'));
 
     $html = view('User.components.combined-catalog-grid.combined-catalog-grid', [
-        'records' => Package::query()->with('category')->get(),
+        'items' => Package::query()->with('category')->get()
+            ->each(fn ($package) => $package->setAttribute('catalog_type', 'package'))
+            ->concat(Product::query()->with('category')->get()
+                ->each(fn ($product) => $product->setAttribute('catalog_type', 'product'))),
     ])->render();
 
-    expect($html)->toContain('/welcome/packages/')
-        ->and($html)->toContain('/welcome/products/')
-        ->and($html)->not->toContain('/user/packages')
-        ->and($html)->not->toContain('/user/products');
+    expect($html)->toContain('/welcome/flowerdecorationspackagecatalog/')
+        ->and($html)->toContain('/welcome/flowerdecorationscatalog/')
+        ->and($html)->not->toContain('/user/flowerdecorationspackagecatalog')
+        ->and($html)->not->toContain('/user/flowerdecorationscatalog');
 });
 
 test('the welcome panel resource urls are panel relative', function (): void {
@@ -246,7 +252,7 @@ test('the welcome panel resource urls are panel relative', function (): void {
     Filament::setCurrentPanel(Filament::getPanel('welcome'));
 
     expect(ProductResource::getUrl('view', ['record' => $this->product]))
-        ->toContain('/welcome/products/')
+        ->toContain('/welcome/flowerdecorationscatalog/')
         ->and(PackageResource::getUrl('view', ['record' => $this->package]))
-        ->toContain('/welcome/packages/');
+        ->toContain('/welcome/flowerdecorationspackagecatalog/');
 });

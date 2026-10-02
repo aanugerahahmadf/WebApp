@@ -5,11 +5,13 @@ namespace App\Filament\Admin\Resources\TransactionResource\Pages\ListTransaction
 use App\Filament\Admin\Exports\TransactionExporter\TransactionExporter;
 use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\TransactionResource\TransactionResource;
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
 class ListTransactions extends ListRecords
 {
+    use HasDynamicBreadcrumbs;
     protected static string $resource = TransactionResource::class;
 
     public function getTitle(): string
@@ -20,7 +22,7 @@ class ListTransactions extends ListRecords
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             TransactionResource::getUrl('index') => TransactionResource::getNavigationLabel(),
         ];
     }

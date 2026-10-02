@@ -6,6 +6,7 @@ use App\Models\User\User;
 use App\Support\AppPlatform\AppPlatform;
 use Database\Factories\HistoryFactory;
 use Filament\Facades\Filament;
+use App\Http\Middleware\EnsureProfileComplete\EnsureProfileComplete;
 use Filament\Http\Middleware\Authenticate as FilamentAuthenticate;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
@@ -83,12 +84,12 @@ test('the welcome panel is routed', function (string $path): void {
     '/welcome',
     '/welcome/orders',
     '/welcome/histories',
-    '/welcome/products',
+    '/welcome/flowerdecorationscatalog',
     '/welcome/vouchers',
     '/welcome/wishlists',
     '/welcome/carts',
     '/welcome/reviews',
-    '/welcome/packages',
+    '/welcome/flowerdecorationspackagecatalog',
 ]);
 
 test('the welcome panel dashboard renders on a desktop', function (): void {
@@ -212,7 +213,7 @@ test('the welcome panel gates guests differently from the user panel', function 
     $user = Filament::getPanel('user');
 
     expect($welcome->getAuthMiddleware())->toBe([AuthenticateWelcome::class])
-        ->and($user->getAuthMiddleware())->toBe([FilamentAuthenticate::class])
+        ->and($user->getAuthMiddleware())->toBe([FilamentAuthenticate::class, EnsureProfileComplete::class])
         ->and($welcome->getAuthMiddleware())->not->toBe($user->getAuthMiddleware());
 });
 

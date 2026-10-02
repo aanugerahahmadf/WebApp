@@ -3,6 +3,7 @@
 namespace App\Filament\Welcome\Resources\PackageResource\Pages\ManagePackages;
 
 use App\Enums\OrderStatus\OrderStatus;
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\Welcome\Pages\Home\Home;
 use App\Filament\Welcome\Resources\PackageResource\PackageResource;
 use App\Http\Middleware\AuthenticateWelcome\AuthenticateWelcome;
@@ -19,6 +20,8 @@ use Illuminate\Support\Facades\DB;
 
 class ManagePackages extends ManageRecords
 {
+    use HasDynamicBreadcrumbs;
+
     protected static string $resource = PackageResource::class;
 
     // public function getTabs(): array
@@ -175,7 +178,7 @@ class ManagePackages extends ManageRecords
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
+            ...$this->breadcrumbParentCrumb(),
             PackageResource::getUrl('index') => PackageResource::getNavigationLabel(),
         ];
     }
