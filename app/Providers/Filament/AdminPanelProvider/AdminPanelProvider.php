@@ -91,6 +91,13 @@ class AdminPanelProvider extends PanelProvider
                     ->url(fn (): string => EditProfilePage::getUrl())
                     ->icon('eos-account-circle')
                     ->visible(fn (): bool => Auth::check()),
+
+                // SignOut: label dikunci "Sign Out" (bukan "Log out"/"Keluar"
+                // hasil terjemahan per-bahasa) dan tujuannya Welcome Home.
+                // `->url()` tidak di-set -- Filament tetap POST ke route logout
+                // panel admin, lalu WelcomeLogoutResponse mengarahkan ke Welcome
+                // Home. Lihat RedirectsLogoutToWelcomeHome.
+                'logout' => static::signOutMenuItem(),
             ])
             ->navigationGroups([
                 NavigationGroup::make()->label(fn () => __('Beranda')),
@@ -113,6 +120,9 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->middleware([
                 ClerkFilamentAuth::class,
+                // WAJIB subclass APLIKASI. Lihat catatan lengkap di
+                // UserPanelProvider: yang base punya $except kosong sehingga
+                // POST /admin/logout kena 419.
                 VerifyCsrfToken::class,
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

@@ -49,6 +49,15 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URL'),
     ],
 
+    // Google Sheets untuk cadangan data review.
+    // Sheet hanya menampung teks -- file foto tidak bisa diunggah ke sini,
+    // yang dicatat hanyalah path dan URL publiknya.
+    'google_sheets' => [
+        'spreadsheet_id' => env('GOOGLE_SHEETS_SPREADSHEET_ID', ''),
+        'service_account_json' => env('GOOGLE_SHEETS_SERVICE_ACCOUNT_JSON', ''),
+        'tab' => env('GOOGLE_SHEETS_TAB', 'ReviewsBackup'),
+    ],
+
     'geonames' => [
         'username' => env('GEONAMES_USERNAME'),
     ],

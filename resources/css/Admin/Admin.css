@@ -147,4 +147,30 @@
     .fi-panel-admin .fi-sidebar-nav {
         padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px)) !important;
     }
+
+    /* Bendera + nama negara pada Select kode negara WhatsApp.
+       Labelnya HTML dari App\Support\Phone\CountryCallingCodeOptions::all().
+       Dicerminkan dari User.css / Welcome.css supaya ketiganya sama. */
+    .fi-panel-admin .country-flag {
+        display: inline-block;
+        font-size: 1.05rem;
+        line-height: 1;
+        vertical-align: -0.15em;
+        margin-inline-end: 0.15rem;
+    }
+
+    /* Fallback kalau flag emoji tidak dirender: kode ISO gaya ringkas "AF"/"ID". */
+    .fi-panel-admin .country-iso-code {
+        display: inline-block;
+        min-width: 1.35rem;
+        font-size: 0.5625rem;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        line-height: 1;
+        vertical-align: 0.05em;
+    }
+
+    .fi-panel-admin .country-dial-code {
+        opacity: 0.6;
+    }
 }

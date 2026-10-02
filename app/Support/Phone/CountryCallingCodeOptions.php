@@ -9,8 +9,37 @@ use libphonenumber\PhoneNumberUtil;
 final class CountryCallingCodeOptions
 {
     /**
+     * Bendera emoji dari kode ISO 3166-1 alpha-2 (mis. "ID" menjadi flag
+     * Indonesia).
+     *
+     * Dibangun dari regional indicator symbol: tiap huruf A-Z dipetakan ke
+     * U+1F1E6 + offset. Dipilih daripada gambar eksternal (flagcdn.com dsb)
+     * karena tidak butuh koneksi -- penting untuk shell native Capacitor dan
+     * untuk halaman auth yang harus tampil sebelum ada akses internet.
+     *
+     * Mengembalikan string kosong kalau kodenya bukan dua huruf, supaya
+     * pemanggil bisa jatuh ke kode ISO sebagai teks biasa.
+     */
+    public static function flag(string $region): string
+    {
+        $letters = strtoupper((string) preg_replace('/[^A-Za-z]/', '', $region));
+
+        if (strlen($letters) !== 2) {
+            return '';
+        }
+
+        return implode('', array_map(
+            static fn (string $letter): string => mb_chr(0x1F1E6 + (ord($letter) - ord('A')), 'UTF-8'),
+            str_split($letters)
+        ));
+    }
+
+    /**
      * Daftar pilihan untuk Select bawaan Filament. Nilai menyimpan kode dial
      * dan ISO agar negara yang berbagi kode (mis. +1) tetap dapat dipilih.
+     *
+     * Label memakai HTML (Select wajib `->allowHtml()`): nama negara dan kode
+     * dial di-escape, sedangkan bendera emoji tidak perlu.
      *
      * @return array<string, string>
      */
@@ -35,11 +64,19 @@ final class CountryCallingCodeOptions
 
         foreach ($countries as $selection => $country) {
             [$dialCode, $region] = explode('|', $selection);
+            $flag = self::flag($region);
+
+            // Fallback ke kode ISO sebagai teks untuk platform yang tidak
+            // merender flag emoji (webview lama, sebagian font Linux).
+            $marker = $flag !== ''
+                ? sprintf('<span class="country-flag" title="%s" aria-label="%s">%s</span>', e($region), e($region), $flag)
+                : sprintf('<span class="country-iso-code">%s</span>', e($region));
+
             $options[$selection] = sprintf(
-                '<span class="country-iso-code" style="font-size: 9px !important; font-weight: 800; letter-spacing: .02em; vertical-align: 1px;">%s</span> %s (%s)',
-                $region,
+                '%s <span class="country-name">%s</span> <span class="country-dial-code">(%s)</span>',
+                $marker,
                 e($country),
-                $dialCode,
+                e($dialCode),
             );
         }
 

@@ -22,6 +22,7 @@ use Spatie\MediaLibrary\ResponsiveImages\TinyPlaceholderGenerator\Blurred;
 use Spatie\MediaLibrary\ResponsiveImages\WidthCalculator\FileSizeOptimizedWidthCalculator;
 use Spatie\MediaLibrary\Support\FileNamer\DefaultFileNamer;
 use Spatie\MediaLibrary\Support\FileRemover\DefaultFileRemover;
+use App\Support\MediaLibrary\CollectionPathGenerator;
 use Spatie\MediaLibrary\Support\PathGenerator\DefaultPathGenerator;
 use Spatie\MediaLibrary\Support\UrlGenerator\DefaultUrlGenerator;
 
@@ -107,8 +108,13 @@ return [
 
     /*
      * The class that contains the strategy for determining a media file's path.
+     *
+     * CollectionPathGenerator menyimpan media datar per koleksi
+     * (`product_image/1-product-1.png`) alih-alih satu folder per file seperti
+     * DefaultPathGenerator (`721/package-31.png`). DefaultPathGenerator masih
+     * dipakai di sini supaya file config ini tetap sinkron dengan paket Filament.
      */
-    'path_generator' => DefaultPathGenerator::class,
+    'path_generator' => CollectionPathGenerator::class,
 
     /*
      * The class that contains the strategy for determining how to remove files.

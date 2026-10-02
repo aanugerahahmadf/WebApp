@@ -52,9 +52,13 @@ return [
 
     'channels' => [
 
+        // Default `daily`, bukan `single`: driver single menulis ke satu file
+        // selamanya tanpa rotasi, jadi laravel.log tumbuh tanpa batas sampai
+        // storage penuh. Channel `daily` di bawah sudah diset retensinya
+        // (LOG_DAILY_DAYS, default 14 hari) lalu otomatis dihapus.
         'stack' => [
             'driver' => 'stack',
-            'channels' => explode(',', (string) env('LOG_STACK', 'single')),
+            'channels' => explode(',', (string) env('LOG_STACK', 'daily')),
             'ignore_exceptions' => false,
         ],
 

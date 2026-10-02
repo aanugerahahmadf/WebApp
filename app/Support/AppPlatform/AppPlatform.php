@@ -4,6 +4,7 @@ namespace App\Support\AppPlatform;
 
 use App\Enums\RuntimePlatform\RuntimePlatform;
 use Illuminate\Http\Request;
+use Jenssegers\Agent\Agent;
 
 /**
  * Single source of truth for "which runtime am I in?".
@@ -134,6 +135,38 @@ class AppPlatform
     public static function isDesktopApp(?Request $request = null): bool
     {
         return static::current($request)->isDesktopApp();
+    }
+
+    /**
+     * True for a tablet surface: iPad/iPod, or Android without the "Mobile"
+     * token in its user agent.
+     *
+     * RuntimePlatform deliberately has no tablet case -- an iPad is a
+     * WebsiteIos and an Android tablet a WebsiteAndroid, because everything
+     * else about the request (auth, features, API surface) is the same as the
+     * browser. Only the *layout* decision needs to know the device is wide,
+     * which is what this is for.
+     *
+     * App shells never count as tablets: a tablet running the Capacitor build
+     * is still a mobile shell, and its sidebar -- not the topbar -- is where
+     * the controls belong there.
+     */
+    public static function isTablet(?Request $request = null): bool
+    {
+        $request ??= request();
+
+        if (! $request instanceof Request || app()->runningInConsole()) {
+            return false;
+        }
+
+        if (! static::current($request)->isWebsite()) {
+            return false;
+        }
+
+        $agent = new Agent;
+        $agent->setUserAgent((string) $request->userAgent());
+
+        return $agent->isTablet();
     }
 
     public static function isWebsite(?Request $request = null): bool

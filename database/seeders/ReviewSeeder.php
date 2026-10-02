@@ -7,9 +7,8 @@ use App\Models\Product\Product;
 use App\Models\Review\Review;
 use App\Models\ReviewVote\ReviewVote;
 use App\Models\User\User;
+use App\Services\ReviewPhotoStorage\ReviewPhotoStorage;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Str;
 
 class ReviewSeeder extends Seeder
 {
@@ -54,7 +53,14 @@ class ReviewSeeder extends Seeder
         $oldReviewIds = Review::query()->whereIn('user_id', $testUserIds)->pluck('id')->all();
         if ($oldReviewIds !== []) {
             ReviewVote::query()->whereIn('review_id', $oldReviewIds)->delete();
+
+            // Baris review lama dihapus lebih dulu, baru file yatim dibersihkan.
+            // Urutan ini penting: pruneOrphans() menentukan file yang aman dihapus
+            // dari sisa referensi di tabel reviews, jadi harus dijalankan setelah
+            // baris lama hilang -- kalau tidak, tidak ada yang jadi yatim.
             Review::query()->whereIn('id', $oldReviewIds)->delete();
+
+            $this->deletePhotoFiles();
         }
 
         foreach (Package::all() as $package) {
@@ -156,7 +162,7 @@ class ReviewSeeder extends Seeder
     }
 
     /**
-     * Salin beberapa foto item (produk/paket) ke storage publik review-photos.
+     * Ambil foto item (produk/paket) untuk storage publik review-photos.
      *
      * @return array<int, string> Path relatif foto (relatif ke public disk).
      */
@@ -171,36 +177,32 @@ class ReviewSeeder extends Seeder
             }
         }
 
-        $count = random_int(0, 3);
-        $result = [];
-
-        for ($i = 0; $i < $count; $i++) {
-            $rel = $this->copySourceToReviewPhotos($source);
-            if ($rel) {
-                $result[] = $rel;
-            }
+        if (! $source) {
+            return [];
         }
 
-        return $result;
+        // Hanya ada satu sumber foto untuk item ini, jadi cukup satu path.
+        // Nama file diturunkan dari hash isi, sehingga foto yang sama tidak
+        // pernah tersalin dua kali antar-run seeder.
+        $relative = ReviewPhotoStorage::store($source);
+
+        return $relative ? [$relative] : [];
     }
 
-    private function copySourceToReviewPhotos(?string $source): ?string
+    /**
+     * Hapus file foto yang tidak lagi dirujuk review mana pun.
+     *
+     * Penting: nama file foto berbasis hash isi, jadi satu file bisa dipakai
+     * banyak review. Karena itu penghapusan dicek ulang terhadap SELURUH
+     * tabel reviews -- bukan hanya review milik seeder -- agar foto milik user
+     * asli tidak ikut terhapus. Lihat ReviewPhotoStorage::pruneOrphans().
+     */
+    private function deletePhotoFiles(): void
     {
-        if (! $source || ! file_exists($source)) {
-            return null;
+        $result = ReviewPhotoStorage::pruneOrphans(apply: true);
+
+        if ($result['deleted'] > 0) {
+            $this->command?->info("  {$result['deleted']} foto ulasan yatim dihapus");
         }
-
-        $ext = strtolower(pathinfo($source, PATHINFO_EXTENSION)) ?: 'jpg';
-        if (! in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
-            $ext = 'jpg';
-        }
-
-        $destDir = storage_path('app/public/review-photos');
-        File::ensureDirectoryExists($destDir);
-
-        $name = 'review-'.Str::random(20).'.'.$ext;
-        File::copy($source, $destDir.'/'.$name);
-
-        return 'review-photos/'.$name;
     }
 }

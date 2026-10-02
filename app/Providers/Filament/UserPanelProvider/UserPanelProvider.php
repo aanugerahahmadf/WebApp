@@ -20,6 +20,7 @@ use App\Filament\User\Resources\ReviewResource\ReviewResource;
 use App\Http\Middleware\ClerkFilamentAuth\ClerkFilamentAuth;
 use App\Http\Middleware\EnsureProfileComplete\EnsureProfileComplete;
 use App\Http\Middleware\SetLocale\SetLocale;
+use App\Http\Middleware\VerifyCsrfToken\VerifyCsrfToken;
 use App\Support\AppPlatform\AppPlatform;
 use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
@@ -36,7 +37,6 @@ use Filament\View\PanelsRenderHook;
 use Illuminate\Contracts\View\View;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Auth;
@@ -165,6 +165,13 @@ class UserPanelProvider extends PanelProvider
                     ->label(__('Pusat Bantuan'))
                     ->url(fn (): string => HelpCenterPage::getUrl())
                     ->icon('heroicon-o-question-mark-circle'),
+
+                // SignOut: label dikunci "Sign Out" (bukan "Log out"/"Keluar"
+                // hasil terjemahan per-bahasa) dan tujuannya Welcome Home.
+                // `->url()` tidak di-set -- Filament tetap POST ke route logout
+                // panel user, lalu WelcomeLogoutResponse mengarahkan ke Welcome
+                // Home. Lihat RedirectsLogoutToWelcomeHome.
+                'logout' => static::signOutMenuItem(),
             ])
             ->middleware([
                 ClerkFilamentAuth::class,
@@ -174,6 +181,19 @@ class UserPanelProvider extends PanelProvider
                 SetLocale::class,
                 AuthenticateSession::class,
                 ShareErrorsFromSession::class,
+                // WAJIB subclass APLIKASI (App\Http\Middleware\VerifyCsrfToken),
+                // bukan Illuminate\Foundation\Http\Middleware\VerifyCsrfToken.
+                // Keduanya sama-sama middleware CSRF, tapi yang base punya
+                // $except KOSONG, sedangkan yang aplikasi mengecualikan
+                // user/logout, welcome/logout, dan admin/*.
+                //
+                // Kalau panel memakai yang base, POST /user/logout akan lolos di
+                // lapisan global (sudah dikecualikan) lalu DITOLAK lagi di
+                // lapisan panel -> 419 PAGE EXPIRED. Route Filament sebenarnya
+                // sudah berada di group `web` (FilamentServiceProvider
+                // ->hasRoutes('web')) yang juga memakai kelas aplikasi, jadi
+                // entri di sini adalah lapisan kedua -- dan hanya aman selama
+                // kelasnya sama.
                 VerifyCsrfToken::class,
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,

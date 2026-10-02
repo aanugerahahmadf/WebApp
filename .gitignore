@@ -5,6 +5,9 @@
 /public/storage
 /storage/*.key
 /storage/framework/cache/data/*
+# Cache facade yang di-generate Laravel (`php artisan cache:clear`). Ini artefak
+# runtime, bukan source -- sempat ter-commit lalu terhapus lagi tiap optimize:clear.
+/storage/framework/cache/*.php
 /storage/framework/sessions/*
 /storage/framework/views/*
 /storage/logs/*

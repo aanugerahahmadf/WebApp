@@ -526,7 +526,17 @@
     width: 100% !important;
 }
 
-/* Kode ISO pada daftar negara: gaya ringkas seperti "AF", "ID", dan "AL". */
+/* Bendera + nama negara pada Select kode negara WhatsApp.
+   Labelnya HTML dari App\Support\Phone\CountryCallingCodeOptions::all(). */
+.fi-panel-user .country-flag {
+    display: inline-block;
+    font-size: 1.05rem;
+    line-height: 1;
+    vertical-align: -0.15em;
+    margin-inline-end: 0.15rem;
+}
+
+/* Fallback kalau flag emoji tidak dirender: kode ISO gaya ringkas "AF"/"ID". */
 .fi-panel-user .country-iso-code {
     display: inline-block;
     min-width: 1.35rem;
@@ -535,6 +545,10 @@
     letter-spacing: 0.02em;
     line-height: 1;
     vertical-align: 0.05em;
+}
+
+.fi-panel-user .country-dial-code {
+    opacity: 0.6;
 }
 
 

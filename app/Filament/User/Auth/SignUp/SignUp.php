@@ -10,7 +10,7 @@ use App\Services\GeoLocationService\GeoLocationService;
 use App\Services\GeoNamesService\GeoNamesService;
 use App\Services\PlatformNotificationService\PlatformNotificationService;
 use App\Services\WorldRegionService\WorldRegionService;
-use App\Support\Phone\CountryCallingCodeOptions;
+use App\Support\Phone\WhatsappField;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\FileUpload;
@@ -51,6 +51,17 @@ class SignUp extends BaseRegister
     public function getHeading(): string|Htmlable
     {
         return __('Sign Up');
+    }
+
+    /**
+     * Judul halaman ini juga jadi `<title>` di tab browser. Base class Filament
+     * mengembalikan `filament-panels::pages/auth/register.title` ("Register"),
+     * jadi tanpa override ini heading kartu sudah "Sign Up" tapi tabnya tetap
+     * "Register". Ikut getHeading() supaya keduanya tidak bisa berbeda.
+     */
+    public function getTitle(): string|Htmlable
+    {
+        return $this->getHeading();
     }
 
     protected function getEmailFormComponent(): Component
@@ -175,26 +186,7 @@ class SignUp extends BaseRegister
                     ->icon('heroicon-o-chat-bubble-left-ellipsis')
                     ->description(__('Untuk notifikasi pembayaran via WhatsApp.'))
                     ->schema([
-                        Group::make([
-                            Select::make('whatsapp_country_code')
-                                ->label(__('Negara / Kode Negara'))
-                                ->options(CountryCallingCodeOptions::all())
-                                ->default(CountryCallingCodeOptions::defaultSelection())
-                                ->searchable()
-                                ->native(false)
-                                ->allowHtml()
-                                ->live()
-                                ->dehydrated(false)
-                                ->columnSpanFull(),
-                            TextInput::make('whatsapp')
-                                ->label(__('Nomor WhatsApp'))
-                                ->tel()
-                                ->required()
-                                ->prefix(fn (Get $get): string => explode('|', $get('whatsapp_country_code') ?: CountryCallingCodeOptions::defaultSelection())[0])
-                                ->placeholder(__('81234567890'))
-                                ->dehydrateStateUsing(fn ($state, Get $get): string => CountryCallingCodeOptions::toE164($get('whatsapp_country_code'), $state))
-                                ->columnSpanFull(),
-                        ])->columns(1)->columnSpanFull(),
+                        WhatsappField::group(required: true),
                     ])
                     ->columns(1),
 
@@ -870,7 +862,7 @@ class SignUp extends BaseRegister
 
         Notification::make()
             ->title(__('Perhatian'))
-            ->body(__('Account Anda Sudah Terdaftar Silahkan Ke Halaman Login.'))
+            ->body(__('Account Anda Sudah Terdaftar Silahkan Ke Halaman Sign In.'))
             ->warning()
             ->send();
 

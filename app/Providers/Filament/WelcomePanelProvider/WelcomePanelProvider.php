@@ -6,6 +6,7 @@ use App\Filament\Welcome\Pages\Home\Home;
 use App\Http\Middleware\AuthenticateWelcome\AuthenticateWelcome;
 use App\Http\Middleware\ClerkFilamentAuth\ClerkFilamentAuth;
 use App\Http\Middleware\SetLocale\SetLocale;
+use App\Http\Middleware\VerifyCsrfToken\VerifyCsrfToken;
 use App\Support\AppPlatform\AppPlatform;
 use App\Support\MobileNav\MobileNav;
 use Filament\Enums\ThemeMode;
@@ -20,7 +21,6 @@ use Filament\View\PanelsRenderHook;
 use Illuminate\Contracts\View\View;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Auth;
@@ -66,8 +66,21 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
  *
  * The language-switcher view and the stylesheet stay panel-scoped
  * (Welcome.*, resources/css/Welcome/Welcome.css) because those assets only
- * exist under the Welcome namespace. The switcher keeps the user panel's
- * "hidden on mobile" behaviour so the two topbars stay identical in shape.
+ * exist under the Welcome namespace.
+ *
+ * Where the controls live depends on the surface:
+ *
+ *   topbar (Top Navigation bawaan Filament) -- tablet, macOS, desktop, dan
+ *     desktop app. Rendered from PanelsRenderHook::GLOBAL_SEARCH_AFTER, which
+ *     Filament places inside the topbar's own `ms-auto flex items-center
+ *     gap-x-4` row -- the same row as the search box and the user menu.
+ *
+ *   sidebar (menu geser) -- HP dan app shell Android/iOS. Rendered from
+ *     PanelsRenderHook::SIDEBAR_NAV_START.
+ *
+ * The split is AppPlatform::isAnyMobile() plus AppPlatform::isTablet():
+ * RuntimePlatform has no tablet case, so an iPad reads as WebsiteIos and
+ * would otherwise land in the sidebar even though it has room for the topbar.
  */
 class WelcomePanelProvider extends PanelProvider
 {
@@ -95,28 +108,55 @@ class WelcomePanelProvider extends PanelProvider
             ->collapsibleNavigationGroups()
             ->globalSearch()
             ->renderHook(
-                'panels::global-search.after',
+                // Switcher bahasa di Top Navigation bawaan Filament, untuk
+                // tablet, macOS, desktop, dan desktop app.
+                //
+                // Hook GLOBAL_SEARCH_AFTER ini bukan sisipan di luar layout:
+                // di vendor/filament/.../components/topbar/index.blade.php,
+                // hook itu dirender DI DALAM <nav> topbar, di dalam baris
+                // `ms-auto flex items-center gap-x-4` yang juga memuat kotak
+                // pencarian, notifikasi, dan user menu. Jadi posisinya benar
+                // "di topbar bawaan".
+                //
+                // Kenapa bukan TOPBAR_END: hook itu dirender SESUDAH baris
+                // flex tersebut, jadi tidak ikut gap-x-4-nya dan akan
+                // terlihat menempel di tepi paling kanan, terpisah dari
+                // alignment topbar yang lain.
+                //
+                // CUMA bahasa, bukan tema. Switcher tema sudah ada di topbar
+                // ini: Welcome.components.topbar-auth-actions merendernya
+                // dengan `hidden sm:block`, jadi tampil di tablet ke atas dan
+                // disembunyikan di HP (HP ambil yang dari sidebar di bawah).
+                // Merender temanya di sini akan memunculkan dua tombol.
+                //
+                // Tablet dihitung topbar: RuntimePlatform tidak punya kasus
+                // tablet (iPad = WebsiteIos), jadi isTablet() yang memilah --
+                // iPad & tablet Android ke sini, HP dan app shell ke sidebar.
+                PanelsRenderHook::GLOBAL_SEARCH_AFTER,
                 function (): View|string {
-                    // Keep the switcher available on website/desktop apps, but
-                    // hide it on native mobile and mobile-browser requests.
-                    if (AppPlatform::isAnyMobile()) {
+                    if (AppPlatform::isAnyMobile() && ! AppPlatform::isTablet()) {
                         return '';
                     }
 
-                    return view('Welcome.filament-language-switcher.language-switcher.language-switcher');
+                    return view('Welcome.filament-language-switcher.language-switcher.language-switcher')->render();
                 },
             )
             ->renderHook(
+                // Switcher tema + bahasa yang sama, dipindah ke menu geser
+                // (sidebar) -- hanya untuk HP dan app shell Android/iOS.
+                //
+                // Syaratnya kebalikan dari hook topbar di atas: mobile shell
+                // DAN bukan tablet. Tablet punya ruang cukup dan tidak punya
+                // sidebar yang bisa dibuka, jadi kontrolnya tetap di topbar.
+                //
+                // Dropdown-nya teleport ke <body> jadi aman dari overflow
+                // sidebar.
                 PanelsRenderHook::SIDEBAR_NAV_START,
                 function (): View|string {
-                    // Switcher tema + bahasa untuk menu geser. Sidebar
-                    // bawaan Filament hanya terbuka sebagai menu geser di
-                    // layar kecil (panel ini pakai top navigation), jadi aman
-                    // selalu dirender: di desktop tidak pernah terlihat.
-                    // Berbasis viewport (bukan UA) agar konsisten dengan
-                    // topbar yang menyembunyikan switcher-nya di bawah sm.
-                    // Dropdown-nya teleport ke <body> jadi aman dari
-                    // overflow sidebar.
+                    if (! AppPlatform::isAnyMobile() || AppPlatform::isTablet()) {
+                        return '';
+                    }
+
                     return '<div class="flex items-center justify-end gap-2 px-4 pb-2">'
                         .view('Welcome.components.theme-switcher.theme-switcher')->render()
                         .view('Welcome.filament-language-switcher.language-switcher.language-switcher')->render()
@@ -191,6 +231,9 @@ class WelcomePanelProvider extends PanelProvider
                 SetLocale::class,
                 AuthenticateSession::class,
                 ShareErrorsFromSession::class,
+                // WAJIB subclass APLIKASI. Lihat catatan lengkap di
+                // UserPanelProvider: yang base punya $except kosong sehingga
+                // POST /welcome/logout kena 419.
                 VerifyCsrfToken::class,
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,

@@ -6,7 +6,7 @@ use App\Forms\Components\BirthPlaceDatePicker\BirthPlaceDatePicker;
 use App\Forms\Components\CalendarPicker\CalendarPicker;
 use App\Models\User\User;
 use App\Services\FaceService\FaceService;
-use App\Support\Phone\CountryCallingCodeOptions;
+use App\Support\Phone\WhatsappField;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Components\FileUpload;
@@ -50,8 +50,6 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
     {
         $user = Auth::user();
         if ($user) {
-            $whatsapp = CountryCallingCodeOptions::split($user->whatsapp);
-
             $firstName = $user->first_name;
             $midName = $user->mid_name;
             $lastName = $user->last_name;
@@ -73,8 +71,7 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
                 'last_name' => $lastName,
                 'username' => $user->username,
                 'email' => $user->email,
-                'whatsapp_country_code' => $whatsapp['selection'],
-                'whatsapp' => $whatsapp['national'],
+                ...WhatsappField::state($user->whatsapp),
                 'identity_type' => $user->identity_type ?? 'ktp',
                 'ktp_number' => $user->ktp_number,
                 'passport_number' => $user->passport_number,
@@ -198,26 +195,7 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
                     ->icon('heroicon-o-chat-bubble-left-ellipsis')
                     ->description(__('Untuk notifikasi pembayaran via WhatsApp.'))
                     ->schema([
-                        Group::make([
-                            Select::make('whatsapp_country_code')
-                                ->label(__('Negara / Kode Negara'))
-                                ->options(CountryCallingCodeOptions::all())
-                                ->default(CountryCallingCodeOptions::defaultSelection())
-                                ->searchable()
-                                ->native(false)
-                                ->allowHtml()
-                                ->live()
-                                ->dehydrated(false)
-                                ->columnSpanFull(),
-                            TextInput::make('whatsapp')
-                                ->label(__('Nomor WhatsApp'))
-                                ->tel()
-                                ->required()
-                                ->prefix(fn (Get $get): string => explode('|', $get('whatsapp_country_code') ?: CountryCallingCodeOptions::defaultSelection())[0])
-                                ->placeholder(__('81234567890'))
-                                ->dehydrateStateUsing(fn ($state, Get $get): string => CountryCallingCodeOptions::toE164($get('whatsapp_country_code'), $state))
-                                ->columnSpanFull(),
-                        ])->columns(1)->columnSpanFull(),
+                        WhatsappField::group(required: true),
                     ]),
 
                 // ── Identitas & Alamat ──────────────────────────────────────

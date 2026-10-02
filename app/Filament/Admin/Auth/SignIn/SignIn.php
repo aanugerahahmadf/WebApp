@@ -27,6 +27,17 @@ class SignIn extends BaseLogin
         return __('Sign In');
     }
 
+    /**
+     * Judul halaman ini juga jadi `<title>` di tab browser. Base class Filament
+     * mengembalikan `filament-panels::pages/auth/login.title` ("Login"), jadi
+     * tanpa override ini heading kartu sudah "Sign In" tapi tabnya tetap
+     * "Login". Ikut getHeading() supaya keduanya tidak bisa berbeda.
+     */
+    public function getTitle(): string|Htmlable
+    {
+        return $this->getHeading();
+    }
+
     public function getSubheading(): string|Htmlable|null
     {
         return __('Silakan masukkan kredensial Anda untuk melanjutkan rencana Anda.');
