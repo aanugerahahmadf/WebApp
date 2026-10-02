@@ -8,6 +8,17 @@
 /storage/framework/sessions/*
 /storage/framework/views/*
 /storage/logs/*
+
+# Runtime artifacts under storage/framework/temp. bootstrap/app.php points
+# TMP/TEMP/TMPDIR here on Windows so Artisan works when the system temp path is
+# locked, which means PHP's own temp files land here too -- plus the stdout/stderr
+# of spawned subprocesses (sf_proc_*). None of it is source.
+/storage/framework/temp/*
+!/storage/framework/temp/.gitignore
+
+# Larastan/LSP scratch files dropped at the storage root.
+/storage/framework/lsp-*.php
+/storage/framework/*.tmp
 /bootstrap/cache/*.php
 /bootstrap/cache/*.tmp
 /bootstrap/cache/filament
