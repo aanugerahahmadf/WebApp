@@ -11,8 +11,21 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Facades\Auth;
 
 /**
- * Empat kartu aksi beranda, sebaris 4 kolom (Row 1):
- * | My Orders | Favorite | Active Voucher | Cart |. Aman untuk guest (angka 0).
+ * Empat kartu aksi beranda: | Pesanan Saya | Favorit | Voucher Aktif | Keranjang |.
+ * Aman untuk guest (semua angka 0).
+ *
+ * Tata letaknya per platform, dikerjakan di view
+ * resources/views/Shared/widgets/shortcut-stats.blade.php — kelas PHP ini
+ * sengaja tidak branching per platform:
+ *
+ *   - mobile (aplikasi shell Android/iOS + browser mobile): satu kartu per
+ *     halaman, digeser dengan swipe, lengkap dengan titik penanda dan
+ *     animasi slide berurutan saat masuk. Empat kolom di lebar 400px cuma
+ *     berdesakan dan teksnya terpotong.
+ *   - tablet, macOS, desktop, desktop app: grid 4 kolom seperti biasa.
+ *
+ * Widget ini memakai view `Shared.*` yang sama dengan panel User, jadi
+ * perubahan view-nya berlaku di kedua panel sekaligus.
  */
 class ShortcutStats extends BaseWidget
 {

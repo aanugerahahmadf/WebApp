@@ -551,6 +551,123 @@ select:focus[data-flux-control] {
 
 
 /* ═══════════════════════════════════════════════════════════════════
+   SHORTCUT STATS — carousel 1-kartu (khusus mobile)
+
+   Kelas .shortcut-stats-slide + .shortcut-stats-track hanya di-render view
+   shortcut-stats saat AppPlatform::isAnyMobile() (aplikasi shell Android/iOS
+   + browser mobile). Di tablet, macOS, desktop, dan desktop app keduanya
+   tidak ada sama sekali -- jadi grid 4 kolom bawaan tetap apa adanya.
+
+   Geserannya scroll-snap CSS, bukan JS: satu kartu selebar container, snap
+   per halaman. Swipe native Android/iOS (dan drag mouse di desktop) langsung
+   jalan, dan tetap jalan walau Alpine belum hydrate atau JS gagal.
+
+   Kartu sudah punya hover:scale-105; selama animasi masuk masih berjalan,
+   scale dari hover akan menimpa transform milik keyframe -- jeda di sini
+   supaya keduanya tidak berebut.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.shortcut-stats-slide > * {
+    animation: shortcut-stats-slide-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+    will-change: transform, opacity;
+}
+
+.shortcut-stats-slide > *:nth-child(1) {
+    animation-delay: 0ms;
+}
+
+.shortcut-stats-slide > *:nth-child(2) {
+    animation-delay: 60ms;
+}
+
+.shortcut-stats-slide > *:nth-child(3) {
+    animation-delay: 120ms;
+}
+
+.shortcut-stats-slide > *:nth-child(4) {
+    animation-delay: 180ms;
+}
+
+.shortcut-stats-slide > *:nth-child(n + 5) {
+    animation-delay: 240ms;
+}
+
+@keyframes shortcut-stats-slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(-14px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.shortcut-stats-slide > *:hover {
+    animation-play-state: paused;
+}
+
+/* Pengguna yang meminta pengurangan gerak di OS tidak perlu animasi ini --
+   hormati, jangan dipaksa. */
+@media (prefers-reduced-motion: reduce) {
+    .shortcut-stats-slide > * {
+        animation: none;
+    }
+
+    .shortcut-stats-slide > *:hover {
+        animation-play-state: running;
+    }
+}
+
+/* ——— Track carousel: satu kartu per halaman ——— */
+
+/*
+ * WAJIB menumbangkan `display: grid !important` yang sudah ada di Shared.css
+ * (lihat blok .fi-wi-stats-overview-stats-ctn:has(.home-stat-card) dan
+ * .user-home-shortcuts ...:has(.home-stat-card) di atas).
+ *
+ * Aturan lama itu memakai !important, jadi inline style `display: flex`
+ * dari view kalah, dan :has(.home-stat-card) menambah specificity di atas
+ * selector kelas biasa. Akibatnya container tetap grid: kartu tetap 4 kolom,
+ * flex-basis:100% diabaikan, dan carousel tidak pernah jalan -- meski
+ * markup-nya sudah benar dan titik-titiknya sudah muncul.
+ *
+ * Selector di sini juga memakai :has(.home-stat-card) supaya specificity
+ * (0,3,0) melampaui aturan lama (0,2,0), bukan sekadar mengandalkan
+ * "yang belakangan menang".
+ */
+.fi-wi-stats-overview-stats-ctn.shortcut-stats-track:has(.home-stat-card),
+.fi-wi-stats-overview-stats-ctn.shortcut-stats-track:has(.home-stat-welcome) {
+    display: flex !important;
+    grid-template-columns: none !important;
+    gap: 0.75rem !important;
+}
+
+.shortcut-stats-track {
+    /* Scrollbar-nya disembunyikan supaya tidak memenuhi layar HP; kartu tetap
+       bisa digeser seperti biasa. */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    /* Swipe mendatar tidak ikut memicu geser halaman (back-swipe browser). */
+    overscroll-behavior-x: contain;
+}
+
+.shortcut-stats-track::-webkit-scrollbar {
+    display: none;
+}
+
+.shortcut-stats-track > * {
+    /* 100% = tepat satu kartu terlihat, memenuhi lebar track. Gap flex
+       tetap menyimpan jarak antarhalaman, jadi kartu tidak pernah menempel
+       ke tepi container. */
+    flex: 0 0 100%;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    CBIR SEARCH BAR — tombol camera & upload menyatu di dalam search
    */
 
