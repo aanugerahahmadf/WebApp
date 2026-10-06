@@ -169,9 +169,21 @@ it('route user tetap memakai middleware auth', function (): void {
  */
 
 it('menampilkan tombol Unduh PDF di view Messages panel Welcome dan User', function (string $panel): void {
-    $path = resource_path("views/{$panel}/livewire/messages/messages/messages.blade.php");
+    // `$panel` adalah PANEL ID ('welcome'/'user'), sedangkan folder view-nya
+    // huruf kapital (Welcome/User) -- itu memang nama foldernya di
+    // resources/views.
+    //
+    // Dua hal itu dipisah karena Windows tidak membedakan huruf besar-kecil
+    // pada filesystem, jadi path huruf kecil tetap ketemu di laptop dan test
+    // hijau. Di Linux (runner CI) tidak begitu, dan file_get_contents gagal
+    // dengan "Failed to open stream: No such file or directory" -- test jadi
+    // merah hanya di CI. Nama route tetap huruf kecil karena memang begitu
+    // oleh Filament.
+    $directory = ucfirst($panel);
+
+    $path = resource_path("views/{$directory}/livewire/messages/messages/messages.blade.php");
     $src = (string) file_get_contents($path);
-    $routeName = $panel === 'welcome' ? 'welcome.reports.pdf' : 'user.reports.pdf';
+    $routeName = "{$panel}.reports.pdf";
 
     // Tombol hanya boleh muncul kalau ada laporan di meta percakapan.
     expect($src)->toContain('$mySubmittedReport')
