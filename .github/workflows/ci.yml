@@ -65,7 +65,20 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: mbstring, pdo_sqlite, sqlite3
+          # grpc WAJIB ada di sini, sama seperti di job `application` dan
+          # `frontend`. `google/cloud-firestore` (v2.1.0 di composer.lock)
+          # mendeklarasikan `ext-grpc` di require-nya, jadi `composer install`
+          # berhenti dengan "your lock file does not contain a compatible set of
+          # packages" kalau ekstensi ini tidak ada -- meski tidak ada satu pun
+          # test di suite ini yang benar-benar memanggil Firestore.
+          #
+          # FirestoreServiceTest memang skip sendiri saat kredensial tidak ada,
+          # tapi itu alasan untuk TIDAK stumbling, bukan alasan memasang
+          # ekstensi: menyandarkan installer pada skip-test berarti lock file
+          # dan platform CI tidak sinkron, dan begitu ada test yang menyentuh
+          # Firestore tanpa kredensial, kegagalan muncul sebagai error yang
+          # tidak jelas.
+          extensions: mbstring, pdo_sqlite, sqlite3, grpc
           tools: composer:v2
       - uses: actions/cache@v4
         with:
