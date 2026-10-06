@@ -37,23 +37,29 @@
  *                 filter.
  * ===================================================================== */
 
-/* --- Kaca tanpa gradasi warna -------------------------------------- */
-/* Permukaan kaca (kapsul topbar, sidebar, panel dropdown,
-   .lang-dd, modal, kartu halaman) semula menumpuk gradasi
-   cucian warna brand (--fi-glass-t*) di atas latar kacanya.
-   Permintaannya: blur-nya HARUS blur 100% tanpa gradasi
-   warna -- supaya teks terbaca di ketiga mode tema (Light,
-   Dark, System) -- tapi JANGAN transparan. Maka gradasi
-   dilepas dengan `background-image: none`, BUKAN dengan
-   menjadikan warnanya tembus pandang.
+/* --- Token KACA: 70% transparan + blur KUAT + border TERLIHAT --- */
+/* Default di Shared.css: alpha 0.62/0.70, blur(20px), ring putih tipis.
+   Permintaan: background 70% transparan (alpha 0.30), blur kelihatan,
+   border terlihat di Light & Dark. Override di sini tanpa build. */
+.fi-panel-welcome,
+.fi-panel-user,
+.fi-panel-admin {
+    --fi-glass-bg: rgb(255 255 255 / 0.30) !important;
+    --fi-glass-ring: rgb(0 0 0 / 0.18) !important;
+    --fi-glass-blur: blur(24px) saturate(180%) !important;
+}
 
-   Yang tetap utuh: latar kaca (--fi-glass-bg -- putih 0.62
-   di mode terang, nyaris hitam 0.70 di mode gelap), cincin
-   (--fi-glass-ring), dan blur (--fi-glass-blur).
+.dark .fi-panel-welcome,
+.dark .fi-panel-user,
+.dark .fi-panel-admin {
+    --fi-glass-bg: rgb(12 12 15 / 0.30) !important;
+    --fi-glass-ring: rgb(255 255 255 / 0.25) !important;
+    --fi-glass-blur: blur(24px) saturate(180%) !important;
+}
 
-   Kapsul topbar, sidebar, dan panel dropdown aturannya hidup
-   di Shared.css (tidak bisa diubah tanpa build), jadi
-   dilepas di sini lewat aturan penimpa ini. */
+/* Gradasi warna dilepas dari SEMUA permukaan kaca (kapsul,
+   sidebar, dropdown, lang-dd, modal, kartu). background-image: none
+   menghapus gradien --fi-glass-t* tapi KEEP latar, blur, border. */
 .fi-panel-welcome .fi-topbar.fi-topbar,
 .fi-panel-user .fi-topbar.fi-topbar,
 .fi-panel-admin .fi-topbar.fi-topbar,
@@ -120,9 +126,14 @@
 }
 
 /* --- Permukaan kartu di halaman -------------------------------------- */
-body.fi-panel-welcome .fi-section,
-body.fi-panel-user .fi-section,
-body.fi-panel-admin .fi-section,
+/* .fi-section TIDAK diberi backdrop-filter: ia membungkus halaman
+   dan di dalamnya Filament menaruh overlay modal (position:fixed
+   inset-0). Kalau section dikasih blur, overlay menyusut jadi
+   seukuran section dan form Sign In bocor di sekeliling modal.
+
+   Stat cards (.fi-wi-stats-overview-stat) dan catalog cards AMAN
+   diberi blur: mereka DAUN, bukan wadah -- tidak punya keturunan
+   position:fixed. Blur di sini membuat efek kaca kelihatan. */
 body.fi-panel-welcome .fi-wi-stats-overview-stat,
 body.fi-panel-user .fi-wi-stats-overview-stat,
 body.fi-panel-admin .fi-wi-stats-overview-stat,
@@ -131,33 +142,31 @@ body.fi-panel-user .catalog-card,
 body.fi-panel-admin .catalog-card {
     background-color: var(--fi-glass-bg) !important;
 
-    /* Gradasi warna dilepas (seperti dijelaskan di blok
-       "Kaca tanpa gradasi warna" di atas): blur tanpa
-       cucian warna, latar kaca tetap --fi-glass-bg. */
+    /* Gradasi warna dilepas: blur tanpa cucian warna, latar
+       kaca tetap --fi-glass-bg. */
     background-image: none !important;
 
     border: 1px solid var(--fi-glass-ring) !important;
 
-    /* SENGAJA TIDAK ADA backdrop-filter DI SINI.
-     *
-     * backdrop-filter (dan transform, filter, will-change, contain)
-     * membuat elemen itu menjadi CONTAINING BLOCK untuk seluruh
-     * position:fixed di bawahnya. Akibatnya `inset-0` tidak lagi
-     * murdered viewport, melainkan kotak leluhurnya.
-     *
-     * surfacedan ini adalah WADAH, bukan daun: .fi-section membungkus
-     * isi halaman, dan di dalamnya Filament menaruh overlay modalnya
-     * (fi-modal-close-overlay, position:fixed inset-0). Begitu bagian
-     * ini diberi blur, overlay itu menyusut jadi seukuran section dan
-     * berhenti menutup layar -- form Sign In di /user/signin bocor
-     * di sekeliling modal. Sudah terjadi, dan gejalanya jauh dari
-     * jelas: form-nya seemed hilang padahal tetap ada di DOM.
-     *
-     * Modal aman memakai blur karena panelnya di-teleport ke body,
-     * sehingga tidak punya keturunan fixed yang perlu dijepit.
-     *
-     * Yang disisakan di sini: latar transparan + gradien + border +
-     * bayangan. Hasilnya tetap terasa berkaca, tanpa efek samping. */
+    /* Blur HANYA di stat & catalog cards (bukan .fi-section).
+       Radius diperkuat agar blur KELIHATAN di atas konten. */
+    -webkit-backdrop-filter: var(--fi-glass-blur) !important;
+    backdrop-filter: var(--fi-glass-blur) !important;
+
+    box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 0.35),
+        0 1px 2px rgb(0 0 0 / 0.05),
+        0 12px 28px -16px rgb(0 0 0 / 0.35) !important;
+}
+
+/* .fi-section: kaca TANPA blur (untuk alasan di atas), tapi
+   tetap punya latar, border, bayangan agar terasa "kaca". */
+body.fi-panel-welcome .fi-section,
+body.fi-panel-user .fi-section,
+body.fi-panel-admin .fi-section {
+    background-color: var(--fi-glass-bg) !important;
+    background-image: none !important;
+    border: 1px solid var(--fi-glass-ring) !important;
     box-shadow:
         inset 0 1px 0 rgb(255 255 255 / 0.35),
         0 1px 2px rgb(0 0 0 / 0.05),
