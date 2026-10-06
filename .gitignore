@@ -66,3 +66,26 @@ coverage/
 .phpunit.cache/
 /.phpunit.result.cache
 
+# Skrip debug sekali pakai yang ditulis di root repo. Awalnya tidak tertangkap
+# aturan apa pun, jadi `_probe2.php` dan `_gray_probe.php` terus muncul sebagai
+# untracked di setiap `git status` dan terlihat seperti ada file yang belum
+# terkirim. Awalan underscore + .php juga membuat mereka tidak dianggap file
+# entrance point Composer.
+/_*.php
+
+# Folder scratch. Hanya `columns.txt` yang benar-benar source; sisanya skrip
+# audit sekali pakai. Aturan di baris 22 hanya mencakup /storage/framework,
+# sehingga folder scratch/ sendiri tidak pernah ikut tertutup.
+/scratch/*
+!/scratch/columns.txt
+
+# Dump SQLite dari pengujian. Ekstensi sengaja dihapus supaya tidak tertangkap
+# aturan `*.sqlite` di atas.
+/wedding_cbir_test
+
+# Disk palsu yang dibuat pengujian (file unggahan sementara)
+/storage/framework/testing/disks/
+
+# Database Connection Extension (VS Code). Isinya path absolut mesin lokal,
+# jadi tidak berguna di repo dan tidak boleh dibagikan.
+.devdbrc
