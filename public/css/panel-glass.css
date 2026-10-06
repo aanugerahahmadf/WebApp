@@ -37,6 +37,41 @@
  *                 filter.
  * ===================================================================== */
 
+/* --- Kaca tanpa gradasi warna -------------------------------------- */
+/* Permukaan kaca (kapsul topbar, sidebar, panel dropdown,
+   .lang-dd, modal, kartu halaman) semula menumpuk gradasi
+   cucian warna brand (--fi-glass-t*) di atas latar kacanya.
+   Permintaannya: blur-nya HARUS blur 100% tanpa gradasi
+   warna -- supaya teks terbaca di ketiga mode tema (Light,
+   Dark, System) -- tapi JANGAN transparan. Maka gradasi
+   dilepas dengan `background-image: none`, BUKAN dengan
+   menjadikan warnanya tembus pandang.
+
+   Yang tetap utuh: latar kaca (--fi-glass-bg -- putih 0.62
+   di mode terang, nyaris hitam 0.70 di mode gelap), cincin
+   (--fi-glass-ring), dan blur (--fi-glass-blur).
+
+   Kapsul topbar, sidebar, dan panel dropdown aturannya hidup
+   di Shared.css (tidak bisa diubah tanpa build), jadi
+   dilepas di sini lewat aturan penimpa ini. */
+.fi-panel-welcome .fi-topbar.fi-topbar,
+.fi-panel-user .fi-topbar.fi-topbar,
+.fi-panel-admin .fi-topbar.fi-topbar,
+.fi-panel-welcome .fi-sidebar,
+.fi-panel-user .fi-sidebar,
+.fi-panel-admin .fi-sidebar,
+.fi-panel-welcome .fi-topbar .fi-dropdown .fi-dropdown-panel,
+.fi-panel-user .fi-topbar .fi-dropdown .fi-dropdown-panel,
+.fi-panel-admin .fi-topbar .fi-dropdown .fi-dropdown-panel,
+.fi-panel-welcome .fi-sidebar .fi-dropdown .fi-dropdown-panel,
+.fi-panel-user .fi-sidebar .fi-dropdown .fi-dropdown-panel,
+.fi-panel-admin .fi-sidebar .fi-dropdown .fi-dropdown-panel,
+.fi-panel-welcome .lang-dd,
+.fi-panel-user .lang-dd,
+.fi-panel-admin .lang-dd {
+    background-image: none !important;
+}
+
 /* --- Modal ---------------------------------------------------------- */
 .fi-panel-welcome .fi-glass-modal,
 .fi-panel-user .fi-glass-modal,
@@ -45,12 +80,11 @@
 .fi-panel-user .fi-modal-window,
 .fi-panel-admin .fi-modal-window {
     background-color: var(--fi-glass-bg) !important;
-    background-image: linear-gradient(
-        var(--fi-glass-angle),
-        var(--fi-glass-t1) 0%,
-        var(--fi-glass-t2) 45%,
-        var(--fi-glass-t3) 100%
-    ) !important;
+
+    /* Gradasi warna dilepas (seperti dijelaskan di blok
+       "Kaca tanpa gradasi warna" di atas): blur tanpa
+       cucian warna, latar kaca tetap --fi-glass-bg. */
+    background-image: none !important;
 
     border: 1px solid var(--fi-glass-ring) !important;
 
@@ -96,12 +130,11 @@ body.fi-panel-welcome .catalog-card,
 body.fi-panel-user .catalog-card,
 body.fi-panel-admin .catalog-card {
     background-color: var(--fi-glass-bg) !important;
-    background-image: linear-gradient(
-        var(--fi-glass-angle),
-        var(--fi-glass-t1) 0%,
-        var(--fi-glass-t2) 45%,
-        var(--fi-glass-t3) 100%
-    ) !important;
+
+    /* Gradasi warna dilepas (seperti dijelaskan di blok
+       "Kaca tanpa gradasi warna" di atas): blur tanpa
+       cucian warna, latar kaca tetap --fi-glass-bg. */
+    background-image: none !important;
 
     border: 1px solid var(--fi-glass-ring) !important;
 
