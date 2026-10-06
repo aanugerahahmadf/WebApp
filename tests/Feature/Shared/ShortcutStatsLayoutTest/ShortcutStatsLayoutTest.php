@@ -19,18 +19,26 @@ beforeEach(function (): void {
     actingAs($this->user, 'web');
 });
 
-function assertFourAcross(string $html): void
+function assertFourCardsInOneTrack(string $html): void
 {
-    // Kolom ditulis inline !important di view sendiri (Shared.widgets.shortcut-stats),
-    // jadi tidak bisa ditimpa stylesheet / breakpoint / platform mana pun.
-    expect($html)->toContain('grid-template-columns: repeat(4, minmax(0, 1fr))')
-        ->and(substr_count($html, 'home-stat-card'))->toBe(4, 'Harus ada 4 kartu: My Orders, Favorite, Active Voucher, Cart');
+    // Keempat kartu tetap ada, dan semuanya hidup di dalam SATU track yang
+    // bisa digeser. Jumlah kartu per halaman itu urusan tiap permukaan dan
+    // diuji di ShortcutStatsSlideAnimationTest; test ini hanya memastikan
+    // tidak ada kartu yang hilang atau terpecah jadi beberapa track.
+    expect(substr_count($html, 'home-stat-card'))->toBe(4, 'Harus ada 4 kartu: Pesanan Saya, Favorit, Voucher Aktif, Keranjang')
+        ->and($html)->toContain('shortcut-stats-track')
+        ->and($html)->toContain('scroll-snap-type: x mandatory')
+        // Inline style WAJIB display:flex. Kalau masih grid, kartu tetap 4
+        // kolom -- flex-basis diabaikan di grid, dan inilah bug yang pernah
+        // terjadi (blade sudah benar, CSS belum terpakai).
+        ->and($html)->toContain('display: flex')
+        ->and($html)->not->toContain('grid-template-columns');
 }
 
-test('welcome shortcut stats: empat kartu sebaris satu row', function (): void {
-    assertFourAcross(Livewire::test(WelcomeShortcutStats::class)->html());
+test('welcome shortcut stats: empat kartu dalam satu track yang bisa digeser', function (): void {
+    assertFourCardsInOneTrack(Livewire::test(WelcomeShortcutStats::class)->html());
 });
 
-test('user shortcut stats: empat kartu sebaris satu row', function (): void {
-    assertFourAcross(Livewire::test(UserShortcutStats::class)->html());
+test('user shortcut stats: empat kartu dalam satu track yang bisa digeser', function (): void {
+    assertFourCardsInOneTrack(Livewire::test(UserShortcutStats::class)->html());
 });

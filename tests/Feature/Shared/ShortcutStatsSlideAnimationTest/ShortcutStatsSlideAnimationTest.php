@@ -4,11 +4,17 @@
  * Layout kartu ShortcutStats per platform.
  *
  * Dikendalikan di resources/views/Shared/widgets/shortcut-stats.blade.php:
+ * SELURUH permukaan memakai slide (scroll-snap) + titik penanda + animasi
+ * slide berurutan, class: shortcut-stats-slide shortcut-stats-track. Yang
+ * membedakan antarpermukaan hanya jumlah kartu per halaman, yang ditulis
+ * sebagai custom property --shortcut-stats-page:
  *
- *   - mobile (aplikasi shell Android/iOS + browser mobile): satu kartu per
- *     halaman yang digeser swipe (scroll-snap), titik penanda, dan animasi
- *     slide berurutan. Class: shortcut-stats-slide shortcut-stats-track.
- *   - tablet, macOS, desktop, desktop app: grid 4 kolom, tanpa kedua kelas.
+ *   - HP (aplikasi shell Android/iOS + browser mobile Android/iOS):
+ *     --shortcut-stats-page: 100%  -> 1 kartu per halaman, 4 titik.
+ *   - tablet, macOS, desktop, desktop app:
+ *     --shortcut-stats-page: calc(50% - 0.375rem) -> 2 kartu per halaman,
+ *     2 titik. Bukan 1 kartu per halaman: di lebar 1600-1920px satu kartu
+ *     akan selebar ~1800px.
  *
  * Widget diuji lewat Livewire (bukan HTTP) karena Filament memuatnya lewat
  * request terpisah, jadi HTML respons awal tidak memuat markup widget.
@@ -41,11 +47,13 @@ it('menjadi carousel satu kartu di mobile, dengan titik penanda', function (Runt
         // Swipe-nya scroll-snap, bukan JS: snap wajib ada di inline style.
         ->assertSee('scroll-snap-type: x mandatory')
         ->assertSee('overflow-x: auto')
-        // Inline style WAJIB display:flex di mobile. Kalau masih grid, kartu
-        // tetap 4 kolom -- flex-basis:100% diabaikan di grid, dan inilah
-        // bug yang pernah terjadi (blade sudah benar, CSS belum terpakai).
+        // Inline style WAJIB display:flex. Kalau masih grid, kartu tetap 4
+        // kolom -- flex-basis diabaikan di grid, dan inilah bug yang pernah
+        // terjadi (blade sudah benar, CSS belum terpakai).
         ->assertSee('display: flex')
-        ->assertDontSee('grid-template-columns');
+        ->assertDontSee('grid-template-columns')
+        // Di HP satu kartu memenuhi lebar track.
+        ->assertSee('--shortcut-stats-page: 100%');
 })->with([
     'app android' => RuntimePlatform::MobileAppAndroid,
     'app ios' => RuntimePlatform::MobileAppIos,
@@ -68,15 +76,26 @@ it('menjadi carousel satu kartu di panel user saat mobile', function (RuntimePla
     'app ios' => RuntimePlatform::MobileAppIos,
 ]);
 
-it('tetap grid 4 kolom di tablet, macOS, desktop, dan desktop app', function (RuntimePlatform $platform): void {
+it('tetap slide di tablet, macOS, desktop, dan desktop app, dua kartu per halaman', function (RuntimePlatform $platform): void {
     AppPlatform::fake($platform);
 
-    Livewire::test(WelcomeShortcutStats::class)
-        ->assertDontSee('shortcut-stats-slide')
-        ->assertDontSee('shortcut-stats-track')
-        ->assertDontSee('scroll-snap-type')
-        // Grid 4 kolom tetap ditulis inline seperti sebelumnya.
-        ->assertSee('grid-template-columns: repeat(4, minmax(0, 1fr))');
+    $html = Livewire::test(WelcomeShortcutStats::class)
+        ->assertSee('shortcut-stats-slide')
+        ->assertSee('shortcut-stats-track')
+        ->assertSee('scroll-snap-type: x mandatory')
+        ->assertSee('display: flex')
+        ->assertDontSee('grid-template-columns')
+        // Dua kartu per halaman. `calc(50% - 0.375rem)`, bukan `50%`: gap flex
+        // 0.75rem dihitung dua kali kalau kartu selebar 50% penuh, sehingga
+        // halaman kedua tidak pernah pas di titik snap.
+        ->assertSee('--shortcut-stats-page: calc(50% - 0.375rem)')
+        ->html();
+
+    // Empat kartu jadi DUA halaman, jadi hanya dua titik. Titik per kartu
+    // akan menyesatkan: tidak ada halaman yang cuma berisi satu kartu.
+    expect(substr_count($html, 'snap === 0'))->toBe(1)
+        ->and(substr_count($html, 'snap === 1'))->toBe(1)
+        ->and($html)->not->toContain('snap === 2');
 })->with([
     'desktop windows' => RuntimePlatform::WebsiteWindows,
     'macos' => RuntimePlatform::WebsiteMacOS,
@@ -147,9 +166,12 @@ it('menumbangkan display:grid !important yang sudah ada di Shared.css', function
         ->toMatch('/\.fi-wi-stats-overview-stats-ctn\.shortcut-stats-track:has\(\.home-stat-card\)[^{]*\{[^}]*display:\s*flex\s*!important/s')
         ->toMatch('/\.fi-wi-stats-overview-stats-ctn\.shortcut-stats-track:has\(\.home-stat-card\)[^{]*\{[^}]*grid-template-columns:\s*none\s*!important/s');
 
-    // 3. Aturan anak kartunya: satu kartu per halaman.
+    // 3. Aturan anak kartunya: lebar diambil dari custom property, jadi satu
+    //    aturan CSS melayani 1 kartu per halaman (HP) maupun 2 (desktop).
+    //    Fallback 100% wajib ikut, untuk markup lama yang masih tersimpan di
+    //    cache Blade.
     expect($css)
-        ->toMatch('/\.shortcut-stats-track\s*>\s*\*\s*\{[^}]*flex:\s*0\s+0\s+100%/s')
+        ->toMatch('/\.shortcut-stats-track\s*>\s*\*\s*\{[^}]*flex:\s*0\s+0\s+var\(\s*--shortcut-stats-page\s*,\s*100%\s*\)/s')
         ->toMatch('/\.shortcut-stats-track\s*>\s*\*\s*\{[^}]*scroll-snap-align:\s*start/s');
 });
 

@@ -659,10 +659,17 @@ select:focus[data-flux-control] {
 }
 
 .shortcut-stats-track > * {
-    /* 100% = tepat satu kartu terlihat, memenuhi lebar track. Gap flex
-       tetap menyimpan jarak antarhalaman, jadi kartu tidak pernah menempel
-       ke tepi container. */
-    flex: 0 0 100%;
+    /* Lebar kartu ditentukan --shortcut-stats-page, yang ditulis inline di
+       resources/views/Shared/widgets/shortcut-stats.blade.php:
+         100%                    -> HP, satu kartu per halaman
+         calc(50% - 0.375rem)    -> tablet/desktop/desktop app, dua per halaman
+
+       Satu aturan untuk dua mode, jadi menambah mode baru cukup mengubah satu
+       angka di view -- bukan menambah selector CSS yang bisa saling menimpa.
+
+       Nilai 100% (HP) tetap fallback kalau custom property-nya hilang, mis.
+       markup lama masih tersimpan di cache Blade. */
+    flex: 0 0 var(--shortcut-stats-page, 100%);
     scroll-snap-align: start;
     scroll-snap-stop: always;
 }

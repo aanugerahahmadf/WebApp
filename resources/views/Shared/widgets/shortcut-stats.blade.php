@@ -6,15 +6,41 @@
     $hasHeading = filled($heading);
     $hasDescription = filled($description);
 
-    // Animasi slide hanya di permukaan mobile: aplikasi shell Android/iOS dan
-    // browser mobile Android/iOS. Di tablet/macOS/desktop/desktop app kartu
-    // muncul diam -- dipoles per platform, bukan sekali untuk semua.
+    // Slide di SEMUA permukaan: aplikasi shell Android/iOS, browser mobile
+    // Android/iOS, tablet, macOS, desktop, dan desktop app.
     //
-    // AppPlatform::isAnyMobile() sudah mencakup keduanya (mobile shell +
-    // browser mobile), jadi tidak perlu UA sniffing sendiri di sini.
-    $isMobile = AppPlatform::isAnyMobile();
+    // Yang berbeda antarpermukaan hanya JUMLAH KARTU PER HALAMAN, bukan
+    // mekanismenya:
+    //
+    //   HP (mobile shell + browser mobile) -> 1 kartu per halaman. Empat kolom
+    //     di lebar 400px cuma berdesakan dan teksnya terpotong.
+    //   Sisanya (tablet, macOS, desktop, desktop app) -> 2 kartu per halaman.
+    //     Bukan 1: di lebar 1600-1920px satu kartu akan selebar ~1800px,
+    //     jadi isinya jadi satu baris raksasa dan justru lebih buruk dari
+    //     grid. Dua per halaman menjaga ukuran kartu seperti yang biasa
+    //     terlihat, dan row tetap bisa digeser.
+    //
+    // AppPlatform::isAnyMobile() sudah mencakup mobile shell + browser
+    // mobile, jadi tidak perlu UA sniffing sendiri di sini.
+    $isPhone = AppPlatform::isAnyMobile();
 
     $stats = $this->getCachedStats();
+
+    // Lebar satu kartu, ditulis sebagai custom property supaya aturan
+    // `flex: 0 0 ...` di Shared.css cukup punya SATU bentuk untuk kedua mode
+    // (lihat blok CARA MEMBAWA POSISI KE TITIK-TITIKNYA di bawah).
+    //
+    // `calc(50% - 0.375rem)` bukan `50%`: gap flex 0.75rem dihitung dua kali
+    // kalau kartu selebar 50% penuh, sehingga halaman kedua bergeser 0.75rem
+    // dan tidak pernah pas di titik snap. Setengah gap membuat dua kartu
+    // memenuhi persis satu lebar track.
+    $cardBasis = $isPhone
+        ? '100%'
+        : 'calc(50% - 0.375rem)';
+
+    // Satu titik per HALAMAN, bukan per kartu. Di HP 4 kartu = 4 halaman,
+    // di desktop 4 kartu = 2 halaman.
+    $pageCount = max(1, (int) ceil(count($stats) / ($isPhone ? 1 : 2)));
 @endphp
 
 <x-filament-widgets::widget class="fi-wi-stats-overview user-home-shortcuts grid gap-y-4">
@@ -80,10 +106,8 @@
             @if ($pollingInterval = $this->getPollingInterval())
                 wire:poll.{{ $pollingInterval }}
             @endif
-            class="fi-wi-stats-overview-stats-ctn grid gap-6{{ $isMobile ? ' shortcut-stats-slide shortcut-stats-track' : '' }}"
-            style="{{ $isMobile
-                ? 'display: flex; width: 100%; gap: 0.75rem; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;'
-                : 'display: grid; width: 100%; gap: 0.875rem; grid-template-columns: repeat(4, minmax(0, 1fr)) !important;' }}"
+            class="fi-wi-stats-overview-stats-ctn grid gap-6 shortcut-stats-slide shortcut-stats-track"
+            style="--shortcut-stats-page: {{ $cardBasis }}; display: flex; width: 100%; gap: 0.75rem; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;"
             @scroll="$dispatch('shortcut-snap', { index: Math.round($event.target.scrollLeft / ($event.target.clientWidth || 1)) })"
         >
             @foreach ($stats as $stat)
@@ -91,28 +115,30 @@
             @endforeach
         </div>
 
-        @if ($isMobile)
-            {{-- Titik penanda posisi: satu-satunya petunjuk bahwa row itu bisa
-                 digeser, dan juga penanda halaman mana yang sedang tampil.
+        {{-- Titik penanda posisi: satu-satunya petunjuk bahwa row itu bisa
+             digeser, dan juga penanda halaman mana yang sedang tampil.
 
-                 `.window` wajib: posisinya SEBERANG track, jadi event dari
-                 track tidak akan sampai ke sini tanpa bubbles -- dan
-                 `$dispatch` memang memakai CustomEvent yang bubbles. --}}
-            <div
-                class="mt-2.5 flex items-center justify-center gap-1.5"
-                aria-hidden="true"
-                x-data="{ snap: 0 }"
-                @shortcut-snap.window="snap = $event.detail.index"
-            >
-                @foreach ($stats as $index => $stat)
-                    <span
-                        class="h-1.5 rounded-full transition-all duration-200"
-                        :class="typeof snap !== 'undefined' && snap === {{ $index }}
-                            ? 'w-4 bg-primary-500'
-                            : 'w-1.5 bg-gray-300 dark:bg-gray-600'"
-                    ></span>
-                @endforeach
-            </div>
-        @endif
+             Satu titik per HALAMAN ($pageCount), bukan per kartu: di desktop
+             4 kartu jadi 2 halaman, jadi 4 titik akan menyesatkan -- satu
+             titik untuk setiap kartu yang tidak bisa jadi satu halaman.
+
+             `.window` wajib: posisinya SEBERANG track, jadi event dari
+             track tidak akan sampai ke sini tanpa bubbles -- dan
+             `$dispatch` memang memakai CustomEvent yang bubbles. --}}
+        <div
+            class="mt-2.5 flex items-center justify-center gap-1.5"
+            aria-hidden="true"
+            x-data="{ snap: 0 }"
+            @shortcut-snap.window="snap = $event.detail.index"
+        >
+            @for ($page = 0; $page < $pageCount; $page++)
+                <span
+                    class="h-1.5 rounded-full transition-all duration-200"
+                    :class="typeof snap !== 'undefined' && snap === {{ $page }}
+                        ? 'w-4 bg-primary-500'
+                        : 'w-1.5 bg-gray-300 dark:bg-gray-600'"
+                ></span>
+            @endfor
+        </div>
     </div>
 </x-filament-widgets::widget>
