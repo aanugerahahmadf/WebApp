@@ -63,7 +63,7 @@
                         x-on:click="(theme = '{{ $theme }}') && close()"
                         x-bind:class="theme === '{{ $theme }}' ? 'bg-gray-50 dark:bg-white/5 font-bold text-[#fbbf24]' : ''"
                     >
-                        {{ __("filament-panels::layout.actions.theme_switcher.{$theme}.label") }}
+                        {{ ['light' => __('Light'), 'dark' => __('Dark'), 'system' => __('System')][$theme] }}
                     </x-filament::dropdown.list.item>
                 @endforeach
             </x-filament::dropdown.list>
