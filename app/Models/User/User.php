@@ -37,9 +37,12 @@ use Laravolt\Indonesia\Models\City as IndonesiaCity;
 use Laravolt\Indonesia\Models\District as IndonesiaDistrict;
 use Laravolt\Indonesia\Models\Province as IndonesiaProvince;
 use Laravolt\Indonesia\Models\Village as IndonesiaVillage;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
+    use MixCode\FilamentMulti2fa\Enums\TwoFactorAuthType;
+    use MixCode\FilamentMulti2fa\Traits\UsingTwoFA;
 
 /**
  * @property int $id
@@ -184,6 +187,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName, 
     use HasRoles;
     use InteractsWithLanguages;
     use Notifiable;
+    // 2FA: Email OTP + Authenticator App + perangkat terpercaya.
+    // Memberi generateTwoFactorAuthenticatorAppOTPCode(), verifyOTP(),
+    // addTrustedDevice(), hasSetupTwoFactor(), dan relasi trustedDevices()
+    // yang menunjuk model milik package.
+    use UsingTwoFA;
 
     public function getFilamentName(): string
     {
@@ -317,6 +325,17 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName, 
      *
      * @return array<string, string>
      */
+    /**
+     * Default dua_factor_type.
+     *
+     * Kolomnya NOT NULL dengan default 'none' di database, tapi default
+     * database tidak ikut ke atribut model yang baru dibuat -- sehingga
+     * dua_factor_type terbaca NULL pada instance itu. Setting di sini
+     * membuat model baru langsung konsisten dengan isi tabel.
+     */
+    protected $attributes = [
+        'two_factor_type' => TwoFactorAuthType::None->value,
+    ];
     protected function casts(): array
     {
         return [
@@ -327,6 +346,13 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName, 
             'kyc_reviewed_at' => 'datetime',
             'face_liveness' => 'array',
             'liveness_completed' => 'boolean',
+            // Hasil verifikasi dokumen identitas dari AI Core (/api/ktp/verify).
+            // Lihat migration 2026_10_05_000001 untuk perbedaan makna
+            // doc_ai_reason (nama dokumen) vs doc_ai_reason_code (kode error).
+            'doc_ai_verified_at' => 'datetime',
+            'doc_ai_blocking_issue' => 'array',
+            'doc_ai_score' => 'decimal:2',
+            'doc_ai_number_matches_profile' => 'boolean',
             'password' => 'hashed',
             'birth_date' => 'date',
             'wedding_date' => 'date',
@@ -339,6 +365,18 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName, 
             'app_lock_face_enrolled_at' => 'datetime',
             'app_lock_last_unlock_at' => 'datetime',
             'notification_preferences' => 'array',
+            // Kolom 2FA milik mix-code/filament-multi-2fa. Tanpa cast ini
+            // two_factor_type tetap string, dan hasSetupTwoFactor() akan
+            // selalu salah membandingkan dengan enum.
+            'two_factor_type' => TwoFactorAuthType::class,
+            'two_factor_sent_at' => 'datetime',
+            'two_factor_expires_at' => 'datetime',
+            'two_factor_confirmed_at' => 'datetime',
+            // Tanpa cast ini nilainya balik dari database sebagai int 0/1,
+            // bukan true/false. twoFactorStatus() meneruskannya apa adanya
+            // ke JSON, jadi klien menerima 1 di tempat yang diharapkan bool --
+            // dan di Dart itu akan gagal di-decode ke bool.
+            'two_factor_enabled' => 'boolean',
         ];
     }
 
@@ -486,14 +524,78 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName, 
         return $this->hasMany(UserSession::class);
     }
 
-    public function trustedDevices()
+    /*
+     * trustedDevices() sengaja dihapus: trait UsingTwoFA sudah mendefinisikan
+     * relasi yang sama, menunjuk model milik package. Versi lama menunjuk
+     * App\Models\TrustedDevice dengan kolom device_fingerprint / platform /
+     * trusted_at, sedangkan tabel trust_devices sekarang memakai
+     * device_signature / expires_at.
+     */
+
+    /**
+     * Versi null-safe dari hasSetupTwoFactor() milik trait UsingTwoFA.
+     *
+     * Yang dari package menulis $this->two_factor_type->value tanpa
+     * penjaga null, padahal CheckTrustedDevice memanggilnya di setiap
+     * request panel terautentikasi. Satu barik dengan NULL akan membuat
+     * seluruh panel 500 untuk user tersebut, bukan hanya halaman 2FA.
+     */
+    public function hasSetupTwoFactor(): bool
     {
-        return $this->hasMany(TrustedDevice::class);
+        return $this->two_factor_type !== null
+            && $this->two_factor_type->value !== TwoFactorAuthType::None->value;
     }
 
     public function backupCodes()
     {
         return $this->hasMany(BackupCode::class);
+    }
+
+    /**
+     * Buang semua perangkat yang sedang masuk KECUALI yang sedang dipakai
+     * request ini, dan kembalikan berapa yang dibuang.
+     *
+     * Padanan "Logout dari perangkat lain" pada
+     * HandlesPasswordSecurity::updatePassword() di panel Filament, tapi
+     * ditulis ulang untuk dua sumber sekaligus:
+     *
+     *   - token Sanctum: setiap aplikasi/Perangkat yang "Ingat Saya" adalah
+     *     satu token, jadi inilah yang diper comprehensively. Hanya sesi
+     *     database yang dihapus berarti perangkat mobile yang login
+     *     sebelumnya tetap punya akses -- dan perangkat mobile adalah
+     *     majority di sini, bukan pengecualian.
+     *   - baris session database: browser web.
+     *
+     * Pengecualiannya penting dan tidak boleh dihapus: token dan session
+     * milik request yang SEDANG berjalan ikut terbuang kalau tidak, dan
+     * pemanggil akan langsung logout di detik yang sama dengan mengetik
+     * kata sandi barunya.
+     */
+    public function revokeOtherSessions(): int
+    {
+        $currentTokenId = $this->currentAccessToken()?->getKey();
+
+        $revokedTokens = $this->tokens()
+            ->when(
+                $currentTokenId !== null,
+                fn ($query) => $query->where('id', '!=', $currentTokenId),
+            )
+            ->delete();
+
+        $revokedSessions = 0;
+
+        // Hanya berlaku kalau driver session memakai database. Untuk driver
+        // lain tidak ada tabel yang bisa dihapus, dan mengarang-hapus lewat
+        // tabel yang tidak dipakai akan merusak data driver itu -- jadi lebih
+        // baik melaporkan tidak ada yang dihapus.
+        if (config('session.driver') === 'database') {
+            $revokedSessions = DB::table(config('session.table', 'sessions'))
+                ->where('user_id', $this->id)
+                ->where('id', '!=', request()->session()->getId())
+                ->delete();
+        }
+
+        return $revokedTokens + $revokedSessions;
     }
 
     public function getIsAdminAttribute(): bool

@@ -3,14 +3,46 @@
     // Pakai path relatif untuk semua platform — WebView dan browser sama-sama handle ini.
     // normalizeUrl() tidak dipakai untuk navigasi halaman agar tidak buka Chrome di mobile.
     $googleRedirectUrl = '/auth/google/redirect';
-    $registerUrl       = filament()->getRegistrationUrl() ?? route('filament.user.auth.register');
+    // SIGN UP: link pendaftaran DIMATIKAN, kodenya tidak dihapus.
+    //
+    // `->registration()` tidak dipanggil di UserPanelProvider, jadi
+    // `filament()->getRegistrationUrl()` selalu null dan tidak ada route
+    // `filament.user.auth.register` untuk dijadikan fallback. Asli URL blok ini
+    // disimpan di bawah dalam bentuk komentar; yang aktif sekarang mengarah ke
+    // halaman auth -- satu-satunya pintu yang memuat tombol Google.
+    //
+    // $registerUrl       = filament()->getRegistrationUrl()
+    //     ?? \App\Filament\User\Auth\Auth\Auth::getUrl()
+    //     ?? filament()->getLoginUrl()
+    //     ?? route('filament.user.auth.login');
+    $registerUrl       = \App\Filament\User\Auth\Auth\Auth::getUrl();
     $loginUrl          = filament()->getLoginUrl() ?? route('filament.user.auth.login');
     $hasParentData     = $hasParentData ?? false;
     $hideCheckboxes    = $hideCheckboxes ?? false;
+    // Modal syarat (Perjanjian Pengguna / Kebijakan Privasi / Kebijakan
+    // Aplikasi). TIDAK disatukan dengan $hideCheckboxes: SignIn lewat
+    // auth-buttons menyalakan hideCheckboxes (checkbox-nya dirender terpisah
+    // sebagai bagian form) tapi tetap butuh modal ini. Default true supaya
+    // pemanggil lama tidak berubah; halaman auth baru (/user/auth) yang
+    // checkbox-nya dihapus menyalakannya false -- di sana modal ini tidak punya
+    // pemicu open-agreement lagi, jadi hanya markup mati + 3 query sia-sia.
+    $showAgreementModal = $showAgreementModal ?? true;
+    // Tombol Google SUDAH pindah ke halaman auth baru
+    // (App\Filament\User\Auth\Auth\Auth -> /user/auth). Partial ini masih
+    // dirender oleh SignIn karena dia butuh blok form-action
+    // ("Belum/Sudah memiliki akun" + tombol submit), jadi pemindahannya
+    // dilakukan lewat flag, bukan dengan menghapus @include-nya.
+    $showGoogleButton  = $showGoogleButton ?? true;
+    // Link "Belum/Sudah memiliki akun? -> Sign Up / Sign In".
+        // DIMATIKAN. Markup-nya ada di bawah dalam bentuk Blade comment, jadi
+        // tidak hilang; satu-satunya flag yang menghidupkannya adalah
+        // $showAuthSwitchLink = true di baris berikutnya.
+    $showAuthSwitchLink = $showAuthSwitchLink ?? false;
+    // Mode 'signup', bukan 'register' --[class SignUp] sudah memakai kata Sign Up.
     $authMode          = $authMode ?? (
-        (isset($this) && $this instanceof \Filament\Pages\Auth\Register) ? 'register' :
+        (isset($this) && $this instanceof \Filament\Pages\Auth\Register) ? 'signup' :
         ((isset($this) && $this instanceof \Filament\Pages\Auth\Login) ? 'login' :
-        (request()->routeIs('*register*') ? 'register' : 'login'))
+        (request()->routeIs('*register*', '*signup*') ? 'signup' : 'login'))
     );
 @endphp
 {{-- Firebase Auth (GIS + signInWithCredential) — tanpa authorized-domain restriction --}}
@@ -66,8 +98,9 @@
         }
     </style>
 
-    <div class="flex flex-wrap items-center justify-center w-full gap-0 mt-2">
-        <button type="button"
+    @if ($showGoogleButton)
+        <div class="flex flex-wrap items-center justify-center w-full gap-0 mt-2">
+            <button type="button"
             x-bind:class="!(agreed && remembered) ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[0.98]'"
             x-on:click="
                 if (!(agreed && remembered)) return;
@@ -106,41 +139,68 @@
             </svg>
             <span x-text="loading ? '{{ __('Menghubungkan...') }}' : '{{ __('Masuk Dengan Google') }}'">{{ __('Masuk Dengan Google') }}</span>
         </button>
-    </div>
+        </div>
+    @endif
 
     @if (! $hideCheckboxes)
         @include('User.social-buttons.agreement-checkboxes.agreement-checkboxes')
     @endif
 
-    <div class="w-full text-center mt-4">
-        @if ($authMode === 'register')
-            <p class="text-sm text-gray-500 dark:text-gray-400">
-                {{ __('Sudah memiliki akun?') }}
-                <x-filament::link :href="$loginUrl" color="primary" class="font-semibold ml-1">
-                    {{ __('Sign In') }}
-                </x-filament::link>
-            </p>
-        @else
-            <p class="text-sm text-gray-500 dark:text-gray-400">
-                {{ __('Belum memiliki akun?') }}
-                <x-filament::link :href="$registerUrl" color="primary" class="font-semibold ml-1">
-                    {{ __('Sign Up') }}
-                </x-filament::link>
-            </p>
-        @endif
-    </div>
+    {{--
+        SIGN UP / link "Belum memiliki akun?" — DIMATIKAN dengan sengaja.
 
-    @php
-        try {
-            $termsRecord = \App\Models\TermsOfService\TermsOfService::first();
-            $privacyRecord = \App\Models\PrivacyPolicy\PrivacyPolicy::first();
-            $weddingPolicyRecord = \App\Models\WeddingDecorationPolicy\WeddingDecorationPolicy::first();
-        } catch (\Throwable $e) {
-            $termsRecord = null;
-            $privacyRecord = null;
-            $weddingPolicyRecord = null;
-        }
-    @endphp
+        Blok markup di bawah dikomentari, bukan dihapus: pendaftaran
+        email/password dinonaktifkan, tapi
+        `App\Filament\User\Auth\SignUp\SignUp` masih ada di repo. Kalau
+        suatu saat dibutuhkan: (1) hapus dua pembungkus komentar Blade yang
+        memblok markup ini, lalu (2) set `$showAuthSwitchLink = true` di atas
+        -- satu-satunya flag yang menghidupkan blok ini.
+
+        PERINGATAN: jangan pernah menulis literal pembuka/penutup komentar
+        Blade di dalam teks komentar. Blade tidak mendukung komentar
+        bersarang, jadi penutup yang tertulis di dalam komentar akan menutup
+        komentar lebih awal dan seluruh sisa teksnya bocor ke halaman sebagai
+        teks terlihat -- persis yang terjadi di sini sebelumnya.
+
+        Selama blok ini mati:
+          - tidak ada door pendaftaran di halaman mana pun di panel User,
+          - `$registerUrl` diarahkan ke halaman auth (tombol Google), bukan ke
+            halaman Sign Up yang tidak lagi punya route.
+    --}}
+    {{--
+    @if ($showAuthSwitchLink)
+        <div class="w-full text-center mt-4">
+            @if ($authMode === 'signup')
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                    {{ __('Sudah memiliki akun?') }}
+                    <x-filament::link :href="$loginUrl" color="primary" class="font-semibold ml-1">
+                        {{ __('Sign In') }}
+                    </x-filament::link>
+                </p>
+            @else
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                    {{ __('Belum memiliki akun?') }}
+                    <x-filament::link :href="$registerUrl" color="primary" class="font-semibold ml-1">
+                        {{ __('Sign Up') }}
+                    </x-filament::link>
+                </p>
+            @endif
+        </div>
+    @endif
+    --}}
+
+    @if ($showAgreementModal)
+        @php
+            try {
+                $termsRecord = \App\Models\TermsOfService\TermsOfService::first();
+                $privacyRecord = \App\Models\PrivacyPolicy\PrivacyPolicy::first();
+                $weddingPolicyRecord = \App\Models\WeddingDecorationPolicy\WeddingDecorationPolicy::first();
+            } catch (\Throwable $e) {
+                $termsRecord = null;
+                $privacyRecord = null;
+                $weddingPolicyRecord = null;
+            }
+        @endphp
 
     <x-filament::modal id="agreement-modal" width="3xl" :close-by-clicking-away="false" :close-button="false">
         <div x-data="{ step: 1, mode: 'wizard', showWedding: false }"
@@ -283,4 +343,5 @@
             </div>
         </div>
     </x-filament::modal>
+@endif
 </div>

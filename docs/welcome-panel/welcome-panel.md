@@ -51,14 +51,20 @@ there is no login page to redirect to. The Welcome panel replaces it with `Authe
 **Behaviour:**
 - Public pages (`/welcome/home`, `/welcome/products`, `/welcome/packages`, detail pages): **allow guests**.
 - Account pages (`/welcome/carts`, `/welcome/orders`, `/welcome/wishlists`, `/welcome/settings`, etc.):
-  **redirect guests to** `route('filament.user.auth.login')`.
+  **redirect guests to** `route('filament.user.auth.index')` — the auth landing page `/user/auth`, which offers
+  both Sign In and Continue With Google. Not the `/user/signin` form directly: a guest who only wants to
+  add to a cart should not be pushed past the Google door.
 - The `url.intended` session key is set before redirecting, so after login the user lands back
   on the page they were trying to reach.
 
 ```php
 // AuthenticateWelcome::LOGIN_ROUTE
-public const LOGIN_ROUTE = 'filament.user.auth.login';
+public const LOGIN_ROUTE = 'filament.user.auth.index';   // GET /user/auth
 ```
+
+The same constant backs every guest redirect in the panel — `ProductResource`, `PackageResource`,
+`ManageProducts`, `ManagePackages`, `CheckoutProduct` and `CheckoutPackage` all call
+`route(AuthenticateWelcome::LOGIN_ROUTE)`, so there is no second place to keep in sync.
 
 ### Public Storefront Routes
 
@@ -101,7 +107,7 @@ The checkout wizard pages (`/welcome/products/{id}/checkout`,
 The topbar rendered for **guests** shows:
 - Brand logo (left)
 - Theme switcher dropdown (right) — moved out of the user menu since guests have no user menu
-- **Masuk** button → `route('filament.user.auth.login')`
+- **Masuk** button → `route('filament.user.auth.index')` (`/user/auth`: Sign In + Continue With Google)
 
 The topbar rendered for **signed-in customers** shows:
 - Brand logo (left)

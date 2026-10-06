@@ -6,6 +6,7 @@ use App\Forms\Components\BirthPlaceDatePicker\BirthPlaceDatePicker;
 use App\Forms\Components\CalendarPicker\CalendarPicker;
 use App\Models\User\User;
 use App\Services\FaceService\FaceService;
+use App\Support\IdentityVerification\IdentityVerification;
 use App\Support\Phone\CountryCallingCodeOptions;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
@@ -603,7 +604,8 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
 
         $verified = ($ai['success'] ?? false) && ($ai['verified'] ?? false);
 
-        $update = ['liveness_completed' => true];
+        /* liveness_completed hanya true kalau AI benar-benar sempat memeriksa. */
+        $update = ['liveness_completed' => (bool) ($ai['success'] ?? false)];
 
         if ($ai['success'] ?? false) {
             $update['kyc_status'] = null;
@@ -612,10 +614,18 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
             $update['face_reason'] = $ai['reason'] ?? null;
             $update['face_liveness'] = $ai['liveness_checks'] ?? null;
             $update['face_verified_at'] = $verified ? now() : null;
-            $update['identity_verified_at'] = $verified ? now() : $user->identity_verified_at;
+
+            /* Status identitas hanya lewat IdentityVerification, bukan diisi
+             * di sini langsung, supaya tidak ada jalan lain yang bisa
+             * menandai "verified" tanpa AI. */
+            if ($verified) {
+                app(IdentityVerification::class)->markVerified($user, $ai);
+            }
         }
 
-        $user->forceFill($update)->save();
+        if (! $verified) {
+            $user->forceFill($update)->save();
+        }
 
         $this->faceAiVerifiedPath = $verified ? $facePath : null;
 
@@ -721,13 +731,10 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
 
             $user->update($data);
 
-            if (! empty($data['face_scan_photo'])) {
-                $user->forceFill(['liveness_completed' => true])->save();
-            }
-
-            if (! empty($data['selfie_photo']) || ! empty($data['face_scan_photo'])) {
-                $user->forceFill(['identity_verified_at' => now()])->save();
-            }
+            /* PENTING: foto yang terunggah bukan berarti identitas terverifikasi.
+             * Status hanya boleh diisi setelah AI benar-benar memverifikasi wajah
+             * terhadap dokumen -- lihat IdentityVerification. */
+            app(IdentityVerification::class)->markUnverified($user);
 
             Notification::make()
                 ->title(__('Profil berhasil dilengkapi!'))

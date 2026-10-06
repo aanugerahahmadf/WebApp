@@ -865,11 +865,32 @@ class Messages extends Component implements HasActions, HasForms
                     'status' => ReportStatus::OPEN,
                 ]);
 
+                /*
+                 * Report tidak punya kolom inbox_id, jadi id-nya dicatat di
+                 * meta percakapan -- pola yang sama dengan consultation_forms.
+                 * Tanpa ini, view tidak punya cara tahu bahwa percakapan ini
+                 * sudah punya laporan, sehingga tombol Unduh PDF tidak akan
+                 * pernah muncul.
+                 */
+                if ($this->selectedConversation) {
+                    $meta = $this->selectedConversation->meta ?? [];
+                    $reports = is_array($meta['reports'] ?? null) ? $meta['reports'] : [];
+                    $reports[(string) Auth::id()] = [
+                        'id' => $report->id,
+                        'category' => $category,
+                        'submitted_at' => now()->toIso8601String(),
+                    ];
+                    $meta['reports'] = $reports;
+                    $this->selectedConversation->meta = $meta;
+                    $this->selectedConversation->save();
+                }
+
                 Notification::make()
                     ->title(__('Laporan terkirim ke Admin'))
                     ->body(__('Admin dapat melihat laporan dan lampiran Anda di panel laporan.'))
                     ->success()
                     ->send();
+
                 $this->dispatch('download-report-pdf', url: route('user.reports.pdf', $report));
             });
     }

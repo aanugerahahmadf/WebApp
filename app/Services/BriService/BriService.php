@@ -3,12 +3,41 @@
 namespace App\Services\BriService;
 
 use App\Models\Transaction\Transaction;
+use App\Models\User\User;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class BriService
 {
+    /**
+     * Kirim request JSON ke BRI tanpa encoding ganda.
+     *
+     * Argumen kedua `Http::post()` dipetakan ke opsi Guzzle `json`, dan
+     * Guzzle menjalankan `json_encode()` LAGI atas nilainya. Bila nilainya
+     * sudah berupa string JSON -- yang memang terjadi di sini karena body
+     * harus persis sama dengan byte yang dipakai menghitung signature --
+     * body yang terkirim menjadi JSON *string literal*, bukan objek:
+     *
+     *     {"partnerServiceId":"8808"}            <- yang dimaksud
+     *     "{\"partnerServiceId\":\"8808\"}"      <- yang sebenarnya terkirim
+     *
+     * BRI menolak body seperti itu, dan signature HMAC jadi tidak cocok
+     * dengan byte yang benar-benar ada di kabel.
+     *
+     * `withBody()` memakai opsi `body`, yang Guzzle pakai apa adanya. Jadi
+     * string yang dihitung signature dan string yang dikirim identik.
+     */
+    private function postJson(string $url, string $body, array $headers, int $timeout = 0): Response
+    {
+        $request = Http::withHeaders($headers)->withBody($body, 'application/json');
+
+        return $timeout > 0
+            ? $request->timeout($timeout)->post($url)
+            : $request->post($url);
+    }
+
     public function enabled(): bool
     {
         return config('bri.enabled', false)
@@ -87,13 +116,12 @@ class BriService
         $path = '/v2.0/statement';
         $externalId = 'WO-'.uniqid();
 
-        $response = Http::withHeaders([
+        $response = $this->postJson(config('bri.statement_url'), $body, [
             'Authorization' => 'Bearer '.$token,
             'BRI-Timestamp' => $timestamp,
             'BRI-Signature' => $this->signature($path, 'POST', 'Bearer '.$token, $timestamp, $body),
             'BRI-External-Id' => $externalId,
-            'Content-Type' => 'application/json',
-        ])->post(config('bri.statement_url'), $body);
+        ]);
 
         if (! $response->successful()) {
             Log::error('[BRI] Statement request failed ('.$response->status().'): '.$response->body());
@@ -205,7 +233,7 @@ class BriService
     }
 
     /**
-     * SNAP access token. Supports两种 tipe:
+     * SNAP access token. Supports dua tipe:
      * - Asymmetric (RSA): B2B token via SHA256withRSA(PrivateKey, client_ID|timestamp)
      * - Symmetric (HMAC): B2B token via HMAC-SHA512 signature
      */
@@ -247,12 +275,11 @@ class BriService
                 'stringToSign' => $stringToSign,
             ]);
 
-            $response = Http::withHeaders([
-                'Content-Type' => 'application/json',
+            $response = $this->postJson(config('bri.snap_token_url'), $body, [
                 'X-TIMESTAMP' => $timestamp,
                 'X-SIGNATURE' => $signature,
                 'X-CLIENT-KEY' => config('bri.client_id'),
-            ])->post(config('bri.snap_token_url'), $body);
+            ]);
 
             if (! $response->successful()) {
                 Log::error('[BRI] SNAP HMAC token request failed ('.$response->status().'): '.$response->body());
@@ -306,12 +333,11 @@ class BriService
                 'signature_len' => strlen($sigB64),
             ]);
 
-            $response = Http::withHeaders([
-                'Content-Type' => 'application/json',
+            $response = $this->postJson(config('bri.snap_token_url'), $body, [
                 'X-TIMESTAMP' => $timestamp,
                 'X-SIGNATURE' => $sigB64,
                 'X-CLIENT-KEY' => config('bri.client_id'),
-            ])->timeout(15)->post(config('bri.snap_token_url'), $body);
+            ], 15);
 
             if (! $response->successful()) {
                 $bodyJson = json_decode($response->body(), true);
@@ -337,10 +363,32 @@ class BriService
     }
 
     /**
+     * Nama pemilik Virtual Account yang akan tampil di aplikasi BRI.
+     *
+     * BRI menampilkan `virtualAccountName` apa adanya di m-banking/ATM saat
+     * pemesan memindai atau mengetik nomor VA. Karena itu isinya harus nama
+     * pemesan sendiri, bukan nama merchant: yang tampil adalah "nama Virtual
+     * Account". Nama merchant tidak hilang -- dana tetap masuk ke rekening
+     * admin (`bri.account_number`) dan tampil sebagai penerima mutasi.
+     *
+     * Perhitungannya ada di model supaya nilai yang dikirim ke BRI dan
+     * nilai yang tampil di API tidak bisa berbeda.
+     */
+    private function virtualAccountHolderName(?User $user): string
+    {
+        return Transaction::virtualAccountNameFor($user);
+    }
+
+    /**
      * Membuat nomor Virtual Account untuk sebuah transaksi via BRI.
+     *
+     * Nomor VA dilihat dan diketik pemesan sendiri di aplikasi BRI, lalu
+     * otomatis terkredit ke rekening admin (`bri.account_number`) tanpa
+     * perlu verifikasi manual.
+     *
      * Nomor VA = partnerServiceId + customerNo (unik per transaksi).
      *
-     * @return array{something} provider-agnostic VA info, atau null bila gagal
+     * @return array<string, mixed>|null provider-agnostic VA info, atau null bila gagal
      */
     public function createVirtualAccount(Transaction $transaction): ?array
     {
@@ -355,13 +403,14 @@ class BriService
         // customerNo: unik sampai 20 digit, berasal dari id transaksi + acak.
         $customerNo = str_pad((string) $transaction->id, 10, '0', STR_PAD_LEFT).substr((string) time(), -6);
         $virtualAccountNo = $partnerServiceId.$customerNo;
+        $virtualAccountName = $this->virtualAccountHolderName($transaction->user);
         $expiry = now()->addHours((int) config('bri.va_expiry_hours', 24));
 
         $body = json_encode([
             'partnerServiceId' => $partnerServiceId,
             'customerNo' => $customerNo,
             'virtualAccountNo' => $virtualAccountNo,
-            'virtualAccountName' => mb_substr(config('bri.account_holder', 'ADMIN'), 0, 40),
+            'virtualAccountName' => $virtualAccountName,
             'virtualAccountEmail' => $transaction->user?->email,
             'virtualAccountPhone' => $transaction->user?->whatsapp,
             'trxId' => $transaction->reference_number,
@@ -380,15 +429,14 @@ class BriService
         $externalId = (string) mt_rand(100000000000, 999999999999);
 
         try {
-            $response = Http::withHeaders([
+            $response = $this->postJson(config('bri.va_create_url'), $body, [
                 'Authorization' => 'Bearer '.$token,
                 'X-TIMESTAMP' => $timestamp,
                 'X-SIGNATURE' => $this->snapSignature('POST', $path, $token, $timestamp, $body),
                 'X-PARTNER-ID' => config('bri.client_id'),
                 'X-EXTERNAL-ID' => $externalId,
                 'CHANNEL-ID' => config('bri.va_channel_id', '00009'),
-                'Content-Type' => 'application/json',
-            ])->post(config('bri.va_create_url'), $body);
+            ]);
 
             if (! $response->successful()) {
                 Log::error('[BRI] create-va failed ('.$response->status().'): '.$response->body());
@@ -417,7 +465,10 @@ class BriService
 
             return [
                 'virtual_account_no' => $transaction->virtual_account_no,
+                // Nama yang akan tampil di aplikasi BRI = nama pemesan.
+                'virtual_account_name' => $vaData['virtualAccountName'] ?? $virtualAccountName,
                 'virtual_account_expiry' => $transaction->virtual_account_expiry ? $transaction->virtual_account_expiry->format('Y-m-d\TH:i:sP') : null,
+                // Rekening tujuan: dana otomatis masuk ke sini.
                 'account_number' => config('bri.account_number'),
                 'account_holder' => config('bri.account_holder'),
             ];
@@ -475,15 +526,14 @@ class BriService
         $externalId = (string) mt_rand(100000000000, 999999999999);
 
         try {
-            $response = Http::withHeaders([
+            $response = $this->postJson(config('bri.qr_create_url'), $body, [
                 'Authorization' => 'Bearer '.$token,
                 'X-TIMESTAMP' => $timestamp,
                 'X-SIGNATURE' => $this->snapSignature('POST', $path, $token, $timestamp, $body),
                 'X-PARTNER-ID' => config('bri.client_id'),
                 'X-EXTERNAL-ID' => $externalId,
                 'CHANNEL-ID' => config('bri.va_channel_id', '00009'),
-                'Content-Type' => 'application/json',
-            ])->post(config('bri.qr_create_url'), $body);
+            ]);
 
             if (! $response->successful()) {
                 Log::error('[BRI] qr-mpm-generate failed ('.$response->status().'): '.$response->body());

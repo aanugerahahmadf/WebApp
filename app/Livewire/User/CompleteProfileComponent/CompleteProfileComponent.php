@@ -6,6 +6,7 @@ use App\Forms\Components\BirthPlaceDatePicker\BirthPlaceDatePicker;
 use App\Forms\Components\CalendarPicker\CalendarPicker;
 use App\Models\User\User;
 use App\Services\FaceService\FaceService;
+use App\Support\IdentityVerification\IdentityVerification;
 use App\Support\Phone\WhatsappField;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
@@ -169,9 +170,8 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
                             ->disabled()
                             ->dehydrated(false)
                             ->prefixIcon('heroicon-o-user')
-                            ->helperText(__('Terisi otomatis dari Nama Depan, Tengah, dan Belakang.'))
-                            ->columnSpanFull(),
-                    ])->columns(3),
+                            ->helperText(__('Terisi otomatis dari Nama Depan, Tengah, dan Belakang.')),
+                    ])->columns(1),
 
                 // ── Username ────────────────────────────────────────────────
                 Section::make(__('Username'))
@@ -188,7 +188,7 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
                             ->required()
                             ->readOnly()
                             ->helperText(__('Untuk mengubah email, hubungi dukungan.')),
-                    ])->columns(2),
+                    ])->columns(1),
 
                 // ── Nomor WhatsApp ──────────────────────────────────────────
                 Section::make(__('Nomor WhatsApp'))
@@ -213,28 +213,23 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
                                 'npwp' => __('Nomor Pokok Wajib Pajak (NPWP)'),
                             ])
                             ->native(false)
-                            ->live()
-                            ->columnSpan(2),
+                            ->live(),
                         TextInput::make('ktp_number')
                             ->label(__('Nomor KTP'))
                             ->visible(fn (Get $get) => $get('identity_type') === 'ktp')
-                            ->maxLength(20)
-                            ->columnSpan(1),
+                            ->maxLength(20),
                         TextInput::make('passport_number')
                             ->label(__('Nomor Passport'))
                             ->visible(fn (Get $get) => $get('identity_type') === 'passport')
-                            ->maxLength(20)
-                            ->columnSpan(1),
+                            ->maxLength(20),
                         TextInput::make('sim_number')
                             ->label(__('Nomor SIM'))
                             ->visible(fn (Get $get) => $get('identity_type') === 'sim')
-                            ->maxLength(20)
-                            ->columnSpan(1),
+                            ->maxLength(20),
                         TextInput::make('npwp_number')
                             ->label(__('Nomor NPWP'))
                             ->visible(fn (Get $get) => $get('identity_type') === 'npwp')
-                            ->maxLength(20)
-                            ->columnSpan(1),
+                            ->maxLength(20),
                         FileUpload::make('ktp_photo')
                             ->label(fn (Get $get) => match ($get('identity_type')) {
                                 'ktp' => __('Foto KTP'),
@@ -249,8 +244,7 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
                             ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/jpg'])
                             ->extraInputAttributes(['accept' => 'image/*'])
                             ->extraFieldWrapperAttributes(['class' => 'document-photo-wrapper'])
-                            ->helperText(__('Scan atau unggah foto dokumen dari kamera/galeri.'))
-                            ->columnSpan(1),
+                            ->helperText(__('Scan atau unggah foto dokumen dari kamera/galeri.')),
                         FileUpload::make('selfie_photo')
                             ->label(fn (Get $get) => match ($get('identity_type')) {
                                 'ktp' => __('Foto Selfie + KTP'),
@@ -265,13 +259,11 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
                             ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/jpg'])
                             ->extraInputAttributes(['accept' => 'image/*'])
                             ->extraFieldWrapperAttributes(['class' => 'selfie-photo-wrapper'])
-                            ->helperText(__('Foto diri Anda sambil memegang dokumen identitas.'))
-                            ->columnSpan(1),
+                            ->helperText(__('Foto diri Anda sambil memegang dokumen identitas.')),
                         BirthPlaceDatePicker::make('birth_place_date')
                             ->label(__('Tempat & Tanggal Lahir'))
                             ->required()
-                            ->semiboldAll()
-                            ->columnSpanFull(),
+                            ->semiboldAll(),
                         Select::make('country')
                             ->label(__('Negara'))
                             ->required()
@@ -286,8 +278,7 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
                                     ->required()
                                     ->maxLength(255),
                             ])
-                            ->createOptionUsing(fn (array $data): string => $data['name'])
-                            ->columnSpan(2),
+                            ->createOptionUsing(fn (array $data): string => $data['name']),
                         Select::make('province_id')
                             ->label(__('Provinsi'))
                             ->searchable()
@@ -426,9 +417,8 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
                         Textarea::make('address')
                             ->label(__('Alamat Lengkap'))
                             ->required()
-                            ->rows(3)
-                            ->columnSpan(2),
-                    ])->columns(2),
+                            ->rows(3),
+                    ])->columns(1),
 
                 // ── Data KYC ────────────────────────────────────────────────
                 Section::make(__('Data KYC'))
@@ -518,7 +508,7 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
                                     ->maxLength(255),
                             ])
                             ->createOptionUsing(fn (array $data): string => $data['name']),
-                    ])->columns(3),
+                    ])->columns(1),
 
                 // ── Verifikasi Wajah ────────────────────────────────────────
                 Section::make(__('Verifikasi Wajah'))
@@ -581,7 +571,10 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
 
         $verified = ($ai['success'] ?? false) && ($ai['verified'] ?? false);
 
-        $update = ['liveness_completed' => true];
+        /* liveness_completed hanya boleh true kalau AI benar-benar sempat
+         * memeriksa. Dulu baris ini selalu true, sehingga panggilan gagal total
+         * (AI offline) tetap mencatat liveness sudah selesai. */
+        $update = ['liveness_completed' => (bool) ($ai['success'] ?? false)];
 
         if ($ai['success'] ?? false) {
             $update['kyc_status'] = null;
@@ -590,10 +583,16 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
             $update['face_reason'] = $ai['reason'] ?? null;
             $update['face_liveness'] = $ai['liveness_checks'] ?? null;
             $update['face_verified_at'] = $verified ? now() : null;
-            $update['identity_verified_at'] = $verified ? now() : $user->identity_verified_at;
+            /* Tidak pernah diisi dari sini kalau belum verified: status identitas
+             * hanya boleh diberikan oleh IdentityVerification::markVerified(). */
+            if ($verified) {
+                app(IdentityVerification::class)->markVerified($user, $ai);
+            }
         }
 
-        $user->forceFill($update)->save();
+        if (! $verified) {
+            $user->forceFill($update)->save();
+        }
 
         $this->faceAiVerifiedPath = $verified ? $facePath : null;
 
@@ -699,13 +698,11 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
 
             $user->update($data);
 
-            if (! empty($data['face_scan_photo'])) {
-                $user->forceFill(['liveness_completed' => true])->save();
-            }
-
-            if (! empty($data['selfie_photo']) || ! empty($data['face_scan_photo'])) {
-                $user->forceFill(['identity_verified_at' => now()])->save();
-            }
+            /* PENTING: foto yang terunggah bukan berarti identitas terverifikasi.
+             * Status hanya boleh diisi setelah AI benar-benar memverifikasi wajah
+             * terhadap dokumen -- lihat IdentityVerification. Foto yang diganti
+             * membuat verifikasi lama tidak berlaku lagi. */
+            app(IdentityVerification::class)->markUnverified($user);
 
             Notification::make()
                 ->title(__('Profil berhasil dilengkapi!'))

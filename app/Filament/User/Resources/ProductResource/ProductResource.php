@@ -6,8 +6,8 @@ use App\Enums\DiscountType\DiscountType;
 use App\Enums\OrderPaymentStatus\OrderPaymentStatus;
 use App\Enums\OrderStatus\OrderStatus;
 use App\Filament\User\Pages\MessagesPage\MessagesPage;
-use App\Filament\User\Resources\ProductResource\Pages;
 use App\Filament\User\Resources\ReviewResource\ReviewResource;
+use App\Forms\Components\CheckoutAddress\CheckoutAddress;
 use App\Forms\Components\CheckoutCalendarPicker\CheckoutCalendarPicker;
 use App\Models\Cart\Cart;
 use App\Models\Order\Order;
@@ -17,8 +17,9 @@ use App\Models\Review\Review;
 use App\Models\Transaction\Transaction;
 use App\Models\Voucher\Voucher;
 use App\Models\Wishlist\Wishlist;
-use App\Support\AppPlatform\AppPlatform;
+use App\Services\BriService\BriService;
 use App\Services\ChatService\ChatService;
+use App\Support\AppPlatform\AppPlatform;
 use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Infolists;
@@ -35,7 +36,6 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\HtmlString;
 use Livewire\Component;
@@ -253,9 +253,9 @@ class ProductResource extends Resource
                                                 Forms\Components\Placeholder::make('item_info')
                                                     ->hiddenLabel()
                                                     ->content(new HtmlString(
-                                                        '<div class="rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-4">' .
-                                                        '<div class="text-base font-bold text-gray-900 dark:text-white">' . e($record->name) . '</div>' .
-                                                        '<div class="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mt-1">Rp ' . number_format($record->final_price, 0, ',', '.') . '</div>' .
+                                                        '<div class="rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-4">'.
+                                                        '<div class="text-base font-bold text-gray-900 dark:text-white">'.e($record->name).'</div>'.
+                                                        '<div class="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mt-1">Rp '.number_format($record->final_price, 0, ',', '.').'</div>'.
                                                         '</div>'
                                                     )),
                                                 Forms\Components\TextInput::make('share_url')
@@ -268,7 +268,7 @@ class ProductResource extends Resource
                                                             ->color('primary')
                                                             ->tooltip(__('Salin ke Clipboard'))
                                                             ->action(function ($livewire, $state) {
-                                                                $livewire->js('window.navigator.clipboard.writeText(' . json_encode($state) . ')');
+                                                                $livewire->js('window.navigator.clipboard.writeText('.json_encode($state).')');
                                                                 Notification::make()
                                                                     ->title(__('Tautan berhasil disalin!'))
                                                                     ->success()
@@ -432,12 +432,12 @@ class ProductResource extends Resource
                                                     ->maxValue(fn ($record) => $record->stock),
                                             ])
                                             ->action(function ($record, array $data) {
-                                                Cart::updateOrCreate([
-                                                    'user_id' => auth()->id(),
-                                                    'product_id' => $record->id,
-                                                ], [
-                                                    'quantity' => DB::raw('quantity + '.$data['quantity']),
-                                                ]);
+                                                Cart::incrementQuantity(
+                                                    (int) auth()->id(),
+                                                    $record->id,
+                                                    null,
+                                                    (int) $data['quantity'],
+                                                );
 
                                                 Notification::make()
                                                     ->title(__('Berhasil masuk keranjang'))
@@ -559,20 +559,20 @@ class ProductResource extends Resource
                                         ->icon('heroicon-o-chat-bubble-oval-left-ellipsis')
                                         ->iconColor('warning')
                                         ->compact()
-                                            ->visible(fn ($record) => $record->reviews()->count() > 0)
-                                            ->schema([
-                                                Infolists\Components\ViewEntry::make('review_summary')
-                                                    ->label('')
-                                                    ->hiddenLabel()
-                                                    ->view('User.components.review-summary.review-summary', fn (Product $record): array => ReviewResource::summaryData($record, __('Penilaian Produk'))),
-                                                Infolists\Components\ViewEntry::make('reviews_list')
-                                                    ->label('')
-                                                    ->hiddenLabel()
-                                                    ->view('User.components.review-list.review-list', fn (Product $record): array => [
-                                                        'reviews' => ReviewResource::filteredReviews($record),
-                                                        'activeFilter' => ReviewResource::activeReviewFilter(),
-                                                    ])
-                                                    ->columnSpanFull(),
+                                        ->visible(fn ($record) => $record->reviews()->count() > 0)
+                                        ->schema([
+                                            Infolists\Components\ViewEntry::make('review_summary')
+                                                ->label('')
+                                                ->hiddenLabel()
+                                                ->view('User.components.review-summary.review-summary', fn (Product $record): array => ReviewResource::summaryData($record, __('Penilaian Produk'))),
+                                            Infolists\Components\ViewEntry::make('reviews_list')
+                                                ->label('')
+                                                ->hiddenLabel()
+                                                ->view('User.components.review-list.review-list', fn (Product $record): array => [
+                                                    'reviews' => ReviewResource::filteredReviews($record),
+                                                    'activeFilter' => ReviewResource::activeReviewFilter(),
+                                                ])
+                                                ->columnSpanFull(),
                                         ]),
                                 ])->columnSpan([
                                     'default' => 12,
@@ -630,6 +630,9 @@ class ProductResource extends Resource
         $paymentMethodId = $data['payment_method_id'] ?? null;
         $pm = $paymentMethodId ? PaymentMethod::find($paymentMethodId) : null;
         $isCreditCard = $pm !== null && $pm->type === 'credit_card';
+        // Virtual Account BRI butuh nomor unik per transaksi, dibuat setelah
+        // transaksi ada (nomor itu merujuk id transaksi).
+        $isVirtualAccount = $pm !== null && $pm->type === 'virtual_account';
         $adminFee = (float) ($pm?->fee ?? 0);
 
         // Default statuses
@@ -646,7 +649,11 @@ class ProductResource extends Resource
             'payment_status' => $orderPaymentStatus,
             'booking_date' => $data['booking_date'],
             'booking_time' => $data['booking_time'] ?? null,
-            'notes' => $data['notes'],
+            // Alamat acara datang dari field CheckoutAddress (`event_address`),
+            // bukan `notes` polos. Rakit di sini, di server, lewat method yang
+            // sama dengan yang dipakai view -- supaya string yang tersimpan dan
+            // yang tampil tidak mungkin berbeda.
+            'notes' => CheckoutAddress::formatAddress($data['event_address'] ?? []),
             'quantity' => $data['quantity'],
         ]);
 
@@ -660,15 +667,22 @@ class ProductResource extends Resource
         // Send message to Admin Panel Chat
         try {
             $inbox = ChatService::getOrCreateInboxWithAdmin($user->id);
-            ChatService::sendOrderMessage($inbox, $order);
-        } catch (\Exception $e) {
+
+            // Tanpa admin, getOrCreateInboxWithAdmin() null dan pemanggilan
+            // di bawahnya melempar TypeError -- bukan \Exception, jadi blok
+            // catch di bawah tidak akan menangkapnya. Checkout tidak boleh
+            // gagal hanya karena notifikasi chat tidak punya penerima.
+            if ($inbox) {
+                ChatService::sendOrderMessage($inbox, $order);
+            }
+        } catch (\Throwable $e) {
             Log::error('Failed to send order message: '.$e->getMessage());
         }
 
         // Process Transaction
         $reference = 'TRX-ITM-'.time().'-'.strtoupper(str()->random(4));
 
-        Transaction::create([
+        $transaction = Transaction::create([
             'user_id' => $user->id,
             'order_id' => $order->id,
             'type' => 'order',
@@ -681,18 +695,37 @@ class ProductResource extends Resource
             'payment_method_id' => $pm?->id,
             'status' => $isCreditCard ? 'success' : 'pending',
             'paid_at' => $isCreditCard ? now() : null,
-            'notes' => $isCreditCard
-                ? __('Pembayaran kartu kredit / debit oleh pengguna.')
-                : __('Menunggu konfirmasi pembayaran manual.'),
+            'notes' => match (true) {
+                $isCreditCard => __('Pembayaran kartu kredit / debit oleh pengguna.'),
+                $isVirtualAccount => __('Menunggu pembayaran ke nomor Virtual Account BRI.'),
+                default => __('Menunggu konfirmasi pembayaran manual.'),
+            },
         ]);
 
-        Notification::make()
+        $vaFailed = false;
+
+        if ($isVirtualAccount) {
+            // Checkout web sebelumnya tidak pernah membuat VA, jadi pesanan
+            // BRIVA dari web hanya bisa diverifikasi manual oleh admin.
+            $va = app(BriService::class)->createVirtualAccount($transaction);
+            $vaFailed = $va === null;
+        }
+
+        $notification = Notification::make()
             ->title(__('Pesanan Berhasil Dibuat'))
-            ->body($isCreditCard
-                ? __('Pembayaran Anda telah berhasil.')
-                : __('Silakan lakukan pembayaran di halaman "Pesanan Saya".'))
-            ->success()
-            ->send();
+            ->body(match (true) {
+                $isCreditCard => __('Pembayaran Anda telah berhasil.'),
+                // VA gagal dibuat: pesanan tetap ada, tapi dana tidak bisa
+                // dicocokkan otomatis. User harus diberi tahu supaya tidak
+                // menunggu pembayaran yang tidak akan pernah tercatat.
+                $vaFailed => __('Nomor Virtual Account gagal dibuat. Silakan hubungi admin untuk instruksi pembayaran.'),
+                $isVirtualAccount => __('Silakan transfer ke nomor Virtual Account BRI di halaman "Pesanan Saya".'),
+                default => __('Silakan lakukan pembayaran di halaman "Pesanan Saya".'),
+            });
+
+        $vaFailed ? $notification->danger() : $notification->success();
+
+        $notification->send();
 
         return redirect()->route('filament.user.resources.orders.index');
     }
@@ -724,9 +757,14 @@ class ProductResource extends Resource
                                 ->minValue(1)
                                 ->maxValue($product->stock)
                                 ->columnSpanFull(),
-                            Forms\Components\Textarea::make('notes')
-                                ->label(__('Alamat Lokasi'))
-                                ->rows(4)
+                            // Alamat acara: GPS + Google Places + tombol Edit. Dulu
+                            // `Textarea::make('notes')`, yang hanya menerima teks bebas
+                            // tanpa koordinat. Sekarang address-nya terpecah (wilayah /
+                            // jalan / detail) dan ikut menyimpan lat+lng;
+                            // `handleCheckout()` merakitnya kembali ke satu string untuk
+                            // `orders.notes`.
+                            CheckoutAddress::make('event_address')
+                                ->label(__('Alamat Lokasi Acara'))
                                 ->required()
                                 ->columnSpanFull(),
                         ]),

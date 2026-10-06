@@ -15,9 +15,16 @@ use Tests\TestCase;
 |
 */
 
+/*
+| Integration needs the same base as Feature: it makes real HTTP requests, so it
+| needs the booted application and the database. The difference between the two is
+| scope, not infrastructure -- Integration asserts on the middleware chain, Feature
+| asserts on a single component. Do NOT add RefreshDatabase to Unit: a Unit test
+| that needs a database belongs in Feature or Integration instead.
+*/
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
-    ->in('Feature');
+    ->in('Feature', 'Integration');
 
 pest()->extend(TestCase::class)
     ->in('Unit');

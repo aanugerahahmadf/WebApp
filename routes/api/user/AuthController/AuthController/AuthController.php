@@ -10,6 +10,10 @@ Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 Route::post('/auth/send-otp', [AuthController::class, 'sendOtp']);
 Route::post('/auth/verify-otp', [AuthController::class, 'verifyOtp']);
+// Tantangan 2FA setelah Sign In. Public karena belum ada token: yang dipegang
+// baru challenge_token dari respons login(), bukan hak akses.
+Route::post('/auth/two-factor/verify', [AuthController::class, 'verifyTwoFactor']);
+Route::post('/auth/two-factor/resend', [AuthController::class, 'resendTwoFactorCode']);
 Route::post('/auth/clerk-sync', [AuthController::class, 'clerkSync']);
 Route::post('/auth/google', [AuthController::class, 'googleLogin']);
 Route::post('/auth/facebook', [AuthController::class, 'facebookLogin']);

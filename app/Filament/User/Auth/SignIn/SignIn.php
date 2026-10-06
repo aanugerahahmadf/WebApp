@@ -2,8 +2,8 @@
 
 namespace App\Filament\User\Auth\SignIn;
 
+use App\Filament\User\Auth\Auth\Auth;
 use App\Filament\User\Auth\Concerns\HasAuthBreadcrumbs;
-use App\Filament\Welcome\Pages\Home\Home;
 use App\Models\User\User;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Component;
@@ -57,22 +57,24 @@ class SignIn extends BaseLogin
     }
 
     /**
-     * Parent crumb Sign-In selalu Welcome Home, bukan halaman asal klik.
+     * Parent crumb Sign-In adalah halaman auth (`/user/auth`), bukan Welcome
+     * Home.
      *
-     * Sign In adalah pintu masuk auth dari storefront publik yang bisa dibuka
-     * semua orang, jadi parent crumb yang "mengikuti asal klik" dari trait
-     * HasAuthBreadcrumbs tidak pernah informatif di sini: kandidat /welcome/*
-     * apa pun hanya menghasilkan label generik "Kembali", dan kandidat lain
-     * ditolak. "Beranda" selalu benar, dan kliknya mengembalikan user ke
-     * storefront dari manapun mereka datang.
+     * Alur auth bercabang dari satu halaman: `/user/auth` memegang dua pintu
+     * (Sign In + Masuk Dengan Google), dan halaman ini salah satu cabangnya.
+     * Jadi di sinilah "Beranda" DIHAPUS -- crumb-nya jadi "Masuk / Sign In",
+     * dan klik "Masuk" mengembalikan pengguna ke pemilih pintu, bukan melompat
+     * ke storefront dan mencari-cari tombol Sign In lagi.
      *
-     * Halaman auth lain tetap memakai trait apa adanya -- parent-nya memang
-     * bermakna di sana (Sign Up -> Sign In, OTP -> Lupa Kata Sandi, dst).
+     * crumb parent memakai Auth::crumbLabel() ("Welcome Back"), bukan
+     * getHeading() halaman ini ("Sign In"), supaya crumb di halaman ini tetap
+     * "Welcome Back / Sign In" -- nama cabangnya sendiri, bukan nama halaman
+     * induknya.
      */
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl(panel: 'welcome') => __('Beranda'),
+            Auth::getUrl() => Auth::crumbLabel(),
             $this->getAuthBreadcrumbsCurrentLabel(),
         ];
     }
@@ -103,9 +105,15 @@ class SignIn extends BaseLogin
             $candidates[] = $intended;
         }
 
+        $retiredRegisterPaths = $this->retiredRegisterPaths();
+
         $isUnusable = fn (string $url): bool => str_contains($url, 'livewire')
             || str_contains($url, $this->authPagePath())
-            || str_contains($url, $this->registrationPagePath())
+            // `/user/signup` & `/user/register`: halaman pendaftaran sudah
+            // dihapus, keduanya hanya redirect ke `/user/auth`. Kalau URL lama
+            // ini dipakai sebagai tujuan tombol "kembali", pengguna cuma
+            // terlempar ke halaman auth lagi.
+            || collect($retiredRegisterPaths)->contains(fn (string $path): bool => str_contains($url, $path))
             || str_contains($url, 'password-reset')
             || str_contains($url, 'verify-otp')
             || str_contains($url, '/admin');
@@ -154,15 +162,26 @@ class SignIn extends BaseLogin
             ->statePath('data');
     }
 
+    /**
+     * Form ini HANYA menerima Email atau Username.
+     *
+     * Sebelumnya label menjanjikan "KTP / Passport / SIM / NPWP / Username /
+     * Email" sementara form() hanya memproses email + username -- jadi nomor
+     * dokumen yang diketik pengguna ditolak tanpa penjelasan. Sekarang label
+     * dan perilaku sudah sama, dan cocok dengan app Flutter yang juga memakai
+     * satu field berlabel "Email / Username".
+     *
+     * Ukuran field juga sudah kembali ke bawaan Filament: wrapper class
+     * `signin-identifier` (yang menyalakan `white-space: nowrap` di blade view)
+     * dihapus bersama style block-nya.
+     */
     protected function getEmailFormComponent(): Component
     {
         return TextInput::make('login')
-            ->label(__('KTP / Passport / SIM / NPWP / Username / Email'))
+            ->label(__('Email / Username'))
             ->required()
             ->autocomplete()
-            ->autofocus()
-            ->extraInputAttributes(['tabindex' => 1])
-            ->extraFieldWrapperAttributes(['class' => 'signin-identifier']);
+            ->autofocus();
     }
 
     public function registerAction(): Action
@@ -190,38 +209,22 @@ class SignIn extends BaseLogin
             ->label(__('Sign In'));
     }
 
+    /**
+     * Kredensial hanya boleh berisi satu field identitas: email atau username.
+     *
+     * Field `login` dipetakan ke `email` bila lolos validasi email, selebihnya
+     * dianggap `username`. Nomor KTP/Passport/SIM/NPWP tidak lagi jadi alias
+     * login, jadi query cukup menyentuh satu kolom ter-index.
+     */
     protected function getCredentialsFromFormData(array $data): array
     {
         $login = $data['login'];
-        $password = $data['password'];
 
         $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
 
-        $user = User::where($field, $login)
-            ->orWhere('ktp_number', $login)
-            ->orWhere('passport_number', $login)
-            ->orWhere('sim_number', $login)
-            ->orWhere('npwp_number', $login)
-            ->first();
-        if ($user) {
-            if ($user->email === $login) {
-                $field = 'email';
-            } elseif ($user->ktp_number === $login) {
-                $field = 'ktp_number';
-            } elseif ($user->passport_number === $login) {
-                $field = 'passport_number';
-            } elseif ($user->sim_number === $login) {
-                $field = 'sim_number';
-            } elseif ($user->npwp_number === $login) {
-                $field = 'npwp_number';
-            } else {
-                $field = 'username';
-            }
-        }
-
         return [
             $field => $login,
-            'password' => $password,
+            'password' => $data['password'],
         ];
     }
 

@@ -8,6 +8,18 @@
         <testsuite name="Unit">
             <directory>tests/Unit</directory>
         </testsuite>
+        <!--
+            Integration: request HTTP sungguhan yang melewati seluruh middleware
+            stack (auth, locale, panel, EnsureProfileComplete) lalu dicek efeknya
+            ke database. Dipisah dari Feature karena Feature menguji satu
+            komponen atau satu Livewire page, sedangkan di sini yang diuji adalah
+            rangkaian middleware-nya, tempat bug produksi paling sering muncul
+            karena urutan dan konfigurasi middleware tidak pernah diuji satu
+            per satu.
+        -->
+        <testsuite name="Integration">
+            <directory>tests/Integration</directory>
+        </testsuite>
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
         </testsuite>
@@ -25,7 +37,15 @@
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
-        <env name="DB_DATABASE" value="testing"/>
+        <!--
+            DB_DATABASE saja tidak cukup: config/database.php membaca
+            DB_CONNECTION dari .env, dan .env produksi menunjuk MySQL. Akibatnya
+            `php artisan test` secara lokal bisa menyasar database MySQL asli
+            bernama "testing". Kunci keduanya di sini supaya hasil lokal sama
+            dengan CI (ci.yml menyetel sqlite + :memory: di level job).
+        -->
+        <env name="DB_CONNECTION" value="sqlite"/>
+        <env name="DB_DATABASE" value=":memory:"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>

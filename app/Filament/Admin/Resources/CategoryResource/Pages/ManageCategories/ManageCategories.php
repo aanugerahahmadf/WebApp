@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\CategoryResource\Pages\ManageCategories;
 
+use App\Filament\Admin\Concerns\HasMobilePagination\HasMobilePagination;
 use App\Filament\Admin\Exports\CategoryExporter\CategoryExporter;
 use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\CategoryResource\CategoryResource;
@@ -15,6 +16,7 @@ use Filament\Resources\Pages\ManageRecords;
  */
 class ManageCategories extends ManageRecords
 {
+    use HasMobilePagination;
     use HasDynamicBreadcrumbs;
     protected static string $resource = CategoryResource::class;
 

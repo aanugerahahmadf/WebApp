@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\VoucherResource\Pages\ManageVouchers;
 
+use App\Filament\Admin\Concerns\HasMobilePagination\HasMobilePagination;
 use App\Filament\Admin\Exports\VoucherExporter\VoucherExporter;
 use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\VoucherResource\VoucherResource;
@@ -15,6 +16,7 @@ use Filament\Resources\Pages\ManageRecords;
  */
 class ManageVouchers extends ManageRecords
 {
+    use HasMobilePagination;
     use HasDynamicBreadcrumbs;
     protected static string $resource = VoucherResource::class;
 

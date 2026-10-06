@@ -54,7 +54,29 @@ class ReviewPhotoStorage
             $ext = 'jpg';
         }
 
-        return 'review-'.substr((string) hash_file('sha256', $sourcePath), 0, self::HASH_LENGTH).'.'.$ext;
+        // Hash isi jadi acuan dedup: foto yang sama tidak pernah tersalin dua
+        // kali. Tapi `hash_file()` bisa gagal walaupun file-nya ada -- di
+        // Windows `is_readable()` bisa lulus lalu open() ditolak kalau proses
+        // lain sedang memegang file (antivirus, editor, runner paralel).
+        // Warning-nya jadi ErrorException dan menjatuhkan seluruh test run,
+        // padahal niat kode ini cuma "lewati foto ini".
+        //
+        // Karena itu dibungkus, dengan fallback ke path + ukuran + waktu
+        // modifikasi. Fallback itu tetap deterministik untuk file yang sama,
+        // jadi sifat idempoten dan bebas-salin-ganda tidak hilang.
+        $hash = @hash_file('sha256', $sourcePath);
+
+        if ($hash === false) {
+            clearstatcache(true, $sourcePath);
+
+            $hash = hash('sha256', implode('|', [
+                $sourcePath,
+                (string) (@filesize($sourcePath) ?: 0),
+                (string) (@filemtime($sourcePath) ?: 0),
+            ]));
+        }
+
+        return 'review-'.substr($hash, 0, self::HASH_LENGTH).'.'.$ext;
     }
 
     /**

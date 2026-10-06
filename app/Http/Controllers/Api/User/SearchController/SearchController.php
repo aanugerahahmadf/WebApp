@@ -19,6 +19,7 @@ use App\Models\Voucher\Voucher;
 use App\Models\WeddingDecorationPolicy\WeddingDecorationPolicy;
 use App\Services\CBIRService\CBIRService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class SearchController extends Controller
 {
@@ -385,6 +386,7 @@ class SearchController extends Controller
         $results = $apiResponse['results'] ?? [];
         $mixedResults = [];
         $seen = [];
+        $missingModels = [];
 
         foreach ($results as $r) {
             $type = $r['type'] ?? 'product';
@@ -404,6 +406,9 @@ class SearchController extends Controller
                 : Product::with(['category', 'media'])->find($id);
 
             if (! $model) {
+                // AI Core mengembalikan hit yang entah kenapa tidak ada lagi di
+                // database. Dicatat, bukan diabaikan diam-diam.
+                $missingModels[] = $key;
                 continue;
             }
 
@@ -419,6 +424,29 @@ class SearchController extends Controller
             ];
 
             $seen[$key] = true;
+        }
+
+        // Indeks CBIR sudah tidak sinkron dengan database: AI Core mengembalikan
+        // hit, tapi tidak satu pun ada di tabel products/packages. Tanpa guard ini
+        // endpoint balas 200 + array kosong, sehingga kelihatan seperti "tidak ada
+        // hasil mirip" padahal katalognya sendiri yang bermasalah.
+        if ($results !== [] && $mixedResults === []) {
+            Log::warning('CBIR byImage: semua hit tidak ditemukan di database (indeks basi)', [
+                'ai_hits' => count($results),
+                'missing_count' => count($missingModels),
+                'missing_sample' => array_slice($missingModels, 0, 10),
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'data' => [],
+                'message' => 'Indeks CBIR tidak sinkron dengan katalog. Jalankan: php artisan cbir:sync',
+                'diagnostics' => [
+                    'ai_hits' => count($results),
+                    'missing_in_database' => count($missingModels),
+                    'missing_sample' => array_slice($missingModels, 0, 10),
+                ],
+            ], 503);
         }
 
         usort($mixedResults, fn ($a, $b) => ($b['similarity'] ?? 0) <=> ($a['similarity'] ?? 0));

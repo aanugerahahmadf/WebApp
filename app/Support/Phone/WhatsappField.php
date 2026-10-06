@@ -14,8 +14,8 @@ use Illuminate\Support\Facades\Log;
 /**
  * Satu-satunya definisi field "Nomor WhatsApp" + alur OTP-nya.
  *
- * Sebelumnya blok ini diduplikasi di empat tempat (SignUp,
- * CompleteProfileComponent, PersonalInfoComponent, PersonalInfoComponentSuperAdmin)
+ * Sebelumnya blok ini diduplikasi di empat tempat (SignUp, CompleteProfileComponent,
+ * PersonalInfoComponent, PersonalInfoComponentSuperAdmin)
  * dan perlahanPokemonjacinan: versi SuperAdmin masih memakai prefix '+62' statis
  * dan menyimpan nomor sebagai '+62 812...' (pakai spasi), sehingga tidak cocok
  * dengan E.164 yang dipakai tiga tempat lain -- nomor itu jadi gagal dicocokkan
@@ -27,7 +27,7 @@ final class WhatsappField
     /**
      * Group berisi Select kode negara (dengan bendera) + input nomor.
      *
-     * @param  bool  $required  nomor wajib diisi (SignUp, Complete Profile)
+     * @param  bool  $required  nomor wajib diisi (Complete Profile)
      * @param  bool  $withOtpButton  tampilkan tombol "Kirim Kode OTP" dan
      *                            pastikan nomor tersimpan sebelum OTP dikirim
      */

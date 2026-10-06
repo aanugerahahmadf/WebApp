@@ -2,6 +2,7 @@
 
 namespace App\Filament\Welcome\Pages\Home;
 
+use App\Filament\User\Pages\Home\Home as UserHome;
 use App\Filament\Welcome\Widgets\CombinedCatalogWidget\CombinedCatalogWidget;
 use App\Filament\Welcome\Widgets\ShortcutStats\ShortcutStats;
 use App\Filament\Welcome\Widgets\StatsOverview\StatsOverview;
@@ -43,6 +44,36 @@ class Home extends BaseDashboard
     public static function getNavigationIcon(): ?string
     {
         return static::$navigationIcon;
+    }
+
+    /**
+     * Beranda storefront milik tamu. User yang sudah Sign In -- termasuk
+     * super_admin yang juga punya panel admin -- mendarat di home panel user,
+     * bukan berhenti di storefront dan mencari-cari menu akunnya.
+     *
+     * Dipakai mount() Livewire, bukan middleware, karena halaman katalog /
+     * detail harus tetap bisa dibuka user yang sudah login
+     * (Browse-from-storefront-after-SignIn). Kalau sampai ke middleware,
+     * seluruh panel welcome tertutup untuk mereka.
+     *
+     * Hanya `/welcome/home` yang disentuh; `/welcome` dan `/` ikut karena
+     * keduanya sudah diarahkan ke sini oleh RedirectToHomeController.
+     *
+     * `url.intended` tidak ditulis di sini, jadi tujuan setelah login yang
+     * disimpan middleware tetap utuh untuk tamu yang Galilee.
+     */
+    public function mount(): void
+    {
+        if (auth()->check()) {
+            // `panel: 'user'` itu wajib, bukan opsional. Page::getUrl() menulis
+            // route name dari getCurrentPanel() kalau argumennya null, dan saat
+            // halaman ini dirender current panel adalah 'welcome' -- sehingga
+            // UserHome::getUrl() tanpa panel menghasilkan /welcome/home, yaitu
+            // halaman ini sendiri. Akibatnya user yang sudah login diarahkan balik
+            // ke tempat dia datang, tanpa henti; Laravel membatalkan karena lebih
+            // dari 5 hop dan test gagal dengan "5 is less than 5".
+            $this->redirect(UserHome::getUrl(panel: 'user'), navigate: false);
+        }
     }
 
     public function getWidgets(): array

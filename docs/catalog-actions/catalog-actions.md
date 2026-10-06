@@ -94,8 +94,12 @@ protected static function getChatUser(): ?User
 }
 ```
 
-Returns `null` only if `GuestIdentity` fails to create/find a row, which should
-not happen in practice (it creates on demand).
+Returns `null` for a signed-in member, so the guest guard can be called unconditionally before
+dereferencing `auth()->id()`.
+
+The redirect target is `AuthenticateWelcome::LOGIN_ROUTE` = `filament.user.auth.index`, i.e. the
+auth landing page `/user/auth` (Sign In **and** Continue With Google) — not the `/user/signin` form
+directly, so a guest pushed here by "add to cart" still has the Google door one click away.
 
 ---
 

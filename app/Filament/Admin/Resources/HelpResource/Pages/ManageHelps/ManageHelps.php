@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\HelpResource\Pages\ManageHelps;
 
+use App\Filament\Admin\Concerns\HasMobilePagination\HasMobilePagination;
 use App\Filament\Admin\Exports\HelpExporter\HelpExporter;
 use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\HelpResource\HelpResource;
@@ -12,6 +13,7 @@ use Filament\Resources\Pages\ManageRecords;
 
 class ManageHelps extends ManageRecords
 {
+    use HasMobilePagination;
     use HasDynamicBreadcrumbs;
     protected static string $resource = HelpResource::class;
 

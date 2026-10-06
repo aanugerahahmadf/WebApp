@@ -19,9 +19,17 @@
         stream: null,
         facingMode: 'user',
         photoTaken: false,
+        cameraFacing: '',
+        cameraLabel: '',
+        mirrorSaved: true,   /* file hasil jepret ikut dicermin seperti preview */
 
         open(target) {
             this.targetField = target;
+            // Set SEKALI saat dibuka. Dulu startCamera() menimpa facingMode tiap kali,
+            // jadi tombol balik kamera tidak pernah berefek.
+            this.facingMode = this.facingModeForTarget;
+            this.activeCameraId = '';
+            this.cameraFacing = '';
             this.isOpen = true;
             this.showCamera = false;
             this.photoTaken = false;
@@ -40,6 +48,51 @@
             return this.targetField === 'selfie_photo' ? 'user' : 'environment';
         },
 
+        /* Cermin (CSS saja) hanya untuk selfie dengan kamera depan. Foto KTP tidak
+         * pernah dicermin karena teksnya jadi tidak terbaca. */
+        get mirroredView() {
+            return !(this.cameraFacing === 'environment' || (!this.cameraFacing && /back|rear|environment|belakang/i.test(this.cameraLabel || '')));
+        },
+
+        /* Frame digambar TIDAK dibalik (hanya dipotong sesuai panduan). Pencerminan hanya
+         * efek tampilan lewat CSS. Kalau file ikut dibalik, teks KTP di foto
+         * selfie menjadi terbalik dan tidak terbaca OCR / AI / petugas. */
+        drawToCanvas(video, canvas) {
+            const vw = video.videoWidth || 1920;
+            const vh = video.videoHeight || 1080;
+
+            /* Kotak preview selalu 4:3 dan video memakai object-cover, jadi
+             * yang terlihat hanya bagian tengah 4:3 dari frame. Ambil bagian
+             * yang sama supaya hasil foto = yang terlihat di layar. */
+            let sw = vw, sh = vh;
+            if (vw / vh > 4 / 3) { sw = vh * 4 / 3; } else { sh = vw * 3 / 4; }
+            let sx = (vw - sw) / 2, sy = (vh - sh) / 2;
+
+            /* KTP: potong persis di dalam garis kartu (lebar 86% kotak,
+             * rasio 85.6 : 54). Angka ini sama dengan <rect> di SVG panduan. */
+            if (this.targetField !== 'selfie_photo') {
+                const cw = sw * 0.86;
+                const ch = cw / 1.585;
+                sx += (sw - cw) / 2;
+                sy += (sh - ch) / 2;
+                sw = cw;
+                sh = ch;
+            }
+
+            canvas.width = Math.round(sw);
+            canvas.height = Math.round(sh);
+            const ctx = canvas.getContext('2d');
+            if (this.mirrorSaved && this.mirroredView) {
+                ctx.save();
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
+                ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+                ctx.restore();
+            } else {
+                ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+            }
+        },
+
         isMobile() {
             return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         },
@@ -52,23 +105,67 @@
             return /Android/i.test(navigator.userAgent);
         },
 
+        /* Daftar kamera fisik di perangkat. Laptop biasanya cuma satu webcam;
+         * HP bisa punya beberapa (depan, belakang, ultra-wide, tele). */
+        cameras: [],
+        activeCameraId: '',
+
+        async loadCameras() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+
+                this.cameras = devices.filter((d) => d.kind === 'videoinput');
+            } catch (e) {
+                this.cameras = [];
+            }
+        },
+
+        cameraConstraints() {
+            const base = { width: { ideal: 1920 }, height: { ideal: 1080 } };
+
+            if (this.activeCameraId) {
+                return { ...base, deviceId: { exact: this.activeCameraId } };
+            }
+
+            return { ...base, facingMode: this.facingMode };
+        },
+
+        /* Dipakai tombol 'Kiri' dan 'Kanan'. */
+        async selectCamera(deviceId) {
+            this.activeCameraId = deviceId;
+            await this.startCamera();
+        },
+
         async startCamera() {
             this.showCamera = true;
             this.photoTaken = false;
-            this.facingMode = this.facingModeForTarget;
             await this.$nextTick();
             const video = this.$refs.camVideo;
             if (!video) return;
             try {
                 if (this.stream) { this.stream.getTracks().forEach(t => t.stop()); }
                 this.stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: this.facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
+                    video: this.cameraConstraints(),
                     audio: false,
                 });
                 video.srcObject = this.stream;
+
+                /* Panduan AI mulai begitu ada stream frame yang bisa dianalisis. */
+                this.startCoach();
                 await video.play();
+
+                // Sinkronkan state dengan kamera yang BENAR-BENAR dipakai browser.
+                // Dulu activeCameraId diisi cameras[0] seenaknya, jadi tombol
+                // Kiri/Kanan menandai kamera yang salah dan retake memakai deviceId
+                // yang salah (flip kamera 'tidak berfungsi' setelah ulangi foto).
+                const settings = this.stream.getVideoTracks()[0]?.getSettings?.() || {};
+                this.activeCameraId = settings.deviceId || this.activeCameraId;
+                this.cameraFacing = settings.facingMode || '';
+                this.cameraLabel = this.stream.getVideoTracks()[0]?.label || '';
+
+                await this.loadCameras();
             } catch (e) {
-                alert('{{ __('Tidak dapat mengakses kamera. Pastikan izin kamera diberikan.') }}');
+                alert({{ json_encode(__('Tidak dapat mengakses kamera. Pastikan izin kamera diberikan.')) }});
                 this.showCamera = false;
             }
         },
@@ -78,10 +175,14 @@
                 this.stream.getTracks().forEach(t => t.stop());
                 this.stream = null;
             }
+            /* Tanpa stream tidak ada frame untuk dianalisis, dan suara
+             * AI harus berhenti sekarang juga. */
+            this.stopCoach();
         },
 
         flipCamera() {
             this.facingMode = this.facingMode === 'user' ? 'environment' : 'user';
+            this.activeCameraId = ''; // kalau tidak, deviceId lama mengalahkan facingMode
             this.startCamera();
         },
 
@@ -89,9 +190,7 @@
             const video = this.$refs.camVideo;
             const canvas = this.$refs.camCanvas;
             if (!video || !canvas) return;
-            canvas.width  = video.videoWidth  || 1920;
-            canvas.height = video.videoHeight || 1080;
-            canvas.getContext('2d').drawImage(video, 0, 0);
+            this.drawToCanvas(video, canvas);
             this.stopCamera();
             this.photoTaken = true;
         },
@@ -113,45 +212,18 @@
             }, 'image/jpeg', 0.92);
         },
 
-        pickNativeCamera() {
-            this.stopCamera();
-            this.showCamera = false;
-            setTimeout(() => {
-                const el = document.getElementById('identity-input-native-camera');
-                if (el) el.click();
-            }, 100);
-        },
-
-        pickGallery() {
-            this.stopCamera();
-            this.showCamera = false;
-            setTimeout(() => {
-                const el = document.getElementById('identity-input-gallery');
-                if (el) el.click();
-            }, 100);
-        },
-
-        pickDrive() {
-            this.stopCamera();
-            this.showCamera = false;
-            setTimeout(() => {
-                const el = document.getElementById('identity-input-drive');
-                if (el) el.click();
-            }, 100);
-        },
-
-        pickICloud() {
-            this.stopCamera();
-            this.showCamera = false;
-            setTimeout(() => {
-                const el = document.getElementById('identity-input-icloud');
-                if (el) el.click();
-            }, 100);
-        },
+        /* Klik input sinkron (tanpa setTimeout) supaya tidak diblokir Safari/iOS. */
+        pickNativeCamera() { document.getElementById('identity-input-native-camera')?.click(); },
+        pickGallery() { document.getElementById('identity-input-gallery')?.click(); },
+        pickDrive() { document.getElementById('identity-input-drive')?.click(); },
+        pickICloud() { document.getElementById('identity-input-icloud')?.click(); },
 
         onPicked(event) {
             const file = event.target.files?.[0];
-            if (file) this.injectFile(file);
+            if (file) {
+                this.injectFile(file);
+                this.close(); // dulu modal tetap terbuka setelah pilih file
+            }
             event.target.value = '';
         },
 
@@ -159,8 +231,8 @@
             if (!file || !this.targetField) return;
 
             let target = null;
-            document.querySelectorAll('[wire\\\\:key]').forEach(el => {
-                const key = el.getAttribute('wire\\\\:key') || '';
+            document.querySelectorAll('[wire\\:key]').forEach(el => {
+                const key = el.getAttribute('wire:key') || '';
                 if (key.includes(this.targetField)) {
                     target = el;
                 }
@@ -188,6 +260,44 @@
                 }
             }
         },
+
+        /* ── Real-time AI scan coach ──────────────────────────────────────
+         * Mengukur fokus, pencahayaan, dan posisi subjek dari frame video
+         * langsung, lalu memberi arahan secara lisan dan visual (lingkaran
+         * hijau saat kualitas siap ditekan).
+         *
+         * Seluruh algoritmanya ada di resources/js/ai-scan-coach supaya
+         * objek x-data ini tetap tipis. Analisis real-time tidak mungkin
+         * lewat server: satu round-trip per frame jauh terlalu lambat.
+         *
+         * PENTING: hanya kutip tunggal di dalam x-data. Atributnya dibungkus
+         * kutip ganda, satu saja akan menutupnya lebih awal. */
+        coach: null,
+
+        startCoach() {
+            this.stopCoach();
+
+            const factory = window.AIScanCoach && window.AIScanCoach.create;
+            if (!factory) return;
+
+            const mount = this.$refs.camWrap;
+            if (!mount) return;
+
+            this.coach = factory({
+                mount: mount,
+                mode: this.targetField === 'ktp_photo' ? 'document' : 'face',
+                lang: document.documentElement.lang || '{{ app()->getLocale() }}',
+                video: () => this.$refs.camVideo,
+            });
+
+            this.coach.start();
+        },
+
+        stopCoach() {
+            if (!this.coach) return;
+            this.coach.stop();
+            this.coach = null;
+        },
     }"
     x-on:open-identity-camera.window="open($event.detail.target)"
     x-on:keydown.escape.window="if (isOpen) { if (showCamera) { stopCamera(); showCamera = false; } else { close(); } }"
@@ -195,7 +305,7 @@
     class="contents"
 >
     {{-- Hidden file inputs --}}
-    <input type="file" accept="image/*" capture="environment" class="sr-only" id="identity-input-native-camera" x-on:change="onPicked($event)">
+    <input type="file" accept="image/*" :capture="targetField === 'selfie_photo' ? 'user' : 'environment'" class="sr-only" id="identity-input-native-camera" x-on:change="onPicked($event)">
     <input type="file" accept="image/*" class="sr-only" id="identity-input-gallery" x-on:change="onPicked($event)">
     <input type="file" accept="image/*" class="sr-only" id="identity-input-drive" x-on:change="onPicked($event)">
     <input type="file" accept="image/*" class="sr-only" id="identity-input-icloud" x-on:change="onPicked($event)">
@@ -234,7 +344,7 @@
                     <h3 id="identity-camera-title" class="text-base font-semibold leading-6 text-gray-950 dark:text-white">
                         <span x-show="!showCamera">{{ __('Pilih Sumber Foto') }}</span>
                         <span x-show="showCamera" style="display:none;">
-                            <span x-text="targetField === 'selfie_photo' ? '{{ __('Ambil Selfie') }}' : '{{ __('Foto Dokumen') }}'"></span>
+                            <span x-text="targetField === 'selfie_photo' ? {{ json_encode(__('Ambil Selfie')) }} : {{ json_encode(__('Foto Dokumen')) }}"></span>
                         </span>
                     </h3>
                     <div class="flex items-center gap-1">
@@ -348,7 +458,7 @@
 
                 {{-- WebRTC Camera view --}}
                 <div x-show="showCamera" style="display:none;">
-                    <div class="relative bg-black" style="aspect-ratio:4/3;">
+                    <div x-ref="camWrap" class="relative bg-black" style="aspect-ratio:4/3;">
                         <video
                             x-ref="camVideo"
                             x-show="!photoTaken"
@@ -356,14 +466,53 @@
                             playsinline
                             muted
                             class="h-full w-full object-cover"
-                            style="display:block;"
+                            :style="mirroredView ? 'display:block; transform: scaleX(-1);' : 'display:block;'"
                         ></video>
                         <canvas
                             x-ref="camCanvas"
                             x-show="photoTaken"
-                            class="h-full w-full object-cover"
+                            class="h-full w-full"
+                            :class="targetField === 'selfie_photo' ? 'object-cover' : 'object-contain'"
+                            :style="{ transform: 'none' }"
                             style="display:none;"
                         ></canvas>
+                        {{-- Garis panduan. viewBox 400x300 = rasio kotak 4:3 (tanpa distorsi).
+                             Selfie: oval wajah. KTP: kotak kartu 85.6:54, lebar 86%.
+                             Ukuran harus sama dengan perhitungan di drawToCanvas(). --}}
+                        <svg
+                            x-show="!photoTaken && targetField === 'selfie_photo'"
+                            class="pointer-events-none absolute inset-0 h-full w-full"
+                            viewBox="0 0 400 300"
+                            preserveAspectRatio="none"
+                            aria-hidden="true"
+                            style="display:none;"
+                        >
+                            <defs>
+                                <mask id="identity-guide-mask-face">
+                                    <rect width="400" height="300" fill="white" />
+                                    <ellipse cx="200" cy="150" rx="84" ry="112" fill="black" />
+                                </mask>
+                            </defs>
+                            <rect width="400" height="300" fill="rgba(0,0,0,0.45)" mask="url(#identity-guide-mask-face)" />
+                            <ellipse cx="200" cy="150" rx="84" ry="112" fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="2.5" vector-effect="non-scaling-stroke" />
+                        </svg>
+                        <svg
+                            x-show="!photoTaken && targetField !== 'selfie_photo'"
+                            class="pointer-events-none absolute inset-0 h-full w-full"
+                            viewBox="0 0 400 300"
+                            preserveAspectRatio="none"
+                            aria-hidden="true"
+                            style="display:none;"
+                        >
+                            <defs>
+                                <mask id="identity-guide-mask-card">
+                                    <rect width="400" height="300" fill="white" />
+                                    <rect x="28" y="41.5" width="344" height="217" fill="black" />
+                                </mask>
+                            </defs>
+                            <rect width="400" height="300" fill="rgba(0,0,0,0.45)" mask="url(#identity-guide-mask-card)" />
+                            <rect x="28" y="41.5" width="344" height="217" fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="2.5" vector-effect="non-scaling-stroke" />
+                        </svg>
                         <div
                             x-show="!photoTaken && stream === null"
                             class="absolute inset-0 flex items-center justify-center bg-gray-900/60"
@@ -376,15 +525,46 @@
                         </div>
                     </div>
 
-                    <div class="flex items-center justify-center gap-4 px-4 py-4">
+                    {{-- Satu tombol jepret di tengah, dikelilingi tombol pemilih kamera
+                         KIRI dan KANAN. Hanya tampil kalau perangkat punya
+                         lebih dari satu kamera. --}}
+                    <div class="flex items-center justify-center gap-5 px-4 py-4">
+                        <button
+                            type="button"
+                            x-show="!photoTaken && cameras.length > 1"
+                            x-on:click="selectCamera(cameras[0].deviceId)"
+                            x-bind:class="activeCameraId === cameras[0]?.deviceId
+                                ? 'bg-primary-600 text-white'
+                                : 'bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-gray-200'"
+                            class="flex h-11 shrink-0 items-center gap-1.5 rounded-full px-4 text-xs font-semibold transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                            :aria-label="cameras[0]?.label || 'Kamera Kiri'"
+                        >
+                            <x-filament::icon icon="heroicon-m-arrow-left" class="h-4 w-4" />
+                            <span>{{ __('Kiri') }}</span>
+                        </button>
+
                         <button
                             type="button"
                             x-show="!photoTaken"
                             x-on:click="capturePhoto()"
-                            class="flex h-14 w-14 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg transition hover:bg-primary-500 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                            class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg transition hover:bg-primary-500 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
                             aria-label="{{ __('Ambil Foto') }}"
                         >
-                            <x-filament::icon icon="heroicon-m-camera" class="h-7 w-7" />
+                            <x-filament::icon icon="heroicon-m-camera" class="h-8 w-8" />
+                        </button>
+
+                        <button
+                            type="button"
+                            x-show="!photoTaken && cameras.length > 1"
+                            x-on:click="selectCamera(cameras[cameras.length - 1].deviceId)"
+                            x-bind:class="activeCameraId === cameras[cameras.length - 1]?.deviceId
+                                ? 'bg-primary-600 text-white'
+                                : 'bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-gray-200'"
+                            class="flex h-11 shrink-0 items-center gap-1.5 rounded-full px-4 text-xs font-semibold transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                            :aria-label="cameras[cameras.length - 1]?.label || 'Kamera Kanan'"
+                        >
+                            <span>{{ __('Kanan') }}</span>
+                            <x-filament::icon icon="heroicon-m-arrow-right" class="h-4 w-4" />
                         </button>
 
                         <template x-if="photoTaken">

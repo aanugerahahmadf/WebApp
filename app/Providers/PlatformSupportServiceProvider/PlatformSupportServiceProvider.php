@@ -28,8 +28,23 @@ class PlatformSupportServiceProvider extends ServiceProvider
             fn (): View => view('User.components.pwa-head.pwa-head'),
         );
 
+        // Platform marker (window.AppPlatform + <html data-platform> + kelas
+        // .native-mobile / .native-desktop).
+        //
+        // Didaftarkan di HEAD_START, BUKAN SCRIPTS_AFTER seperti semula, dan
+        // itu penting: penanda `.native-desktop` dibaca CSS untuk membedakan
+        // "jendela sempit karena desktop app" dari "HP asli". Kalau skrip baru
+        // jalan di akhir <body>, topbar sudah ter-render lebih dulu -- di
+        // jendela desktop app yang dikecilkan, kotak Global Search sempat
+        // melebar versi mobile lalu menyusut sendiri. HEAD_START ada di dalam
+        // <head>, jadi documentElement sudah ada dan kelas terpasang sebelum
+        // <body> di-parse.
+        //
+        // Melewatkan script ke depan tidak merusak apa pun: isinya hanya
+        // menulis window.AppPlatform, atribut <html>, dan cookie (semuanya
+        // dijaga `indexOf` supaya tidak menimpa nilai yang sudah ada).
         FilamentView::registerRenderHook(
-            PanelsRenderHook::SCRIPTS_AFTER,
+            PanelsRenderHook::HEAD_START,
             fn (): View => view('User.components.platform-runtime-script.platform-runtime-script'),
         );
 

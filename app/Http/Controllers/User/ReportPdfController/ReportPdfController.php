@@ -18,6 +18,18 @@ class ReportPdfController extends Controller
             403
         );
 
+        return $this->renderPdf($report);
+    }
+
+    /**
+     * Render PDF laporan.
+     *
+     * Dipisah dari download() supaya panel Welcome -- yang juga melayani tamu --
+     * bisa memakai render yang sama setelah memeriksa kepemilikan lewat
+     * GuestIdentity, bukan menggandakan seluruh blok HTML di bawah.
+     */
+    protected function renderPdf(Report $report): Response
+    {
         $categoryLabels = [
             'bug_report' => __('Lapor Bug'),
             'account_issue' => __('Masalah Akun'),

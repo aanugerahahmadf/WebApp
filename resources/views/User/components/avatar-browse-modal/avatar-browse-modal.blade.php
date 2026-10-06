@@ -24,6 +24,39 @@
         facingMode: 'user',
         photoTaken: false,
 
+        /* Cermin untuk kamera depan (avatar / selfie) -- seperti cermin kaca.
+         * User minta kiri dan kanan ditukar: tangan yang di layar kiri akan
+         * terlihat di kanan, begitulah cermin berperilaku.
+         *
+         * Hanya kamera depan. Kalau user membalik ke kamera belakang,
+         * cermin otomatis mati lewat getter ini.
+         */
+        get mirroredView() {
+            return this.facingMode === 'user';
+        },
+
+        /* Gambar frame video ke canvas. Kalau preview dicermin, hasil jepret
+         * juga dicermin (lewat transform canvas, bukan CSS) supaya yang
+         * disimpan persis sama dengan yang dilihat user. */
+        drawToCanvas(video, canvas) {
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+
+            const ctx = canvas.getContext('2d');
+
+            if (this.mirroredView) {
+                ctx.save();
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
+                ctx.drawImage(video, 0, 0);
+                ctx.restore();
+
+                return;
+            }
+
+            ctx.drawImage(video, 0, 0);
+        },
+
         open() {
             this.isOpen = true;
             this.showCamera = false;
@@ -55,6 +88,41 @@
         },
 
         /* ── camera (WebRTC, desktop + web) ── */
+        /* Daftar kamera fisik di perangkat. Laptop biasanya cuma satu webcam;
+         * HP bisa punya beberapa (depan, belakang, ultra-wide, tele). */
+        cameras: [],
+        activeCameraId: '',
+
+        async loadCameras() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+
+                this.cameras = devices.filter((d) => d.kind === 'videoinput');
+            } catch (e) {
+                this.cameras = [];
+            }
+
+            if (this.cameras.length > 1 && !this.activeCameraId) {
+                this.activeCameraId = this.cameras[0].deviceId;
+            }
+        },
+
+        cameraConstraints() {
+            const base = { width: { ideal: 1280 }, height: { ideal: 720 } };
+
+            if (this.activeCameraId) {
+                return { ...base, deviceId: { exact: this.activeCameraId } };
+            }
+
+            return { ...base, facingMode: this.facingMode };
+        },
+
+        /* Dipakai tombol 'Kiri' dan 'Kanan'. */
+        async selectCamera(deviceId) {
+            this.activeCameraId = deviceId;
+            await this.startCamera();
+        },
+
         async startCamera() {
             this.showCamera = true;
             this.photoTaken = false;
@@ -64,11 +132,13 @@
             try {
                 if (this.stream) { this.stream.getTracks().forEach(t => t.stop()); }
                 this.stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: this.facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+                    video: this.cameraConstraints(),
                     audio: false,
                 });
                 video.srcObject = this.stream;
                 await video.play();
+
+                await this.loadCameras();
             } catch (e) {
                 alert('{{ __('Tidak dapat mengakses kamera. Pastikan izin kamera diberikan.') }}');
                 this.showCamera = false;
@@ -91,9 +161,7 @@
             const video = this.$refs.camVideo;
             const canvas = this.$refs.camCanvas;
             if (!video || !canvas) return;
-            canvas.width  = video.videoWidth  || 640;
-            canvas.height = video.videoHeight || 480;
-            canvas.getContext('2d').drawImage(video, 0, 0);
+            this.drawToCanvas(video, canvas);
             this.stopCamera();
             this.photoTaken = true;
         },
@@ -349,8 +417,10 @@
                             playsinline
                             muted
                             class="h-full w-full object-cover"
-                            style="display:block;"
+                            :style="mirroredView ? 'display:block; transform: scaleX(-1);' : 'display:block;'"
                         ></video>
+                        {{-- Canvas TIDAK pakai scaleX(-1): gambarnya sudah
+                             dicermin waktu drawToCanvas(). --}}
                         <canvas
                             x-ref="camCanvas"
                             x-show="photoTaken"
@@ -370,17 +440,46 @@
                         </div>
                     </div>
 
-                    {{-- Controls --}}
-                    <div class="flex items-center justify-center gap-4 px-4 py-4">
-                        {{-- Capture button (live view) --}}
+                    {{-- Controls: satu tombol jepret di tengah, dikelilingi tombol pemilih
+                         kamera KIRI dan KANAN. Hanya tampil kalau perangkat
+                         punya lebih dari satu kamera. --}}
+                    <div class="flex items-center justify-center gap-5 px-4 py-4">
+                        <button
+                            type="button"
+                            x-show="!photoTaken && cameras.length > 1"
+                            x-on:click="selectCamera(cameras[0].deviceId)"
+                            x-bind:class="activeCameraId === cameras[0]?.deviceId
+                                ? 'bg-primary-600 text-white'
+                                : 'bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-gray-200'"
+                            class="flex h-11 shrink-0 items-center gap-1.5 rounded-full px-4 text-xs font-semibold transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                            :aria-label="cameras[0]?.label || 'Kamera Kiri'"
+                        >
+                            <x-filament::icon icon="heroicon-m-arrow-left" class="h-4 w-4" />
+                            <span>{{ __('Kiri') }}</span>
+                        </button>
+
                         <button
                             type="button"
                             x-show="!photoTaken"
                             x-on:click="capturePhoto()"
-                            class="flex h-14 w-14 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg transition hover:bg-primary-500 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                            class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg transition hover:bg-primary-500 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
                             aria-label="{{ __('Ambil Foto') }}"
                         >
-                            <x-filament::icon icon="heroicon-m-camera" class="h-7 w-7" />
+                            <x-filament::icon icon="heroicon-m-camera" class="h-8 w-8" />
+                        </button>
+
+                        <button
+                            type="button"
+                            x-show="!photoTaken && cameras.length > 1"
+                            x-on:click="selectCamera(cameras[cameras.length - 1].deviceId)"
+                            x-bind:class="activeCameraId === cameras[cameras.length - 1]?.deviceId
+                                ? 'bg-primary-600 text-white'
+                                : 'bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-gray-200'"
+                            class="flex h-11 shrink-0 items-center gap-1.5 rounded-full px-4 text-xs font-semibold transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                            :aria-label="cameras[cameras.length - 1]?.label || 'Kamera Kanan'"
+                        >
+                            <span>{{ __('Kanan') }}</span>
+                            <x-filament::icon icon="heroicon-m-arrow-right" class="h-4 w-4" />
                         </button>
 
                         {{-- Retake + Use (after capture) --}}

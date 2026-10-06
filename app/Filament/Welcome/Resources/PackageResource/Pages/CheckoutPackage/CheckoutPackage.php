@@ -2,8 +2,8 @@
 
 namespace App\Filament\Welcome\Resources\PackageResource\Pages\CheckoutPackage;
 
-use App\Filament\Welcome\Resources\PackageResource\PackageResource;
 use App\Filament\Welcome\Pages\Home\Home;
+use App\Filament\Welcome\Resources\PackageResource\PackageResource;
 use App\Http\Middleware\AuthenticateWelcome\AuthenticateWelcome;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Wizard;
@@ -35,8 +35,8 @@ class CheckoutPackage extends Page implements HasForms
 
         // This URL sits under the storefront's public path, so a guest can type
         // it in directly. Checking out writes an order against a user, so bounce
-        // to login -- Laravel keeps the intended URL and brings the guest back
-        // here once they have signed in.
+        // to the auth landing page (/user/auth, not the form) -- Laravel keeps
+        // the intended URL and brings the guest back here once they have signed in.
         if (! Filament::auth()->check()) {
             $this->redirect(route(AuthenticateWelcome::LOGIN_ROUTE), navigate: false);
 

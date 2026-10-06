@@ -32,6 +32,14 @@
 .netlify
 .idea
 sqlite.db
+# Database SQLite development. Hanya nama `sqlite.db` yang tertangkap aturan di
+# atas; file bernama `database.sqlite` (Laravel default) tidak, padahal isinya
+# data user nyata.
+/database.sqlite
+/database/*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
 .env.backup
 .phpstorm.meta.php
 _ide_helper.php

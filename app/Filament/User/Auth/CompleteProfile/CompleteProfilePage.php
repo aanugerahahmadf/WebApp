@@ -12,7 +12,7 @@ class CompleteProfilePage extends Page
     use HasAuthBreadcrumbs;
     protected static string $view = 'User.auth.complete-profile.complete-profile';
 
-    // Gaya Auth: layout simple fullscreen seperti SignIn/SignUp/VerifyOtp,
+    // Gaya Auth: layout simple fullscreen seperti SignIn/VerifyOtp,
     // tanpa top-navigation. Tetap extends Page agar bisa didaftar via
     // ->pages() (SimplePage murni tidak punya registerRoutes untuk itu).
     protected static string $layout = 'filament-panels::components.layout.simple';

@@ -9,6 +9,7 @@ use App\Models\ReviewVote\ReviewVote;
 use App\Models\User\User;
 use App\Services\ReviewPhotoStorage\ReviewPhotoStorage;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class ReviewSeeder extends Seeder
 {
@@ -88,7 +89,7 @@ class ReviewSeeder extends Seeder
                     'first_name' => $name,
                     'last_name' => 'User',
                     'username' => strtolower($name).'_reviewer',
-                    'password' => bcrypt('password'),
+                    'password' => Hash::make('@ReviewerPass123'),
                     'email_verified_at' => now(),
                     'whatsapp' => '628'.str_pad((string) random_int(100000000, 999999999), 9, '0', STR_PAD_LEFT),
                 ]

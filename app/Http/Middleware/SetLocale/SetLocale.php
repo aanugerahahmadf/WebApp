@@ -19,10 +19,27 @@ class SetLocale
         $locale = null;
 
         // 1. Cek parameter request query/post 'locale' atau 'lang' terlebih dahulu
+        //
+        // NILAI HARUS DISARING lebih dulu. Branch 3 (Accept-Language) sudah
+        // memvalidasi terhadap daftar locale yang didukung, tapi branch 1 tidak.
+        // Sebelumnya `?locale=<apa saja>` langsung dipakai apa adanya --
+        // termasuk nilai yang tidak ada di switcher -- lalu nilai itu ikut
+        // tersimpan di `user_languages`. Akibatnya preferensi yang tersimpan tidak
+        // punya berkas terjemahan, dan setiap pembacaan berikutnya jatuh ke
+        // default Laravel. Query string adalah input pengguna, jadi harus
+        // diperlakukan sebagai input, bukan dipercaya.
+        $supportedLocales = array_keys(config('filament-language-switcher.locals', ['id' => [], 'en' => []]));
+
         if ($request->has('locale')) {
-            $locale = (string) $request->input('locale');
+            $requested = (string) $request->input('locale');
         } elseif ($request->has('lang')) {
-            $locale = (string) $request->input('lang');
+            $requested = (string) $request->input('lang');
+        } else {
+            $requested = null;
+        }
+
+        if ($requested !== null && in_array($requested, $supportedLocales, strict: true)) {
+            $locale = $requested;
         }
 
         // 2. Cek session jika session store aktif pada request ini
@@ -84,8 +101,22 @@ class SetLocale
 
             if ($locale && $locale !== $dbLocale) {
                 try {
+                    // WAJIB `getMorphClass()`, bukan `get_class($user)`.
+                    //
+                    // User memakai trait `LegacyMorphClass`, jadi morph class-nya
+                    // adalah `App\Models\User` -- bukan FQCN sebenarnya
+                    // (`App\Models\User\User`). Relasi `InteractsWithLanguages::lang()`
+                    // mencari dengan `getMorphClass()`, jadi kalau penulisan memakai
+                    // `get_class()` barisnya tersimpan dengan nilai yang berbeda dan
+                    // TIDAK PERNAH ditemukan lagi: pilihan bahasa pengguna hilang
+                    // diam-diam, dan accessor `lang()` selalu mengembalikan default.
+                    // Ditulis dengan `getMorphClass()` supaya baca dan tulis memakai
+                    // kunci yang sama, persis seperti relasi morph yang lain.
                     UserLanguage::updateOrCreate(
-                        ['model_id' => (string) $user->id, 'model_type' => get_class($user)],
+                        [
+                            'model_id' => (string) $user->id,
+                            'model_type' => $user->getMorphClass(),
+                        ],
                         ['lang' => $locale]
                     );
                     if (method_exists($user, 'unsetRelation')) {

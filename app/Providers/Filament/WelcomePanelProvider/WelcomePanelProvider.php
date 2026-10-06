@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament\WelcomePanelProvider;
 
+use App\Filament\User\Auth\Auth\Auth as UserAuth;
 use App\Filament\Welcome\Pages\Home\Home;
 use App\Http\Middleware\AuthenticateWelcome\AuthenticateWelcome;
 use App\Http\Middleware\ClerkFilamentAuth\ClerkFilamentAuth;
@@ -39,18 +40,23 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
  *
  *   ->login() / ->registration() / ->passwordReset() / ->emailVerification()
  *       This panel is the public storefront and the one `/` resolves to, so it
- *       has no auth pages of its own: the Masuk button in the topbar sends
- *       guests to the user panel's login, which is where the account flows
- *       already live -- and from there on to registration, which the topbar
- *       deliberately does not link to.
+ *       has no auth pages of its own: the account icon in the topbar opens a
+ *       dropdown whose single item is Sign In To Account (id: Masuk ke Akun),
+ *       which sends guests to the user panel's guest auth landing page
+ *       (/user/auth) -- that page offers both the email/password form and
+ *       Continue With Google -- and from there on to registration, which the
+ *       topbar deliberately does not link to.
  *
  *   ->userMenuItems()
  *       The custom entries point at App\Filament\User pages and Resources, which
  *       resolve to /user URLs and would navigate out of the Welcome panel. The
- *       stock user menu is not used either: its avatar trigger and its Profile
- *       item are replaced by the Masuk / Beranda buttons rendered from
- *       the global-search.after hook below, and the avatar itself is dropped by
- *       the panel-scoped override in
+ *       stock user menu is not used either: Filament only renders it for a
+ *       signed-in user, and its avatar trigger needs an avatar that a guest does
+ *       not have. Both states come from the global-search.after hook below
+ *       instead -- a user icon whose dropdown holds Sign In To Account for
+ *       guests, and the same icon linking straight to the user panel home
+ *       (/user/home) once signed in -- and Filament's own markup is dropped by the panel-scoped
+ *       override in
  *       resources/views/Welcome/panel-overrides/filament-panels/components/user-menu.blade.php
  *       (registered in AppServiceProvider with the other panel view overrides),
  *       because a render hook cannot remove markup.
@@ -68,19 +74,29 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
  * (Welcome.*, resources/css/Welcome/Welcome.css) because those assets only
  * exist under the Welcome namespace.
  *
- * Where the controls live depends on the surface:
+ * Where the controls live depends on the surface, and the rule is a single
+ * predicate: AppPlatform::switchersBelongInSidebar(). Both hooks below ask
+ * it, so the language and theme switchers can never end up rendered in the
+ * topbar AND the sidebar at the same time.
  *
- *   topbar (Top Navigation bawaan Filament) -- tablet, macOS, desktop, dan
- *     desktop app. Rendered from PanelsRenderHook::GLOBAL_SEARCH_AFTER, which
- *     Filament places inside the topbar's own `ms-auto flex items-center
- *     gap-x-4` row -- the same row as the search box and the user menu.
+ *   topbar (Top Navigation bawaan Filament) -- tablet dan website desktop.
+ *     Language from PanelsRenderHook::GLOBAL_SEARCH_AFTER, which Filament
+ *     places inside the topbar's own `ms-auto flex items-center gap-x-4` row
+ *     -- the same row as the search box and the user menu. Theme from
+ *     Welcome.components.topbar-auth-actions, in that same row.
  *
- *   sidebar (menu geser) -- HP dan app shell Android/iOS. Rendered from
+ *   sidebar (menu geser) -- HP, mobile web Android/iOS, app shell
+ *     Android/iOS, dan APLIKASI DESKTOP. Both switchers, from
  *     PanelsRenderHook::SIDEBAR_NAV_START.
  *
- * The split is AppPlatform::isAnyMobile() plus AppPlatform::isTablet():
- * RuntimePlatform has no tablet case, so an iPad reads as WebsiteIos and
- * would otherwise land in the sidebar even though it has room for the topbar.
+ * Desktop app is in the sidebar group because its switchers already live
+ * there; a second copy in the topbar would be two buttons for one setting.
+ * Note this is not a width test -- the desktop app window has no minimum
+ * width, so a breakpoint would flip it back as soon as the window narrowed.
+ *
+ * RuntimePlatform has no tablet case, so an iPad reads as WebsiteIos;
+ * that is why AppPlatform::isTablet() exists separately and why tablet is
+ * counted as topbar rather than sidebar.
  */
 class WelcomePanelProvider extends PanelProvider
 {
@@ -129,12 +145,15 @@ class WelcomePanelProvider extends PanelProvider
                 // disembunyikan di HP (HP ambil yang dari sidebar di bawah).
                 // Merender temanya di sini akan memunculkan dua tombol.
                 //
-                // Tablet dihitung topbar: RuntimePlatform tidak punya kasus
-                // tablet (iPad = WebsiteIos), jadi isTablet() yang memilah --
-                // iPad & tablet Android ke sini, HP dan app shell ke sidebar.
+                // Syaratnya AppPlatform::switchersBelongInTopbar(), bukan
+                // kondisi yang ditulis di sini: hook topbar dan hook sidebar
+                // memakai predikat yang sama, jadi mustahil switcher bahasa
+                // muncul di KEDUA tempat pada satu permukaan. Aplikasi
+                // desktop, yang switcher temanya sudah dihapus dari topbar,
+                // karena itu juga tidak boleh dapat switcher bahasa di sana.
                 PanelsRenderHook::GLOBAL_SEARCH_AFTER,
                 function (): View|string {
-                    if (AppPlatform::isAnyMobile() && ! AppPlatform::isTablet()) {
+                    if (! AppPlatform::switchersBelongInTopbar()) {
                         return '';
                     }
 
@@ -142,47 +161,79 @@ class WelcomePanelProvider extends PanelProvider
                 },
             )
             ->renderHook(
-                // Switcher tema + bahasa yang sama, dipindah ke menu geser
-                // (sidebar) -- hanya untuk HP dan app shell Android/iOS.
+                // Switcher tema + bahasa di menu geser (sidebar) -- HP,
+                // mobile web Android/iOS, app shell Android/iOS, DAN aplikasi
+                // desktop.
                 //
-                // Syaratnya kebalikan dari hook topbar di atas: mobile shell
-                // DAN bukan tablet. Tablet punya ruang cukup dan tidak punya
-                // sidebar yang bisa dibuka, jadi kontrolnya tetap di topbar.
+                // Syaratnya AppPlatform::switchersBelongInSidebar(), yaitu
+                // kebalikan persis dari hook topbar di atas:
+                //   - HP / mobile web / app shell: topbar menyingkir di bawah
+                //     640px, jadi sidebar yang memegang kendali.
+                //   - APLIKASI DESKTOP: switcher temanya sengaja dihapus dari
+                //     topbar (lihat Welcome.components.topbar-auth-actions),
+                //     dan switcher bahasanya mengikuti supaya tidak muncul dua
+                //     kali. Sidebar yang menanggung keduanya.
+                //   - Tablet dan website desktop: tetap di topbar. Menyalinnya
+                //     ke sidebar di sana hanya membuat dua tempat untuk satu
+                //     pengaturan.
                 //
-                // Dropdown-nya teleport ke <body> jadi aman dari overflow
-                // sidebar.
+                // Kedua switcher teleport ke <body> juga, jadi overflow
+                // sidebar tidak akan memotongnya.
+                //
+                // Hook ini hanya mengembalikan ISI switcher-nya, tanpa wrapper
+                // sendiri: barisnya adalah baris logo di dalam header sidebar,
+                // dan wrapper-nya dimiliki file override sidebar (lihat
+                // resources/views/{Panel}/vendor/filament-panels/components/
+                // sidebar/index.blade.php, blok .fi-sidebar-switchers).
+                //
+                // Kenapa tidak di sini: hook ini deciding KAPAN, file override
+                // yang memutuskan DI MANA. Kalau wrapper-nya ikut di sini,
+                //_switchers_ dan "tepat di sebelah logo" jadi dua keputusan
+                // yang berbeda di dua file, dan menggeser switcher berarti
+                // mengedit view Filament yang bukan milik kita.
                 PanelsRenderHook::SIDEBAR_NAV_START,
                 function (): View|string {
-                    if (! AppPlatform::isAnyMobile() || AppPlatform::isTablet()) {
+                    if (! AppPlatform::switchersBelongInSidebar()) {
                         return '';
                     }
 
-                    return '<div class="flex items-center justify-end gap-2 px-4 pb-2">'
-                        .view('Welcome.components.theme-switcher.theme-switcher')->render()
-                        .view('Welcome.filament-language-switcher.language-switcher.language-switcher')->render()
-                        .'</div>';
+                    return view('Shared.components.theme-switcher.theme-switcher')->render()
+                        .view('Welcome.filament-language-switcher.language-switcher.language-switcher')->render();
                 },
             )
             ->renderHook(
                 'panels::global-search.after',
-                // Masuk / Beranda plus the theme switcher, rendered where Filament
-                // puts the user menu -- except for guests, who never get a user
-                // menu at all, so this cannot hang off USER_MENU_BEFORE. The
-                // avatar itself is dropped by the panel-scoped override in
+                // A user icon + dropdown for guests, the same icon linking to
+                // /user/home for signed-in visitors -- rendered where Filament puts
+                // the user menu, except guests never get a user menu at all, so this
+                // cannot hang off USER_MENU_BEFORE. The avatar itself is dropped by
+                // the panel-scoped override in
                 // resources/views/Welcome/panel-overrides/filament-panels/components/user-menu.blade.php
                 // (registered in AppServiceProvider with the other panel view
                 // overrides), because a render hook cannot remove markup.
                 fn (): View|string => view('Welcome.components.topbar-auth-actions.topbar-auth-actions', [
                     // Panel-explicit: the user panel's account home, not this
                     // panel's dashboard -- a signed-in visitor is already
-                    // standing on the storefront, so "Beranda" has to take them
-                    // somewhere. Matches where Masuk leads.
+                    // standing on the storefront, so the icon has to take them
+                    // somewhere. Direct link, no dropdown: one destination, one
+                    // control. (On /welcome and /welcome/home they never see it
+                    // anyway -- both redirect signed-in visitors here.)
                     //
-                    // No register URL: the topbar offers Masuk only. Registration
-                    // is still one click away, via the "Belum memiliki akun? Daftar"
-                    // link on the login page.
+                    // The guest dropdown item -> /user/auth, the guest auth landing
+                    // page (heading "Welcome Back" + Sign In To Account button +
+                    // Continue With Google), NOT the email/password form directly.
+                    // Di-pointing ke Auth::class (bukan route()) supaya perubahan
+                    // slug/path cuma perlu diubah di satu tempat.
+                    //
+                    // Alias `UserAuth` wajib: file ini juga memakai facade
+                    // Illuminate\Support\Facades\Auth untuk Auth::check() di
+                    // hook bottom-nav, jadi nama `Auth` sudah terpakai.
+                    //
+                    // No register URL: the dropdown offers sign-in only. Registration
+                    // is still one click away, via the "Sudah/Belum memiliki akun"
+                    // link on the auth page.
                     'homeUrl' => route('filament.user.pages.home'),
-                    'loginUrl' => route(AuthenticateWelcome::LOGIN_ROUTE),
+                    'loginUrl' => UserAuth::getUrl(),
                 ]),
             )
             ->renderHook(

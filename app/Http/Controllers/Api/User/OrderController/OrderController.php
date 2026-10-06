@@ -405,6 +405,7 @@ class OrderController extends Controller
                     'message' => __('Nomor Virtual Account berhasil dibuat'),
                     'data' => [
                         'virtual_account_no' => $transaction->virtual_account_no,
+                        'virtual_account_name' => $transaction->virtual_account_name,
                         'virtual_account_expiry' => $transaction->virtual_account_expiry?->format('Y-m-d\TH:i:sP'),
                         'account_number' => config('bri.account_number'),
                         'account_holder' => config('bri.account_holder'),

@@ -1,5 +1,5 @@
 {{--
-    Breadcrumb halaman Auth (Sign In / Sign Up / OTP / Complete Profile).
+    Breadcrumb halaman Auth panel User (Sign In / OTP / Complete Profile).
 
     Dirender lewat render hook `panels::simple-page.start` (lihat
     UserPanelProvider), bukan di-@include dari masing-masing view. Alasannya
@@ -7,6 +7,11 @@
     yang diminta breadcrumb di ATAS logo. Hook tersebut dirender sebelum
     <header> logo, jadi satu titik pas untuk semua halaman auth dan tidak ada
     view yang harus ingat memanggilnya.
+
+    PENTING: hook itu global (nama hook-nya sama untuk semua panel), jadi
+    partial ini bisa dipanggil untuk halaman auth panel lain. Karena itu
+    `method_exists($authPage, 'getBreadcrumbs')` di bawah itu wajib -- bukan
+    gaya penulisan, tapi penjaga agar halaman tanpa crumb tidak jadi 500.
 
     Rata kiri (justify-start) dan sejajar margin kiri kartu.
 
@@ -21,7 +26,19 @@
         $authPage = $this;
     }
 
-    $authCrumbs = $authPage ? $authPage->getBreadcrumbs() : [];
+    // `method_exists()` di sini adalah PENJAGA, bukan sekadar fallback.
+    //
+    // Hook `panels::simple-page.start` bersifat global: Filament merender
+    // layout "simple" untuk halaman auth dari ketiga panel, dan scope yang
+    // dikirim ke hook adalah class halaman (bukan id panel), sehingga hook yang
+    // didaftarkan lewat UserPanelProvider ikut terpanggil di halaman auth panel
+    // lain. `authPage` di sini selalu terisi (Livewire::current()), jadi
+    // fallback `method_exists()` di atas tidak pernah dipakai -- tanpa penjaga
+    // kedua ini, halaman yang tidak punya getBreadcrumbs() (mis. Sign-In panel
+    // admin) melempar BadMethodCallException dan jadi 500.
+    $authCrumbs = $authPage && method_exists($authPage, 'getBreadcrumbs')
+        ? $authPage->getBreadcrumbs()
+        : [];
 @endphp
 @if (! empty($authCrumbs))
     {{-- Opening tag sengaja satu baris: consumer (test, parser) mencari penanda

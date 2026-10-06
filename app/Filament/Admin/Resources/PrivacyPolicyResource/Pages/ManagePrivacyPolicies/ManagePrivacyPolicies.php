@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\PrivacyPolicyResource\Pages\ManagePrivacyPolicies;
 
+use App\Filament\Admin\Concerns\HasMobilePagination\HasMobilePagination;
 use App\Filament\Admin\Exports\PrivacyPolicyExporter\PrivacyPolicyExporter;
 use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\PrivacyPolicyResource\PrivacyPolicyResource;
@@ -12,6 +13,7 @@ use Filament\Resources\Pages\ManageRecords;
 
 class ManagePrivacyPolicies extends ManageRecords
 {
+    use HasMobilePagination;
     use HasDynamicBreadcrumbs;
     protected static string $resource = PrivacyPolicyResource::class;
 

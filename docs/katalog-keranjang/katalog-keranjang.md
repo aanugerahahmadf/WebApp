@@ -26,8 +26,9 @@ Desain ini menjawab error lama `419 Page Expired` saat guest menekan Submit:
    - `modalSubmitAction` dinonaktifkan (`false`), jadi **tidak ada tombol
      Submit Livewire** dan tidak ada `POST /livewire/update`.
    - Sebagai gantinya tampil `extraModalFooterActions` berupa `StaticAction`
-     link biasa (`<a href>`) ke login panel user. Klik = `GET` biasa,
-     sehingga error 419 **mustahil** terjadi.
+     link biasa (`<a href>`) ke halaman auth pertama panel user
+     (`AuthenticateWelcome::LOGIN_ROUTE` = `/user/auth`: Sign In **dan** Google).
+     Klik = `GET` biasa, sehingga error 419 **mustahil** terjadi.
    - `url.intended` disimpan ke session saat modal dibuka, supaya tombol
      kembali di halaman login bisa pulang ke detail yang diklik.
 3. `action()` di server tetap punya guard `redirectGuestToLogin()` sebagai

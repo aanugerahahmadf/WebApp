@@ -42,9 +42,9 @@
                         class="flex items-center justify-center px-5 h-10 text-sm min-w-10 dark:text-[#EDEDEC] text-[#1b1b18] ring-1 ring-gray-950/10 dark:ring-white/20 hover:bg-gray-50 dark:hover:bg-white/5 rounded-md font-medium transition-all active:scale-95 whitespace-nowrap">
                         {{ __('Log in') }}
                     </a>
-                    <a href="{{ \App\Support\AppPlatform\AppPlatform::normalizeUrl(route('filament.user.auth.register')) }}"
+                    <a href="{{ \App\Support\AppPlatform\AppPlatform::normalizeUrl(\App\Filament\User\Auth\Auth\Auth::getUrl()) }}"
                         class="flex items-center justify-center px-5 h-10 text-sm min-w-10 dark:text-[#EDEDEC] text-[#1b1b18] ring-1 ring-gray-950/10 dark:ring-white/20 hover:bg-gray-50 dark:hover:bg-white/5 rounded-md font-medium transition-all active:scale-95 whitespace-nowrap">
-                        {{ __('Register') }}
+                        {{ __('Sign Up') }}
                     </a>
                 @endauth
             </div>

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\ProductResource\Pages\ListProducts;
 
+use App\Filament\Admin\Concerns\HasMobilePagination\HasMobilePagination;
 use App\Filament\Admin\Exports\ProductExporter\ProductExporter;
 use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\ProductResource\ProductResource;
@@ -12,6 +13,7 @@ use Filament\Resources\Pages\ListRecords;
 
 class ListProducts extends ListRecords
 {
+    use HasMobilePagination;
     use HasDynamicBreadcrumbs;
     protected static string $resource = ProductResource::class;
 

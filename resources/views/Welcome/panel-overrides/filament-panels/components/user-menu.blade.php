@@ -6,10 +6,12 @@
     still comes from the package.
 
     Why the menu is dropped instead of restyled: this panel is the storefront a
-    guest lands on, and a guest never gets a user menu at all, so an avatar
-    trigger would leave the signed-in and signed-out states looking nothing
-    alike. The Masuk / Beranda buttons rendered from the
-    'panels::global-search.after' hook cover both states instead.
+    guest lands on, and Filament only renders the user menu for a signed-in
+    user, so an avatar trigger would leave the guest and signed-in states
+    looking nothing alike. The account control rendered from the
+    'panels::global-search.after' hook covers both states instead: a user icon
+    whose dropdown holds Sign In To Account for guests, and the same icon
+    linking straight to /user/home once signed in.
 
     Consequence: the account actions this menu carried (profile, sign out) are
     no longer in this panel's topbar. They remain on the user panel, which is

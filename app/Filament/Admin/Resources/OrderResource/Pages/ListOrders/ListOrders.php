@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources\OrderResource\Pages\ListOrders;
 
 use App\Enums\OrderStatus\OrderStatus;
+use App\Filament\Admin\Concerns\HasMobilePagination\HasMobilePagination;
 use App\Filament\Admin\Exports\OrderExporter\OrderExporter;
 use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\OrderResource\OrderResource;
@@ -15,6 +16,7 @@ use Filament\Resources\Pages\ListRecords;
 
 class ListOrders extends ListRecords
 {
+    use HasMobilePagination;
     use HasDynamicBreadcrumbs;
     protected static string $resource = OrderResource::class;
 

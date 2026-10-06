@@ -31,6 +31,10 @@ import 'emoji-picker-element';
 import '../emoji-picker/emoji-picker';
 import '../pdf-preview-plugin/pdf-preview-plugin';
 import '../firebase-client/firebase-client';
+// Real-time scan coaching, exposed as window.AIScanCoach by the module itself.
+// Imported on every platform so a WebRTC viewfinder still gets guidance if the
+// shell is ever pointed at a page that uses the in-page camera.
+import '../ai-scan-coach/ai-scan-coach';
 
 // No phpProtocolAdapter import: that existed only for NativePHP's iOS build,
 // which served the app over a `php://` scheme. This shell uses plain http(s).

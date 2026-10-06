@@ -8,18 +8,19 @@ use App\Filament\Admin\Auth\OtpEmailVerificationPrompt\OtpEmailVerificationPromp
 use App\Filament\Admin\Auth\OtpRequestPasswordReset\OtpRequestPasswordReset as AdminOtpRequestPasswordReset;
 use App\Filament\Admin\Auth\OtpResetPassword\OtpResetPassword as AdminOtpResetPassword;
 use App\Filament\Admin\Auth\VerifyOtp\VerifyOtp as AdminVerifyOtp;
+use App\Filament\User\Auth\Auth\Auth as UserAuth;
 use App\Filament\User\Auth\SignIn\SignIn as UserSignIn;
 use App\Filament\User\Auth\OtpEmailVerificationPrompt\OtpEmailVerificationPrompt as UserOtpEmailVerificationPrompt;
 use App\Filament\User\Auth\OtpRequestPasswordReset\OtpRequestPasswordReset as UserOtpRequestPasswordReset;
 use App\Filament\User\Auth\OtpResetPassword\OtpResetPassword as UserOtpResetPassword;
-use App\Filament\User\Auth\SignUp\SignUp as UserSignUp;
+// use App\Filament\User\Auth\SignUp\SignUp as UserSignUp;
 use App\Filament\User\Auth\VerifyOtp\VerifyOtp as UserVerifyOtp;
-use App\Filament\User\Pages\SettingsPage\PasswordSecurityPage\PasswordSecurityPage;
+use App\Filament\User\Pages\SettingsPage\PasswordSecurityPage\SecurityCheck\SignInActivity\SignInActivity;
 use App\Livewire\Admin\Messages\Inbox\Inbox as AdminMessagesInbox;
 use App\Livewire\Admin\Messages\Messages\Messages as AdminMessagesContent;
 use App\Livewire\Admin\Messages\Search\Search as AdminMessagesSearch;
 use App\Livewire\Admin\UsernameComponent\UsernameComponent;
-use App\Livewire\User\BrowserSessionsComponent\BrowserSessionsComponent;
+use App\Filament\User\Pages\SettingsPage\PasswordSecurityPage\SecurityCheck\SignInActivity\BrowserSessionsComponent\BrowserSessionsComponent;
 use App\Livewire\User\DeleteAccountComponent\DeleteAccountComponent;
 use App\Livewire\User\EditPasswordComponent\EditPasswordComponent;
 use App\Livewire\User\MobileSettingsComponent\MobileSettingsComponent;
@@ -79,6 +80,7 @@ use App\Services\GeoLocationService\GeoLocationService;
 use App\Services\PlatformNotificationService\PlatformNotificationService;
 use App\Support\AppPlatform\AppPlatform;
 use App\Support\PlatformContext\PlatformContext;
+use App\Support\PasswordPolicy\PasswordPolicy;
 use Filament\Actions\Exports\ExportColumn;
 use Filament\Forms\Components\Field;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse as LoginResponseContract;
@@ -244,6 +246,22 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Default aturan kata sandi untuk SELURUH aplikasi.
+        //
+        // Tanpa baris ini, `Password::default()` -- yang dipakai tiga
+        // EditPasswordComponent, halaman reset kata sandi Filament, dan
+        // beberapa form internal lain -- jatuh ke default Laravel yaitu
+        // Password::min(8). Itu sebabnya kebijakan "minimal 12 karakter +
+        // huruf besar/kecil/angka/simbol" hanya berlaku di sebagian form,
+        // sementara halaman "Ubah Kata Sandi" menerima "password".
+        //
+        // Satu baris ini menutup semua celah itu tanpa harus menyentuh
+        // tiap komponen satu per satu. Sumber kebenaran tetap
+        // App\Support\PasswordPolicy\PasswordPolicy.
+        \Illuminate\Validation\Rules\Password::defaults(
+            fn (): \Illuminate\Validation\Rules\Password => PasswordPolicy::filamentRules()
+        );
+
         // Models use a one-folder-per-class structure (App\Models\X\X), so the
         // framework's default factory<->model guessing must be re-mapped.
         Factory::guessFactoryNamesUsing(function (string $modelName): string {
@@ -448,7 +466,7 @@ class AppServiceProvider extends ServiceProvider
                             'location' => $locationText,
                             'time' => now()->format('d M Y H:i:s'),
                         ]),
-                        PasswordSecurityPage::getUrl(['section' => 'sign-in-activity'], panel: 'user'),
+                        SignInActivity::getUrl(panel: 'user'),
                         __('Lihat aktivitas Sign In'),
                     );
                 }
@@ -482,8 +500,13 @@ class AppServiceProvider extends ServiceProvider
         Livewire::component('app.filament.admin.auth.otp-reset-password', AdminOtpResetPassword::class);
         Livewire::component('app.filament.admin.auth.verify-otp', AdminVerifyOtp::class);
         Livewire::component('app.filament.admin.auth.otp-email-verification-prompt', AdminOtpEmailVerificationPrompt::class);
+        Livewire::component('app.filament.user.auth.auth', UserAuth::class);
         Livewire::component('app.filament.user.auth.sign-in', UserSignIn::class);
-        Livewire::component('app.filament.user.auth.sign-up', UserSignUp::class);
+        // Alias Sign Up dikomentari (kode aslinya, tidak dihapus): pendaftaran
+        // email/password dinonaktifkan di UserPanelProvider karena
+        // `->registration()` tidak dipanggil. Baris di bawah tetap utuh supaya
+        // hidupkan lagi cukup hapus tanda `//`-nya.
+        // Livewire::component('app.filament.user.auth.sign-up', UserSignUp::class);
         Livewire::component('app.filament.user.auth.otp-request-password-reset', UserOtpRequestPasswordReset::class);
         Livewire::component('app.filament.user.auth.otp-reset-password', UserOtpResetPassword::class);
         Livewire::component('app.filament.user.auth.verify-otp', UserVerifyOtp::class);

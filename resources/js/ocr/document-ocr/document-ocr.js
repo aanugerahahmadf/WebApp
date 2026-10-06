@@ -519,3 +519,19 @@ export function mapOcrToFormState(parsed) {
 }
 
 export { splitName, toIsoDate, normalizeGender, matchOption };
+
+/**
+ * Expose OCR helpers globally (dipakai document-scan-modal lewat window.OCR).
+ */
+if (typeof window !== 'undefined') {
+    window.OCR = {
+        ...(window.OCR || {}),
+        recognizeText,
+        parseKtpFields,
+        parseNpwpFields,
+        parseSimFields,
+        parsePassportFields,
+        parseDocument,
+        mapOcrToFormState,
+    };
+}

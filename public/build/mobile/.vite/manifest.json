@@ -4,7 +4,7 @@
     "name": "popper"
   },
   "resources/css/Admin/Admin.css": {
-    "file": "assets/Admin-D5SDrSlj.css",
+    "file": "assets/Admin-X9VkQ_Jd.css",
     "src": "resources/css/Admin/Admin.css",
     "isEntry": true,
     "name": "Admin",
@@ -13,7 +13,7 @@
     ]
   },
   "resources/css/User/User.css": {
-    "file": "assets/User-BKH7gLrV.css",
+    "file": "assets/User-B7xQpdx3.css",
     "src": "resources/css/User/User.css",
     "isEntry": true,
     "name": "User",
@@ -22,7 +22,7 @@
     ]
   },
   "resources/css/Welcome/Welcome.css": {
-    "file": "assets/Welcome-Er9iJrCE.css",
+    "file": "assets/Welcome-DYXlFtzN.css",
     "src": "resources/css/Welcome/Welcome.css",
     "isEntry": true,
     "name": "Welcome",
@@ -30,20 +30,119 @@
       "Welcome.css"
     ]
   },
+  "resources/js/advanced-file-upload/advanced-file-upload.js": {
+    "file": "assets/advanced-file-upload-l0sNRNKZ.js",
+    "name": "advanced-file-upload",
+    "src": "resources/js/advanced-file-upload/advanced-file-upload.js",
+    "isEntry": true
+  },
+  "resources/js/ai-scan-coach/ai-scan-coach.js": {
+    "file": "assets/ai-scan-coach-BPMeFYNO.js",
+    "name": "ai-scan-coach",
+    "src": "resources/js/ai-scan-coach/ai-scan-coach.js",
+    "isEntry": true
+  },
   "resources/js/app-mobile/app-mobile.js": {
-    "file": "assets/app-mobile-D4K38FzF.js",
+    "file": "assets/app-mobile-BZtpvauC.js",
     "name": "app-mobile",
     "src": "resources/js/app-mobile/app-mobile.js",
     "isEntry": true,
     "imports": [
-      "resources/js/echo/echo.js",
-      "_popper-BwhhPXy0.js"
+      "resources/js/bootstrap/bootstrap.js",
+      "resources/js/sidebar-auto-expand/sidebar-auto-expand.js",
+      "_popper-BwhhPXy0.js",
+      "resources/js/emoji-picker/emoji-picker.js",
+      "resources/js/firebase-client/firebase-client.js",
+      "resources/js/ai-scan-coach/ai-scan-coach.js",
+      "resources/js/echo/echo.js"
     ]
+  },
+  "resources/js/app/app.js": {
+    "file": "assets/app-BbrGJadP.js",
+    "name": "app",
+    "src": "resources/js/app/app.js",
+    "isEntry": true,
+    "imports": [
+      "resources/js/bootstrap/bootstrap.js",
+      "resources/js/echo/echo.js",
+      "resources/js/sidebar-auto-expand/sidebar-auto-expand.js",
+      "_popper-BwhhPXy0.js",
+      "resources/js/emoji-picker/emoji-picker.js"
+    ]
+  },
+  "resources/js/bootstrap/bootstrap.js": {
+    "file": "assets/bootstrap-x6CIbyzl.js",
+    "name": "bootstrap",
+    "src": "resources/js/bootstrap/bootstrap.js",
+    "isEntry": true,
+    "imports": [
+      "resources/js/echo/echo.js"
+    ]
+  },
+  "resources/js/checkout-address/checkout-address.js": {
+    "file": "assets/checkout-address-3x0oADZF.js",
+    "name": "checkout-address",
+    "src": "resources/js/checkout-address/checkout-address.js",
+    "isEntry": true
   },
   "resources/js/echo/echo.js": {
     "file": "assets/echo-BXRmpxmk.js",
     "name": "echo",
     "src": "resources/js/echo/echo.js",
+    "isEntry": true
+  },
+  "resources/js/emoji-picker/emoji-picker.js": {
+    "file": "assets/emoji-picker-fDxZPez6.js",
+    "name": "emoji-picker",
+    "src": "resources/js/emoji-picker/emoji-picker.js",
+    "isEntry": true,
+    "imports": [
+      "_popper-BwhhPXy0.js"
+    ]
+  },
+  "resources/js/firebase-auth/firebase-auth.js": {
+    "file": "assets/firebase-auth-CFiQDKiH.js",
+    "name": "firebase-auth",
+    "src": "resources/js/firebase-auth/firebase-auth.js",
+    "isEntry": true,
+    "imports": [
+      "resources/js/firebase/firebase.js"
+    ]
+  },
+  "resources/js/firebase-client/firebase-client.js": {
+    "file": "assets/firebase-client-EtqMirI1.js",
+    "name": "firebase-client",
+    "src": "resources/js/firebase-client/firebase-client.js",
+    "isEntry": true
+  },
+  "resources/js/firebase/firebase.js": {
+    "file": "assets/firebase-Ca21zC2B.js",
+    "name": "firebase",
+    "src": "resources/js/firebase/firebase.js",
+    "isEntry": true
+  },
+  "resources/js/ocr/document-ocr/document-ocr.js": {
+    "file": "assets/document-ocr-Cikpijko.js",
+    "name": "document-ocr",
+    "src": "resources/js/ocr/document-ocr/document-ocr.js",
+    "isEntry": true
+  },
+  "resources/js/ocr/scanner-ui/scanner-ui.js": {
+    "file": "assets/scanner-ui-B_OH2Bw1.js",
+    "name": "scanner-ui",
+    "src": "resources/js/ocr/scanner-ui/scanner-ui.js",
+    "isEntry": true
+  },
+  "resources/js/pdf-preview-plugin/pdf-preview-plugin.js": {
+    "file": "assets/pdf-preview-plugin-l0sNRNKZ.js",
+    "name": "pdf-preview-plugin",
+    "src": "resources/js/pdf-preview-plugin/pdf-preview-plugin.js",
+    "isEntry": true
+  },
+  "resources/js/sidebar-auto-expand/sidebar-auto-expand.js": {
+    "file": "assets/sidebar-auto-expand-Ce1oDmhy.js",
+    "name": "sidebar-auto-expand",
+    "src": "resources/js/sidebar-auto-expand/sidebar-auto-expand.js",
     "isEntry": true
   },
   "vendor/tangodev-it/filament-emoji-picker/resources/js/index.js": {

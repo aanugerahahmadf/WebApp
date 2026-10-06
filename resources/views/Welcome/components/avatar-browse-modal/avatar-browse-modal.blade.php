@@ -24,6 +24,16 @@
         facingMode: 'user',
         photoTaken: false,
 
+        /* Cermin untuk kamera depan (avatar / selfie).
+         *
+         * Tanpa scaleX(-1), preview depan tidak seperti cermin: user bergeser
+         * ke kiri, di layar ikut ke kiri. Seperti cermin kaca, arah di preview
+         * harus berlawanan supaya user bisa memosisikan wajahnya.
+         *
+         * False saat kamera belakang aktif.
+         */
+        mirroredView: true,
+
         open() {
             this.isOpen = true;
             this.showCamera = false;
@@ -84,6 +94,12 @@
 
         flipCamera() {
             this.facingMode = this.facingMode === 'user' ? 'environment' : 'user';
+
+            /* Cermin hanya relevan untuk kamera depan. Kalau user pindah ke
+             * kamera belakang, scaleX(-1) harus mati -- kalau tidak, foto yang
+             * terbalik.
+             */
+            this.mirroredView = this.facingMode === 'user';
             this.startCamera();
         },
 
@@ -349,12 +365,13 @@
                             playsinline
                             muted
                             class="h-full w-full object-cover"
-                            style="display:block;"
+                            :style="mirroredView ? 'display:block; transform: scaleX(-1);' : 'display:block;'"
                         ></video>
                         <canvas
                             x-ref="camCanvas"
                             x-show="photoTaken"
                             class="h-full w-full object-cover"
+                            :style="mirroredView ? 'transform: scaleX(-1);' : ''"
                             style="display:none;"
                         ></canvas>
                         {{-- Loading indicator while camera starts --}}

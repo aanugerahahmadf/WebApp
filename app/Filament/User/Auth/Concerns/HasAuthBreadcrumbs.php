@@ -27,14 +27,30 @@ trait HasAuthBreadcrumbs
     }
 
     /**
-     * Path halaman Sign-Up panel user, diturunkan dari panel (path +
-     * slug route registration) — alasan yang sama seperti authPagePath().
+     * Path URL pendaftaran yang SUDAH DIMATIKAN, dipakai sebagai penjaga: URL
+     * lama ini masih bisa muncul di referer atau `url.intended` (bookmark,
+     * history browser), dan tidak boleh dipakai sebagai tujuan navigasi.
+     *
+     * Daftar memuat dua path karena keduanya pernah jadi URL pendaftaran:
+     * `/user/signup` (slug lama, `registrationRouteSlug('signup')`) dan
+     * `/user/register` (slug default Filament yang aktif kembali begitu
+     * `->registration()` tidak lagi dipanggil di `UserPanelProvider`).
+     * `App\Filament\User\Auth\SignUp\SignUp` beserta view-nya MASIH ADA di
+     * repo -- hanya panggilannya yang dikomentari, jadi begitu
+     * `->registration()` dihidupkan lagi ketiga nama ini harus ikut dicek:
+     * saat itu daftar ini harus dikosongkan, atau crumb akan menunjuk ke
+     * halaman yang justru sudah hidup kembali.
+     *
+     * @return array<int, string>
      */
-    protected function registrationPagePath(): string
+    protected function retiredRegisterPaths(): array
     {
         $panel = Filament::getPanel('user');
 
-        return '/'.$panel->getPath().$panel->getRegistrationRouteSlug();
+        return [
+            '/'.$panel->getPath().'/signup',
+            '/'.$panel->getPath().$panel->getRegistrationRouteSlug(),
+        ];
     }
 
     public function getBreadcrumbs(): array
@@ -99,9 +115,28 @@ trait HasAuthBreadcrumbs
                 return ['url' => route('filament.user.auth.login'), 'label' => __('Sign In')];
             }
 
-            if (str_contains($url, $this->registrationPagePath())) {
-                return ['url' => route('filament.user.auth.register'), 'label' => __('Sign Up')];
-            }
+            // Sign Up DINONAKTIFKAN di panel User: `->registration()` tidak
+            // dipanggil di UserPanelProvider (barisnya dikomentari), dan
+            // `SignIn::registerAction()` di-`->hidden()`. Class
+            // app/Filament/User/Auth/SignUp tidak dihapus -- masih ada di repo,
+            // hanya tidak terdaftar sebagai halaman.
+            //
+            // Cabang ini dulu memanggil route('filament.user.auth.register')
+            // tanpa mengecek, padahal route itu tidak ada. Tamu yang
+            // datang dengan referer /user/signup (bookmark lama atau history
+            // browser) membuat halaman auth melempar RouteNotFoundException,
+            // jadi seluruh halaman jadi 500 -- bukan cuma crumb yang salah.
+            //
+            // Karena tidak ada halaman Sign Up untuk dituju, cabangnya
+            // dihapus, bukan diberi fallback. Referer lama untuk tamu berakhir
+            // tanpa parent crumb; untuk user yang sudah login ia jatuh ke
+            // cabang "/user/ + sudah login" di bawah dengan label "Kembali",
+            // yang jujur karena memang tidak ada Sign Up yang hidup.
+            //
+            // Kalau pendaftaran dihidupkan lagi, cabangnya boleh dikembalikan
+            // bersama `->registration()`; jangan hanya memanggil route()
+            // tanpa mendaftarkan halamannya, karena crash yang sama akan
+            // kembali.
 
             if (str_contains($url, 'complete-profile')) {
                 return ['url' => route('filament.user.pages.complete-profile'), 'label' => __('Lengkapi Profil Anda')];

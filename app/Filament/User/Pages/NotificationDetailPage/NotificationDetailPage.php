@@ -4,7 +4,7 @@ namespace App\Filament\User\Pages\NotificationDetailPage;
 
 use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\User\Pages\Home\Home;
-use App\Filament\User\Pages\SettingsPage\PasswordSecurityPage\PasswordSecurityPage;
+use App\Filament\User\Pages\SettingsPage\PasswordSecurityPage\SecurityCheck\SignInActivity\SignInActivity;
 use App\Models\User\User;
 use Filament\Actions\Action;
 use Filament\Pages\Page;
@@ -104,8 +104,7 @@ class NotificationDetailPage extends Page
             $actions[] = Action::make('viewSignInActivity')
                 ->label(__('Lihat aktivitas Sign In'))
                 ->icon('heroicon-m-shield-check')
-                ->url(PasswordSecurityPage::getUrl([
-                    'section' => 'sign-in-activity',
+                ->url(SignInActivity::getUrl([
                     'returnTo' => static::getUrl(['id' => $this->notificationId], panel: 'user'),
                 ], panel: 'user'));
         }
@@ -124,9 +123,7 @@ class NotificationDetailPage extends Page
 
     private function withNotificationReturnUrl(?string $actionUrl): ?string
     {
-        $signInActivityUrl = PasswordSecurityPage::getUrl([
-            'section' => 'sign-in-activity',
-        ], panel: 'user');
+        $signInActivityUrl = SignInActivity::getUrl(panel: 'user');
 
         if (! $actionUrl || ! str_starts_with($actionUrl, $signInActivityUrl)) {
             return $actionUrl;

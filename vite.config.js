@@ -55,9 +55,58 @@ export default defineConfig(({ mode }) => {
 
     const activePlatform = validPlatforms.includes(platform) ? platform : 'web';
 
+    // ─── Entry points ────────────────────────────────────────────────────
+    // Setiap modul di bawah resources/js didaftarkan sebagai entry point Vite
+    // sendiri, bukan sekadar di-import oleh entry platform. Dengan begitu satu
+    // modul pun bisa diminta sendiri dari Blade lewat
+    // @vite('resources/js/...') dan akan ketemu di manifest.
+    //
+    // Ini wajib, bukan hiasan: social-buttons.blade.php memanggil
+    // @vite('resources/js/firebase-auth/firebase-auth.js'). Kalau path itu
+    // bukan entry point, ViteManifestNotFoundException dilempar dan halaman
+    // social-buttons gagal render.
+    //
+    // Mendaftarkan modul dua kali -- sebagai entry DAN sebagai import dari entry
+    // lain -- aman di sini. Rollup hoist modul bersama ke satu chunk sendiri
+    // dan browser mengevaluasinya sekali, jadi efek samping (Echo,
+    // initializeApp, penugasan window.*) tidak terpicu dua kali.
+    const cssEntries = [
+        'resources/css/User/User.css',
+        'resources/css/Welcome/Welcome.css',
+        'resources/css/Admin/Admin.css',
+    ];
+
+    const vendorEntries = [
+        './vendor/tangodev-it/filament-emoji-picker/resources/js/index.js',
+    ];
+
+    // Satu entry per folder di resources/js.
+    const moduleEntries = [
+        'resources/js/advanced-file-upload/advanced-file-upload.js',
+        'resources/js/ai-scan-coach/ai-scan-coach.js',
+        'resources/js/app/app.js',
+        'resources/js/bootstrap/bootstrap.js',
+        'resources/js/checkout-address/checkout-address.js',
+        'resources/js/echo/echo.js',
+        'resources/js/emoji-picker/emoji-picker.js',
+        'resources/js/firebase/firebase.js',
+        'resources/js/firebase-auth/firebase-auth.js',
+        'resources/js/firebase-client/firebase-client.js',
+        'resources/js/ocr/document-ocr/document-ocr.js',
+        'resources/js/ocr/scanner-ui/scanner-ui.js',
+        'resources/js/pdf-preview-plugin/pdf-preview-plugin.js',
+        'resources/js/sidebar-auto-expand/sidebar-auto-expand.js',
+    ];
+
+    // Entry shell per platform.
+    const platformEntries = {
+        web:     'resources/js/app-web/app-web.js',
+        mobile:  'resources/js/app-mobile/app-mobile.js',
+        desktop: 'resources/js/app-desktop/app-desktop.js',
+    };
+
     // ─── Per-platform build descriptors ──────────────────────────────────
     // Each descriptor declares:
-    //   input        — Vite / laravel-vite-plugin entry points
     //   buildDir     — relative path inside public/ (used by laravel-vite-plugin)
     //   publicBuild  — full path from project root (used by build.outDir)
     //   hotFile      — path of the "hot" file used by Laravel's asset() helper
@@ -68,40 +117,16 @@ export default defineConfig(({ mode }) => {
     // Vite plugin, no `php:` protocol adapter, and no per-OS hot file.
     const platformConfigs = {
         web: {
-            input: [
-                'resources/css/User/User.css',
-                'resources/css/Welcome/Welcome.css',
-                'resources/css/Admin/Admin.css',
-                'resources/js/app-web/app-web.js',
-                './vendor/tangodev-it/filament-emoji-picker/resources/js/index.js',
-                'resources/js/echo/echo.js',
-            ],
             buildDir:   'build/web',
             publicBuild: 'public/build/web',
             hotFile:    'public/hot',
         },
         mobile: {
-            input: [
-                'resources/css/User/User.css',
-                'resources/css/Welcome/Welcome.css',
-                'resources/css/Admin/Admin.css',
-                'resources/js/app-mobile/app-mobile.js',
-                './vendor/tangodev-it/filament-emoji-picker/resources/js/index.js',
-                'resources/js/echo/echo.js',
-            ],
             buildDir:   'build/mobile',
             publicBuild: 'public/build/mobile',
             hotFile:    'public/hot',
         },
         desktop: {
-            input: [
-                'resources/css/User/User.css',
-                'resources/css/Welcome/Welcome.css',
-                'resources/css/Admin/Admin.css',
-                'resources/js/app-desktop/app-desktop.js',
-                './vendor/tangodev-it/filament-emoji-picker/resources/js/index.js',
-                'resources/js/echo/echo.js',
-            ],
             buildDir:   'build/desktop',
             publicBuild: 'public/build/desktop',
             hotFile:    'public/hot',
@@ -110,13 +135,23 @@ export default defineConfig(({ mode }) => {
 
     const config = platformConfigs[activePlatform];
 
-    console.log(`[vite.config] Building for platform: ${activePlatform}`);
+    const input = [
+        ...cssEntries,
+        platformEntries[activePlatform],
+        ...vendorEntries,
+        ...moduleEntries,
+    ];
+
+    console.log(
+        `[vite.config] Building for platform: ${activePlatform} ` +
+        `(${input.length} entries)`
+    );
 
     // ─── Vite configuration ───────────────────────────────────────────────
     return {
         plugins: [
             laravel({
-                input:            config.input,
+                input,
                 refresh:          true,
                 hotFile:          config.hotFile,
                 // buildDirectory is relative to public/, e.g. "build/web"

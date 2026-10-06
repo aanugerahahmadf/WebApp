@@ -2,6 +2,7 @@
 
 namespace App\Filament\User\Auth\SignUp;
 
+use App\Filament\User\Auth\Auth\Auth;
 use App\Filament\User\Auth\Concerns\HasAuthBreadcrumbs;
 use App\Forms\Components\BirthPlaceDatePicker\BirthPlaceDatePicker;
 use App\Forms\Components\CalendarPicker\CalendarPicker;
@@ -31,7 +32,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Auth\Register as BaseRegister;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
+use App\Support\PasswordPolicy\PasswordPolicy;
 use Illuminate\Validation\ValidationException;
 use Laravolt\Indonesia\Models\City as IndonesiaCity;
 use Laravolt\Indonesia\Models\District as IndonesiaDistrict;
@@ -64,6 +65,30 @@ class SignUp extends BaseRegister
         return $this->getHeading();
     }
 
+    /**
+     * Parent crumb Sign-Up adalah halaman auth (`/user/auth`), bukan Welcome
+     * Home -- sama seperti SignIn.
+     *
+     * Yang di-override di sini adalah perilaku default trait
+     * HasAuthBreadcrumbs, yang menebak parent dari "asal klik"
+     * (`url()->previous()` / `url.intended`). Tebakan itu benar untuk halaman
+     * OTP (yangelying benar-benar datang dari Lupa Kata Sandi), tapi untuk Sign
+     * Up hasilnya selalu "Beranda" atau tidak ada sama sekali, sementara yang
+     * benar sudah pasti: cabangnya halaman auth.
+     *
+     * crumb parent memakai Auth::crumbLabel() ("Welcome Back"), bukan
+     * getHeading() halaman ini ("Sign Up"), supaya crumb di halaman ini tetap
+     * "Welcome Back / Sign Up" -- nama cabangnya sendiri, bukan nama halaman
+     * induknya.
+     */
+    public function getBreadcrumbs(): array
+    {
+        return [
+            Auth::getUrl() => Auth::crumbLabel(),
+            $this->getAuthBreadcrumbsCurrentLabel(),
+        ];
+    }
+
     protected function getEmailFormComponent(): Component
     {
         return parent::getEmailFormComponent()
@@ -74,7 +99,7 @@ class SignUp extends BaseRegister
     {
         return $form
             ->schema([
-                // ── Foto Profil ─────────────────────────────────────────────
+                // â”€â”€ Foto Profil â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 Section::make(__('Foto Profil'))
                     ->icon('heroicon-o-camera')
                     ->description(__('Foto profil Anda. Buka kamera atau pilih dari galeri.'))
@@ -99,7 +124,7 @@ class SignUp extends BaseRegister
                     ])
                     ->columns(1),
 
-                // ── Akun ────────────────────────────────────────────────────
+                // â”€â”€ Akun â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 Section::make(__('Akun'))
                     ->icon('heroicon-o-user-circle')
                     ->description(__('Username, email, dan kata sandi untuk masuk.'))
@@ -124,12 +149,7 @@ class SignUp extends BaseRegister
                             ->password()
                             ->revealable()
                             ->required()
-                            ->rule(Password::min(12)
-                                ->letters()
-                                ->mixedCase()
-                                ->numbers()
-                                ->symbols()
-                            )
+                            ->rule(PasswordPolicy::filamentRules())
                             ->same('password_confirmation')
                             ->helperText(__('Minimal 12 karakter: huruf besar, huruf kecil, angka, dan simbol.'))
                             ->validationAttribute(__('Kata Sandi'))
@@ -144,7 +164,7 @@ class SignUp extends BaseRegister
                     ])
                     ->columns(1),
 
-                // ── Nama Lengkap ────────────────────────────────────────────
+                // â”€â”€ Nama Lengkap â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 Section::make(__('Nama Lengkap'))
                     ->icon('heroicon-o-identification')
                     ->description(__('Nama sesuai dokumen identitas Anda.'))
@@ -181,7 +201,7 @@ class SignUp extends BaseRegister
                     ])
                     ->columns(1),
 
-                // ── Nomor WhatsApp ──────────────────────────────────────────
+                // â”€â”€ Nomor WhatsApp â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 Section::make(__('Nomor WhatsApp'))
                     ->icon('heroicon-o-chat-bubble-left-ellipsis')
                     ->description(__('Untuk notifikasi pembayaran via WhatsApp.'))
@@ -190,7 +210,7 @@ class SignUp extends BaseRegister
                     ])
                     ->columns(1),
 
-                // ── Tempat & Tanggal Lahir ──────────────────────────────────
+                // â”€â”€ Tempat & Tanggal Lahir â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 Section::make(__('Tempat & Tanggal Lahir'))
                     ->icon('heroicon-o-map-pin')
                     ->schema([
@@ -201,7 +221,7 @@ class SignUp extends BaseRegister
                             ->columnSpanFull(),
                     ]),
 
-                // ── Identitas & Dokumen ─────────────────────────────────────
+                // â”€â”€ Identitas & Dokumen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 Section::make(__('Identitas & Dokumen'))
                     ->icon('heroicon-o-shield-check')
                     ->description(__('Pilih jenis identitas, lalu scan atau unggah foto dokumen dan selfie.'))
@@ -275,7 +295,7 @@ class SignUp extends BaseRegister
                     ])
                     ->columns(1),
 
-                // ── Alamat ──────────────────────────────────────────────────
+                // â”€â”€ Alamat â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 Section::make(__('Alamat'))
                     ->icon('heroicon-o-home')
                     ->schema([
@@ -543,7 +563,7 @@ class SignUp extends BaseRegister
                                         $p['postal_code'],
                                         $search
                                     )))
-                                    ->mapWithKeys(fn ($p) => [$p['postal_code'] => $p['postal_code'].' — '.$p['place_name']])
+                                    ->mapWithKeys(fn ($p) => [$p['postal_code'] => $p['postal_code'].' â€” '.$p['place_name']])
                                     ->toArray();
                                 if (empty($results) && $search) {
                                     return [$search => $search];
@@ -562,7 +582,7 @@ class SignUp extends BaseRegister
                     ])
                     ->columns(1),
 
-                // ── Data KYC ────────────────────────────────────────────────
+                // â”€â”€ Data KYC â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 Section::make(__('Data KYC'))
                     ->icon('heroicon-o-user-group')
                     ->description(__('Lengkapi data berikut sesuai dokumen. Dipakai verifikasi identitas.'))
@@ -653,7 +673,7 @@ class SignUp extends BaseRegister
                     ])
                     ->columns(1),
 
-                // ── Verifikasi Wajah ────────────────────────────────────────
+                // â”€â”€ Verifikasi Wajah â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 Section::make(__('Verifikasi Wajah'))
                     ->icon('heroicon-o-face-smile')
                     ->description(__('Scan wajah Anda untuk verifikasi identitas.')
@@ -672,7 +692,7 @@ class SignUp extends BaseRegister
                         View::make('User.social-buttons.agreement-checkboxes.agreement-checkboxes')
                             ->columnSpanFull(),
                         View::make('User.social-buttons.auth-buttons.auth-buttons')
-                            ->viewData(['authMode' => 'register'])
+                            ->viewData(['authMode' => 'signup'])
                             ->columnSpanFull(),
                     ])
                     ->columns(1),
@@ -728,7 +748,7 @@ class SignUp extends BaseRegister
             $data['last_name'] ?? null,
         );
 
-        // Parse "Kota, DD/MM/YYYY" → birth_place + birth_date
+        // Parse "Kota, DD/MM/YYYY" â†’ birth_place + birth_date
         if (! empty($data['birth_place_date'])) {
             $parts               = array_map('trim', explode(',', $data['birth_place_date'], 2));
             $data['birth_place'] = $parts[0] ?? null;
@@ -817,13 +837,14 @@ class SignUp extends BaseRegister
             'ip_address' => $ip,
         ]);
 
-        if (! empty($data['selfie_photo']) || ! empty($data['face_scan_photo'])) {
-            $user->forceFill(['identity_verified_at' => now()])->save();
-        }
-
-        if (! empty($data['face_scan_photo'])) {
-            $user->forceFill(['liveness_completed' => true])->save();
-        }
+        /* PENTING: mengunggah foto wajah BUKAN berarti identitas terverifikasi.
+         *
+         * Versi lama menandai akun verified begitu ada file selfie/foto wajah
+         * yang tidak kosong -- sehingga siapa pun bisa melewati "verifikasi
+         * identitas" hanya dengan mengunggah gambar apa saja. Status identitas
+         * kini hanya boleh diisi oleh verifyFaceAi() setelah FaceNet benar-benar
+         * mencocokkan wajah dengan dokumen; lihat IdentityVerification. */
+        $user->forceFill(['liveness_completed' => false])->save();
 
         $customerRole = Role::where('name', 'customer')->first(['*']);
         if ($customerRole) {

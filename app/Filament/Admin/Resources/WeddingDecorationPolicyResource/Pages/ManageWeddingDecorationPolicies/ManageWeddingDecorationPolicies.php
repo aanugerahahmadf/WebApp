@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\WeddingDecorationPolicyResource\Pages\ManageWeddingDecorationPolicies;
 
+use App\Filament\Admin\Concerns\HasMobilePagination\HasMobilePagination;
 use App\Filament\Admin\Exports\WeddingDecorationPolicyExporter\WeddingDecorationPolicyExporter;
 use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\WeddingDecorationPolicyResource\WeddingDecorationPolicyResource;
@@ -12,6 +13,7 @@ use Filament\Resources\Pages\ManageRecords;
 
 class ManageWeddingDecorationPolicies extends ManageRecords
 {
+    use HasMobilePagination;
     use HasDynamicBreadcrumbs;
     protected static string $resource = WeddingDecorationPolicyResource::class;
 

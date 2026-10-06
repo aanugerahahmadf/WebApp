@@ -15,7 +15,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rules\Password;
+use App\Support\PasswordPolicy\PasswordPolicy;
 use Illuminate\Validation\Rule;
 use Laravolt\Indonesia\Models\City as IndonesiaCity;
 use Laravolt\Indonesia\Models\District as IndonesiaDistrict;
@@ -409,11 +409,7 @@ class UserResource extends Resource
                                 Forms\Components\TextInput::make('password')
                                     ->label(__('Kata Sandi'))
                                     ->password()
-                                    ->rule(Password::min(12)
-                                        ->letters()
-                                        ->mixedCase()
-                                        ->numbers()
-                                        ->symbols()
+                                    ->rule(PasswordPolicy::filamentRules()
                                         ->uncompromised()
                                     )
                                     ->dehydrateStateUsing(fn ($state) => Hash::make($state))
@@ -567,7 +563,7 @@ class UserResource extends Resource
                                             ->disabled()
                                             ->helperText(__('Aktif jika pengguna mengaktifkan kunci sidik jari di perangkatnya.')),
                                         Forms\Components\Toggle::make('app_lock_face_enabled')
-                                            ->label(__('Wajah (AI Core — Kunci Aplikasi)'))
+                                            ->label(__('Wajah (AI Core â€” Kunci Aplikasi)'))
                                             ->disabled()
                                             ->helperText(__('Aktif jika pengguna mendaftarkan wajah untuk membuka kunci aplikasi.')),
                                         Forms\Components\Toggle::make('app_lock_pin_enabled')

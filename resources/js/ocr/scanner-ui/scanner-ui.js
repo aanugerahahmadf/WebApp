@@ -157,6 +157,36 @@ export function callAction(name, args = [], el = null) {
 }
 
 /**
+ * Menunggu semua item FilePond di dalam wrapper selesai diproses (upload).
+ * Menjalankan aksi Livewire / render ulang saat upload masih jalan membuat item
+ * FilePond hilang dan Filament melempar "Cannot read properties of null (reading 'filename')".
+ *
+ * @param {string} wrapperSelector
+ * @param {number} [timeoutMs]
+ * @returns {Promise<boolean>} true bila selesai, false bila timeout
+ */
+export function waitForUploads(wrapperSelector, timeoutMs = 20000) {
+    return new Promise((resolve) => {
+        const start = Date.now();
+        const poll = () => {
+            const elapsed = Date.now() - start;
+            const wrapper = document.querySelector(wrapperSelector);
+            const items = wrapper ? wrapper.querySelectorAll('.filepond--item') : [];
+            let busy = false;
+            items.forEach((el) => {
+                const s = el.getAttribute('data-filepond-item-state') || '';
+                if (['busy', 'processing', 'processing-queued'].includes(s)) busy = true;
+                if (s === 'idle' && elapsed < 2500) busy = true;
+            });
+            if (elapsed >= 400 && !busy) { setTimeout(() => resolve(true), 150); return; }
+            if (elapsed >= timeoutMs) { resolve(false); return; }
+            setTimeout(poll, 150);
+        };
+        poll();
+    });
+}
+
+/**
  * Reads the raw original filename/extension from a File.
  */
 export function fileExtension(file) {
@@ -164,4 +194,24 @@ export function fileExtension(file) {
     const dot = name.lastIndexOf('.');
     if (dot < 0) return 'jpg';
     return name.slice(dot + 1).toLowerCase();
+}
+
+/**
+ * Expose helpers globally. Blade modals call window.ScannerUI.* from Alpine,
+ * so this must run whenever this module is loaded (tidak bergantung pada
+ * app-web.js yang menugaskan window.ScannerUI).
+ */
+if (typeof window !== 'undefined') {
+    window.ScannerUI = {
+        ...(window.ScannerUI || {}),
+        detectPlatform,
+        getLivewireComponent,
+        getFormState,
+        setFormState,
+        setFormStateMany,
+        injectFile,
+        callAction,
+        waitForUploads,
+        fileExtension,
+    };
 }

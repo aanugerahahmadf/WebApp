@@ -6,7 +6,6 @@ use App\Enums\DiscountType\DiscountType;
 use App\Enums\OrderPaymentStatus\OrderPaymentStatus;
 use App\Enums\OrderStatus\OrderStatus;
 use App\Filament\Welcome\Pages\MessagesPage\MessagesPage;
-use App\Filament\Welcome\Resources\ProductResource\Pages;
 use App\Filament\Welcome\Resources\ReviewResource\ReviewResource;
 use App\Forms\Components\CheckoutCalendarPicker\CheckoutCalendarPicker;
 use App\Http\Middleware\AuthenticateWelcome\AuthenticateWelcome;
@@ -16,10 +15,13 @@ use App\Models\PaymentMethod\PaymentMethod;
 use App\Models\Product\Product;
 use App\Models\Review\Review;
 use App\Models\Transaction\Transaction;
+use App\Models\User\User;
 use App\Models\Voucher\Voucher;
 use App\Models\Wishlist\Wishlist;
+use App\Services\BriService\BriService;
 use App\Services\ChatService\ChatService;
 use App\Services\GuestIdentity\GuestIdentity;
+use Filament\Actions\StaticAction;
 use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Infolists;
@@ -37,7 +39,6 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\HtmlString;
 use Livewire\Component;
@@ -115,7 +116,8 @@ class ProductResource extends Resource
      * The welcome panel is the public storefront, so a guest can reach this
      * detail page. Every action below writes to user-owned state (cart,
      * wishlist, admin chat), which is meaningless without a user id, so they
-     * are hidden for guests and point them at the login page instead.
+     * are hidden for guests and point them at the auth landing page instead
+     * (`/user/auth` -- see AuthenticateWelcome::LOGIN_ROUTE).
      *
      * `disabled()` is what actually enforces this: Filament checks it in both
      * mountAction() and callMountedAction(), whereas `visible()` only controls
@@ -136,20 +138,30 @@ class ProductResource extends Resource
             }
         }
 
-        return redirect()->to(route(AuthenticateWelcome::LOGIN_ROUTE));
+        // PENTING: `new RedirectResponse`, bukan `redirect()`.
+        // Method ini dipanggil dari action Livewire, dan Livewire menukar
+        // binding `redirect` di container dengan Redirector-nya sendiri --
+        // yang tidak punya `getTargetUrl()`. Setiap pemanggil mengambil URL dari
+        // respons ini lalu meneruskannya ke `$livewire->redirect(...)`, jadi
+        // yang dikembalikan harus benar-benar Illuminate\Http\RedirectResponse.
+        // Memakai helper `redirect()` di sini melempar TypeError (halaman 500)
+        // untuk setiap tamu yang menekan wishlist/cart/chat.
+        //
+        // Facade `Redirect` tidak membantu: ia juga membaca binding `redirect`.
+        return new RedirectResponse(route(AuthenticateWelcome::LOGIN_ROUTE));
     }
 
     /**
      * Resolve the chat user: signed-in member, or the guest row behind the browser.
      * Returns null only in the pathological case where neither can be resolved.
      */
-    protected static function getChatUser(): ?\App\Models\User\User
+    protected static function getChatUser(): ?User
     {
         if (Filament::auth()->check()) {
             return Filament::auth()->user();
         }
 
-        return app(\App\Services\GuestIdentity\GuestIdentity::class)->user();
+        return app(GuestIdentity::class)->user();
     }
 
     public static function table(Table $table): Table
@@ -296,9 +308,9 @@ class ProductResource extends Resource
                                                 Forms\Components\Placeholder::make('item_info')
                                                     ->hiddenLabel()
                                                     ->content(new HtmlString(
-                                                        '<div class="rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-4">' .
-                                                        '<div class="text-base font-bold text-gray-900 dark:text-white">' . e($record->name) . '</div>' .
-                                                        '<div class="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mt-1">Rp ' . number_format($record->final_price, 0, ',', '.') . '</div>' .
+                                                        '<div class="rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-4">'.
+                                                        '<div class="text-base font-bold text-gray-900 dark:text-white">'.e($record->name).'</div>'.
+                                                        '<div class="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mt-1">Rp '.number_format($record->final_price, 0, ',', '.').'</div>'.
                                                         '</div>'
                                                     )),
                                                 Forms\Components\TextInput::make('share_url')
@@ -311,7 +323,7 @@ class ProductResource extends Resource
                                                             ->color('primary')
                                                             ->tooltip(__('Salin ke Clipboard'))
                                                             ->action(function ($livewire, $state) {
-                                                                $livewire->js('window.navigator.clipboard.writeText(' . json_encode($state) . ')');
+                                                                $livewire->js('window.navigator.clipboard.writeText('.json_encode($state).')');
                                                                 Notification::make()
                                                                     ->title(__('Tautan berhasil disalin!'))
                                                                     ->success()
@@ -514,7 +526,7 @@ class ProductResource extends Resource
                                                 session()->put('url.intended', static::getUrl('view', ['record' => $record->id]));
 
                                                 return [
-                                                    \Filament\Actions\StaticAction::make('guest_login_submit')
+                                                    StaticAction::make('guest_login_submit')
                                                         ->label(__('Submit'))
                                                         ->color('warning')
                                                         ->button()
@@ -531,12 +543,12 @@ class ProductResource extends Resource
                                                     return;
                                                 }
 
-                                                Cart::updateOrCreate([
-                                                    'user_id' => auth()->id(),
-                                                    'product_id' => $record->id,
-                                                ], [
-                                                    'quantity' => DB::raw('quantity + '.$data['quantity']),
-                                                ]);
+                                                Cart::incrementQuantity(
+                                                    (int) auth()->id(),
+                                                    $record->id,
+                                                    null,
+                                                    (int) $data['quantity'],
+                                                );
 
                                                 Notification::make()
                                                     ->title(__('Berhasil masuk keranjang'))
@@ -691,20 +703,20 @@ class ProductResource extends Resource
                                         ->icon('heroicon-o-chat-bubble-oval-left-ellipsis')
                                         ->iconColor('warning')
                                         ->compact()
-                                            ->visible(fn ($record) => $record->reviews()->count() > 0)
-                                            ->schema([
-                                                Infolists\Components\ViewEntry::make('review_summary')
-                                                    ->label('')
-                                                    ->hiddenLabel()
-                                                    ->view('Welcome.components.review-summary.review-summary', fn (Product $record): array => ReviewResource::summaryData($record, __('Penilaian Produk'))),
-                                                Infolists\Components\ViewEntry::make('reviews_list')
-                                                    ->label('')
-                                                    ->hiddenLabel()
-                                                    ->view('Welcome.components.review-list.review-list', fn (Product $record): array => [
-                                                        'reviews' => ReviewResource::filteredReviews($record),
-                                                        'activeFilter' => ReviewResource::activeReviewFilter(),
-                                                    ])
-                                                    ->columnSpanFull(),
+                                        ->visible(fn ($record) => $record->reviews()->count() > 0)
+                                        ->schema([
+                                            Infolists\Components\ViewEntry::make('review_summary')
+                                                ->label('')
+                                                ->hiddenLabel()
+                                                ->view('Welcome.components.review-summary.review-summary', fn (Product $record): array => ReviewResource::summaryData($record, __('Penilaian Produk'))),
+                                            Infolists\Components\ViewEntry::make('reviews_list')
+                                                ->label('')
+                                                ->hiddenLabel()
+                                                ->view('Welcome.components.review-list.review-list', fn (Product $record): array => [
+                                                    'reviews' => ReviewResource::filteredReviews($record),
+                                                    'activeFilter' => ReviewResource::activeReviewFilter(),
+                                                ])
+                                                ->columnSpanFull(),
                                         ]),
                                 ])->columnSpan([
                                     'default' => 12,
@@ -762,6 +774,9 @@ class ProductResource extends Resource
         $paymentMethodId = $data['payment_method_id'] ?? null;
         $pm = $paymentMethodId ? PaymentMethod::find($paymentMethodId) : null;
         $isCreditCard = $pm !== null && $pm->type === 'credit_card';
+        // Virtual Account BRI butuh nomor unik per transaksi, dibuat setelah
+        // transaksi ada (nomor itu merujuk id transaksi).
+        $isVirtualAccount = $pm !== null && $pm->type === 'virtual_account';
         $adminFee = (float) ($pm?->fee ?? 0);
 
         // Default statuses
@@ -792,15 +807,22 @@ class ProductResource extends Resource
         // Send message to Admin Panel Chat
         try {
             $inbox = ChatService::getOrCreateInboxWithAdmin($user->id);
-            ChatService::sendOrderMessage($inbox, $order);
-        } catch (\Exception $e) {
+
+            // Tanpa admin, getOrCreateInboxWithAdmin() null dan pemanggilan
+            // di bawahnya melempar TypeError -- bukan \Exception, jadi blok
+            // catch di bawah tidak akan menangkapnya. Checkout tidak boleh
+            // gagal hanya karena notifikasi chat tidak punya penerima.
+            if ($inbox) {
+                ChatService::sendOrderMessage($inbox, $order);
+            }
+        } catch (\Throwable $e) {
             Log::error('Failed to send order message: '.$e->getMessage());
         }
 
         // Process Transaction
         $reference = 'TRX-ITM-'.time().'-'.strtoupper(str()->random(4));
 
-        Transaction::create([
+        $transaction = Transaction::create([
             'user_id' => $user->id,
             'order_id' => $order->id,
             'type' => 'order',
@@ -813,18 +835,36 @@ class ProductResource extends Resource
             'payment_method_id' => $pm?->id,
             'status' => $isCreditCard ? 'success' : 'pending',
             'paid_at' => $isCreditCard ? now() : null,
-            'notes' => $isCreditCard
-                ? __('Pembayaran kartu kredit / debit oleh pengguna.')
-                : __('Menunggu konfirmasi pembayaran manual.'),
+            'notes' => match (true) {
+                $isCreditCard => __('Pembayaran kartu kredit / debit oleh pengguna.'),
+                $isVirtualAccount => __('Menunggu pembayaran ke nomor Virtual Account BRI.'),
+                default => __('Menunggu konfirmasi pembayaran manual.'),
+            },
         ]);
 
-        Notification::make()
+        $vaFailed = false;
+
+        if ($isVirtualAccount) {
+            // Tanpa ini, pesanan BRIVA dari panel Welcome hanya bisa
+            // diverifikasi manual oleh admin.
+            $va = app(BriService::class)->createVirtualAccount($transaction);
+            $vaFailed = $va === null;
+        }
+
+        $notification = Notification::make()
             ->title(__('Pesanan Berhasil Dibuat'))
-            ->body($isCreditCard
-                ? __('Pembayaran Anda telah berhasil.')
-                : __('Silakan lakukan pembayaran di halaman "Pesanan Saya".'))
-            ->success()
-            ->send();
+            ->body(match (true) {
+                $isCreditCard => __('Pembayaran Anda telah berhasil.'),
+                // VA gagal dibuat: pesanan tetap ada, tapi dana tidak bisa
+                // dicocokkan otomatis.
+                $vaFailed => __('Nomor Virtual Account gagal dibuat. Silakan hubungi admin untuk instruksi pembayaran.'),
+                $isVirtualAccount => __('Silakan transfer ke nomor Virtual Account BRI di halaman "Pesanan Saya".'),
+                default => __('Silakan lakukan pembayaran di halaman "Pesanan Saya".'),
+            });
+
+        $vaFailed ? $notification->danger() : $notification->success();
+
+        $notification->send();
 
         return redirect()->route('filament.welcome.resources.orders.index');
     }

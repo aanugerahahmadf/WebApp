@@ -3,7 +3,6 @@
 namespace App\Filament\User\Resources\ProductResource\Pages\ManageProducts;
 
 use App\Filament\Concerns\HasDynamicBreadcrumbs;
-use App\Filament\User\Pages\Home\Home;
 use App\Filament\User\Resources\ProductResource\ProductResource;
 use App\Models\Cart\Cart;
 use App\Models\Product\Product;
@@ -13,7 +12,6 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Components\Tab;
 use Filament\Resources\Pages\ManageRecords;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB;
 
 class ManageProducts extends ManageRecords
 {
@@ -104,12 +102,7 @@ class ManageProducts extends ManageRecords
     {
         $user = Filament::auth()->user();
 
-        Cart::updateOrCreate([
-            'user_id' => $user->id,
-            'product_id' => $id,
-        ], [
-            'quantity' => DB::raw('quantity + 1'),
-        ]);
+        Cart::incrementQuantity($user->id, $id, null);
 
         Notification::make()
             ->title(__('Berhasil masuk keranjang'))

@@ -3,14 +3,27 @@
     // Pakai path relatif untuk semua platform — WebView dan browser sama-sama handle ini.
     // normalizeUrl() tidak dipakai untuk navigasi halaman agar tidak buka Chrome di mobile.
     $googleRedirectUrl = '/auth/google/redirect';
-    $registerUrl       = filament()->getRegistrationUrl() ?? route('filament.user.auth.register');
+    // SIGN UP: link pendaftaran DIMATIKAN, kodenya tidak dihapus.
+    //
+    // `->registration()` tidak dipanggil di UserPanelProvider, jadi
+    // `filament()->getRegistrationUrl()` selalu null dan tidak ada route
+    // `filament.user.auth.register` untuk dijadikan fallback. Asli URL blok ini
+    // disimpan di bawah dalam bentuk komentar; yang aktif sekarang mengarah ke
+    // halaman auth -- satu-satunya pintu yang memuat tombol Google.
+    //
+    // $registerUrl       = filament()->getRegistrationUrl()
+    //     ?? \App\Filament\User\Auth\Auth\Auth::getUrl()
+    //     ?? filament()->getLoginUrl()
+    //     ?? route('filament.user.auth.login');
+    $registerUrl       = \App\Filament\User\Auth\Auth\Auth::getUrl();
     $loginUrl          = filament()->getLoginUrl() ?? route('filament.user.auth.login');
     $hasParentData     = $hasParentData ?? false;
     $hideCheckboxes    = $hideCheckboxes ?? false;
+    // Mode 'signup', bukan 'register' -- sama dengan partial User.
     $authMode          = $authMode ?? (
-        (isset($this) && $this instanceof \Filament\Pages\Auth\Register) ? 'register' :
+        (isset($this) && $this instanceof \Filament\Pages\Auth\Register) ? 'signup' :
         ((isset($this) && $this instanceof \Filament\Pages\Auth\Login) ? 'login' :
-        (request()->routeIs('*register*') ? 'register' : 'login'))
+        (request()->routeIs('*register*', '*signup*') ? 'signup' : 'login'))
     );
 @endphp
 {{-- Firebase Auth (GIS + signInWithCredential) — tanpa authorized-domain restriction --}}
@@ -112,8 +125,24 @@
         @include('Welcome.social-buttons.agreement-checkboxes.agreement-checkboxes')
     @endif
 
+    {{--
+        SIGN UP / link "Belum memiliki akun?" — DIMATIKAN dengan sengaja.
+
+        Markup asli disimpan apa adanya di dalam dua pembungkus komentar Blade
+        ini supaya tidak hilang bersama dimatikannya halaman Sign Up. Kalau
+        panel user menghidupkan pendaftaran lagi (->registration() dipanggil
+        di UserPanelProvider), blok ini cukup dibuka lagi.
+
+        PERINGATAN: jangan pernah menulis literal pembuka/penutup komentar
+        Blade di dalam teks komentar. Blade tidak mendukung komentar
+        bersarang, jadi penutup yang tertulis di dalam komentar akan menutup
+        komentar lebih awal dan sisa teksnya bocor ke halaman sebagai teks
+        terlihat -- persis yang terjadi di sini sebelumnya.
+    --}}
+    {{--
+    @if ($showAuthSwitchLink ?? false)
     <div class="w-full text-center mt-4">
-        @if ($authMode === 'register')
+        @if ($authMode === 'signup')
             <p class="text-sm text-gray-500 dark:text-gray-400">
                 {{ __('Sudah memiliki akun?') }}
                 <x-filament::link :href="$loginUrl" color="primary" class="font-semibold ml-1">
@@ -129,6 +158,8 @@
             </p>
         @endif
     </div>
+    @endif
+    --}}
 
     @php
         try {

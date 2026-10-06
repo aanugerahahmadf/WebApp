@@ -43,25 +43,20 @@
 >
     <div class="overflow-x-clip">
         <header
-            class="fi-sidebar-header flex h-16 items-center bg-white px-6 ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 lg:shadow-sm"
+            class="fi-sidebar-header flex h-12 items-center bg-white px-6 ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 lg:shadow-sm"
         >
-            <div
-                @if (filament()->isSidebarCollapsibleOnDesktop())
-                    x-show="$store.sidebar.isOpen"
-                    x-transition:enter="lg:transition lg:delay-100"
-                    x-transition:enter-start="opacity-0"
-                    x-transition:enter-end="opacity-100"
-                @endif
-            >
-                @if ($homeUrl = filament()->getHomeUrl())
-                    <a {{ \Filament\Support\generate_href_html($homeUrl) }}>
-                        <x-filament-panels::logo />
-                    </a>
-                @else
-                    <x-filament-panels::logo />
-                @endif
-            </div>
+            {{-- Header ini SENGAJA hanya berisi tombol kontrol (tutup / lebarkan /
+                 ciutkan). Logo dipindahkan ke baris switcher di bawah.
 
+                 Alasannya: logo dan switcher tema + bahasa adalah dua kelompok
+                 kontrol yang sama untuk satu orang -- identitas di kiri,
+                 preferensi di kanan. Ditumpuk dalam satu baris, keduanya
+                 terbaca sebagai satu blok. Logo sendirian di baris paling atas
+                 dengan switcher jauh di bawahnya justru terlihat mengambang
+                 dan terpisah.
+
+                 `ms-auto` di tombol tutup dikembalikan ke miliknya sendiri,
+                 karena sekarang tidak ada elemen lain di header ini. --}}
             @if (filament()->isSidebarCollapsibleOnDesktop())
                 <x-filament::icon-button
                     color="gray"
@@ -106,14 +101,68 @@
                 class="fi-sidebar-mobile-close-btn ms-auto flex lg:hidden"
             />
         </header>
+
+        {{-- BARIS LOGO + SWITCHER
+
+             Dua perubahan terhadap view Filament, dan hanya dua:
+
+             1. Logo pindah dari <header> ke sini, sebaris dengan switcher tema
+                dan bahasa. Kepala header sekarang hanya tombol tutup di kanan.
+
+             2. Hook SIDEBAR_NAV_START -- yang tadinya dipanggil di dalam <nav>
+                -- dipanggil di sini, bukan di dalam wrapper-nya sendiri.
+                Hook tetap deciding KAPAN switcher tampil
+                (AppPlatform::switchersBelongInSidebar()); file ini yang
+                menentukan DI MANA posisinya. Kalau wrapper-nya ikut di
+                provider, keputusan tata letak akan tersebar di dua file yang
+                tidak saling tahu.
+
+             Baris ini DI LUAR <nav> dengan sengaja: <nav> yang bisa di-scroll,
+             dan logo tidak boleh ikut hilang saat daftar menu digulir.
+
+             Wrapper switcher (`ms-auto`) dirender tanpa syarat, jadi di tablet
+             dan website desktop -- tempat switcher tetap di topbar dan hook ini
+             mengembalikan string kosong -- logo tetap terdorong ke kiri dan
+             tidak ikut melebar.
+
+             Hook dipanggil di sini, bukan me-render view switcher langsung,
+             supaya ketiga panel tetap memakai kode yang sama -- file ini
+             identik di Welcome/User/Admin.
+
+             CATATAN: file ini adalah salinan view Filament. Kalau
+             filament/filament di-upgrade, bandingkan dulu dengan
+             vendor/filament/filament/resources/views/components/sidebar/
+             index.blade.php -- jangan ditimpa buta, blok di atas adalah
+             satu-satunya beda yang disengaja.
+        --}}
+        <div class="fi-sidebar-switchers flex items-center gap-2 px-6 pb-2">
+            <div
+                @if (filament()->isSidebarCollapsibleOnDesktop())
+                    x-show="$store.sidebar.isOpen"
+                    x-transition:enter="lg:transition lg:delay-100"
+                    x-transition:enter-start="opacity-0"
+                    x-transition:enter-end="opacity-100"
+                @endif
+            >
+                @if ($homeUrl = filament()->getHomeUrl())
+                    <a {{ \Filament\Support\generate_href_html($homeUrl) }}>
+                        <x-filament-panels::logo />
+                    </a>
+                @else
+                    <x-filament-panels::logo />
+                @endif
+            </div>
+
+            <div class="ms-auto flex items-center gap-2">
+                {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::SIDEBAR_NAV_START) }}
+            </div>
+        </div>
     </div>
 
     <nav
         class="fi-sidebar-nav flex-grow flex flex-col gap-y-7 overflow-y-auto overflow-x-hidden px-6 py-8"
         style="scrollbar-gutter: stable"
     >
-        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::SIDEBAR_NAV_START) }}
-
         @if (filament()->hasTenancy() && filament()->hasTenantMenu())
             <div
                 @class([

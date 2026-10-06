@@ -4,15 +4,19 @@ namespace App\Http\Controllers\Api\User\AuthController;
 
 use App\Http\Controllers\Controller;
 use App\Mail\OtpMail\OtpMail;
+use App\Models\BackupCode\BackupCode;
 use App\Models\User\User;
 use App\Models\WhatsappOtp\WhatsappOtp;
 use App\Services\StorageService\StorageService;
+use App\Support\PasswordPolicy\PasswordPolicy;
 use Firebase\JWT\JWK;
 use Firebase\JWT\JWT;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -20,10 +24,32 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use MixCode\FilamentMulti2fa\Enums\TwoFactorAuthType;
+use PragmaRX\Google2FA\Google2FA;
 use Spatie\Permission\Models\Role;
 
 class AuthController extends Controller
 {
+    /**
+     * Masa berlaku OTP lupa kata sandi (menit).
+     *
+     * 30, mengikuti OtpRequestPasswordReset::request() dan masa berlaku
+     * penanda di VerifyOtp::verify() di panel Filament. API ini pernah
+     * memakai 5 menit -- 6 kali lebih pendek dari web -- sehingga pengguna
+     * yang membaca email-nya dengan telat gagal despite masih di bawah
+     * tenggat yang sama di web.
+     *
+     * Tidak boleh diubah tanpa mengubah ketiga tempat sekaligus:
+     * forgotPassword() (menerbitkan), verifyOtp() (memverifikasi), dan
+     * resetPassword() (kivingga penanda 30 menit). Kalau hanya satu yang
+     * berubah, ada jeda di mana kode dianggap belum sah padahal baru
+     * saja dikirim.
+     */
+    public const OTP_FORGOT_PASSWORD_TTL_MINUTES = 30;
+
+    /** Masa berlaku OTP verifikasi email / Google (menit). */
+    public const OTP_VERIFY_TTL_MINUTES = 5;
+
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -63,7 +89,7 @@ class AuthController extends Controller
             'income_range' => 'nullable|string|max:50',
             'source_of_funds' => 'nullable|string|max:100',
             'address' => 'nullable|string',
-            'password' => 'required|string|min:12|confirmed',
+            'password' => PasswordPolicy::confirmedRules(),
             'profile_photo' => 'nullable|image|max:10240',
             'avatar_url' => 'nullable|string|max:500',
         ], [
@@ -192,15 +218,27 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'login' => 'required',
             'password' => 'required',
         ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => __('Validasi gagal'),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
         $login = $request->login;
+
+        // Sign in hanya menerima Email atau Username. Nomor KTP/Passport/SIM/
+        // NPWP tidak lagi jadi alias login, jadi query cukup satu kolom
+        // ter-index -- konsisten dengan SignIn.php di panel Filament.
         $fieldType = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
 
-        $user = User::where($fieldType, $login)->orWhere('ktp_number', $login)->orWhere('passport_number', $login)->orWhere('sim_number', $login)->orWhere('npwp_number', $login)->first();
+        $user = User::where($fieldType, $login)->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
             return response()->json([
@@ -220,6 +258,21 @@ class AuthController extends Controller
             $user->update(['active_status' => true]);
         }
 
+        // 2FA aktif -> jangan terbitkan token dulu.
+        //
+        // Padanan middleware CheckTrustedDevice milik paket multi-2fa, yang
+        // di panel Filament mengarahkan ke OtpEmailOrTwoFactory sebelum
+        // halaman mana pun boleh dibuka. Mobile sebelumnya melompatinya
+        // seluruhnya: token langsung terbit begitu kata sandi cocok, jadi 2FA
+        // yang sudah aktif tidak pernah ditebak -- siapa pun yang punya kata
+        // sandi bisa masuk.
+        //
+        // Token baru terbit di verifyTwoFactor(), yaitu hanya setelah kode
+        // benar.
+        if ($this->requiresTwoFactor($user)) {
+            return $this->twoFactorChallenge($user);
+        }
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -231,6 +284,326 @@ class AuthController extends Controller
                 'user' => $user,
             ],
         ]);
+    }
+
+    /* ---------------------------------------------------------------------
+     | Autentikasi dua faktor (padanan OtpEmailOrTwoFactory)
+     | ------------------------------------------------------------------ */
+
+    /** Cara verifikasi: kode dari aplikasi autentikasi (TOTP). */
+    public const TWO_FACTOR_METHOD_AUTHENTICATOR = 'authenticator';
+
+    /** Cara verifikasi: kode pemulihan XXXX-XXXX. */
+    public const TWO_FACTOR_METHOD_RECOVERY = 'recovery';
+
+    /** Cara verifikasi: kode 6 digit yang dikirim ke email. */
+    public const TWO_FACTOR_METHOD_EMAIL = 'email';
+
+    /** Berapa lama challenge 2FA berlaku (menit). */
+    protected const TWO_FACTOR_CHALLENGE_TTL_MINUTES = 10;
+
+    /** Berapa lama kode email 2FA berlaku (menit). */
+    protected const TWO_FACTOR_EMAIL_TTL_MINUTES = 10;
+
+    /** Key cache kode email 2FA. Sama dengan milik OtpEmailOrTwoFactory. */
+    protected const TWO_FACTOR_EMAIL_CACHE_KEY = '2fa_email_otp_';
+
+    /**
+     * Apakah akun ini wajib membuktikan identitas dua langkah?
+     *
+     * Syaratnya sama persis dengan CheckTrustedDevice milik paket:
+     * `two_factor_type` selain "none".
+     *
+     * `two_factor_enabled` sengaja TIDAK dipakai sebagai penentu. Keduanya
+     * bisa tidak sinkron -- `SecurityController::twoFactorToggle()` mengubah
+     * `two_factor_enabled` lewat toggle WhatsApp, sementara setup lewat
+     * TwoFactorySetup hanya mengisi `two_factor_type`. memakai yang kedua
+     * membuat kedua jalur itu sama-sama dihormati.
+     */
+    protected function requiresTwoFactor(User $user): bool
+    {
+        return $user->two_factor_type !== null
+            && $user->two_factor_type->value !== TwoFactorAuthType::None->value;
+    }
+
+    /**
+     * Mulai challenge 2FA: buat token sementara, kirim kode email bila perlu,
+     * dan JANGAN terbitkan token aplikasi.
+     *
+     * Token challenge hanya mengikat "pengguna mana yang sedang memegang
+     * challenge ini", bukan hak akses. Ia disimpan di cache bersama id user,
+     * jadi tidak bisa dipakai menebak-nebak akun lain.
+     */
+    protected function twoFactorChallenge(User $user): JsonResponse
+    {
+        $challengeToken = Str::random(64);
+
+        // Metode awal mengikuti tipe yang tersimpan: Email -> kode email,
+        // selain itu -> aplikasi autentikasi.
+        $method = $user->two_factor_type->value === TwoFactorAuthType::Email->value
+            ? self::TWO_FACTOR_METHOD_EMAIL
+            : self::TWO_FACTOR_METHOD_AUTHENTICATOR;
+
+        Cache::put(
+            self::twoFactorChallengeCacheKey($challengeToken),
+            ['user_id' => $user->id],
+            now()->addMinutes(self::TWO_FACTOR_CHALLENGE_TTL_MINUTES),
+        );
+
+        if ($method === self::TWO_FACTOR_METHOD_EMAIL) {
+            $this->sendTwoFactorEmailCode($user);
+        }
+
+        return response()->json([
+            'status' => 'two_factor_required',
+            'message' => __('Verifikasi dua faktor diperlukan.'),
+            'data' => [
+                'challenge_token' => $challengeToken,
+                'method' => $method,
+                'two_factor_type' => $user->two_factor_type->value,
+                'email' => $user->email,
+                'expires_in' => self::TWO_FACTOR_CHALLENGE_TTL_MINUTES * 60,
+            ],
+        ]);
+    }
+
+    /**
+     * Tahap kedua: verifikasi kode 2FA, baru terbitkan token.
+     *
+     * Tiga cara, dipilih lewat `method`, persis seperti OtpEmailOrTwoFactory:
+     *
+     *   authenticator -- TOTP 6 digit dari Google Authenticator / Duo
+     *   recovery     -- kode pemulihan XXXX-XXXX, SEKALI PAKAI
+     *   email        -- kode 6 digit yang dikirim ke email
+     *
+     * Paket resend: kirim ulang kode email.
+     */
+    public function resendTwoFactorCode(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'challenge_token' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => __('Validasi gagal'),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user = $this->twoFactorChallengeUser($request->challenge_token);
+
+        if (! $user) {
+            return $this->twoFactorChallengeExpiredResponse();
+        }
+
+        $this->sendTwoFactorEmailCode($user, force: true);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => __('Kode baru telah dikirim ke email Anda.'),
+        ]);
+    }
+
+    public function verifyTwoFactor(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'challenge_token' => 'required|string',
+            'code' => 'required|string|max:12',
+            'method' => 'nullable|string|in:'.self::TWO_FACTOR_METHOD_AUTHENTICATOR.','.self::TWO_FACTOR_METHOD_RECOVERY.','.self::TWO_FACTOR_METHOD_EMAIL,
+        ]);
+
+        // Sama seperti login() dan register(): validasi gagal dibalas 422
+        // dengan `errors` per-field, bukan exception ValidationException yang
+        // jadi 500.
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => __('Validasi gagal'),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $challengeToken = $request->challenge_token;
+        $user = $this->twoFactorChallengeUser($challengeToken);
+
+        if (! $user) {
+            return $this->twoFactorChallengeExpiredResponse();
+        }
+
+        $method = $request->method ?: ($user->two_factor_type->value === TwoFactorAuthType::Email->value
+            ? self::TWO_FACTOR_METHOD_EMAIL
+            : self::TWO_FACTOR_METHOD_AUTHENTICATOR);
+
+        $code = (string) $request->code;
+
+        $lolos = match ($method) {
+            self::TWO_FACTOR_METHOD_AUTHENTICATOR => $this->checkTwoFactorTotp($user, $code),
+            self::TWO_FACTOR_METHOD_RECOVERY => $this->checkTwoFactorRecovery($user, $code),
+            self::TWO_FACTOR_METHOD_EMAIL => $this->checkTwoFactorEmail($user, $code),
+            default => false,
+        };
+
+        if (! $lolos) {
+            return response()->json([
+                'status' => 'error',
+                'message' => __('Kode salah'),
+                'error' => __('Kode yang Anda masukkan tidak cocok atau sudah kadaluarsa.'),
+            ], 422);
+        }
+
+        // Kode email sudah tidak berlaku -- jangan biarkan bisa dipakai ulang.
+        Cache::forget(self::TWO_FACTOR_EMAIL_CACHE_KEY.$user->id);
+        Cache::forget(self::twoFactorChallengeCacheKey($challengeToken));
+
+        if ($method === self::TWO_FACTOR_METHOD_EMAIL && ! $user->two_factor_confirmed_at) {
+            $user->forceFill(['two_factor_confirmed_at' => now()])->save();
+        }
+
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'status' => 'success',
+            'message' => __('Verifikasi Berhasil'),
+            'token' => $token,
+            'user' => $user,
+            'data' => [
+                'token' => $token,
+                'user' => $user,
+            ],
+        ]);
+    }
+
+    protected static function twoFactorChallengeCacheKey(string $challengeToken): string
+    {
+        return '2fa_challenge_'.$challengeToken;
+    }
+
+    /**
+     * User di balik challenge, atau null kalau challenge sudah kadaluarsa /
+     * dipakai ulang.
+     */
+    protected function twoFactorChallengeUser(string $challengeToken): ?User
+    {
+        $cached = Cache::get(self::twoFactorChallengeCacheKey($challengeToken));
+
+        if (! is_array($cached) || ! isset($cached['user_id'])) {
+            return null;
+        }
+
+        $user = User::find($cached['user_id']);
+
+        // Akun yang sudah dihapus, atau 2FA-nya dimatikan di tengah
+        // challenge: challenge ini tidak lagi berguna.
+        if (! $user || ! $this->requiresTwoFactor($user)) {
+            return null;
+        }
+
+        return $user;
+    }
+
+    protected function twoFactorChallengeExpiredResponse(): JsonResponse
+    {
+        return response()->json([
+            'status' => 'error',
+            'message' => __('Sesi verifikasi habis. Silakan Sign In kembali.'),
+        ], 401);
+    }
+
+    /** Kode 6 digit dari aplikasi autentikasi, dicek dengan Google2FA sungguhan. */
+    protected function checkTwoFactorTotp(User $user, string $code): bool
+    {
+        $secret = $user->two_factor_secret;
+
+        if (! $secret || $code === '') {
+            return false;
+        }
+
+        return (new Google2FA)->verifyKey((string) $secret, $code);
+    }
+
+    /**
+     * Kode pemulihan harus SEKALI PAKAI.
+     *
+     * Dicari dengan lockForUpdate supaya dua request bersamaan tidak memakai
+     * kode yang sama dua kali. Pencocokan dibuat case-insensitive karena
+     * pengguna bisa saja mengetik huruf kecil.
+     */
+    protected function checkTwoFactorRecovery(User $user, string $code): bool
+    {
+        $code = strtoupper(trim($code));
+
+        if ($code === '') {
+            return false;
+        }
+
+        $backup = BackupCode::query()
+            ->where('user_id', $user->id)
+            ->whereRaw('UPPER(code) = ?', [$code])
+            ->where('used', false)
+            ->lockForUpdate()
+            ->first();
+
+        if (! $backup) {
+            return false;
+        }
+
+        $backup->update(['used' => true, 'used_at' => now()]);
+
+        return true;
+    }
+
+    protected function checkTwoFactorEmail(User $user, string $code): bool
+    {
+        $disimpan = Cache::get(self::TWO_FACTOR_EMAIL_CACHE_KEY.$user->id);
+
+        return $disimpan !== null && hash_equals((string) $disimpan, trim($code));
+    }
+
+    /**
+     * Kirim kode 2FA ke email.
+     *
+     * Disimpan di cache dengan key terpisah, BUKAN lewat
+     * generateTwoFactorOTPCode() milik paket: method itu menulis
+     * `two_factor_secret = encrypt(kode acak)`, dan menimpanya berarti 2FA
+     * yang sedang aktif ikut hancur -- terutama kalau pengguna memakai
+     * aplikasi autentikasi, karena secret itu berisi TOTP-nya.
+     */
+    protected function sendTwoFactorEmailCode(User $user, bool $force = false): void
+    {
+        $key = self::TWO_FACTOR_EMAIL_CACHE_KEY.$user->id;
+
+        if (! $force && Cache::has($key)) {
+            return;
+        }
+
+        $kode = (string) random_int(100000, 999999);
+        Cache::put($key, $kode, now()->addMinutes(self::TWO_FACTOR_EMAIL_TTL_MINUTES));
+
+        try {
+            Mail::to($user->email)->send(new OtpMail($kode, $user->name ?? 'Pengguna'));
+        } catch (\Throwable $e) {
+            // Mail gagal = kode tidak akan pernah sampai. Hapus dari cache
+            // supaya tombol "Kirim Ulang" tetap bisa dipakai, jangan
+            // menampilkan form yang tidak bisa diisi.
+            Cache::forget($key);
+
+            Log::error('Gagal kirim OTP 2FA ke '.$user->email.': '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Buang semua perangkat yang sedang masuk KECUALI yang sedang dipakai
+     * request ini.
+     *
+     * Delegasi ke User::revokeOtherSessions() -- logikanya hidup di model
+     * karena bukan milik satu controller saja: Ubah Kata Sandi di panel
+     * Filament dan di API sama-sama membutuhkannya.
+     */
+    protected function revokeOtherSessions(User $user): int
+    {
+        return $user->revokeOtherSessions();
     }
 
     public function logout(Request $request)
@@ -259,11 +632,36 @@ class AuthController extends Controller
 
         User::where('email', $request->email)->update([
             'otp_code' => $otp,
-            'otp_expires_at' => now()->addMinutes(5),
+            // 30 menit, bukan 5.
+            //
+            // OtpRequestPasswordReset::request() di panel Filament menyimpan
+            // OTP lupa kata sandi 30 menit (sama dengan VerifyOtp yang
+            // menandainya sah 30 menit). API ini memakai 5 menit, jadi
+            // pengguna yang membuka email-nya lewat -- hal yang paling
+            // sering terjadi, apalagi dengan email perusahaan yang
+            // Sometimes道理的 ditunda -- akan melihat OTP sudah kedaluwarsa
+            // padahal masih di bawah tenggat yang sama di web.
+            //
+            // VerifyOtp juga memanggil verifyOtp() dengan purpose
+            // forgot_password, jadi masa berlaku WAJIB sama untuk keduanya;
+            // kalau tidak, ada jeda di mana sheet reset akan menolak OTP
+            // yang baru saja dianggap sah.
+            'otp_expires_at' => now()->addMinutes(self::OTP_FORGOT_PASSWORD_TTL_MINUTES),
             'otp_purpose' => 'forgot_password',
         ]);
 
-        Mail::to($request->email)->send(new OtpMail($otp, $user->name ?? 'Pengguna'));
+        try {
+            Mail::to($request->email)->send(new OtpMail($otp, $user->name ?? 'Pengguna'));
+        } catch (\Throwable $e) {
+            // Mail gagal = OTP tidak akan pernah sampai. Hapus dari DB
+            // supaya VerifyOtp bisa-rules تحمل kebetulan tidak mungkin.
+            Log::error('Gagal kirim OTP lupa kata sandi ke '.$request->email.': '.$e->getMessage());
+
+            return response()->json([
+                'status' => 'error',
+                'message' => __('Kode OTP gagal dikirim. Periksa konfigurasi email lalu coba lagi.'),
+            ], 500);
+        }
 
         return response()->json([
             'status' => 'success',
@@ -272,23 +670,59 @@ class AuthController extends Controller
         ]);
     }
 
+    /**
+     * Atur ulang kata sandi setelah OTP terverifikasi.
+     *
+     * Dua tahap, sama seperti VerifyOtp + OtpResetPassword di panel Filament:
+     * verifyOtp() menandai OTP forgot_password sudah sah di cache, lalu
+     * endpoint inilah yang menerimanya. both pihak menulis ke key cache yang
+     * sama (`otp_verified_for_<email>`), jadi kedua antarmuka tidak mungkin
+     * saling menagih OTP-nya dua kali.
+     *
+     * Field `email` dan `otp` tetap diterima dan keduanya WAJIB, karena
+     * authenticate-nya berarti "pengguna ini sudah membuktikan miliknya email
+     * dengan kode itu". Mobil mengirim keduanya; kode yang lolos adalah yang
+     * sudah diverifikasi, atau -- untuk klien yang lebih lama -- yang masih
+     * hidup di tabel.
+     */
     public function resetPassword(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'otp' => 'required|string|size:6',
-            'password' => 'required|confirmed|min:12',
+            'password' => PasswordPolicy::confirmedRules(),
         ]);
 
-        $user = User::where('email', $request->email)
-            ->where('otp_code', $request->otp)
-            ->where('otp_purpose', 'forgot_password')
-            ->where('otp_expires_at', '>', now())
-            ->first();
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => __('Validasi gagal'),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $email = $request->email;
+        $otp = (string) $request->otp;
+
+        // Sudah diverifikasi di verifyOtp()? (jalur normal)
+        $sudahDiverifikasi = Cache::get('otp_verified_for_'.$email);
+
+        $user = $sudahDiverifikasi
+            ? User::where('email', $email)->first(['*'])
+            : // Fallback: OTP forgot_password yang masih hidup di tabel.
+                User::where('email', $email)
+                ->where('otp_code', $otp)
+                ->where('otp_purpose', 'forgot_password')
+                ->where('otp_expires_at', '>', now())
+                ->first();
 
         if (! $user) {
             return response()->json(['status' => 'error', 'message' => __('Kode OTP tidak valid atau sudah kedaluwarsa')], 422);
         }
+
+        // Token lama ikut dibuang: kata sandi berubah, jadi sesi yang dibuat
+        // dengan kata sandi lama tidak lagi mewakili akun ini.
+        $user->tokens()->delete();
 
         $user->update([
             'password' => $request->password,
@@ -296,6 +730,8 @@ class AuthController extends Controller
             'otp_expires_at' => null,
             'otp_purpose' => null,
         ]);
+
+        Cache::forget('otp_verified_for_'.$email);
 
         return response()->json([
             'status' => 'success',
@@ -458,7 +894,7 @@ class AuthController extends Controller
 
         User::where('email', $request->email)->update([
             'otp_code' => $otp,
-            'otp_expires_at' => now()->addMinutes(5),
+            'otp_expires_at' => now()->addMinutes(self::OTP_VERIFY_TTL_MINUTES),
             'otp_purpose' => $request->purpose,
         ]);
 
@@ -542,6 +978,25 @@ class AuthController extends Controller
 
         if ($request->purpose === 'forgot_password' || $request->purpose === 'verify_email' || $request->purpose === 'google_register') {
             $user->update(['email_verified_at' => now()]);
+        }
+
+        // forgot_password: OTP ini masih dibutuhkan satu langkah lagi, yaitu
+        // resetPassword(). Tabel di atas sudah mengosongkan otp_code, jadi
+        // tanpa penanda di cache, resetPassword() tidak akan punya apa-apa
+        // untuk dicocokkan -- persis yang membuat alur lupa kata sandi selalu
+        // gagal di mobile.
+        //
+        // TTL-nya ikut OTP_FORGOT_PASSWORD_TTL_MINUTES, sama seperti
+        // VerifyOtp::verify() di panel Filament yang menandainya sah 30
+        // menit. Nilai yang disimpan adalah kodenya, bukan `true`, supaya
+        // resetPassword() bisa mencocokkan ulang kode yang diketik
+        // pengguna.
+        if ($request->purpose === 'forgot_password') {
+            Cache::put(
+                'otp_verified_for_'.$request->email,
+                (string) $request->otp,
+                now()->addMinutes(self::OTP_FORGOT_PASSWORD_TTL_MINUTES),
+            );
         }
 
         return response()->json([

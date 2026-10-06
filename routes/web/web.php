@@ -68,7 +68,7 @@ Route::get('/welcome/legal/help', [WelcomeLegalWebController::class, 'help'])->n
 // The storefront is the 'welcome' Filament panel, and '/' is its front door.
 // The old marketing page that used to live here has been removed: guests browse
 // the landing page and the catalog, and anything account-shaped sends them to
-// the user panel's login (see AuthenticateWelcome).
+// the user panel's auth landing page (see AuthenticateWelcome).
 // '/' sadar-auth: semua yang login (termasuk super_admin, yang bisa
 // memakai Admin Panel maupun User Panel) -> home akun user;
 // tamu -> storefront welcome.
@@ -84,15 +84,23 @@ Route::redirect('/admin/inbox', '/admin/inbox/messages');
 
 // -----------------------------------------------------------------------------
 // SHARED — alias URL lama halaman auth
-// Slug route auth berubah mengikuti penamaan class: `login` -> `signin`,
-// `register` -> `signup` (loginRouteSlug / registrationRouteSlug di
-// UserPanelProvider & AdminPanelProvider). URL utamanya sekarang
-// `/user/signin`, `/user/signup`, `/admin/signin`. Bookmark & tautan lama
-// tetap dilayani redirect supaya tidak jadi 404.
-// Nama route tidak berubah, jadi route()/Filament::getLoginUrl() aman.
+// Slug route auth berubah mengikuti penamaan class: `login` -> `signin`
+// (loginRouteSlug di UserPanelProvider & AdminPanelProvider). URL utamanya
+// sekarang `/user/signin`, `/admin/signin`. Bookmark & tautan lama tetap
+// dilayani redirect supaya tidak jadi 404. Nama route tidak berubah, jadi
+// route()/Filament::getLoginUrl() aman.
 // -----------------------------------------------------------------------------
 Route::redirect('/user/login', '/user/signin');
-Route::redirect('/user/register', '/user/signup');
+// Registrasi email/password DINONAKTIFKAN: `->registration()` tidak
+// dipanggil di UserPanelProvider, jadi route `filament.user.auth.register`
+// tidak terdaftar. Kode `App\Filament\User\Auth\SignUp\SignUp` beserta
+// view-nya SENGAJA TIDAK DIHAPUS -- hanya baris pemanggilnya yang dikomentari
+// (lihat "CARA MENGHIDUPKAN LAGI" di UserPanelProvider). Door `/user/signup`
+// dan `/user/register` dilayani redirect ke `/user/auth`, satu-satunya halaman
+// auth untuk tamu, karena pendaftaran sekarang hanya lewat tombol Google di
+// sana (SocialiteController membuat akun otomatis).
+Route::redirect('/user/register', '/user/auth');
+Route::redirect('/user/signup', '/user/auth');
 Route::redirect('/admin/login', '/admin/signin');
 
 // -----------------------------------------------------------------------------
@@ -215,10 +223,22 @@ Route::middleware(['auth'])->prefix('welcome')->name('welcome.')->group(function
         ->name('invoice.pdf');
     Route::get('/messages/{inbox}/consultation-form.pdf', [WelcomeConsultationFormPdfController::class, 'download'])
         ->name('messages.consultation-form.pdf');
-    Route::get('/reports/{report}/pdf', [WelcomeReportPdfController::class, 'download'])
-        ->name('reports.pdf');
     Route::post('/reviews/{review}/helpful', [WelcomeReviewVoteController::class, 'toggle'])
         ->name('reviews.vote');
     Route::post('/reviews/{review}/report', [WelcomeReviewReportController::class, 'store'])
         ->name('reviews.report');
+});
+
+// PDF laporan -- SENGAJA di luar middleware auth, dan tetap memakai prefix
+// serta name yang sama (welcome.*) supaya URL-nya tidak berubah.
+//
+// Panel Welcome melayani tamu, dan laporan bug bisa dibuat oleh tamu lewat
+// formulir di halaman Messages. Dengan auth, tamu yang melapor akan
+// mendarat di halaman login alih-alih menerima PDF-nya.
+//
+// Kepemilikan dijaga di controller Welcome\ReportPdfController lewat
+// GuestIdentity: hanya pelapor (atau super_admin) yang boleh, selain itu 403.
+Route::prefix('welcome')->name('welcome.')->group(function (): void {
+    Route::get('/reports/{report}/pdf', [WelcomeReportPdfController::class, 'download'])
+        ->name('reports.pdf');
 });

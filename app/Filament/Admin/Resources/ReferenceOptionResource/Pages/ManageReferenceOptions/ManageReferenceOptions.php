@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\ReferenceOptionResource\Pages\ManageReferenceOptions;
 
+use App\Filament\Admin\Concerns\HasMobilePagination\HasMobilePagination;
 use App\Filament\Admin\Exports\ReferenceOptionExporter\ReferenceOptionExporter;
 use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\ReferenceOptionResource\ReferenceOptionResource;
@@ -12,6 +13,7 @@ use Filament\Resources\Pages\ManageRecords;
 
 class ManageReferenceOptions extends ManageRecords
 {
+    use HasMobilePagination;
     use HasDynamicBreadcrumbs;
     protected static string $resource = ReferenceOptionResource::class;
 

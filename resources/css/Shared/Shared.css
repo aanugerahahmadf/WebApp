@@ -1031,3 +1031,546 @@ body.cbir-browse-modal-open .fi-bottom-nav {
     0%, 100% { background-color: transparent; }
     30% { background-color: rgba(250, 204, 21, 0.25); border-radius: 12px; }
 }
+
+
+/* ======================================================================
+   TOPBAR KAPSUL + BLUR  --  SEMUA PERMUKAAN
+   (desktop app, website laptop/desktop, app Android/iOS, mobile web)
+   ======================================================================
+
+   MARKUP YANG DIKAKI (Filament 3.3, components/topbar/index.blade.php):
+
+       <body class="fi-body fi-panel-{welcome|user|admin}">
+         <div class="fi-layout flex min-h-screen flex-row-reverse overflow-x-clip">
+           <div class="fi-main-ctn ...">
+             <div class="fi-topbar sticky top-0 z-20 overflow-x-clip">   <-- di sini
+               <nav class="... h-16 bg-white shadow-sm ring-1 ring-gray-950/5
+                           dark:bg-gray-900 dark:ring-white/10 ...">
+
+   Dua hal yang harus diingat sebelum mengedit blok ini:
+
+   1) `.fi-topbar` BUKAN saudara dari `.fi-layout` -- ia anak `.fi-main-ctn`
+      yang ada di dalam `.fi-layout`. Jadi topbar yang `position: fixed`
+      dikeluarkan dari flow, dan ruang kosongnya harus dikembalikan lewat
+      `padding-top` di `.fi-layout`. Itu satu-satunya cara menggeser konten
+      turun tanpa menyentuh markup vendor.
+
+   2) File ini di-import di baris 3 tiap CSS panel, jadi blok ini dikompilasi
+      SEBELUM blok `position: fixed` milik panel
+      (resources/css/{User,Welcome,Admin}/*.css) -- dan blok panel itu
+      memakai `!important`. Karena `!important` menang berdasarkan SPECIFICITY
+      lebih dulu, baru urutan file, semua selektor di bawah sengaja ditulis
+      `.fi-panel-X .fi-topbar.fi-topbar` (0,3,0) -- lebih tinggi dari
+      `.fi-panel-user .fi-topbar` (0,2,0). Konsekuensinya blok panel tidak
+      perlu disentuh sama sekali.
+
+   YANG DIUBAH DARI STRIP PENUH MENJADI KAPSUL
+   - left/right dilepas dari 0 -> ada jarak dari tepi layar
+   - border-radius 9999px
+   - <nav> kehilangan warnanya sendiri (bg-white/dark:bg-gray-900) dan
+     shadow+ring-nya; kalau tidak, warna nav menimpa kapsul dan blur-nya
+     tidak kelihatan sama sekali
+   - latar kapsul = kaca BERVERNA, bukan putih/hitam polos. Warnanya diambil
+     dari `--primary-500` milik panel, jadi otomatis mengikuti brand:
+     kuning untuk storefront + panel user, indigo untuk panel admin.
+   ================================================================ */
+
+/* --- 1. Geometri kapsul, per lebar layar ---------------------------
+   Dideklarasikan di <body> panel supaya nilai yang sama bisa dipakai
+   ulang oleh aturan topbar DAN aturan .fi-layout (lihat blok 5 di
+   bawah) -- kalau diulang literal, keduanya pasti akan berbeda someday.
+
+   Mobile-first: nilai dasar = HP (0.5rem), lalu dinaikkan bertahap.      */
+.fi-panel-welcome,
+.fi-panel-user,
+.fi-panel-admin {
+    /* jarak kapsul dari tepi atas layar (safe area sudah dijumlahkan di
+       aturan topbar, bukan di sini) */
+    --fi-capsule-top: 0.5rem;
+
+    /* jarak kapsul dari tepi kiri/kanan */
+    --fi-capsule-side: 0.5rem;
+
+    /* tinggi kapsul = tinggi <nav> bawaan Filament (h-16) */
+    --fi-capsule-h: 4rem;
+
+    /* ruang napas antara kapsul dan konten di bawahnya */
+    --fi-capsule-gap: 0.5rem;
+
+    /* padding horizontal DI DALAM kapsul (menggantikan px-4 / md:px-6 /
+       lg:px-8 milik Filament) */
+    --fi-capsule-inset: 0.5rem;
+}
+
+@media (min-width: 640px) {
+    .fi-panel-welcome,
+    .fi-panel-user,
+    .fi-panel-admin {
+        --fi-capsule-top: 0.625rem;
+        --fi-capsule-side: 0.75rem;
+        --fi-capsule-gap: 0.75rem;
+        --fi-capsule-inset: 0.75rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .fi-panel-welcome,
+    .fi-panel-user,
+    .fi-panel-admin {
+        --fi-capsule-top: 0.75rem;
+        --fi-capsule-side: 1.25rem;
+        --fi-capsule-gap: 1.25rem;
+        --fi-capsule-inset: 1rem;
+    }
+}
+
+/* --- 1b. RESEP KACA -- satu sumber untuk semua permukaan ------------
+ *
+ * Kapsul topbar, sidebar, dan panel dropdown BOLEH sama persis karena
+ * ketiganya membaca token yang sama di sini. Sebelumnya resepnya ditulis
+ * ulang di tiap blok, dan "sama persis" itu hanya Seekarta Convention --
+ * satu angka yang berubah di satu tempat akan membuat ketiganya diam-diam
+ * berbeda. Dengan token, mustahil.
+ *
+ * `--fi-glass-t*` memakai rgba() DENGAN KOMA, bukan
+ * `rgb(var(--primary-500) / a)`. Filament menulis `--primary-500` sebagai
+ * "234, 179, 8" (gaya rgb() lama) -- mencampur koma dengan slash-alpha
+ * tidak valid, dan browser membuang whole declaration-nya tanpa suara.
+ *
+ * `--primary-500` dibaca di dalam custom property aman: var() disubstitusi
+ * saat dipakai, bukan saat property ini dideklarasikan, jadi nilai Filament
+ * yang ditulis belakangan di <style> tetap terpakai.
+ *
+ * Sudut gradien (`--fi-glass-angle`) dibedakan per permukaan: 90deg untuk
+ * panel yang lebih lebar dari tinggi (kapsul, dropdown), 180deg untuk
+ * sidebar yang setinggi layar. Warnanya sama, hanya arahnya.
+ * ------------------------------------------------------------------- */
+.fi-panel-welcome,
+.fi-panel-user,
+.fi-panel-admin {
+    /* Mode terang */
+    --fi-glass-bg: rgb(255 255 255 / 0.62);
+    --fi-glass-t1: rgba(var(--primary-500, 250, 204, 21), 0.22);
+    --fi-glass-t2: rgba(var(--primary-500, 250, 204, 21), 0.05);
+    --fi-glass-t3: rgba(var(--primary-500, 250, 204, 21), 0.18);
+    --fi-glass-ring: rgb(255 255 255 / 0.65);
+    --fi-glass-angle: 90deg;
+
+    --fi-glass-blur: blur(20px) saturate(180%);
+}
+
+/* Mode gelap. Alpha cucian warna sengaja diturunkan dari mode terang: atas
+   latar gelap, alpha yang sama jauh lebih kuat dan berubah jadi kuning
+   keruh. */
+.dark .fi-panel-welcome,
+.dark .fi-panel-user,
+.dark .fi-panel-admin {
+    --fi-glass-bg: rgb(12 12 15 / 0.70);
+    --fi-glass-t1: rgba(var(--primary-500, 250, 204, 21), 0.11);
+    --fi-glass-t2: rgba(var(--primary-500, 250, 204, 21), 0.03);
+    --fi-glass-t3: rgba(var(--primary-500, 250, 204, 21), 0.09);
+    --fi-glass-ring: rgb(255 255 255 / 0.12);
+}
+
+/* --- 2. Kapsul itu sendiri ----------------------------------------- */
+.fi-panel-welcome .fi-topbar.fi-topbar,
+.fi-panel-user .fi-topbar.fi-topbar,
+.fi-panel-admin .fi-topbar.fi-topbar {
+    /* Ditulis ulang di sini, bukan hanya di-andalkan dari blok
+       `position: fixed` milik tiap panel: kapsul tidak boleh pernah
+       kembali jadi strip lengket kalau salah satu panel CSS berubah. */
+    position: fixed !important;
+    z-index: 40 !important;
+
+    /* Lepas dari tepi kiri/kanan supaya jadi kapsul, bukan strip penuh. */
+    left: var(--fi-capsule-side) !important;
+    right: var(--fi-capsule-side) !important;
+    width: auto !important;
+
+    /* Safe area dijumlahkan ke `top`, BUKAN ke padding atas. Alasannya:
+       padding atas dipakai sebagai ruang kosong -- kalau safe area ikut
+       di sana, kapsul jadi setinggi safe area + 4rem dan isinya terdorong
+       ke bawah semua. Dikalikan ke `top`, pita status bar tetap kosong
+       seperti bawaan iOS dan kapsul tetap setinggi 4rem. */
+    top: calc(env(safe-area-inset-top, 0px) + var(--fi-capsule-top)) !important;
+    padding-top: 0 !important;
+
+    /* Penting: topbar adalah kotak dengan border, dan <nav> di dalamnya juga
+       punya tinggi. Tanpa box-sizing + tinggi yang eksplisit, total
+       keduanya jadi 4rem + 2px border, dan padding-top .fi-layout (yang
+       memakai --fi-capsule-h) jadi kurang 2px dari tinggi kapsul sungguhan. */
+    box-sizing: border-box !important;
+    height: var(--fi-capsule-h) !important;
+
+    border-radius: 9999px !important;
+
+    /* Latar: kaca bening + cucian warna brand, dari token blok 1b --
+       nilai yang sama dengan sidebar dan panel dropdown. */
+    background-color: var(--fi-glass-bg) !important;
+    background-image: linear-gradient(
+        var(--fi-glass-angle),
+        var(--fi-glass-t1) 0%,
+        var(--fi-glass-t2) 45%,
+        var(--fi-glass-t3) 100%
+    ) !important;
+
+    border: 1px solid var(--fi-glass-ring) !important;
+
+    /* -webkit- WAJIB: Android WebView dan iOS Safari tidak lagi mendukung
+       backdrop-filter tanpa prefiks itu. */
+    -webkit-backdrop-filter: var(--fi-glass-blur) !important;
+    backdrop-filter: var(--fi-glass-blur) !important;
+
+    /* Bayangan tipis + garis highlight di tepi atas supaya kapsul terbaca
+       melayang dan berkaca, bukan menempel. */
+    box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 0.55),
+        0 1px 2px rgb(0 0 0 / 0.05),
+        0 10px 30px -12px rgb(0 0 0 / 0.18) !important;
+
+    /* Penting: badge notifikasi & dropdown topbar menerobos keluar kotak
+       kapsul. overflow clip bawaan Filament akan memotongnya. */
+    overflow: visible !important;
+    overflow-x: visible !important;
+}
+
+/* Mode gelap: seluruh nilai comes dari token `.dark .fi-panel-*` di blok 1b,
+   jadi tidak ada lagi yang ditulis ulang di sini. */
+.dark .fi-panel-welcome .fi-topbar.fi-topbar,
+.dark .fi-panel-user .fi-topbar.fi-topbar,
+.dark .fi-panel-admin .fi-topbar.fi-topbar {
+    box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 0.10),
+        0 1px 2px rgb(0 0 0 / 0.40),
+        0 10px 30px -12px rgb(0 0 0 / 0.60) !important;
+}
+
+/* --- 3. <nav> di dalam kapsul -------------------------------------- */
+/* Filament mewarnai <nav> sendiri (bg-white dark:bg-gray-900). Kalau tidak
+   ditransparan, warna itu menimpa kapsul dan efek blur-nya tidak terlihat
+   sama sekali. `shadow-sm` + `ring-1` juga harus dilepas: keduanya
+   menggambar tepat di luar kotak nav yang ukurannya sama persis dengan
+   kapsul, jadi hasilnya garis 1px dobel yang tidak berkarakter. */
+.fi-panel-welcome .fi-topbar.fi-topbar > nav,
+.fi-panel-user .fi-topbar.fi-topbar > nav,
+.fi-panel-admin .fi-topbar.fi-topbar > nav {
+    /* Mengisi kapsul, bukan menentukan tingginya sendiri -- tinggi kapsul
+       sudah dikunci oleh --fi-capsule-h di elemen .fi-topbar. */
+    height: 100% !important;
+
+    background-color: transparent !important;
+    background-image: none !important;
+
+    box-shadow: none !important;
+    --tw-shadow: 0 0 #0000 !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+    --tw-ring-offset-shadow: 0 0 #0000 !important;
+    border: 0 !important;
+
+    border-radius: 9999px !important;
+
+    /* Padding dalam dikecilkan: kapsul sudah membawa jarak dari tepi layar,
+       jadi px-4/md:px-6/lg:px-8 bawaan Filament akan terasa terlalu
+       renggang di dalam bentuk melingkar. */
+    padding-inline: var(--fi-capsule-inset) !important;
+
+    overflow: visible !important;
+    overflow-x: visible !important;
+}
+
+/* --- 4. Item topbar: TIDAK DIAPA-APA ------------------------------- */
+/*
+ * Item Top Navigation dibiarkan 100% bawaan Filament -- baik yang aktif
+ * (`bg-gray-50 dark:bg-white/5` + `text-primary-*`) maupun yang tidak
+ * (`hover:bg-gray-50 dark:hover:bg-white/5`). Blok ini sengaja kosong,
+ * hanya mencatat alasannya supaya tidak ada yang "memperbaiki" lagi:
+ *
+ * 1. Percobaan memberi item aktif lapisan warna brand
+ *    (`rgba(var(--primary-500), .22)`). Hasilnya buruk: kapsul sudah
+ *    kuning, jadi alpha kuning kedua menumpuk dan item aktif berubah jadi
+ *    kotak cokelat keruh (olive) -- terlihat seperti bug, bukan desain.
+ * 2. Percobaan berikutnya menyamakan semua item (kartu + teks) dan
+ *    menyentil menu geser juga. Keduanya permintaan yang tidak pernah
+ *    dibuat -- permintaannya hanya soal bentuk kapsul dan blur-nya.
+ *
+ * Jadi: bentuk kapsul + blur dicampur, item topbar dan menu geser
+ * diteruskan apa adanya ke Filament. Kalau nanti item aktif benar-benar
+ * butuh pembeda yang lebih kuat, PREFERENKAN outline tipis
+ * (`box-shadow: inset 0 0 0 1px ...`) -- isian warna apa pun akan
+ * menumpuk dengan cucian kapsul.
+ */
+
+/* --- 5. Dorong konten agar tidak tertutup kapsul -------------------- */
+/* Topbar-nya fixed, jadi tidak menyisakan ruang untuk dirinya sendiri di
+   flow. Padding-top di .fi-layout-lah yang mengembalikannya:
+     jarak atas + tinggi kapsul + jarak bawah.
+   Nilai-nilai itu dibaca dari custom property yang sama, jadi kapsul
+   tidak mungkin tertutup kalau nanti satu angka diubah. */
+.fi-panel-welcome .fi-layout.fi-layout,
+.fi-panel-user .fi-layout.fi-layout,
+.fi-panel-admin .fi-layout.fi-layout {
+    padding-top: calc(
+        env(safe-area-inset-top, 0px) +
+        var(--fi-capsule-top) +
+        var(--fi-capsule-h) +
+        var(--fi-capsule-gap)
+    ) !important;
+}
+
+/* --- 6. SIDEBAR: latar sama persis dengan kapsul topbar -------------
+ *
+ * Permintaan: warna background sidebar harus sama dengan topbar/header,
+ * jadi yang dipakai ACLAH yang sama -- bukan approximation.
+ *
+ * Yang ditulis ulang: Filament memberi sidebar warnanya sendiri lewat
+ * `bg-white dark:bg-gray-900` pada .fi-sidebar, DAN HAL YANG SAMA LAGI
+ * pada .fi-sidebar-header di dalamnya. Dua lapis itu harus dilepas
+ * semua; kalau hanya satu, yang di atas menimpa warna kaca dan sidebar
+ * tetap terlihat seperti panel datar.
+ *
+ * Yang TIDAK diubah: bentuk sidebar (penuh, bukan kapsul), posisi, dan
+ * isi menunya. Permintaannya soal WARNA LATAR, bukan soal membikin
+ * sidebar ikut melingkar.
+ * ------------------------------------------------------------------- */
+.fi-panel-welcome .fi-sidebar,
+.fi-panel-user .fi-sidebar,
+.fi-panel-admin .fi-sidebar {
+    /* Resep yang sama persis dengan kapsul topbar (blok 1b). Yang beda
+       HANYA arah gradien: sidebar setinggi layar, jadi 180deg kelihatan
+       mengalir dari atas ke bawah; kapsul lebih lebar dari tinggi, jadi
+       90deg. Warnanya identik. */
+    --fi-glass-angle: 180deg;
+
+    background-color: var(--fi-glass-bg) !important;
+    background-image: linear-gradient(
+        var(--fi-glass-angle),
+        var(--fi-glass-t1) 0%,
+        var(--fi-glass-t2) 30%,
+        var(--fi-glass-t3) 100%
+    ) !important;
+
+    -webkit-backdrop-filter: var(--fi-glass-blur) !important;
+    backdrop-filter: var(--fi-glass-blur) !important;
+}
+
+/* Lapisan kedua yang menimpa: header sidebar. Transparan supaya kacanya
+   yang terlihat, bukan warna panelnya. */
+.fi-panel-welcome .fi-sidebar .fi-sidebar-header,
+.fi-panel-user .fi-sidebar .fi-sidebar-header,
+.fi-panel-admin .fi-sidebar .fi-sidebar-header {
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+/* --- 7. GLOBAL SEARCH: tengah & melebar di HP SAJA ------------------
+ *
+ * Permintaan: di aplikasi mobile Android/iOS dan website mobile
+ * Android/iOS, kotak Global Search harus pas di tengah-tengah dan
+ * selebar mungkin -- jangan terjepit di sisi.
+ *
+ * DI APLIKASI DESKTOP UKURANNYA HARUS SEPERTI SEMULA (bawaan).
+ *
+ * `@media` SAJA TIDAK CUKUP untuk itu, dan inilah alasannya:
+ * jendela aplikasi desktop (Electron) tidak punya `minWidth` -- config
+ * window-nya tidak menetapkan satu pun, jadi jendela desktop bisa
+ * dikecilkan ke lebar apa saja, termasuk di bawah 1024px. Kalau aturan ini
+ * hanya bergantung pada lebar, desktop app yang jendela sempit ikut
+ * mendapat tampilan search versi mobile. Ini salah: yang diminta melebar
+ * adalah HP dan mobile web, bukan desktop app yang kebetulan sempit.
+ *
+ * Karena itu semua selektor di blok ini diberi
+ * `:root:not(.native-desktop)`. Kelas `.native-desktop` dipasang ke
+ * <html> oleh User.components.platform-runtime-script, yang sekarang
+ * didaftarkan di HEAD_START (lihat PlatformSupportServiceProvider)
+ * supaya kelasnya ada SEBELUM topbar ter-render -- kalau skripnya jalan
+ * di akhir <body>, kotak search akan sempat melebar lalu menyusut
+ * sendiri di depan mata.
+ *
+ * Di sisi lain: 1024px ke atas tidak pernah cocok dengan `@media` di bawah,
+ * jadi laptop dan desktop website otomatis aman tanpa tambahan apa pun.
+ *
+ * STRUKTUR YANG DIPAKAI (Filament components/topbar/index.blade.php):
+ *
+ *   nav > div.ms-auto.flex.items-center.gap-x-4        <- baris kanan
+ *        ├─ div.fi-global-search.flex.items-center      <- kotak pencarian
+ *        ├─ (GLOBAL_SEARCH_AFTER hook)                  <- switcher, ikon
+ *        └─ database notifications + user menu
+ *
+ * Kenapa "di tengah" di sini berarti "melebar", bukan "terpusat proporsional
+ * di tengah layar": baris `.ms-auto` masih memuat ikon-ikon lain di
+ * sebelahnya, jadi kotak search mengisi RUANG TERSISA di antara tombol menu
+ * dan ikon -- itulah arti "di tengah" di dalam topbar. Memusatkannya ke
+ * tengah layar justru membuat baris topbar tidak seimbang.
+ *
+ * Yang dilakukan: ruang di tengah benar-benar dipakai penuh, bukan
+ * menyisakan celek sempit di tengah. Tiga aturan -- kotak search memakai
+ * ruang sisa baris, dua wrapper di dalamnya lebar penuh, dan baris induk
+ * boleh shrink.
+ * ------------------------------------------------------------------- */
+@media (max-width: 1023px) {
+    /* Isi ruang sisa di baris kanan, bukan cuma selebar isinya. */
+    :root:not(.native-desktop) .fi-panel-welcome .fi-topbar .fi-global-search,
+    :root:not(.native-desktop) .fi-panel-user .fi-topbar .fi-global-search,
+    :root:not(.native-desktop) .fi-panel-admin .fi-topbar .fi-global-search {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+    }
+
+    /* Dua pembungkus di dalam kotak search juga harus ikut melebar.
+       Kalau hanya wrapper luarnya, input di dalamnya tetap sempit. */
+    :root:not(.native-desktop) .fi-panel-welcome .fi-topbar .fi-global-search > div,
+    :root:not(.native-desktop) .fi-panel-user .fi-topbar .fi-global-search > div,
+    :root:not(.native-desktop) .fi-panel-admin .fi-topbar .fi-global-search > div,
+    :root:not(.native-desktop) .fi-panel-welcome .fi-topbar .fi-global-search-field,
+    :root:not(.native-desktop) .fi-panel-user .fi-topbar .fi-global-search-field,
+    :root:not(.native-desktop) .fi-panel-admin .fi-topbar .fi-global-search-field {
+        width: 100% !important;
+        max-width: none !important;
+    }
+
+    /* Baris kanan harus membiarkan anak-anaknya shrunk, supaya
+       min-width: 0 di atas benar-benar berlaku. */
+    :root:not(.native-desktop) .fi-panel-welcome .fi-topbar > nav .ms-auto,
+    :root:not(.native-desktop) .fi-panel-user .fi-topbar > nav .ms-auto,
+    :root:not(.native-desktop) .fi-panel-admin .fi-topbar > nav .ms-auto {
+        min-width: 0 !important;
+    }
+}
+
+/* --- 8. PANEL DROPDOWN: kaca yang sama dengan topbar & sidebar ------
+ *
+ * Permintaan: menu yang keluar dari Top Navigation -- dropdown grup
+ * navigasi, switcher tema, switcher bahasa, dan user menu -- latarnya
+ * ikut berburam seperti kapsul topbar dan sidebar. Sebelumnya panel ini
+ * masih `dark:bg-gray-900` pekat, jadi terlihat seperti sistem operasi
+ * lain yang tidak ikut di-style.
+ *
+ * Kenapa selector-nya bisa begini, padahal Filament men-"teleport"
+ * dropdown: yang dipindahkan ke <body> adalah PANEL-nya, tapi root
+ * `.fi-dropdown` tetap berada di tempat asalnya. Ukur ulang diukur langsung:
+ * rantai induknya `panel > .fi-dropdown-panel > .fi-dropdown > ... >
+ * nav.fi-topbar` dan `... > aside.fi-sidebar`. Jadi menandai "dropdown
+ * yang asal dari topbar/sidebar" bisa lewat selector ancestor biasa --
+ * tidak perlu dataset atau JS.
+ *
+ * `.lang-dd` DIBUTUHKAN SENDIRI karena language switcher bukan komponen
+ * dropdown Filament: view-nya menulis dropdown tangan sendiri dengan
+ * `<template x-teleport="body">`, jadi panelnya benar-benar pindah ke
+ * <body> dan TIDAK punya leluhur `.fi-topbar` maupun `.fi-sidebar`.
+ * Selector dropdown di atas tidak akan pernah menyentuhnya. Yang
+ * menyelamatkan adalah `.fi-panel-*` ada di <body> itu sendiri, jadi
+ * `body.fi-panel-x .lang-dd` tetap cocok -- surface-nya tidak masalah.
+ *
+ * SCOPE SENGAJA TIDAK GLOBAL: yang diberi kaca hanya dropdown yang lahir
+ * dari topbar atau sidebar. Dropdown di dalam konten halaman (action
+ * tabel, filter, select, date-picker, color-picker) TIDAK ikut -- itu
+ * menu utilitas yang padat teks, bukan bagian dari "chrome" navigasi, dan
+ * menghilangkannya jadi transparan hanya mengurangi keterbacaan.
+ *
+ * `ring-1` dan `shadow-lg` bawaan Filament pada panel sengaja dibiarkan:
+ * di atas kaca keduanya justru yang bikin panel terbaca sebagai lapisan
+ * tersendiri, bukan noda warna.
+ * ------------------------------------------------------------------- */
+.fi-panel-welcome .fi-topbar .fi-dropdown .fi-dropdown-panel,
+.fi-panel-user .fi-topbar .fi-dropdown .fi-dropdown-panel,
+.fi-panel-admin .fi-topbar .fi-dropdown .fi-dropdown-panel,
+.fi-panel-welcome .fi-sidebar .fi-dropdown .fi-dropdown-panel,
+.fi-panel-user .fi-sidebar .fi-dropdown .fi-dropdown-panel,
+.fi-panel-admin .fi-sidebar .fi-dropdown .fi-dropdown-panel,
+.fi-panel-welcome .lang-dd,
+.fi-panel-user .lang-dd,
+.fi-panel-admin .lang-dd {
+    background-color: var(--fi-glass-bg) !important;
+    background-image: linear-gradient(
+        var(--fi-glass-angle),
+        var(--fi-glass-t1) 0%,
+        var(--fi-glass-t2) 45%,
+        var(--fi-glass-t3) 100%
+    ) !important;
+
+    -webkit-backdrop-filter: var(--fi-glass-blur) !important;
+    backdrop-filter: var(--fi-glass-blur) !important;
+}
+
+/* Garis pemisah antar item (`divide-y`) diturunkan supaya tidak menggambar
+   garis terang di atas kaca.
+
+   Ditulis sebagai `border-color` langsung, BUKAN lewat
+   `--tw-divide-white-5-opacity`: Tailwind 4 meng-compile `divide-white/5`
+   menjadi `color-mix(in oklab, ...)` yang nilainya sudah ridden, jadi
+   menimpa custom property-nya tidak berpengaruh sama sekali. */
+.dark .fi-panel-welcome .fi-topbar .fi-dropdown .fi-dropdown-panel > :not(:last-child),
+.dark .fi-panel-user .fi-topbar .fi-dropdown .fi-dropdown-panel > :not(:last-child),
+.dark .fi-panel-admin .fi-topbar .fi-dropdown .fi-dropdown-panel > :not(:last-child),
+.dark .fi-panel-welcome .fi-sidebar .fi-dropdown .fi-dropdown-panel > :not(:last-child),
+.dark .fi-panel-user .fi-sidebar .fi-dropdown .fi-dropdown-panel > :not(:last-child),
+.dark .fi-panel-admin .fi-sidebar .fi-dropdown .fi-dropdown-panel > :not(:last-child) {
+    border-color: rgb(255 255 255 / 0.08) !important;
+}
+
+/* --- 9. Hormati preferensi aksesibilitas --------------------------- */
+/* Pengguna yang minta transparansi dikurangi (Windows "Transparency
+   effects" off, macOS Reduce Transparency, iOS Reduce Transparency) tetap
+   dapat bentuk kapsulnya, tapi isinya dibuat pekat supaya teks di
+   dalamnya tidak bergantung pada apa yang ada di belakangnya. */
+@media (prefers-reduced-transparency: reduce) {
+    .fi-panel-welcome .fi-topbar.fi-topbar,
+    .fi-panel-user .fi-topbar.fi-topbar,
+    .fi-panel-admin .fi-topbar.fi-topbar {
+        background-color: rgb(255 255 255 / 0.98) !important;
+        background-image: none !important;
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+    }
+
+    .dark .fi-panel-welcome .fi-topbar.fi-topbar,
+    .dark .fi-panel-user .fi-topbar.fi-topbar,
+    .dark .fi-panel-admin .fi-topbar.fi-topbar {
+        background-color: rgb(9 9 11 / 0.98) !important;
+    }
+
+    /* Sidebar ikut, supaya tidak jadi satu-satunya panel transparan. */
+    .fi-panel-welcome .fi-sidebar,
+    .fi-panel-user .fi-sidebar,
+    .fi-panel-admin .fi-sidebar {
+        background-color: rgb(255 255 255 / 0.98) !important;
+        background-image: none !important;
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+    }
+
+    .dark .fi-panel-welcome .fi-sidebar,
+    .dark .fi-panel-user .fi-sidebar,
+    .dark .fi-panel-admin .fi-sidebar {
+        background-color: rgb(9 9 11 / 0.98) !important;
+    }
+
+    /* Dropdown ikut, supaya tetap terbaca di atas konten apa pun. */
+    .fi-panel-welcome .fi-topbar .fi-dropdown .fi-dropdown-panel,
+    .fi-panel-user .fi-topbar .fi-dropdown .fi-dropdown-panel,
+    .fi-panel-admin .fi-topbar .fi-dropdown .fi-dropdown-panel,
+    .fi-panel-welcome .fi-sidebar .fi-dropdown .fi-dropdown-panel,
+    .fi-panel-user .fi-sidebar .fi-dropdown .fi-dropdown-panel,
+    .fi-panel-admin .fi-sidebar .fi-dropdown .fi-dropdown-panel,
+    .fi-panel-welcome .lang-dd,
+    .fi-panel-user .lang-dd,
+    .fi-panel-admin .lang-dd {
+        background-color: rgb(255 255 255 / 0.98) !important;
+        background-image: none !important;
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+    }
+
+    .dark .fi-panel-welcome .fi-topbar .fi-dropdown .fi-dropdown-panel,
+    .dark .fi-panel-user .fi-topbar .fi-dropdown .fi-dropdown-panel,
+    .dark .fi-panel-admin .fi-topbar .fi-dropdown .fi-dropdown-panel,
+    .dark .fi-panel-welcome .fi-sidebar .fi-dropdown .fi-dropdown-panel,
+    .dark .fi-panel-user .fi-sidebar .fi-dropdown .fi-dropdown-panel,
+    .dark .fi-panel-admin .fi-sidebar .fi-dropdown .fi-dropdown-panel,
+    .dark .fi-panel-welcome .lang-dd,
+    .dark .fi-panel-user .lang-dd,
+    .dark .fi-panel-admin .lang-dd {
+        background-color: rgb(9 9 11 / 0.98) !important;
+    }
+}

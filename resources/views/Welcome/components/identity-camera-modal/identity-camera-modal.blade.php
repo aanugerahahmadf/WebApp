@@ -40,6 +40,20 @@
             return this.targetField === 'selfie_photo' ? 'user' : 'environment';
         },
 
+        /* Cermin untuk kamera depan (selfie).
+         *
+         * Tanpa scaleX(-1), preview depan tidak seperti cermin: user bergeser
+         * ke kiri, di layar ikut ke kiri. Seperti cermin kaca, arah di preview
+         * harus berlawanan supaya user bisa memosisikan wajahnya.
+         *
+         * Hanya untuk targetField 'selfie_photo' (kamera depan). Foto KTP
+         * memakai kamera belakang dan TIDAK boleh dicermin -- teksnya akan
+         * terbalik dan tidak terbaca.
+         */
+        get mirroredView() {
+            return this.targetField === 'selfie_photo';
+        },
+
         isMobile() {
             return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         },
@@ -66,6 +80,9 @@
                     audio: false,
                 });
                 video.srcObject = this.stream;
+
+                /* Panduan AI mulai begitu ada stream frame yang bisa dianalisis. */
+                this.startCoach();
                 await video.play();
             } catch (e) {
                 alert('{{ __('Tidak dapat mengakses kamera. Pastikan izin kamera diberikan.') }}');
@@ -78,6 +95,9 @@
                 this.stream.getTracks().forEach(t => t.stop());
                 this.stream = null;
             }
+            /* Tanpa stream tidak ada frame untuk dianalisis, dan suara
+             * AI harus berhenti sekarang juga. */
+            this.stopCoach();
         },
 
         flipCamera() {
@@ -187,6 +207,44 @@
                     fp.dispatchEvent(new Event('change', { bubbles: true }));
                 }
             }
+        },
+
+        /* ── Real-time AI scan coach ──────────────────────────────────────
+         * Mengukur fokus, pencahayaan, dan posisi subjek dari frame video
+         * langsung, lalu memberi arahan secara lisan dan visual (lingkaran
+         * hijau saat kualitas siap ditekan).
+         *
+         * Seluruh algoritmanya ada di resources/js/ai-scan-coach supaya
+         * objek x-data ini tetap tipis. Analisis real-time tidak mungkin
+         * lewat server: satu round-trip per frame jauh terlalu lambat.
+         *
+         * PENTING: hanya kutip tunggal di dalam x-data. Atributnya dibungkus
+         * kutip ganda, satu saja akan menutupnya lebih awal. */
+        coach: null,
+
+        startCoach() {
+            this.stopCoach();
+
+            const factory = window.AIScanCoach && window.AIScanCoach.create;
+            if (!factory) return;
+
+            const mount = this.$refs.camWrap;
+            if (!mount) return;
+
+            this.coach = factory({
+                mount: mount,
+                mode: this.targetField === 'ktp_photo' ? 'document' : 'face',
+                lang: document.documentElement.lang || '{{ app()->getLocale() }}',
+                video: () => this.$refs.camVideo,
+            });
+
+            this.coach.start();
+        },
+
+        stopCoach() {
+            if (!this.coach) return;
+            this.coach.stop();
+            this.coach = null;
         },
     }"
     x-on:open-identity-camera.window="open($event.detail.target)"
@@ -348,7 +406,7 @@
 
                 {{-- WebRTC Camera view --}}
                 <div x-show="showCamera" style="display:none;">
-                    <div class="relative bg-black" style="aspect-ratio:4/3;">
+                    <div x-ref="camWrap" class="relative bg-black" style="aspect-ratio:4/3;">
                         <video
                             x-ref="camVideo"
                             x-show="!photoTaken"
@@ -356,12 +414,13 @@
                             playsinline
                             muted
                             class="h-full w-full object-cover"
-                            style="display:block;"
+                            :style="mirroredView ? 'display:block; transform: scaleX(-1);' : 'display:block;'"
                         ></video>
                         <canvas
                             x-ref="camCanvas"
                             x-show="photoTaken"
                             class="h-full w-full object-cover"
+                            :style="mirroredView ? 'transform: scaleX(-1);' : ''"
                             style="display:none;"
                         ></canvas>
                         <div

@@ -690,3 +690,38 @@
         padding-bottom: 1.5rem !important;
     }
 }
+
+
+/*
+ * AUTH — TANPA BACKGROUND KARTU / SECTION
+ *
+ * Halaman auth (Sign In / Sign Up / OTP / Complete Profile / Security
+ * Question / Two Factor) memakai layout `filament-panels::components.page.simple`
+ * yang menaruh:
+ *
+ *   body.fi-body         bg-gray-50 / dark:bg-gray-950  -> NAVY BAWAAN FILAMENT
+ *   .fi-simple-main     bg-white    / dark:bg-gray-900 -> kartu putih
+ *   section.fi-section  bg-white    / dark:bg-gray-900 -> section putih
+ *
+ * Yang dihapus HANYA dua yang terakhir: kartu dan section. Background navy
+ * bawaan Filament di <body> SENGAJA TETAP -- menghilangkannya membuat halaman
+ * auth kehilangan warna panelnya dan terlihat seperti layar kosong.
+ *
+ * Ditulis sebagai override di sini, BUKAN mengedit file vendor:
+ * `simple.blade.php` akan ditimpa setiap `composer update` dan perubahan itu
+ * tidak terlihat di diff.
+ *
+ * Bayangan dan ring ikut dilepas pada kartu: sisa shadow/ring di atas
+ * background transparan hanya menyisakan garis samar tanpa bentuk kartu, dan itu
+ * terlihat seperti elemen yang belum selesai dirender.
+ *
+ * Scoped ke .fi-panel-user supaya halaman panel lain (Home, Settings, katalog)
+ * tidak ikut kehilangan background-nya.
+ */
+
+.fi-panel-user .fi-simple-main,
+.fi-panel-user section.fi-section {
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}

@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands\AppInstall;
 
+use App\Support\PasswordPolicy\PasswordPolicy;
 use Illuminate\Console\Command;
 
 class AppInstall extends Command
@@ -42,11 +43,15 @@ class AppInstall extends Command
 
         if ($this->confirm('Create initial admin user?', true)) {
             $email = $this->ask('Admin Email', 'admin@example.com');
-            $password = $this->secret('Admin Password (min 8 chars)');
+            $password = $this->secret('Admin Password (min '.PasswordPolicy::MIN_LENGTH.' chars: upper, lower, digit, symbol)');
             $name = $this->ask('Admin Name', 'Super Admin');
 
-            if (strlen($password) < 8) {
-                $this->error('Password needs to be at least 8 characters.');
+            $violations = PasswordPolicy::violations($password);
+            if ($violations !== []) {
+                foreach ($violations as $violation) {
+                    $this->error($violation);
+                }
+                $this->line('  Contoh yang memenuhi: @Superadmin123');
             } else {
                 $this->call('app:init-admin', [
                     'email' => $email,

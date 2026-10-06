@@ -357,6 +357,15 @@
                                         $csCategory = $selectedConversation->meta['cs_category'] ?? null;
                                         $consultationForms = $selectedConversation->meta['consultation_forms'] ?? [];
                                         $hasConsultationForm = !empty($consultationForms[(string) $this->chatUserId()]);
+
+                                        // Laporan yang sudah dikirim pada percakapan ini. Tabel reports
+                                        // tidak punya kolom inbox_id, jadi id-nya dicatat di meta
+                                        // percakapan oleh aksi csReportForm. Tanpa ini, view tidak punya
+                                        // cara tahu bahwa laporan sudah dikirim -- sehingga tombol Unduh
+                                        // PDF tidak akan pernah muncul.
+                                        $submittedReports = $selectedConversation->meta['reports'] ?? [];
+                                        $mySubmittedReport = $submittedReports[(string) $this->chatUserId()] ?? null;
+                                        $hasSubmittedReport = !empty($mySubmittedReport['id']);
                                     @endphp
                                     @if ($csCategory === 'decor_consultation' && !empty($meta['consultation_form']))
                                         <div class="mt-3 flex flex-wrap gap-2">
@@ -374,12 +383,23 @@
                                             @endif
                                         </div>
                                     @elseif (in_array($csCategory, ['bug_report', 'account_issue', 'order_help', 'payment_issue', 'general_question'], true))
-                                        <div class="mt-3">
+                                        <div class="mt-3 flex flex-wrap gap-2">
                                             <button type="button" wire:click="mountAction('csReportForm')"
                                                 class="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-primary-500">
                                                 <x-filament::icon icon="heroicon-o-clipboard-document-list" class="h-4 w-4" />
-                                                {{ __('Isi Formulir Laporan') }}
+                                                {{ $hasSubmittedReport ? __('Kirim ulang Laporan') : __('Isi Formulir Laporan') }}
                                             </button>
+                                            @if ($hasSubmittedReport)
+                                                {{-- Link, bukan tombol JS: window.location.assign() dari
+                                                     Livewire sering diblokir browser karena tidak ada
+                                                     user gesture. Pola yang sama dipakai tombol Unduh PDF
+                                                     formulir dekorasi di atas. --}}
+                                                <a href="{{ route('welcome.reports.pdf', $mySubmittedReport['id']) }}"
+                                                    class="inline-flex items-center gap-1.5 rounded-lg border border-primary-500 px-3 py-2 text-xs font-semibold text-primary-700 transition hover:bg-primary-50 dark:text-primary-300 dark:hover:bg-primary-900/30">
+                                                    <x-filament::icon icon="heroicon-o-arrow-down-tray" class="h-4 w-4" />
+                                                    {{ __('Unduh PDF') }}
+                                                </a>
+                                            @endif
                                         </div>
                                     @endif
                                 @endif

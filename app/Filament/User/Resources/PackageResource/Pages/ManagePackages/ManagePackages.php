@@ -4,7 +4,6 @@ namespace App\Filament\User\Resources\PackageResource\Pages\ManagePackages;
 
 use App\Enums\OrderStatus\OrderStatus;
 use App\Filament\Concerns\HasDynamicBreadcrumbs;
-use App\Filament\User\Pages\Home\Home;
 use App\Filament\User\Resources\PackageResource\PackageResource;
 use App\Models\Cart\Cart;
 use App\Models\Package\Package;
@@ -14,7 +13,6 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Components\Tab;
 use Filament\Resources\Pages\ManageRecords;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB;
 
 class ManagePackages extends ManageRecords
 {
@@ -115,12 +113,7 @@ class ManagePackages extends ManageRecords
     {
         $user = Filament::auth()->user();
 
-        Cart::updateOrCreate([
-            'user_id' => $user->id,
-            'package_id' => $id,
-        ], [
-            'quantity' => DB::raw('quantity + 1'),
-        ]);
+        Cart::incrementQuantity($user->id, null, $id);
 
         Notification::make()
             ->title(__('Berhasil masuk keranjang'))

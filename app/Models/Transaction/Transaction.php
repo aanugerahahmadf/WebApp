@@ -1,18 +1,17 @@
 <?php
 
 namespace App\Models\Transaction;
-use App\Models\Traits\LegacyMorphClass\LegacyMorphClass;
-
-
-use App\Models\Order\Order;
-use App\Models\User\User;
-use App\Models\Voucher\Voucher;
 
 use App\Enums\OrderPaymentStatus\OrderPaymentStatus;
 use App\Enums\OrderStatus\OrderStatus;
 use App\Enums\PaymentStatus\PaymentStatus;
 use App\Enums\TransactionType\TransactionType;
 use App\Events\OrderStatusUpdated\OrderStatusUpdated;
+use App\Models\Order\Order;
+use App\Models\Traits\LegacyMorphClass\LegacyMorphClass;
+use App\Models\User\User;
+use App\Models\Voucher\Voucher;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,8 +20,8 @@ use Illuminate\Support\Facades\Log;
 
 class Transaction extends Model
 {
-    use LegacyMorphClass;
     use HasFactory;
+    use LegacyMorphClass;
 
     protected $fillable = [
         'user_id',
@@ -54,6 +53,49 @@ class Transaction extends Model
         'status' => PaymentStatus::class,
         'type' => TransactionType::class,
     ];
+
+    protected $appends = [
+        'virtual_account_name',
+    ];
+
+    /**
+     * Nama yang dipakai sebagai pemilik Virtual Account.
+     *
+     * Dipakai dua kali: saatBRI membuat VA (sebelum VA ada) dan saat model
+     * diserialisasi. Satu fungsi supaya keduanya tidak mungkin berbeda.
+     */
+    public static function virtualAccountNameFor(?User $user): string
+    {
+        $name = trim((string) ($user?->full_name ?: $user?->username));
+
+        if ($name === '') {
+            // VA tanpa nama ditolak BRI, jadi selalu ada nilai yang dikirim.
+            $name = trim((string) config('bri.account_holder', 'ADMIN'));
+        }
+
+        // BRI membatasi panjang virtualAccountName maksimal 40 karakter.
+        return mb_substr($name !== '' ? $name : 'ADMIN', 0, 40);
+    }
+
+    /**
+     * Nama pemilik Virtual Account, sesuai yang tampil di aplikasi BRI.
+     *
+     * Tidak butuh kolom sendiri: nama asli tersimpan di payload BRI pada
+     * `metadata.bri_va`. Kalau payload itu belum ada, turunkan dari user.
+     */
+    protected function virtualAccountName(): Attribute
+    {
+        return Attribute::get(function (): string {
+            $stored = data_get($this->metadata, 'bri_va.virtualAccountData.virtualAccountName')
+                ?: data_get($this->metadata, 'bri_va.virtualAccountName');
+
+            if (is_string($stored) && trim($stored) !== '') {
+                return $stored;
+            }
+
+            return self::virtualAccountNameFor($this->user);
+        });
+    }
 
     public function user(): BelongsTo
     {

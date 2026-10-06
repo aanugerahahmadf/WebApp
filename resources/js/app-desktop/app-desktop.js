@@ -22,6 +22,8 @@ import 'emoji-picker-element';
 import '../emoji-picker/emoji-picker';
 import '../pdf-preview-plugin/pdf-preview-plugin';
 import '../firebase-client/firebase-client';
+// Real-time scan coaching, exposed as window.AIScanCoach by the module itself.
+import '../ai-scan-coach/ai-scan-coach';
 
 // No phpProtocolAdapter import: it was only needed by NativePHP's iOS build,
 // which served the app over a `php://` scheme.

@@ -4,7 +4,6 @@ namespace App\Filament\Welcome\Resources\PackageResource\Pages\ManagePackages;
 
 use App\Enums\OrderStatus\OrderStatus;
 use App\Filament\Concerns\HasDynamicBreadcrumbs;
-use App\Filament\Welcome\Pages\Home\Home;
 use App\Filament\Welcome\Resources\PackageResource\PackageResource;
 use App\Http\Middleware\AuthenticateWelcome\AuthenticateWelcome;
 use App\Models\Cart\Cart;
@@ -16,7 +15,7 @@ use Filament\Resources\Components\Tab;
 use Filament\Resources\Pages\ManageRecords;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\DB;
+use Livewire\Features\SupportRedirects\Redirector as LivewireRedirector;
 
 class ManagePackages extends ManageRecords
 {
@@ -74,7 +73,7 @@ class ManagePackages extends ManageRecords
     public function bookNow($id)
     {
         // Guest on the public catalog: the checkout is account-shaped, so send
-        // them to the login page instead of dereferencing a null user below.
+        // them to the auth landing page instead of dereferencing a null user below.
         if ($redirect = $this->redirectGuestToLogin()) {
             return $redirect;
         }
@@ -131,12 +130,7 @@ class ManagePackages extends ManageRecords
 
         $user = Filament::auth()->user();
 
-        Cart::updateOrCreate([
-            'user_id' => $user->id,
-            'package_id' => $id,
-        ], [
-            'quantity' => DB::raw('quantity + 1'),
-        ]);
+        Cart::incrementQuantity($user->id, null, $id);
 
         Notification::make()
             ->title(__('Berhasil masuk keranjang'))
@@ -148,14 +142,19 @@ class ManagePackages extends ManageRecords
     /**
      * The catalog is part of the public storefront, so these Livewire actions
      * are reachable without an account. Every one of them writes against
-     * auth()->id(), so a guest is handed to the login page instead.
+     * auth()->id(), so a guest is handed to the auth landing page instead
+     * (`/user/auth` -- see AuthenticateWelcome::LOGIN_ROUTE).
      */
-    protected function redirectGuestToLogin(): ?RedirectResponse
+    protected function redirectGuestToLogin(): RedirectResponse|LivewireRedirector|null
     {
         if (Filament::auth()->check()) {
             return null;
         }
 
+        // Dua kelas di return type, bukan hanya RedirectResponse: dipanggil dari
+        // action Livewire, dan Livewire menukar binding `redirect` di container
+        // dengan Redirector-nya sendiri, jadi `redirect()` di sini mengembalikan
+        // Redirector Livewire. Memaksa satu kelas akan merusak konteks yang lain.
         return redirect()->guest(route(AuthenticateWelcome::LOGIN_ROUTE));
     }
 

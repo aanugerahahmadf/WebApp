@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\WishlistResource\Pages\ManageWishlists;
 
+use App\Filament\Admin\Concerns\HasMobilePagination\HasMobilePagination;
 use App\Filament\Admin\Exports\WishlistExporter\WishlistExporter;
 use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\WishlistResource\WishlistResource;
@@ -15,6 +16,7 @@ use Filament\Resources\Pages\ManageRecords;
  */
 class ManageWishlists extends ManageRecords
 {
+    use HasMobilePagination;
     use HasDynamicBreadcrumbs;
     protected static string $resource = WishlistResource::class;
 

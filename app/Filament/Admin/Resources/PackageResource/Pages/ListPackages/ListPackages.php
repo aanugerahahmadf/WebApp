@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\PackageResource\Pages\ListPackages;
 
+use App\Filament\Admin\Concerns\HasMobilePagination\HasMobilePagination;
 use App\Filament\Admin\Exports\PackageExporter\PackageExporter;
 use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\PackageResource\PackageResource;
@@ -12,6 +13,7 @@ use Filament\Resources\Pages\ListRecords;
 
 class ListPackages extends ListRecords
 {
+    use HasMobilePagination;
     use HasDynamicBreadcrumbs;
     protected static string $resource = PackageResource::class;
 

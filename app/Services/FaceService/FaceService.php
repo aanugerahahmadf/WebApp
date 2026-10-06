@@ -158,15 +158,22 @@ class FaceService
     }
 
     /**
-     * Validasi dokumen KTP via AI Core (Computer Vision).
+     * Validasi dokumen identitas (KTP / SIM / NPWP / PASSPORT) via AI Core.
      *
+     * @param  string|null  $docType  Tipe dokumen yang diharapkan client
+     *                                ('ktp'|'sim'|'npwp'|'passport'). Null = auto-detect.
      * @return array<string, mixed>
      */
-    public function verifyKtp(string $imagePath): array
+    public function verifyKtp(string $imagePath, ?string $docType = null): array
     {
         try {
             if (! file_exists($imagePath) || @filesize($imagePath) === 0) {
                 return $this->errorResponse(__('Foto KTP tidak valid.'));
+            }
+
+            $payload = [];
+            if ($docType !== null && $docType !== '') {
+                $payload['doc_type'] = $docType;
             }
 
             /** @var Response $response */
@@ -176,7 +183,7 @@ class FaceService
                     'image',
                     file_get_contents($imagePath),
                     basename($imagePath)
-                )->post("{$this->baseUrl}/api/ktp/verify");
+                )->post("{$this->baseUrl}/api/ktp/verify", $payload);
 
             if ($response->successful()) {
                 $data = $response->json();
@@ -191,7 +198,17 @@ class FaceService
                     'is_ktp_like' => (bool) ($data['is_ktp_like'] ?? false),
                     'face_detected' => (bool) ($data['face_detected'] ?? false),
                     'aspect_ratio' => isset($data['aspect_ratio']) ? (float) $data['aspect_ratio'] : null,
-                    'reason' => (string) ($data['reason'] ?? 'UNKNOWN'),
+                    // 'reason' = nama resmi dokumen yang dianalisis; hanya ada
+                    // empat nilai yang mungkin: "Kartu Tanda Penduduk",
+                    // "Surat Izin Mengemudi", "Passport", "Nomor Pokok Wajib Pajak".
+                    // Diagnosis kegagalan ada di 'reason_code' / 'blocking_issue'.
+                    'reason' => (string) ($data['reason'] ?? 'Kartu Tanda Penduduk'),
+                    'reason_code' => $data['reason_code'] ?? null,
+                    'blocking_issue' => $data['blocking_issue'] ?? null,
+                    'document_type' => $data['document_type'] ?? null,
+                    'document_number' => $data['document_number'] ?? null,
+                    'document_scores' => $data['document_scores'] ?? null,
+                    'number_detected' => (bool) ($data['number_detected'] ?? false),
                     'threshold' => (float) ($data['threshold'] ?? 0),
                     'frame_base64' => $data['frame_base64'] ?? null,
                 ];

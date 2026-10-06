@@ -7,8 +7,8 @@ Aplikasi memakai tiga panel Filament yang berbagi basis kode storefront:
 | Panel | ID | Path | Sifat |
 |---|---|---|---|
 | Admin | `admin` | `/admin` | Khusus staf. Guard `web` + middleware `SuperAdmin`. **Tanpa registrasi.** |
-| User | `user` | `/user` | Area member. Punya Sign-In, Sign-Up, reset kata sandi OTP, verifikasi email. |
-| Welcome | `welcome` | `/welcome` | Storefront publik, bisa dibuka guest. Tanpa halaman auth sendiri; guest diarahkan ke login panel user. |
+| User | `user` | `/user` | Area member. Punya Auth Landing (`/user/auth`), Sign-In, reset kata sandi OTP, verifikasi email. **Tanpa halaman pendaftaran.** |
+| Welcome | `welcome` | `/welcome` | Storefront publik, bisa dibuka guest. Tanpa halaman auth sendiri; guest yang tertahan diarahkan ke `/user/auth` (Sign In + Google). |
 
 Ketiga panel memakai mode `spa()` (navigasi Livewire). Pindah **antar panel**
 (contoh: `/welcome/...` ke `/user/signin`) harus memakai full reload
@@ -21,8 +21,13 @@ Hasil refactor penamaan, berlaku untuk ketiga panel:
 | Konsep | Class / Folder | Contoh |
 |---|---|---|
 | Sign-In (login) | `...Auth\SignIn\SignIn` | `App\Filament\User\Auth\SignIn\SignIn` |
-| Sign-Up (registrasi) | `...Auth\SignUp\SignUp` | `App\Filament\User\Auth\SignUp\SignUp` |
+| Auth landing (pintu masuk tamu) | `...Auth\Auth\Auth` | `App\Filament\User\Auth\Auth\Auth` |
 | Home (dashboard) | `...Pages\Home\Home` | `App\Filament\Welcome\Pages\Home\Home` |
+
+Catatan: `...Auth\SignUp\SignUp` masih ada di repo, tapi **tidak terdaftar**
+sebagai halaman — `->registration()` di `UserPanelProvider` dikomentari, jadi
+route `filament.user.auth.register` tidak ada. Pendaftaran hanya lewat tombol
+Google di `/user/auth`.
 
 **Satu folder per file**: setiap file PHP dan setiap file Blade tinggal di dalam
 folder yang namanya sama dengan nama file (tanpa ekstensi). Contoh:
@@ -33,23 +38,33 @@ folder yang namanya sama dengan nama file (tanpa ekstensi). Contoh:
 
 **Yang tidak ikut di-rename** (disengaja, karena ini kontrak eksternal):
 
-- Nama route Filament: `filament.user.auth.login`, `filament.user.auth.register`,
+- Nama route Filament: `filament.user.auth.login`, `filament.user.auth.index`,
   `filament.*.pages.home`.
-- URL: `/user/signin`, `/user/signup`, `/admin/signin`, `/welcome/home`, URI API.
-  Slug auth diatur lewat `loginRouteSlug('signin')` /
-  `registrationRouteSlug('signup')` di masing-masing panel provider; URL lama
-  (`/user/login`, `/user/register`, `/admin/login`) dilayani redirect di
-  `routes/web/web.php` supaya bookmark lama tidak jadi 404. Kode sebaiknya
-  memakai `route('filament.<panel>.auth.login')`, bukan URL literal.
+- URL: `/user/auth`, `/user/signin`, `/admin/signin`, `/welcome/home`, URI API.
+  Slug auth diatur lewat `loginRouteSlug('signin')` di masing-masing panel
+  provider; URL lama (`/user/login`, `/user/signup`, `/user/register`,
+  `/admin/login`) dilayani redirect di `routes/web/web.php` supaya bookmark lama
+  tidak jadi 404 — `/user/signup` dan `/user/register` ke `/user/auth`. Kode
+  sebaiknya memakai `route('filament.<panel>.auth.login')`, bukan URL literal.
 - Base class Filament: `Filament\Pages\Auth\Login`,
-  `Filament\Pages\Auth\Register`, `Filament\Pages\Dashboard`.
+  `Filament\Pages\Dashboard`.
+
+**"Register" hanya boleh muncul sebagai kontrak vendor.** Penamaan kita sendiri
+selalu Sign Up — class, view, nilai `$authMode`, dan label yang dilihat user:
+
+| Milik kita (pakai "Sign Up") | Kontrak vendor (tetap "Register") |
+|---|---|
+| `...Auth\SignUp\SignUp` | `Filament\Pages\Auth\Register` (base class) |
+| `User/auth/sign-up/sign-up` | `filament.*.auth.register` (nama route) |
+| `$authMode === 'signup'` | `->registerAction()`, `wire:submit="register"` (API Filament) |
+| label `__('Sign Up')` | segment URL `/register` + `/signup` |
 - Label yang dilihat user (diatur lewat `getHeading()`, label field, dan file bahasa).
 
 ## Middleware Penting
 
 | Middleware | Fungsi |
 |---|---|
-| `AuthenticateWelcome` | Gerbang panel welcome. Path publik (`welcome`, `welcome/home`, `welcome/products/*`, `welcome/packages/*`, `welcome/messages/*`, ...) boleh dibuka guest; sisanya dilempar ke login panel user. Konstanta `LOGIN_ROUTE = 'filament.user.auth.login'`. |
+| `AuthenticateWelcome` | Gerbang panel welcome. Path publik (`welcome`, `welcome/home`, `welcome/products/*`, `welcome/packages/*`, `welcome/messages/*`, ...) boleh dibuka guest; sisanya dilempar ke halaman auth pertama panel user (`/user/auth`, Sign In + Google). Konstanta `LOGIN_ROUTE = 'filament.user.auth.index'`. |
 | `VerifyCsrfToken` (kustom) | Pengecualian CSRF untuk `admin/*`, `livewire/*`, dan webhook pembayaran. |
 | `SetLocale` | Sinkronisasi bahasa (grup `web` dan `api`). |
 | `ClerkFilamentAuth` | Login otomatis via token Sanctum (`clerk_token`). |

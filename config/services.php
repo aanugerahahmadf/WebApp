@@ -47,6 +47,20 @@ return [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect' => env('GOOGLE_REDIRECT_URL'),
+
+        /*
+         * Google Maps Platform untuk pemilih alamat di checkout
+         * (App\Forms\Components\CheckoutAddress). Satu key ini mengaktifkan
+         * Maps JavaScript API, Places API (Autocomplete + Place Details), dan
+         * Geocoder untuk membalik koordinat GPS menjadi alamat.
+         *
+         * PENTING: key ini terekspos ke browser (harus ada Referer restriction),
+         * jadi jangan pernah memakai key yang juga memegang kuota server-side
+         * seperti Google Sheets di bawah. Kalau kosong, komponennya tetap
+         * berfungsi: peta dan autocomplete dinonaktifkan, tetapi GPS + pengetikan
+         * manual tetap jalan.
+         */
+        'maps_key' => env('GOOGLE_MAPS_API_KEY', ''),
     ],
 
     // Google Sheets untuk cadangan data review.

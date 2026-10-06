@@ -87,6 +87,9 @@
                     audio: false,
                 });
                 video.srcObject = this.stream;
+
+                /* Panduan AI mulai begitu ada stream frame yang bisa dianalisis. */
+                this.startCoach();
                 await video.play();
                 this.videoReady = true;
             } catch (e) {
@@ -101,6 +104,9 @@
                 this.stream = null;
             }
             this.videoReady = false;
+            /* Tanpa stream tidak ada frame untuk dianalisis, dan suara
+             * AI harus berhenti sekarang juga. */
+            this.stopCoach();
         },
 
         /* ── Edge detection ── */
@@ -566,6 +572,44 @@
             this.corners[this.dragCorner] = { x: Math.min(1, Math.max(0, x)), y: Math.min(1, Math.max(0, y)) };
         },
         endDrag() { this.dragCorner = null; },
+
+        /* ── Real-time AI scan coach ──────────────────────────────────────
+         * Mengukur fokus, pencahayaan, dan posisi subjek dari frame video
+         * langsung, lalu memberi arahan secara lisan dan visual (lingkaran
+         * hijau saat kualitas siap ditekan).
+         *
+         * Seluruh algoritmanya ada di resources/js/ai-scan-coach supaya
+         * objek x-data ini tetap tipis. Analisis real-time tidak mungkin
+         * lewat server: satu round-trip per frame jauh terlalu lambat.
+         *
+         * PENTING: hanya kutip tunggal di dalam x-data. Atributnya dibungkus
+         * kutip ganda, satu saja akan menutupnya lebih awal. */
+        coach: null,
+
+        startCoach() {
+            this.stopCoach();
+
+            const factory = window.AIScanCoach && window.AIScanCoach.create;
+            if (!factory) return;
+
+            const mount = this.$refs.scanWrap;
+            if (!mount) return;
+
+            this.coach = factory({
+                mount: mount,
+                mode: 'document',
+                lang: document.documentElement.lang || '{{ app()->getLocale() }}',
+                video: () => this.$refs.scanVideo,
+            });
+
+            this.coach.start();
+        },
+
+        stopCoach() {
+            if (!this.coach) return;
+            this.coach.stop();
+            this.coach = null;
+        },
     }"
     x-on:open-document-scanner.window="open()"
     x-on:keydown.escape.window="if (isOpen) { if (scannerState === 'live' || scannerState === 'editNative') { stopCamera(); scannerState = 'pick'; } else { close(); } }"
@@ -658,7 +702,7 @@
 
                 {{-- Live camera view --}}
                 <div x-show="scannerState === 'live'" style="display:none;">
-                    <div class="relative mx-4 mt-4 overflow-hidden rounded-lg bg-black" style="aspect-ratio:4/3;">
+                    <div x-ref="scanWrap" class="relative mx-4 mt-4 overflow-hidden rounded-lg bg-black" style="aspect-ratio:4/3;">
                         <video
                             x-ref="scanVideo"
                             autoplay

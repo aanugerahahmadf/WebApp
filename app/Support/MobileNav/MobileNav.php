@@ -30,7 +30,12 @@ class MobileNav
     protected const AUTH_PATHS = [
         'login',
         'logout',
+        // Dua-duanya segment URL pendaftaran, bukan penamaan class: 'register'
+        // adalah slug default Filament, 'signup' slug yang dipakai project ini
+        // sebelum `->registrationRouteSlug('signup')` di-comment-kan. Karena
+        // pendaftaran bisa hidup lagi dengan salah satu slug, keduanya dicatat.
         'register',
+        'signup',
         'password-reset',
         'email-verification',
         'verify-email',

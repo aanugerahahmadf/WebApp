@@ -47,6 +47,33 @@ class Cart extends Model
         return $this->product ?? $this->package;
     }
 
+    /**
+     * Tambah jumlah item di keranjang, buat barisnya kalau belum ada.
+     *
+     * JANGAN pakai `updateOrCreate([...kunci...], ['quantity' => DB::raw('quantity + N')])`
+     * untuk keperluan ini. updateOrCreate() memakai array kedua baik untuk UPDATE
+     * maupun INSERT, dan pada INSERT ekspresi raw itu dikirim sebagai bound value
+     * apa adanya -- sehingga kolom integer menerima literal string "quantity + 2".
+     * SQLite menolaknya (no such column / type mismatch) dan MySQL non-strict
+     * menyimpannya sebagai 0. Keranjang yang tadinya kosong jadi berisi 0, dan
+     * test tidak pernah menangkapnya karena suite ini lama tidak dijalankan.
+     *
+     * firstOrNew() + penjumlahan di PHP aman untuk kedua cabang.
+     */
+    public static function incrementQuantity(int $userId, ?int $productId, ?int $packageId, int $delta = 1): self
+    {
+        $cart = static::firstOrNew([
+            'user_id' => $userId,
+            'product_id' => $productId,
+            'package_id' => $packageId,
+        ]);
+
+        $cart->quantity = max(0, ((int) $cart->quantity) + $delta);
+        $cart->save();
+
+        return $cart;
+    }
+
     public function getSubtotalAttribute()
     {
         $item = $this->item;

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0ae9ffef711d7d052d4cd04bac0e7e39",
+    "content-hash": "873c492ad82e42a9479697be73133f16",
     "packages": [
         {
             "name": "andreiio/blade-remix-icon",
@@ -908,6 +908,168 @@
                 }
             ],
             "time": "2024-02-09T16:56:22+00:00"
+        },
+        {
+            "name": "chillerlan/php-qrcode",
+            "version": "5.0.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/chillerlan/php-qrcode.git",
+                "reference": "7b66282572fc14075c0507d74d9837dab25b38d6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/chillerlan/php-qrcode/zipball/7b66282572fc14075c0507d74d9837dab25b38d6",
+                "reference": "7b66282572fc14075c0507d74d9837dab25b38d6",
+                "shasum": ""
+            },
+            "require": {
+                "chillerlan/php-settings-container": "^2.1.6 || ^3.2.1",
+                "ext-mbstring": "*",
+                "php": "^7.4 || ^8.0"
+            },
+            "require-dev": {
+                "chillerlan/php-authenticator": "^4.3.1 || ^5.2.1",
+                "ext-fileinfo": "*",
+                "phan/phan": "^5.5.2",
+                "phpcompatibility/php-compatibility": "10.x-dev",
+                "phpmd/phpmd": "^2.15",
+                "phpunit/phpunit": "^9.6",
+                "setasign/fpdf": "^1.8.2",
+                "slevomat/coding-standard": "^8.23.0",
+                "squizlabs/php_codesniffer": "^4.0.0"
+            },
+            "suggest": {
+                "chillerlan/php-authenticator": "Yet another Google authenticator! Also creates URIs for mobile apps.",
+                "setasign/fpdf": "Required to use the QR FPDF output.",
+                "simple-icons/simple-icons": "SVG icons that you can use to embed as logos in the QR Code"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "chillerlan\\QRCode\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT",
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "Kazuhiko Arase",
+                    "homepage": "https://github.com/kazuhikoarase/qrcode-generator"
+                },
+                {
+                    "name": "ZXing Authors",
+                    "homepage": "https://github.com/zxing/zxing"
+                },
+                {
+                    "name": "Ashot Khanamiryan",
+                    "homepage": "https://github.com/khanamiryan/php-qrcode-detector-decoder"
+                },
+                {
+                    "name": "Smiley",
+                    "email": "smiley@chillerlan.net",
+                    "homepage": "https://github.com/codemasher"
+                },
+                {
+                    "name": "Contributors",
+                    "homepage": "https://github.com/chillerlan/php-qrcode/graphs/contributors"
+                }
+            ],
+            "description": "A QR Code generator and reader with a user-friendly API. PHP 7.4+",
+            "homepage": "https://github.com/chillerlan/php-qrcode",
+            "keywords": [
+                "phpqrcode",
+                "qr",
+                "qr code",
+                "qr-reader",
+                "qrcode",
+                "qrcode-generator",
+                "qrcode-reader"
+            ],
+            "support": {
+                "docs": "https://php-qrcode.readthedocs.io",
+                "issues": "https://github.com/chillerlan/php-qrcode/issues",
+                "source": "https://github.com/chillerlan/php-qrcode"
+            },
+            "funding": [
+                {
+                    "url": "https://ko-fi.com/codemasher",
+                    "type": "Ko-Fi"
+                }
+            ],
+            "time": "2025-11-23T23:51:44+00:00"
+        },
+        {
+            "name": "chillerlan/php-settings-container",
+            "version": "3.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/chillerlan/php-settings-container.git",
+                "reference": "a0a487cbf5344f721eb504bf0f59bada40c381b7"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/chillerlan/php-settings-container/zipball/a0a487cbf5344f721eb504bf0f59bada40c381b7",
+                "reference": "a0a487cbf5344f721eb504bf0f59bada40c381b7",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "phan/phan": "^5.5.2",
+                "phpmd/phpmd": "^2.15",
+                "phpstan/phpstan": "^2.1.31",
+                "phpstan/phpstan-deprecation-rules": "^2.0.3",
+                "phpunit/phpunit": "^10.5",
+                "slevomat/coding-standard": "^8.22",
+                "squizlabs/php_codesniffer": "^4.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "chillerlan\\Settings\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Smiley",
+                    "email": "smiley@chillerlan.net",
+                    "homepage": "https://github.com/codemasher"
+                }
+            ],
+            "description": "A container class for immutable settings objects. Not a DI container.",
+            "homepage": "https://github.com/chillerlan/php-settings-container",
+            "keywords": [
+                "Settings",
+                "configuration",
+                "container",
+                "helper",
+                "property hook"
+            ],
+            "support": {
+                "issues": "https://github.com/chillerlan/php-settings-container/issues",
+                "source": "https://github.com/chillerlan/php-settings-container"
+            },
+            "funding": [
+                {
+                    "url": "https://www.paypal.com/donate?hosted_button_id=WLYUNAT9ZTJZ4",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://ko-fi.com/codemasher",
+                    "type": "ko_fi"
+                }
+            ],
+            "time": "2026-03-20T21:10:52+00:00"
         },
         {
             "name": "clue/redis-protocol",
@@ -9665,6 +9827,89 @@
             "time": "2025-07-25T09:04:22+00:00"
         },
         {
+            "name": "mix-code/filament-multi-2fa",
+            "version": "v1.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/mix-code/filament-multi-2fa.git",
+                "reference": "6ec2959a9720f68ed1bd67257443a6276b4873bc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/mix-code/filament-multi-2fa/zipball/6ec2959a9720f68ed1bd67257443a6276b4873bc",
+                "reference": "6ec2959a9720f68ed1bd67257443a6276b4873bc",
+                "shasum": ""
+            },
+            "require": {
+                "bacon/bacon-qr-code": "^3.0",
+                "chillerlan/php-qrcode": "^5.0",
+                "filament/filament": "^3.0",
+                "php": "^8.1",
+                "pragmarx/google2fa": "^8.0",
+                "pragmarx/google2fa-qrcode": "^3.0",
+                "spatie/laravel-package-tools": "^1.15.0"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.0",
+                "nunomaduro/collision": "^7.9",
+                "orchestra/testbench": "^8.0",
+                "pestphp/pest": "^2.1",
+                "pestphp/pest-plugin-arch": "^2.0",
+                "pestphp/pest-plugin-laravel": "^2.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "FilamentMulti2fa": "MixCode\\FilamentMulti2fa\\Facades\\FilamentMulti2fa"
+                    },
+                    "providers": [
+                        "MixCode\\FilamentMulti2fa\\FilamentMulti2faServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "MixCode\\FilamentMulti2fa\\": "src/",
+                    "MixCode\\FilamentMulti2fa\\Database\\Factories\\": "database/factories/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Mohamed Alaa El-Din",
+                    "email": "moaalaa16@gmail.com",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Hamza Omar Mohamed",
+                    "email": "hamzalilomar92@gmail.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Implementing Email OTP and Authenticator App 2FA Logic with Trusted Devices Support",
+            "homepage": "https://github.com/mix-code/filament-multi-2fa",
+            "keywords": [
+                "filament-multi-2fa",
+                "laravel",
+                "mix-code"
+            ],
+            "support": {
+                "issues": "https://github.com/mix-code/filament-multi-2fa/issues",
+                "source": "https://github.com/mix-code/filament-multi-2fa"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/mix-code",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-05-21T17:16:02+00:00"
+        },
+        {
             "name": "mobiledetect/mobiledetectlib",
             "version": "2.8.47",
             "source": {
@@ -9894,583 +10139,6 @@
                 "source": "https://github.com/jmespath/jmespath.php/tree/2.9.1"
             },
             "time": "2026-06-11T10:43:56+00:00"
-        },
-        {
-            "name": "nativephp/electron",
-            "version": "1.3.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/NativePHP/electron.git",
-                "reference": "1f1267e3a91ddf6fbc7fd667a2de92d300fcdd0a"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/NativePHP/electron/zipball/1f1267e3a91ddf6fbc7fd667a2de92d300fcdd0a",
-                "reference": "1f1267e3a91ddf6fbc7fd667a2de92d300fcdd0a",
-                "shasum": ""
-            },
-            "require": {
-                "ext-zip": "*",
-                "illuminate/contracts": "^10.0|^11.0|^12.0",
-                "laravel/prompts": "^0.1.1|^0.2|^0.3",
-                "nativephp/laravel": "^1.0",
-                "nativephp/php-bin": "^1.0",
-                "php": "^8.3",
-                "spatie/laravel-package-tools": "^1.16.4",
-                "symfony/filesystem": "^6.4|^7.2"
-            },
-            "require-dev": {
-                "larastan/larastan": "^2.0.1|^3.0",
-                "laravel/pint": "^1.0",
-                "nunomaduro/collision": "^7.9|^8.1.1",
-                "orchestra/testbench": "^8.18|^9.0|^10.0",
-                "pestphp/pest": "^2.7|^3.7",
-                "pestphp/pest-plugin-arch": "^2.0|^3.0",
-                "pestphp/pest-plugin-laravel": "^2.0|^3.1",
-                "phpstan/extension-installer": "^1.1",
-                "phpstan/phpstan-deprecation-rules": "^1.0|^2.0",
-                "phpstan/phpstan-phpunit": "^1.0|^2.0",
-                "spatie/laravel-ray": "^1.26"
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "aliases": {
-                        "Updater": "Native\\Electron\\Facades\\Updater"
-                    },
-                    "providers": [
-                        "Native\\Electron\\ElectronServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Native\\Electron\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Marcel Pociot",
-                    "email": "marcel@beyondco.de",
-                    "role": "Developer"
-                },
-                {
-                    "name": "Simon Hamp",
-                    "email": "simon.hamp@me.com",
-                    "role": "Developer"
-                }
-            ],
-            "description": "Electron wrapper for the NativePHP framework.",
-            "homepage": "https://github.com/nativephp/electron",
-            "keywords": [
-                "electron",
-                "laravel",
-                "nativephp"
-            ],
-            "support": {
-                "source": "https://github.com/NativePHP/electron/tree/1.3.0"
-            },
-            "funding": [
-                {
-                    "url": "https://github.com/sponsors/simonhamp",
-                    "type": "github"
-                },
-                {
-                    "url": "https://opencollective.com/nativephp",
-                    "type": "opencollective"
-                }
-            ],
-            "time": "2025-09-04T18:19:22+00:00"
-        },
-        {
-            "name": "nativephp/laravel",
-            "version": "1.3.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/NativePHP/laravel.git",
-                "reference": "158b830b6fedf272704b899b19b968a97d0595d8"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/NativePHP/laravel/zipball/158b830b6fedf272704b899b19b968a97d0595d8",
-                "reference": "158b830b6fedf272704b899b19b968a97d0595d8",
-                "shasum": ""
-            },
-            "require": {
-                "illuminate/contracts": "^10.0|^11.0|^12.0",
-                "php": "^8.3",
-                "spatie/laravel-package-tools": "^1.16.4",
-                "symfony/finder": "^6.2|^7.0"
-            },
-            "require-dev": {
-                "guzzlehttp/guzzle": "^7.0",
-                "larastan/larastan": "^2.0|^3.1",
-                "laravel/pint": "^1.0",
-                "nunomaduro/collision": "^7.11|^8.1.1",
-                "orchestra/testbench": "^8.0|^9.0|^10.0",
-                "pestphp/pest": "^v2.30|^3.0",
-                "pestphp/pest-plugin-arch": "^2.0|^3.0",
-                "pestphp/pest-plugin-laravel": "^2.0|^3.1",
-                "phpstan/extension-installer": "^1.1",
-                "phpstan/phpstan-deprecation-rules": "^1.0|^2.0",
-                "phpstan/phpstan-phpunit": "^1.0|^2.0",
-                "spatie/laravel-ray": "^1.26"
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "aliases": {
-                        "Dock": "Native\\Laravel\\Facades\\Dock",
-                        "Menu": "Native\\Laravel\\Facades\\Menu",
-                        "Shell": "Native\\Laravel\\Facades\\Shell",
-                        "Screen": "Native\\Laravel\\Facades\\Screen",
-                        "System": "Native\\Laravel\\Facades\\System",
-                        "Window": "Native\\Laravel\\Facades\\Window",
-                        "MenuBar": "Native\\Laravel\\Facades\\MenuBar",
-                        "Process": "Native\\Laravel\\Facades\\Process",
-                        "Settings": "Native\\Laravel\\Facades\\Settings",
-                        "Clipboard": "Native\\Laravel\\Facades\\Clipboard",
-                        "ContextMenu": "Native\\Laravel\\Facades\\ContextMenu",
-                        "QueueWorker": "Native\\Laravel\\Facades\\QueueWorker",
-                        "ChildProcess": "Native\\Laravel\\Facades\\ChildProcess",
-                        "Notification": "Native\\Laravel\\Facades\\Notification",
-                        "PowerMonitor": "Native\\Laravel\\Facades\\PowerMonitor",
-                        "GlobalShortcut": "Native\\Laravel\\Facades\\GlobalShortcut"
-                    },
-                    "providers": [
-                        "Native\\Laravel\\NativeServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Native\\Laravel\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Marcel Pociot",
-                    "email": "marcel@beyondco.de",
-                    "role": "Developer"
-                },
-                {
-                    "name": "Simon Hamp",
-                    "email": "simon.hamp@me.com",
-                    "role": "Developer"
-                }
-            ],
-            "description": "Laravel wrapper for the NativePHP framework.",
-            "homepage": "https://github.com/nativephp/laravel",
-            "keywords": [
-                "laravel",
-                "nativephp",
-                "nativephp-laravel"
-            ],
-            "support": {
-                "issues": "https://github.com/NativePHP/laravel/issues",
-                "source": "https://github.com/NativePHP/laravel/tree/1.3.1"
-            },
-            "funding": [
-                {
-                    "url": "https://github.com/sponsors/simonhamp",
-                    "type": "github"
-                },
-                {
-                    "url": "https://opencollective.com/nativephp",
-                    "type": "opencollective"
-                }
-            ],
-            "time": "2025-09-04T20:02:52+00:00"
-        },
-        {
-            "name": "nativephp/mobile",
-            "version": "3.2.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/NativePHP/mobile-air.git",
-                "reference": "866a6dd9896cfdee3f33bfb3a95d568711a6ff02"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/NativePHP/mobile-air/zipball/866a6dd9896cfdee3f33bfb3a95d568711a6ff02",
-                "reference": "866a6dd9896cfdee3f33bfb3a95d568711a6ff02",
-                "shasum": ""
-            },
-            "require": {
-                "ext-dom": "*",
-                "ext-simplexml": "*",
-                "guzzlehttp/guzzle": "^7.9",
-                "illuminate/contracts": "^10.0|^11.0|^12.0|^13.0",
-                "illuminate/support": "^10.0|^11.0|^12.0|^13.0",
-                "laravel/prompts": "^0.1.1|^0.2|^0.3",
-                "php": "^8.3",
-                "react/datagram": "^1.10",
-                "spatie/laravel-package-tools": "^1.14.0",
-                "workerman/workerman": "^4.1"
-            },
-            "require-dev": {
-                "endroid/qr-code": "^5.0",
-                "larastan/larastan": "^2.0",
-                "laravel/pint": "^1.0",
-                "nunomaduro/collision": "^7.9",
-                "orchestra/testbench": "^8.18",
-                "pestphp/pest": "^2.7|^3.0|^4.0",
-                "pestphp/pest-plugin-arch": "^2.0",
-                "pestphp/pest-plugin-laravel": "^2.0",
-                "phpstan/extension-installer": "^1.1",
-                "phpstan/phpstan-deprecation-rules": "^1.0",
-                "phpstan/phpstan-phpunit": "^1.0",
-                "spatie/laravel-ray": "^1.26"
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "Native\\Mobile\\NativeServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Native\\Mobile\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Simon Hamp",
-                    "email": "simon@nativephp.com",
-                    "role": "Co-founder"
-                },
-                {
-                    "name": "Shane Rosenthal",
-                    "email": "shane@nativephp.com",
-                    "role": "Co-founder"
-                }
-            ],
-            "description": "NativePHP for Mobile",
-            "homepage": "https://nativephp.com/mobile",
-            "keywords": [
-                "android",
-                "ios",
-                "laravel",
-                "nativephp"
-            ],
-            "support": {
-                "issues": "https://github.com/NativePHP/mobile-air/issues",
-                "source": "https://github.com/NativePHP/mobile-air/tree/3.2.2"
-            },
-            "time": "2026-04-04T20:00:18+00:00"
-        },
-        {
-            "name": "nativephp/mobile-camera",
-            "version": "1.0.3",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/NativePHP/mobile-camera.git",
-                "reference": "b01139ea47029b6eae695d1a16c41e00f265fd54"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/NativePHP/mobile-camera/zipball/b01139ea47029b6eae695d1a16c41e00f265fd54",
-                "reference": "b01139ea47029b6eae695d1a16c41e00f265fd54",
-                "shasum": ""
-            },
-            "require": {
-                "nativephp/mobile": "*",
-                "php": "^8.2"
-            },
-            "type": "nativephp-plugin",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "Native\\Mobile\\Providers\\CameraServiceProvider"
-                    ]
-                },
-                "nativephp": {
-                    "manifest": "nativephp.json"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Native\\Mobile\\Providers\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "NativePHP",
-                    "email": "info@nativephp.com"
-                }
-            ],
-            "description": "Camera plugin for NativePHP Mobile (Photo capture, Video recording, Gallery picker)",
-            "support": {
-                "issues": "https://github.com/NativePHP/mobile-camera/issues",
-                "source": "https://github.com/NativePHP/mobile-camera/tree/1.0.3"
-            },
-            "time": "2026-06-04T12:43:58+00:00"
-        },
-        {
-            "name": "nativephp/mobile-device",
-            "version": "1.0.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/NativePHP/mobile-device.git",
-                "reference": "abd880cea32a969770059653ebb6e2c530cfd08d"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/NativePHP/mobile-device/zipball/abd880cea32a969770059653ebb6e2c530cfd08d",
-                "reference": "abd880cea32a969770059653ebb6e2c530cfd08d",
-                "shasum": ""
-            },
-            "require": {
-                "nativephp/mobile": "^3.0",
-                "php": "^8.2"
-            },
-            "type": "nativephp-plugin",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "Native\\Mobile\\Providers\\DeviceServiceProvider"
-                    ]
-                },
-                "nativephp": {
-                    "manifest": "nativephp.json"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Native\\Mobile\\Providers\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "Device hardware operations for NativePHP Mobile",
-            "support": {
-                "issues": "https://github.com/NativePHP/mobile-device/issues",
-                "source": "https://github.com/NativePHP/mobile-device/tree/1.0.2"
-            },
-            "time": "2026-03-20T22:08:33+00:00"
-        },
-        {
-            "name": "nativephp/mobile-file",
-            "version": "1.0.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/NativePHP/mobile-file.git",
-                "reference": "a265884b3f639c1b62312f13674f3c0efd753761"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/NativePHP/mobile-file/zipball/a265884b3f639c1b62312f13674f3c0efd753761",
-                "reference": "a265884b3f639c1b62312f13674f3c0efd753761",
-                "shasum": ""
-            },
-            "require": {
-                "nativephp/mobile": "^3.0",
-                "php": "^8.2"
-            },
-            "type": "nativephp-plugin",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "Native\\Mobile\\Providers\\FileServiceProvider"
-                    ]
-                },
-                "nativephp": {
-                    "manifest": "nativephp.json"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Native\\Mobile\\Providers\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "NativePHP",
-                    "email": "support@nativephp.com"
-                }
-            ],
-            "description": "File operations plugin for NativePHP Mobile",
-            "support": {
-                "issues": "https://github.com/NativePHP/mobile-file/issues",
-                "source": "https://github.com/NativePHP/mobile-file/tree/1.0.1"
-            },
-            "time": "2026-03-20T22:08:33+00:00"
-        },
-        {
-            "name": "nativephp/mobile-network",
-            "version": "1.0.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/NativePHP/mobile-network.git",
-                "reference": "3a544d6e177c52cd5e2a1bf2becb18ff2c9e8c5c"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/NativePHP/mobile-network/zipball/3a544d6e177c52cd5e2a1bf2becb18ff2c9e8c5c",
-                "reference": "3a544d6e177c52cd5e2a1bf2becb18ff2c9e8c5c",
-                "shasum": ""
-            },
-            "require": {
-                "nativephp/mobile": "^3.0",
-                "php": "^8.2"
-            },
-            "type": "nativephp-plugin",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "Native\\Mobile\\Providers\\NetworkServiceProvider"
-                    ]
-                },
-                "nativephp": {
-                    "manifest": "nativephp.json"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Native\\Mobile\\Providers\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "NativePHP",
-                    "email": "support@nativephp.com"
-                }
-            ],
-            "description": "Network connectivity status plugin for NativePHP Mobile",
-            "support": {
-                "issues": "https://github.com/NativePHP/mobile-network/issues",
-                "source": "https://github.com/NativePHP/mobile-network/tree/1.0.1"
-            },
-            "time": "2026-03-20T22:08:33+00:00"
-        },
-        {
-            "name": "nativephp/mobile-system",
-            "version": "1.0.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/NativePHP/mobile-system.git",
-                "reference": "dc861c1ad54985aca536c5ad8a2fe3044c4e9c28"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/NativePHP/mobile-system/zipball/dc861c1ad54985aca536c5ad8a2fe3044c4e9c28",
-                "reference": "dc861c1ad54985aca536c5ad8a2fe3044c4e9c28",
-                "shasum": ""
-            },
-            "require": {
-                "nativephp/mobile": "^3.0",
-                "nativephp/mobile-device": "*",
-                "php": "^8.2"
-            },
-            "type": "nativephp-plugin",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "Native\\Mobile\\Providers\\SystemServiceProvider"
-                    ]
-                },
-                "nativephp": {
-                    "manifest": "nativephp.json"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Native\\Mobile\\Providers\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "System-level operations for NativePHP Mobile",
-            "support": {
-                "issues": "https://github.com/NativePHP/mobile-system/issues",
-                "source": "https://github.com/NativePHP/mobile-system/tree/1.0.2"
-            },
-            "time": "2026-03-20T22:08:33+00:00"
-        },
-        {
-            "name": "nativephp/php-bin",
-            "version": "1.2.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/NativePHP/php-bin.git",
-                "reference": "df5f1f13ac3928f0630bc66a772ae1bf2ed7ebb3"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/NativePHP/php-bin/zipball/df5f1f13ac3928f0630bc66a772ae1bf2ed7ebb3",
-                "reference": "df5f1f13ac3928f0630bc66a772ae1bf2ed7ebb3",
-                "shasum": ""
-            },
-            "type": "library",
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "Apache-2.0",
-                "GPL-3.0-or-later",
-                "MIT",
-                "PHP-3.01"
-            ],
-            "authors": [
-                {
-                    "name": "Marcel Pociot",
-                    "email": "marcel@beyondco.de",
-                    "role": "Developer"
-                },
-                {
-                    "name": "Simon Hamp",
-                    "email": "simon.hamp@me.com",
-                    "role": "Developer"
-                }
-            ],
-            "description": "PHP binaries used by the NativePHP framework",
-            "homepage": "https://nativephp.com",
-            "keywords": [
-                "nativephp",
-                "php"
-            ],
-            "support": {
-                "source": "https://github.com/NativePHP/php-bin/tree/1.2.0"
-            },
-            "funding": [
-                {
-                    "url": "https://github.com/sponsors/simonhamp",
-                    "type": "github"
-                },
-                {
-                    "url": "https://opencollective.com/nativephp",
-                    "type": "opencollective"
-                }
-            ],
-            "time": "2026-05-21T13:07:24+00:00"
         },
         {
             "name": "nesbot/carbon",
@@ -11574,6 +11242,73 @@
             "time": "2024-09-05T11:56:40+00:00"
         },
         {
+            "name": "pragmarx/google2fa-qrcode",
+            "version": "v3.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/antonioribeiro/google2fa-qrcode.git",
+                "reference": "c23ebcc3a50de0d1566016a6dd1486e183bb78e1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/antonioribeiro/google2fa-qrcode/zipball/c23ebcc3a50de0d1566016a6dd1486e183bb78e1",
+                "reference": "c23ebcc3a50de0d1566016a6dd1486e183bb78e1",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1",
+                "pragmarx/google2fa": "^4.0|^5.0|^6.0|^7.0|^8.0"
+            },
+            "require-dev": {
+                "bacon/bacon-qr-code": "^2.0",
+                "chillerlan/php-qrcode": "^1.0|^2.0|^3.0|^4.0",
+                "khanamiryan/qrcode-detector-decoder": "^1.0",
+                "phpunit/phpunit": "~4|~5|~6|~7|~8|~9"
+            },
+            "suggest": {
+                "bacon/bacon-qr-code": "For QR Code generation, requires imagick",
+                "chillerlan/php-qrcode": "For QR Code generation"
+            },
+            "type": "library",
+            "extra": {
+                "component": "package",
+                "branch-alias": {
+                    "dev-master": "1.0-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "PragmaRX\\Google2FAQRCode\\": "src/",
+                    "PragmaRX\\Google2FAQRCode\\Tests\\": "tests/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Antonio Carlos Ribeiro",
+                    "email": "acr@antoniocarlosribeiro.com",
+                    "role": "Creator & Designer"
+                }
+            ],
+            "description": "QR Code package for Google2FA",
+            "keywords": [
+                "2fa",
+                "Authentication",
+                "Two Factor Authentication",
+                "google2fa",
+                "qr code",
+                "qrcode"
+            ],
+            "support": {
+                "issues": "https://github.com/antonioribeiro/google2fa-qrcode/issues",
+                "source": "https://github.com/antonioribeiro/google2fa-qrcode/tree/v3.0.1"
+            },
+            "time": "2025-09-19T23:02:26+00:00"
+        },
+        {
             "name": "propaganistas/laravel-phone",
             "version": "6.0.3",
             "source": {
@@ -12640,87 +12375,6 @@
                 }
             ],
             "time": "2022-11-30T15:59:55+00:00"
-        },
-        {
-            "name": "react/datagram",
-            "version": "v1.10.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/reactphp/datagram.git",
-                "reference": "9236e1f5a67a6029be17d551e9858c487836c301"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/reactphp/datagram/zipball/9236e1f5a67a6029be17d551e9858c487836c301",
-                "reference": "9236e1f5a67a6029be17d551e9858c487836c301",
-                "shasum": ""
-            },
-            "require": {
-                "evenement/evenement": "^3.0 || ^2.0 || ^1.0",
-                "php": ">=5.3",
-                "react/dns": "^1.13",
-                "react/event-loop": "^1.2",
-                "react/promise": "^3.2 || ^2.1 || ^1.2"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^9.6 || ^5.7 || ^4.8.36",
-                "react/async": "^4.3 || ^3 || ^2"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "React\\Datagram\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Christian Lück",
-                    "email": "christian@clue.engineering",
-                    "homepage": "https://clue.engineering/"
-                },
-                {
-                    "name": "Cees-Jan Kiewiet",
-                    "email": "reactphp@ceesjankiewiet.nl",
-                    "homepage": "https://wyrihaximus.net/"
-                },
-                {
-                    "name": "Jan Sorgalla",
-                    "email": "jsorgalla@gmail.com",
-                    "homepage": "https://sorgalla.com/"
-                },
-                {
-                    "name": "Chris Boden",
-                    "email": "cboden@gmail.com",
-                    "homepage": "https://cboden.dev/"
-                }
-            ],
-            "description": "Event-driven UDP datagram socket client and server for ReactPHP",
-            "homepage": "https://github.com/reactphp/datagram",
-            "keywords": [
-                "Socket",
-                "async",
-                "client",
-                "datagram",
-                "dgram",
-                "reactphp",
-                "server",
-                "udp"
-            ],
-            "support": {
-                "issues": "https://github.com/reactphp/datagram/issues",
-                "source": "https://github.com/reactphp/datagram/tree/v1.10.0"
-            },
-            "funding": [
-                {
-                    "url": "https://opencollective.com/reactphp",
-                    "type": "open_collective"
-                }
-            ],
-            "time": "2024-09-06T11:22:35+00:00"
         },
         {
             "name": "react/dns",
@@ -15081,66 +14735,6 @@
                 }
             ],
             "time": "2025-11-24T16:17:28+00:00"
-        },
-        {
-            "name": "srwiez/nativephp-mobile-screen",
-            "version": "v1.0.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/SRWieZ/nativephp-mobile-screen.git",
-                "reference": "e211a47c89df9761c5071305b125408bdf0a93e7"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/SRWieZ/nativephp-mobile-screen/zipball/e211a47c89df9761c5071305b125408bdf0a93e7",
-                "reference": "e211a47c89df9761c5071305b125408bdf0a93e7",
-                "shasum": ""
-            },
-            "require": {
-                "illuminate/support": "^11.0|^12.0|^13.0",
-                "nativephp/mobile": "^3.0",
-                "php": "^8.2"
-            },
-            "require-dev": {
-                "laravel/pint": "^1.24",
-                "orchestra/testbench": "^9.0|^10.0|^11.0",
-                "pestphp/pest": "^3.0"
-            },
-            "type": "nativephp-plugin",
-            "extra": {
-                "laravel": {
-                    "aliases": {
-                        "Screen": "SRWieZ\\NativePHP\\Mobile\\Screen\\Facades\\Screen"
-                    },
-                    "providers": [
-                        "SRWieZ\\NativePHP\\Mobile\\Screen\\ScreenServiceProvider"
-                    ]
-                },
-                "nativephp": {
-                    "manifest": "nativephp.json"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "SRWieZ\\NativePHP\\Mobile\\Screen\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Eser Deniz",
-                    "email": "srwiez@gmail.com"
-                }
-            ],
-            "description": "Screen wake lock and brightness control for NativePHP Mobile apps",
-            "support": {
-                "issues": "https://github.com/SRWieZ/nativephp-mobile-screen/issues",
-                "source": "https://github.com/SRWieZ/nativephp-mobile-screen/tree/v1.0.2"
-            },
-            "time": "2026-05-26T06:55:01+00:00"
         },
         {
             "name": "stechstudio/filament-impersonate",
@@ -19008,69 +18602,6 @@
                 "source": "https://github.com/wikimedia/composer-merge-plugin/tree/v2.1.0"
             },
             "time": "2023-04-15T19:07:00+00:00"
-        },
-        {
-            "name": "workerman/workerman",
-            "version": "v4.2.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/walkor/workerman.git",
-                "reference": "cafb5a43d93d7d30a16b32a57948581cca993562"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/walkor/workerman/zipball/cafb5a43d93d7d30a16b32a57948581cca993562",
-                "reference": "cafb5a43d93d7d30a16b32a57948581cca993562",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.0"
-            },
-            "suggest": {
-                "ext-event": "For better performance. "
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Workerman\\": "./"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "walkor",
-                    "email": "walkor@workerman.net",
-                    "homepage": "http://www.workerman.net",
-                    "role": "Developer"
-                }
-            ],
-            "description": "An asynchronous event driven PHP framework for easily building fast, scalable network applications.",
-            "homepage": "http://www.workerman.net",
-            "keywords": [
-                "asynchronous",
-                "event-loop"
-            ],
-            "support": {
-                "email": "walkor@workerman.net",
-                "forum": "http://wenda.workerman.net/",
-                "issues": "https://github.com/walkor/workerman/issues",
-                "source": "https://github.com/walkor/workerman",
-                "wiki": "http://doc.workerman.net/"
-            },
-            "funding": [
-                {
-                    "url": "https://opencollective.com/workerman",
-                    "type": "open_collective"
-                },
-                {
-                    "url": "https://www.patreon.com/walkor",
-                    "type": "patreon"
-                }
-            ],
-            "time": "2024-11-24T11:45:37+00:00"
         },
         {
             "name": "ysfkaya/filament-phone-input",

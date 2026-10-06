@@ -31,7 +31,7 @@
         border-top-color: rgba(255, 255, 255, 0.10);
     }
 
-    /* Auth footer (login/register pages) */
+    /* Auth footer (Sign In / Sign Up pages) */
     .fi-auth-footer {
         position: static !important;
         background-color: transparent !important;

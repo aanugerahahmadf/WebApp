@@ -1,6 +1,6 @@
 @php
     // CSS selector of the FilePond field wrapper for the triggering button —
-    // passed via the page that includes this modal. Defaults are the register /
+    // passed via the page that includes this modal. Defaults are the sign-up /
     // complete-profile field wrapper classes.
     $documentWrapper = $documentWrapper ?? '.document-photo-wrapper';
     $selfieWrapper = $selfieWrapper ?? '.selfie-photo-wrapper';
@@ -25,6 +25,97 @@
       window.ScannerUI  → injectFile(), setFormStateMany(), getFormState()
       window.OCR        → recognizeText(), parseDocument(), mapOcrToFormState()
 --}}
+{{-- Cadangan: kalau bundle JS belum memasang window.ScannerUI, modal tetap bisa
+     melampirkan foto ke FilePond / form Livewire. Aman dipasang di beberapa
+     modal sekaligus (dicek dulu sebelum dibuat). --}}
+<script>
+    (function () {
+        if (window.ScannerUI && window.ScannerUI.injectFile && window.ScannerUI.waitForUploads) return;
+
+        function lw(el) {
+            var base = el && el.closest ? el.closest('[wire\\:id]') : null;
+            var node = base || document.querySelector('[wire\\:id]');
+            if (!node || !window.Livewire) return null;
+            return window.Livewire.find(node.getAttribute('wire:id')) || null;
+        }
+
+        window.ScannerUI = Object.assign({
+            getLivewireComponent: lw,
+            getFormState: function (key, el) {
+                var c = lw(el);
+                if (!c) return null;
+                try { var v = c.get(key); return v === undefined ? null : v; } catch (e) { return null; }
+            },
+            setFormState: function (key, value, el) {
+                var c = lw(el);
+                if (!c) return false;
+                try { c.set(key, value); return true; } catch (e) { return false; }
+            },
+            setFormStateMany: function (values, el) {
+                var n = 0;
+                Object.keys(values || {}).forEach(function (k) {
+                    var v = values[k];
+                    if ((typeof v === 'string' && v !== '') || typeof v === 'number') {
+                        if (window.ScannerUI.setFormState(k, v, el)) n++;
+                    }
+                });
+                return n;
+            },
+            injectFile: function (wrapperSelector, file) {
+                var wrapper = document.querySelector(wrapperSelector);
+                if (!wrapper || !file) {
+                    console.error('[ScannerUI] wrapper tidak ditemukan:', wrapperSelector);
+                    return false;
+                }
+                var pondEl = wrapper.querySelector('.filepond--root');
+                if (pondEl && window.FilePond) {
+                    var inst = window.FilePond.find(pondEl);
+                    if (inst) { inst.addFile(file); return true; }
+                }
+                var fp = wrapper.querySelector('input[type=file].scan-photo-input') || wrapper.querySelector('input[type=file]');
+                if (fp) {
+                    var dt = new DataTransfer();
+                    dt.items.add(file);
+                    fp.files = dt.files;
+                    fp.dispatchEvent(new Event('change', { bubbles: true }));
+                    return true;
+                }
+                console.error('[ScannerUI] input file tidak ditemukan di', wrapperSelector);
+                return false;
+            },
+            waitForUploads: function (wrapperSelector, timeoutMs) {
+                timeoutMs = timeoutMs || 20000;
+                return new Promise(function (resolve) {
+                    var start = Date.now();
+                    (function poll() {
+                        var elapsed = Date.now() - start;
+                        var wrapper = document.querySelector(wrapperSelector);
+                        var items = wrapper ? wrapper.querySelectorAll('.filepond--item') : [];
+                        var busy = false;
+                        items.forEach(function (el) {
+                            var s = el.getAttribute('data-filepond-item-state') || '';
+                            if (s === 'busy' || s === 'processing' || s === 'processing-queued') busy = true;
+                            if (s === 'idle' && elapsed < 2500) busy = true;
+                        });
+                        if (elapsed >= 400 && !busy) { setTimeout(function () { resolve(true); }, 150); return; }
+                        if (elapsed >= timeoutMs) { resolve(false); return; }
+                        setTimeout(poll, 150);
+                    })();
+                });
+            },
+            callAction: function (name, args, el) {
+                var c = lw(el);
+                if (!c) return Promise.resolve(null);
+                try {
+                    if (typeof c[name] === 'function') return Promise.resolve(c[name].apply(c, args || []));
+                    if (typeof c.$call === 'function') return Promise.resolve(c.$call.apply(c, [name].concat(args || [])));
+                } catch (e) { return Promise.reject(e); }
+                return Promise.resolve(null);
+            }
+        }, window.ScannerUI || {});
+    })();
+</script>
+
 <div
     x-data="{
         isOpen: false,
@@ -37,6 +128,15 @@
         stream: null,
         facingMode: 'environment',
         photoTaken: false,
+
+        /* Mirroring hanya soal TAMPILAN (CSS). File hasil jepret tidak pernah
+         * dibalik, supaya teks KTP di foto selfie tetap terbaca. */
+        cameraFacing: '',
+        cameraLabel: '',
+        /* true = file hasil jepret ikut dicermin (sama dengan yang terlihat di layar). */
+        mirrorSaved: true,
+        ocrBlob: null,   /* salinan TIDAK dicermin, khusus untuk OCR */
+        ocrFile: null,
 
         /* preview / ocr state */
         imageUrl: null,
@@ -68,6 +168,13 @@
             this.field = detail.field || (detail.mode === 'selfie' ? 'selfie_photo' : 'ktp_photo');
             this.mode = detail.mode || 'document';
             this.wrapper = detail.wrapper || (this.mode === 'selfie' ? '{{ $selfieWrapper }}' : '{{ $documentWrapper }}');
+
+            // Selfie = kamera depan, dokumen = kamera belakang. Sebelumnya
+            // facingMode selalu 'environment' sehingga mode selfie membuka
+            // kamera belakang (tapi dicermin).
+            this.facingMode = this.mode === 'selfie' ? 'user' : 'environment';
+            this.activeCameraId = '';
+            this.cameraFacing = '';
 
             this.view = 'source';
             this.imageUrl = null;
@@ -102,6 +209,45 @@
         },
 
         /* ── camera (WebRTC, semua perangkat) ── */
+
+        /* Daftar kamera fisik yang terdeteksi di perangkat ini.
+         *
+         * Notebook dan HP bisa punya lebih dari satu kamera (depan, belakang,
+         * ultra-wide, tele). Desktop biasanya cuma satu webcam, jadi daftar ini
+         * sering cuma berisi satu tombol saja. */
+        cameras: [],
+        activeCameraId: '',
+
+        async loadCameras() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+
+                this.cameras = devices.filter((d) => d.kind === 'videoinput');
+            } catch (e) {
+                this.cameras = [];
+            }
+        },
+
+        /* Constraint getUserMedia untuk kamera yang sedang aktif.
+         * Kalau belum ada deviceId (mis. hanya satu kamera), pakai facingMode
+         * supaya tetap jalan. */
+        cameraConstraints() {
+            const base = { width: { ideal: 1280 }, height: { ideal: 720 } };
+
+            if (this.activeCameraId) {
+                return { ...base, deviceId: { exact: this.activeCameraId } };
+            }
+
+            return { ...base, facingMode: this.facingMode };
+        },
+
+        /* Pindah ke kamera tertentu. Dipakai oleh tombol 'Kiri' dan 'Kanan'
+         * di bawah preview. */
+        async selectCamera(deviceId) {
+            this.activeCameraId = deviceId;
+            await this.startCamera();
+        },
+
         async startCamera() {
             this.view = 'camera';
             this.photoTaken = false;
@@ -111,20 +257,31 @@
             try {
                 if (this.stream) this.stream.getTracks().forEach((t) => t.stop());
                 this.stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: this.facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+                    video: this.cameraConstraints(),
                     audio: false,
                 });
                 video.srcObject = this.stream;
+
+                /* Panduan AI mulai begitu ada stream frame yang bisa dianalisis. */
+                this.startCoach();
                 await video.play();
+
+                // Sinkronkan state dengan kamera yang BENAR-BENAR dipakai browser.
+                // Dulu activeCameraId diisi cameras[0] seenaknya, jadi tombol
+                // Kiri/Kanan menandai kamera yang salah dan retake memakai deviceId
+                // yang salah (flip kamera 'tidak berfungsi' setelah ulangi foto).
+                const settings = this.stream.getVideoTracks()[0]?.getSettings?.() || {};
+                this.activeCameraId = settings.deviceId || this.activeCameraId;
+                this.cameraFacing = settings.facingMode || '';
+                this.cameraLabel = this.stream.getVideoTracks()[0]?.label || '';
+
+                // Label kamera hanya terisi setelah izin kamera diberikan.
+                await this.loadCameras();
             } catch (e) {
                 // Fallback untuk browser yang tidak mendukung WebRTC in-page:
                 // buka kamera native lewat input capture.
                 this.view = 'source';
-                const el = document.getElementById(this.field + '-input-native-camera');
-                if (el) {
-                    this.close();
-                    setTimeout(() => el.click(), 100);
-                }
+                document.getElementById(this.field + '-input-native-camera')?.click();
             }
         },
 
@@ -133,20 +290,81 @@
                 this.stream.getTracks().forEach((t) => t.stop());
                 this.stream = null;
             }
+            /* Tanpa stream tidak ada frame untuk dianalisis, dan suara
+             * AI harus berhenti sekarang juga. */
+            this.stopCoach();
+        },
+
+        /* Cermin seperti kaca HANYA untuk preview selfie kamera depan.
+         * Mode 'document' tidak pernah dicermin (teks jadi terbalik). */
+        get mirroredView() {
+            return !(this.cameraFacing === 'environment' || (!this.cameraFacing && /back|rear|environment|belakang/i.test(this.cameraLabel || '')));
         },
 
         flipCamera() {
             this.facingMode = this.facingMode === 'user' ? 'environment' : 'user';
+
+            // Penting: deviceId harus dibuang. Kalau tidak, cameraConstraints()
+            // tetap memakai activeCameraId dan mengabaikan facingMode --
+            // tombol 'balik' jadi tidaklonjakan apa-apa.
+            this.activeCameraId = '';
+
             this.startCamera();
+        },
+
+        /* Gambar frame video APA ADANYA (tidak dibalik). Pencerminan hanya
+         * efek tampilan lewat CSS. Kalau file ikut dibalik, teks KTP di foto
+         * selfie menjadi terbalik dan tidak terbaca OCR / AI / petugas. */
+        drawToCanvas(video, canvas) {
+            const vw = video.videoWidth || 640;
+            const vh = video.videoHeight || 480;
+
+            /* Preview 4:3 + object-cover: yang terlihat hanya bagian tengah 4:3. */
+            let sw = vw, sh = vh;
+            if (vw / vh > 4 / 3) { sw = vh * 4 / 3; } else { sh = vw * 3 / 4; }
+            let sx = (vw - sw) / 2, sy = (vh - sh) / 2;
+
+            /* Mode dokumen: potong persis di kotak scanner (lebar 80%, rasio 1.586). */
+            if (this.mode !== 'selfie') {
+                const cw = sw * 0.80;
+                const ch = cw / 1.586;
+                sx += (sw - cw) / 2;
+                sy += (sh - ch) / 2;
+                sw = cw;
+                sh = ch;
+            }
+
+            const w = Math.round(sw), h = Math.round(sh);
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+
+            /* Hasil jepret dicermin PERSIS seperti preview (cermin sudah ada di
+             * piksel, jadi canvas tidak boleh dicermin lagi lewat CSS). */
+            if (this.mirrorSaved && this.mirroredView) {
+                ctx.save();
+                ctx.translate(w, 0);
+                ctx.scale(-1, 1);
+                ctx.drawImage(video, sx, sy, sw, sh, 0, 0, w, h);
+                ctx.restore();
+            } else {
+                ctx.drawImage(video, sx, sy, sw, sh, 0, 0, w, h);
+            }
+
+            /* Salinan tidak dicermin untuk OCR: teks KTP yang dicermin tidak bisa dibaca. */
+            this.ocrBlob = null;
+            const raw = document.createElement('canvas');
+            raw.width = w;
+            raw.height = h;
+            raw.getContext('2d').drawImage(video, sx, sy, sw, sh, 0, 0, w, h);
+            raw.toBlob((b) => { this.ocrBlob = b; }, 'image/jpeg', 0.92);
         },
 
         capturePhoto() {
             const video = this.$refs.camVideo;
             const canvas = this.$refs.camCanvas;
             if (!video || !canvas) return;
-            canvas.width = video.videoWidth || 640;
-            canvas.height = video.videoHeight || 480;
-            canvas.getContext('2d').drawImage(video, 0, 0);
+            this.drawToCanvas(video, canvas);
             this.stopCamera();
             this.photoTaken = true;
         },
@@ -163,33 +381,27 @@
                 if (!blob) return;
                 const ext = this.field === 'selfie_photo' ? 'jpg' : 'jpg';
                 const file = new File([blob], this.field + '-' + Date.now() + '.' + ext, { type: 'image/jpeg' });
-                this.openPreview(file);
+                const ocr = this.ocrBlob
+                    ? new File([this.ocrBlob], 'ocr-' + Date.now() + '.jpg', { type: 'image/jpeg' })
+                    : null;
+                this.openPreview(file, ocr);
             }, 'image/jpeg', 0.92);
         },
 
         /* ── file pickers (native camera, file, galeri) ── */
+        /* Klik input SINKRON di dalam handler klik user. Dulu modal ditutup
+         * dulu lalu setTimeout 100ms -> Safari/iOS memblokir karena user
+         * gesture hilang. Modal tetap terbuka; onPicked() yang lanjut. */
         pickNativeCamera() {
-            this.close();
-            setTimeout(() => {
-                const el = document.getElementById(this.field + '-input-native-camera');
-                if (el) el.click();
-            }, 100);
+            document.getElementById(this.field + '-input-native-camera')?.click();
         },
 
         pickFile() {
-            this.close();
-            setTimeout(() => {
-                const el = document.getElementById(this.field + '-input-file');
-                if (el) el.click();
-            }, 100);
+            document.getElementById(this.field + '-input-file')?.click();
         },
 
         pickGallery() {
-            this.close();
-            setTimeout(() => {
-                const el = document.getElementById(this.field + '-input-gallery');
-                if (el) el.click();
-            }, 100);
+            document.getElementById(this.field + '-input-gallery')?.click();
         },
 
         onPicked(event) {
@@ -203,8 +415,9 @@
         },
 
         /* ── preview → scanner → OCR ── */
-        openPreview(file) {
+        openPreview(file, ocrFile = null) {
             this.file = file;
+            this.ocrFile = ocrFile;
             this.view = 'preview';
             this.photoTaken = false;
             this.stopCamera();
@@ -230,7 +443,7 @@
         },
 
         identityType() {
-            return window.ScannerUI.getFormState('data.identity_type', document.querySelector(this.wrapper)) || 'ktp';
+            return window.ScannerUI?.getFormState('data.identity_type', document.querySelector(this.wrapper)) || 'ktp';
         },
 
         fieldLabel() {
@@ -240,7 +453,15 @@
         },
 
         async scan() {
-            if (!this.file || !window.OCR) { this.close(); return; }
+            if (!this.file) { this.close(); return; }
+
+            // OCR belum termuat: tetap lampirkan fotonya, jangan dibuang diam-diam.
+            if (!window.OCR) {
+                window.ScannerUI?.injectFile(this.wrapper, this.file, this.file.name);
+                await window.ScannerUI?.waitForUploads?.(this.wrapper);
+                this.close();
+                return;
+            }
 
             this.view = 'preview';
             this.scanning = true;
@@ -251,24 +472,27 @@
             try {
                 // 1) Lampirkan file asli ke FilePond field terpilih
                 const anchor = document.querySelector(this.wrapper);
-                const injected = window.ScannerUI.injectFile(this.wrapper, this.file, this.file.name);
+                const injected = window.ScannerUI?.injectFile(this.wrapper, this.file, this.file.name);
                 if (!injected) this.ocrError = {{ json_encode(__('Tidak dapat melampirkan foto. Silakan unggah manual.')) }};
 
                 // 2) OCR client-side
                 const identity = this.identityType();
-                const text = await window.OCR.recognizeText(this.file, {
+                const text = await window.OCR.recognizeText(this.ocrFile || this.file, {
                     onProgress: (status, progress) => {
                         this.ocrStatus = this.translateOcrStatus(status);
                         this.ocrProgress = Math.round((progress || 0) * 100);
                     },
                 });
 
+                // Pastikan upload FilePond selesai sebelum Livewire me-render ulang form
+                await window.ScannerUI?.waitForUploads?.(this.wrapper);
+
                 // 3) Parse sesuai jenis dokumen
                 const parsed = window.OCR.parseDocument(text, identity);
 
                 // 4) Tulis ke form (auto-fill)
                 const values = window.OCR.mapOcrToFormState(parsed);
-                const written = window.ScannerUI.setFormStateMany(values, anchor);
+                const written = window.ScannerUI?.setFormStateMany(values, anchor);
                 this.filledCount = written;
 
                 this.parsedSummary = Object.entries(values).map(([key, value]) => ({
@@ -288,6 +512,54 @@
 
         finish() {
             this.close();
+        },
+
+        /* ── Real-time AI scan coach ──────────────────────────────────────
+         * Mengukur fokus, pencahayaan, dan posisi subjek dari frame video
+         * langsung, lalu memberi arahan secara lisan dan visual (lingkaran
+         * hijau saat kualitas siap ditekan).
+         *
+         * Seluruh algoritmanya ada di resources/js/ai-scan-coach supaya
+         * objek x-data ini tetap tipis. Analisis real-time tidak mungkin
+         * lewat server: satu round-trip per frame jauh terlalu lambat.
+         *
+         * PENTING: hanya kutip tunggal di dalam x-data. Atributnya dibungkus
+         * kutip ganda, satu saja akan menutupnya lebih awal. */
+        coach: null,
+
+        startCoach() {
+            this.stopCoach();
+
+            const factory = window.AIScanCoach && window.AIScanCoach.create;
+            if (!factory) return;
+
+            const mount = this.$refs.camWrap;
+            if (!mount) return;
+
+            this.coach = factory({
+                mount: mount,
+                mode: this.mode === 'selfie' ? 'face' : 'document',
+                lang: document.documentElement.lang || '{{ app()->getLocale() }}',
+                video: () => this.$refs.camVideo,
+                /* Untuk mode dokumen, bingkai + kalimat AI menyesuaikan
+                 * jenis dokumen yang dipilih di form (ktp | npwp | sim |
+                 * passport). Mode selfie tidak memakai guide kartu. */
+                docType: this.mode === 'selfie' ? null : this.identityType(),
+                autoCapture: true,
+                onCapture: () => this.capturePhoto(),
+            });
+
+            this.coach.start();
+
+            /* Modal ini menggabungkan selfie + dokumen, jadi pengumuman
+             * jenis dokumen hanya keluar ketika yang dipindai kartu. */
+            if (this.mode !== 'selfie') this.coach.announceDocument(this.identityType());
+        },
+
+        stopCoach() {
+            if (!this.coach) return;
+            this.coach.stop();
+            this.coach = null;
         },
     }"
     x-on:open-document-scan.window="open($event.detail)"
@@ -419,7 +691,7 @@
 
                 {{-- ── WebRTC Camera view (desktop) ── --}}
                 <div x-show="view === 'camera'" style="display:none;">
-                    <div class="relative bg-black" style="aspect-ratio:4/3;">
+                    <div x-ref="camWrap" class="relative bg-black" style="aspect-ratio:4/3;">
                         <video
                             x-ref="camVideo"
                             x-show="!photoTaken"
@@ -427,42 +699,70 @@
                             playsinline
                             muted
                             class="h-full w-full object-cover"
-                            style="display:block;"
+                            :style="mirroredView ? 'display:block; transform: scaleX(-1);' : 'display:block;'"
                         ></video>
+                        {{-- Canvas dicermin lewat CSS yang sama dengan video; file yang disimpan tidak dicermin. --}}
                         <canvas
                             x-ref="camCanvas"
                             x-show="photoTaken"
-                            class="h-full w-full object-cover"
+                            class="h-full w-full"
+                            :class="mode === 'selfie' ? 'object-cover' : 'object-contain'"
+                            :style="{ transform: 'none' }"
                             style="display:none;"
                         ></canvas>
 
-                        {{-- Scanner box / guide overlay --}}
+                        {{-- Scanner box / guide overlay. Area luar kotak digelapkan lewat
+                             box-shadow pada kotak guide; wrapper-nya overflow-hidden
+                             jadi bayangan tidak meluber keluar preview. --}}
                         <div
                             x-show="!photoTaken"
                             x-transition.opacity.duration.300ms
-                            class="pointer-events-none absolute inset-0 flex items-center justify-center"
-                            :class="mode === 'selfie' ? '' : ''"
+                            class="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden"
                         >
-                            {{-- Selfie: face oval (top) + document box (bottom) --}}
+                            {{-- Selfie: face oval (atas) + document box (bawah).
+
+                                 BUG YANG DIPERBAIKI: kedua guide lama positioned
+                                 dengan `left-1/2 -translate-x-1/2` dan
+                                 top-/bottom-[%]. Pada mode selfie keduanya berada
+                                 di satu wrapper yang sama, jadi:
+                                   - oval (top-12%, h-34%) menabrak kotak dokumen
+                                     (bottom-8%, w-72%): tinggi 34% + 8% + tinggi
+                                     kotak >= 100% -> keduanya saling tumpang tindih
+                                     dan menyisakan garis horizontal tepat di
+                                     tengah oval (terlihat di screenshot);
+                                   - kotak dokumen punya `-translate-x-1/2` tanpa
+                                     `left-1/2`, jadi translate-50% itu menggeser
+                                     kotak KIRI dari posisi static-nya dan keluar
+                                     dari area preview, menyisakan garis vertikal
+                                     panjang di sisi kiri.
+
+                                 Sekarang jadi grid 2 baris (1fr auto) dengan
+                                 jarak eksplisit: guide tidak pernah Absolute,
+                                 tidak bisa saling tumpang tindih, dan tidak
+                                 bisa keluar dari kotaknya. --}}
+                            {{-- Selfie: SVG viewBox 400x300 = rasio kotak 4:3 persis, tanpa
+                                 distorsi. Oval wajah (rx60 ry80 = 3:4) di atas dan kotak KTP
+                                 (190x119.8 = 1.586) di bawah, tidak saling menimpa.
+                                 Dulu pakai grid + h-full sehingga oval mengecil jadi titik. --}}
                             <template x-if="mode === 'selfie'">
-                                <div class="relative h-full w-full">
-                                    {{-- Wajah (oval) --}}
-                                    <div
-                                        class="absolute left-1/2 top-[12%] h-[34%] w-[42%] -translate-x-1/2 rounded-[45%] border-2 border-white/90"
-                                        style="box-shadow: 0 0 0 9999px rgba(0,0,0,0.40);"
-                                    ></div>
-                                    {{-- Dokumen (persegi) --}}
-                                    <div
-                                        class="absolute bottom-[8%] left-1/2 aspect-[1.586/1] w-[72%] -translate-x-1/2 rounded-lg border-2 border-white/90"
-                                    ></div>
-                                </div>
+                                <svg class="h-full w-full" viewBox="0 0 400 300" preserveAspectRatio="none" aria-hidden="true">
+                                    <defs>
+                                        <mask id="doc-scan-selfie-mask">
+                                            <rect width="400" height="300" fill="white" />
+                                            <ellipse cx="200" cy="92" rx="60" ry="80" fill="black" />
+                                            <rect x="105" y="176" width="190" height="119.8" rx="8" fill="black" />
+                                        </mask>
+                                    </defs>
+                                    <rect width="400" height="300" fill="rgba(0,0,0,0.40)" mask="url(#doc-scan-selfie-mask)" />
+                                    <ellipse cx="200" cy="92" rx="60" ry="80" fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="2.5" vector-effect="non-scaling-stroke" />
+                                    <rect x="105" y="176" width="190" height="119.8" rx="8" fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="2.5" vector-effect="non-scaling-stroke" />
+                                </svg>
                             </template>
                             {{-- Document only: rectangle guide --}}
                             <template x-if="mode !== 'selfie'">
-                                <div
-                                    class="absolute left-1/2 top-1/2 aspect-[1.586/1] w-[80%] -translate-x-1/2 -translate-y-1/2 rounded-lg border-2 border-white/90"
-                                    style="box-shadow: 0 0 0 9999px rgba(0,0,0,0.40);"
-                                ></div>
+                                <div class="flex h-full w-full items-center justify-center overflow-hidden">
+                                    <div class="aspect-[1.586/1] w-[80%] rounded-lg border-2 border-white/90" style="box-shadow: 0 0 0 9999px rgba(0,0,0,0.40);"></div>
+                                </div>
                             </template>
                         </div>
 
@@ -481,20 +781,63 @@
 
                     {{-- hint --}}
                     <p class="px-4 py-2 text-center text-xs text-gray-500 dark:text-gray-400">
-                        <template x-if="mode === 'selfie'">{{ __('Arahkan wajah ke oval dan dokumen ke kotak bawah.') }}</template>
-                        <template x-if="mode !== 'selfie'">{{ __('Letakkan dokumen di dalam kotak scanner.') }}</template>
+                        {{-- x-if butuh satu elemen root; teks polos di dalam <template x-if> tidak dirender. --}}
+                        <span x-show="mode === 'selfie'">{{ __('Arahkan wajah ke oval dan dokumen ke kotak bawah.') }}</span>
+                        <span x-show="mode !== 'selfie'" style="display:none;">{{ __('Letakkan dokumen di dalam kotak scanner.') }}</span>
                     </p>
 
-                    {{-- Controls --}}
-                    <div class="flex items-center justify-center gap-4 px-4 py-4">
+                    {{-- Controls.
+
+                             Satu tombol jepret di tengah, dikelilingi dua tombol
+                             pemilih kamera: KAMERA KIRI dan KAMERA KANAN. Dua
+                             tombol itu memindah stream ke device yang berbeda,
+                             jadi user bisa pilih kamera fisik yang mau dipakai
+                             tanpa lewat tombol "balik" yang cuma men-toggle.
+
+                             Hanya tampil kalau perangkat memang punya >1
+                             kamera -- di laptop yang cuma satu webcam, kedua
+                             tombol disembunyikan supaya tidak membingungkan.
+                             --}}
+                    <div class="flex items-center justify-center gap-5 px-4 py-4">
+                        {{-- Kamera kiri --}}
+                        <button
+                            type="button"
+                            x-show="!photoTaken && cameras.length > 1"
+                            x-on:click="selectCamera(cameras[0].deviceId)"
+                            x-bind:class="activeCameraId === cameras[0]?.deviceId
+                                ? 'bg-primary-600 text-white'
+                                : 'bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-gray-200'"
+                            class="flex h-11 shrink-0 items-center gap-1.5 rounded-full px-4 text-xs font-semibold transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                            :aria-label="cameras[0]?.label || 'Kamera Kiri'"
+                        >
+                            <x-filament::icon icon="heroicon-m-arrow-left" class="h-4 w-4" />
+                            <span>{{ __('Kiri') }}</span>
+                        </button>
+
+                        {{-- Tombol jepret --}}
                         <button
                             type="button"
                             x-show="!photoTaken"
                             x-on:click="capturePhoto()"
-                            class="flex h-14 w-14 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg transition hover:bg-primary-500 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                            class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg transition hover:bg-primary-500 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
                             :aria-label="{{ json_encode(__('Ambil Foto')) }}"
                         >
-                            <x-filament::icon icon="heroicon-m-camera" class="h-7 w-7" />
+                            <x-filament::icon icon="heroicon-m-camera" class="h-8 w-8" />
+                        </button>
+
+                        {{-- Kamera kanan --}}
+                        <button
+                            type="button"
+                            x-show="!photoTaken && cameras.length > 1"
+                            x-on:click="selectCamera(cameras[cameras.length - 1].deviceId)"
+                            x-bind:class="activeCameraId === cameras[cameras.length - 1]?.deviceId
+                                ? 'bg-primary-600 text-white'
+                                : 'bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-gray-200'"
+                            class="flex h-11 shrink-0 items-center gap-1.5 rounded-full px-4 text-xs font-semibold transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                            :aria-label="cameras[cameras.length - 1]?.label || 'Kamera Kanan'"
+                        >
+                            <span>{{ __('Kanan') }}</span>
+                            <x-filament::icon icon="heroicon-m-arrow-right" class="h-4 w-4" />
                         </button>
 
                         <template x-if="photoTaken">
@@ -519,33 +862,29 @@
                 </div>
 
                 {{-- ── Preview / scanner view ── --}}
+                {{--
+                    Wrapper preview DISAMAI dengan gambar, bukan kotak 4/3 tetap.
+
+                    Dulu: <div style="aspect-ratio:4/3"> membungkus <img
+                    class="object-contain">. object-contain memastikan SELURUH foto
+                    terlihat, jadi saat rasio foto bukan 4/3 selalu ada bar hitam
+                    di atas/bawah atau kiri/kanan. Guide-overlay-nya `absolute inset-0`
+                    ikut kotak 4/3 itu, bukan fotonya -- jadi kotak guide bergeser
+                    dari dokumen, dan user meluruskan KTP ke tempat yang salah.
+
+                    Sekarang img yang menentukan tinggi wrapper (w-fit + max-h),
+                    jadi guide dan foto selalu punya koordinat yang sama.
+                --}}
                 <div x-show="view === 'preview'" style="display:none;">
-                    <div class="relative bg-black" style="aspect-ratio:4/3;">
+                    <div class="relative mx-auto flex w-fit max-w-full items-center justify-center bg-black">
                         <img
                             :src="imageUrl"
                             alt="Preview"
-                            class="h-full w-full object-contain"
+                            class="block max-h-[60vh] w-auto max-w-full object-contain"
                         />
-                        {{-- Scanner box overlay on preview --}}
-                        <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
-                            <template x-if="mode === 'selfie'">
-                                <div class="relative h-full w-full">
-                                    <div
-                                        class="absolute left-1/2 top-[12%] h-[34%] w-[42%] -translate-x-1/2 rounded-[45%] border-2 border-white/80"
-                                        style="box-shadow: 0 0 0 9999px rgba(0,0,0,0.30);"
-                                    ></div>
-                                    <div
-                                        class="absolute bottom-[8%] left-1/2 aspect-[1.586/1] w-[72%] -translate-x-1/2 rounded-lg border-2 border-white/80"
-                                    ></div>
-                                </div>
-                            </template>
-                            <template x-if="mode !== 'selfie'">
-                                <div
-                                    class="absolute left-1/2 top-1/2 aspect-[1.586/1] w-[80%] -translate-x-1/2 -translate-y-1/2 rounded-lg border-2 border-white/80"
-                                    style="box-shadow: 0 0 0 9999px rgba(0,0,0,0.30);"
-                                ></div>
-                            </template>
-                        </div>
+                        {{-- Tidak ada garis panduan di preview: foto sudah dipotong persis sesuai
+                             garis saat jepret, dan OCR membaca seluruh foto ini. Overlay lama
+                             (grid oval + kotak) menutupi wajah dan tidak cocok dengan isi foto. --}}
 
                         {{-- Scanning overlay --}}
                         <div

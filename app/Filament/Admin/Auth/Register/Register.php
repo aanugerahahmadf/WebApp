@@ -18,6 +18,23 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\HtmlString;
 use Spatie\Permission\Models\Role;
 
+/**
+ * Halaman registrasi panel ADMIN -- TIDAK TERDAFTAR, dan memang begitu sejak awal.
+ *
+ * File ini sengaja DISIMPAN, tidak dihapus. Tidak ada satupun yang mereferensikannya:
+ * `AdminPanelProvider` tidak pernah memanggil `->registration()`, jadi tidak ada
+ * route `filament.admin.auth.register`, dan `/admin/register` dijawab 404 (dipin
+ * `RenameSmokeTest`). Akun admin dibuat dari luar -- seeder atau panel user --
+ * bukan lewat halaman publik.
+ *
+ * Kalau suatu saat butuh pendaftaran admin, daftarkan lewat
+ * `->registration(Register::class)` di `AdminPanelProvider`; kelas ini sudah siap
+ * (form + `handleRegistration()` lengkap), tidak perlu ditulis ulang.
+ *
+ * Bandingkan `App\Filament\User\Auth\SignUp\SignUp`, yang situasinya berbeda:
+ * class itu milik panel User dan dimatikan hanya dengan mengomentari
+ * `->registration()`-nya di `UserPanelProvider`.
+ */
 class Register extends BaseRegister
 {
     public function getHeading(): string|Htmlable

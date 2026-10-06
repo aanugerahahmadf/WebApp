@@ -7,6 +7,15 @@
     $payable = in_array($order?->payment_status?->value, ['unpaid', 'pending', 'failed', 'partial']);
     $deadline = \Carbon\Carbon::parse($order?->created_at)->addHours(24);
     $expired = $deadline->isPast();
+
+    // Virtual Account BRI: nomor yang dipesan unik per transaksi. Rekening
+    // statis di tabel payment_methods HANYA berlaku untuk metode transfer
+    // manual, jadi tidak boleh ditampilkan di sini -- kalau iya, user akan
+    // transfer ke rekening admin dan pembayarannya tidak bisa dicocokkan.
+    $isVirtualAccount = $methodType === 'virtual_account';
+    $vaNumber = $isVirtualAccount ? $tx?->virtual_account_no : null;
+    $vaName = $isVirtualAccount ? $tx?->virtual_account_name : null;
+    $vaExpiry = $isVirtualAccount ? $tx?->virtual_account_expiry : null;
 @endphp
 
 <div class="space-y-3">
@@ -17,7 +26,7 @@
                 @if ($pm?->image_url)
                     <img src="{{ $pm->image_url }}" alt="{{ $methodName }}" class="h-5 w-5 object-contain">
                 @endif
-                {{ \App\Models\PaymentMethod\PaymentMethod::typeLabel((string) $methodType) }} · {{ $methodName }}
+                {{ \App\Models\PaymentMethod\PaymentMethod::typeLabel((string) $methodType) }} Â· {{ $methodName }}
             </span>
         </div>
 
@@ -27,17 +36,44 @@
                 <span class="font-semibold">{{ $pm->bank_name }}</span>
             </div>
         @endif
-        @if ($pm?->account_number)
-            <div class="flex items-center justify-between text-sm">
-                <span class="text-gray-600 dark:text-gray-400">{{ __('No. Rekening') }}</span>
-                <span class="font-mono font-semibold">{{ $pm->account_number }}</span>
-            </div>
-        @endif
-        @if ($pm?->account_holder)
-            <div class="flex items-center justify-between text-sm">
-                <span class="text-gray-600 dark:text-gray-400">{{ __('Atas Nama') }}</span>
-                <span class="font-semibold">{{ $pm->account_holder }}</span>
-            </div>
+        {{-- Virtual Account: nomor VA milik transaksi. Rekening statis dari
+             payment_methods TIDAK PERNAH ditampilkan di sini, bahkan kalau
+             VA gagal dibuat -- kalau iya user akan transfer ke rekening
+             admin dan pembayarannya tidak akan pernah tercatat. --}}
+        @if ($isVirtualAccount)
+            @if ($vaNumber)
+                <div class="rounded-lg border-2 border-gray-300 bg-white p-4 dark:border-gray-600 dark:bg-gray-900">
+                    <div class="text-sm text-gray-600 dark:text-gray-400">{{ __('Nomor Virtual Account') }}</div>
+                    <div class="font-mono text-xl font-bold tracking-wider select-all">{{ $vaNumber }}</div>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600 dark:text-gray-400">{{ __('Atas Nama') }}</span>
+                    <span class="font-semibold">{{ $vaName }}</span>
+                </div>
+                @if ($vaExpiry)
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600 dark:text-gray-400">{{ __('Berlaku sampai') }}</span>
+                        <span class="font-semibold">{{ \Carbon\Carbon::parse($vaExpiry)->translatedFormat('d F Y H:i') }}</span>
+                    </div>
+                @endif
+            @else
+                <div class="rounded-lg border border-danger-300 bg-danger-50 dark:bg-danger-950 p-3 text-sm text-danger-700 dark:text-danger-300">
+                    {{ __('Nomor Virtual Account belum tersedia. Silakan hubungi admin.') }}
+                </div>
+            @endif
+        @else
+            @if ($pm?->account_number)
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600 dark:text-gray-400">{{ __('No. Rekening') }}</span>
+                    <span class="font-mono font-semibold">{{ $pm->account_number }}</span>
+                </div>
+            @endif
+            @if ($pm?->account_holder)
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600 dark:text-gray-400">{{ __('Atas Nama') }}</span>
+                    <span class="font-semibold">{{ $pm->account_holder }}</span>
+                </div>
+            @endif
         @endif
         @if ($pm && $pm->fee > 0)
             <div class="flex items-center justify-between text-sm">

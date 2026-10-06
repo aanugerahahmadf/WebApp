@@ -38,6 +38,21 @@
         facingMode: 'environment',
         photoTaken: false,
 
+        /* Cermin untuk kamera depan (mode 'selfie').
+         *
+         * Tanpa scaleX(-1), preview depan tidak seperti cermin: user geser
+         * kepala ke kiri, di layar ikut ke kiri. Seperti cermin kaca, preview
+         * harus menampilkan arah yang berlawanan supaya user bisa mengarahkan
+         * wajahnya ke oval.
+         *
+         * Mode 'document' memakai kamera belakang dan TIDAK boleh dicermin --
+         * teks di KTP akan terbalik dan OCR tidak bisa membacanya.
+         *
+         * Canvas hasil jepret ikut dicermin supaya foto yang diunggah konsisten
+         * dengan yang dilihat user.
+         */
+        mirroredView: false,
+
         /* preview / ocr state */
         imageUrl: null,
         file: null,
@@ -115,7 +130,16 @@
                     audio: false,
                 });
                 video.srcObject = this.stream;
+
+                /* Panduan AI mulai begitu ada stream frame yang bisa dianalisis. */
+                this.startCoach();
                 await video.play();
+
+                /* Cermin hanya di mode 'selfie' (kamera depan). Mode
+                 * 'document' memakai kamera belakang dan harus tetap normal
+                 * supaya teks KTP terbaca.
+                 */
+                this.mirroredView = this.mode === 'selfie';
             } catch (e) {
                 // Fallback untuk browser yang tidak mendukung WebRTC in-page:
                 // buka kamera native lewat input capture.
@@ -133,6 +157,9 @@
                 this.stream.getTracks().forEach((t) => t.stop());
                 this.stream = null;
             }
+            /* Tanpa stream tidak ada frame untuk dianalisis, dan suara
+             * AI harus berhenti sekarang juga. */
+            this.stopCoach();
         },
 
         flipCamera() {
@@ -289,6 +316,44 @@
         finish() {
             this.close();
         },
+
+        /* ── Real-time AI scan coach ──────────────────────────────────────
+         * Mengukur fokus, pencahayaan, dan posisi subjek dari frame video
+         * langsung, lalu memberi arahan secara lisan dan visual (lingkaran
+         * hijau saat kualitas siap ditekan).
+         *
+         * Seluruh algoritmanya ada di resources/js/ai-scan-coach supaya
+         * objek x-data ini tetap tipis. Analisis real-time tidak mungkin
+         * lewat server: satu round-trip per frame jauh terlalu lambat.
+         *
+         * PENTING: hanya kutip tunggal di dalam x-data. Atributnya dibungkus
+         * kutip ganda, satu saja akan menutupnya lebih awal. */
+        coach: null,
+
+        startCoach() {
+            this.stopCoach();
+
+            const factory = window.AIScanCoach && window.AIScanCoach.create;
+            if (!factory) return;
+
+            const mount = this.$refs.camWrap;
+            if (!mount) return;
+
+            this.coach = factory({
+                mount: mount,
+                mode: this.mode === 'selfie' ? 'face' : 'document',
+                lang: document.documentElement.lang || '{{ app()->getLocale() }}',
+                video: () => this.$refs.camVideo,
+            });
+
+            this.coach.start();
+        },
+
+        stopCoach() {
+            if (!this.coach) return;
+            this.coach.stop();
+            this.coach = null;
+        },
     }"
     x-on:open-document-scan.window="open($event.detail)"
     x-on:keydown.escape.window="if (isOpen) { if (view !== 'source') { resetToSource(); } else { close(); } }"
@@ -419,7 +484,7 @@
 
                 {{-- ── WebRTC Camera view (desktop) ── --}}
                 <div x-show="view === 'camera'" style="display:none;">
-                    <div class="relative bg-black" style="aspect-ratio:4/3;">
+                    <div x-ref="camWrap" class="relative bg-black" style="aspect-ratio:4/3;">
                         <video
                             x-ref="camVideo"
                             x-show="!photoTaken"
@@ -427,42 +492,81 @@
                             playsinline
                             muted
                             class="h-full w-full object-cover"
-                            style="display:block;"
+                            :style="mirroredView ? 'display:block; transform: scaleX(-1);' : 'display:block;'"
                         ></video>
                         <canvas
                             x-ref="camCanvas"
                             x-show="photoTaken"
                             class="h-full w-full object-cover"
+                            :style="mirroredView ? 'transform: scaleX(-1);' : ''"
                             style="display:none;"
                         ></canvas>
 
-                        {{-- Scanner box / guide overlay --}}
+                        {{-- Scanner box / guide overlay.
+
+                             BUG YANG DIPERBAIKI: guide lama memakai
+                             `box-shadow: 0 0 0 9999px` untuk gelapnya area luar.
+                             Spread 9999px itu tidak terpotong, jadi terus
+                             menimpa ke luar kotak foto -- muncul sebagai garis
+                             putih panjang yang memotong KTP (screenshot), dan
+                             ikut menutupi tombol di bawah preview.
+
+                             Sekarang gelapnya area luar cukup 4 strip yang menutupi
+                             area di luar guide (clip-path), tidak ada spread
+                             9999px dan tidak ada z-index yang bisa mengalahkannya. --}}
                         <div
                             x-show="!photoTaken"
                             x-transition.opacity.duration.300ms
-                            class="pointer-events-none absolute inset-0 flex items-center justify-center"
-                            :class="mode === 'selfie' ? '' : ''"
+                            class="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden"
                         >
-                            {{-- Selfie: face oval (top) + document box (bottom) --}}
+                            {{-- Selfie: face oval (atas) + document box (bawah).
+
+                                 BUG YANG DIPERBAIKI: kedua guide lama positioned
+                                 dengan `left-1/2 -translate-x-1/2` dan
+                                 top-/bottom-[%]. Pada mode selfie keduanya berada
+                                 di satu wrapper yang sama, jadi:
+                                   - oval (top-12%, h-34%) menabrak kotak dokumen
+                                     (bottom-8%, w-72%): tinggi 34% + 8% + tinggi
+                                     kotak >= 100% -> keduanya saling tumpang tindih
+                                     dan menyisakan garis horizontal tepat di
+                                     tengah oval (terlihat di screenshot);
+                                   - kotak dokumen punya `-translate-x-1/2` tanpa
+                                     `left-1/2`, jadi translate-50% itu menggeser
+                                     kotak KIRI dari posisi static-nya dan keluar
+                                     dari area preview, menyisakan garis vertikal
+                                     panjang di sisi kiri.
+
+                                 Sekarang jadi grid 2 baris (1fr auto) dengan
+                                 jarak eksplisit: guide tidak pernah Absolute,
+                                 tidak bisa saling tumpang tindih, dan tidak
+                                 bisa keluar dari kotaknya. --}}
                             <template x-if="mode === 'selfie'">
-                                <div class="relative h-full w-full">
+                                <div class="grid h-full w-full grid-rows-[1fr_auto] items-center gap-4 overflow-hidden px-[6%] py-[6%]">
                                     {{-- Wajah (oval) --}}
                                     <div
-                                        class="absolute left-1/2 top-[12%] h-[34%] w-[42%] -translate-x-1/2 rounded-[45%] border-2 border-white/90"
-                                        style="box-shadow: 0 0 0 9999px rgba(0,0,0,0.40);"
+                                        class="mx-auto aspect-[3/4] h-full max-h-full w-auto rounded-[48%] border-2 border-white/90"
+                                        style="max-width: 42%;"
                                     ></div>
-                                    {{-- Dokumen (persegi) --}}
+                                    {{-- Dokumen (KTP) --}}
                                     <div
-                                        class="absolute bottom-[8%] left-1/2 aspect-[1.586/1] w-[72%] -translate-x-1/2 rounded-lg border-2 border-white/90"
+                                        class="mx-auto aspect-[1.586/1] w-full max-w-[72%] rounded-lg border-2 border-white/90"
                                     ></div>
                                 </div>
                             </template>
                             {{-- Document only: rectangle guide --}}
                             <template x-if="mode !== 'selfie'">
-                                <div
-                                    class="absolute left-1/2 top-1/2 aspect-[1.586/1] w-[80%] -translate-x-1/2 -translate-y-1/2 rounded-lg border-2 border-white/90"
-                                    style="box-shadow: 0 0 0 9999px rgba(0,0,0,0.40);"
-                                ></div>
+                                <div class="relative flex h-full w-full items-center justify-center overflow-hidden">
+                                    <div class="relative aspect-[1.586/1] w-[80%] rounded-lg border-2 border-white/90">
+                                        {{-- Layer gelap: 4 strip (atas, bawah, kiri,
+                                             kanan) via clip-path, jadi menutup tepat
+                                             area di luar guide dan TIDAK bisa
+                                             meluber melewati batas wrapper. --}}
+                                        <div
+                                            class="pointer-events-none absolute inset-0"
+                                            style="background: rgba(0,0,0,0.40); clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%, 0 65%, 100% 65%, 100% 100%, 0 100%, 0 65%, 0 35%);"
+                                        ></div>
+                                    </div>
+                                </div>
                             </template>
                         </div>
 
@@ -519,31 +623,55 @@
                 </div>
 
                 {{-- ── Preview / scanner view ── --}}
+                {{--
+                    Wrapper preview DISAMAI dengan gambar, bukan kotak 4/3 tetap.
+
+                    Dulu: <div style="aspect-ratio:4/3"> membungkus <img
+                    class="object-contain">. object-contain memastikan SELURUH foto
+                    terlihat, jadi saat rasio foto bukan 4/3 selalu ada bar hitam
+                    di atas/bawah atau kiri/kanan. Guide-overlay-nya `absolute inset-0`
+                    ikut kotak 4/3 itu, bukan fotonya -- jadi kotak guide bergeser
+                    dari dokumen, dan user meluruskan KTP ke tempat yang salah.
+
+                    Sekarang img yang menentukan tinggi wrapper (w-fit + max-h),
+                    jadi guide dan foto selalu punya koordinat yang sama.
+                --}}
                 <div x-show="view === 'preview'" style="display:none;">
-                    <div class="relative bg-black" style="aspect-ratio:4/3;">
+                    <div class="relative mx-auto flex w-fit max-w-full items-center justify-center bg-black">
                         <img
                             :src="imageUrl"
                             alt="Preview"
-                            class="h-full w-full object-contain"
+                            class="block max-h-[60vh] w-auto max-w-full object-contain"
                         />
-                        {{-- Scanner box overlay on preview --}}
-                        <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
+                        {{-- Scanner box overlay on preview.
+                             Guide selfie pakai grid yang sama dengan camera view
+                             (lihat catatan bug-nya di atas) supaya tidak ada
+                             garis tumpang-tindih di preview juga. --}}
+                        <div class="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden">
                             <template x-if="mode === 'selfie'">
-                                <div class="relative h-full w-full">
+                                <div class="grid h-full w-full grid-rows-[1fr_auto] items-center gap-4 overflow-hidden px-[6%] py-[6%]">
                                     <div
-                                        class="absolute left-1/2 top-[12%] h-[34%] w-[42%] -translate-x-1/2 rounded-[45%] border-2 border-white/80"
-                                        style="box-shadow: 0 0 0 9999px rgba(0,0,0,0.30);"
+                                        class="mx-auto aspect-[3/4] h-full max-h-full w-auto rounded-[48%] border-2 border-white/80"
+                                        style="max-width: 42%;"
                                     ></div>
                                     <div
-                                        class="absolute bottom-[8%] left-1/2 aspect-[1.586/1] w-[72%] -translate-x-1/2 rounded-lg border-2 border-white/80"
+                                        class="mx-auto aspect-[1.586/1] w-full max-w-[72%] rounded-lg border-2 border-white/80"
                                     ></div>
                                 </div>
                             </template>
                             <template x-if="mode !== 'selfie'">
-                                <div
-                                    class="absolute left-1/2 top-1/2 aspect-[1.586/1] w-[80%] -translate-x-1/2 -translate-y-1/2 rounded-lg border-2 border-white/80"
-                                    style="box-shadow: 0 0 0 9999px rgba(0,0,0,0.30);"
-                                ></div>
+                                <div class="relative flex h-full w-full items-center justify-center overflow-hidden">
+                                    <div class="relative aspect-[1.586/1] w-[80%] rounded-lg border-2 border-white/80">
+                                        {{-- 4 strip gelap, bukan box-shadow 9999px:
+                                             yang itu tidak terpotong dan meluber
+                                             keluar area foto (lihat catatan di
+                                             overlay camera view di atas). --}}
+                                        <div
+                                            class="pointer-events-none absolute inset-0"
+                                            style="background: rgba(0,0,0,0.30); clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%, 0 65%, 100% 65%, 100% 100%, 0 100%, 0 65%, 0 35%);"
+                                        ></div>
+                                    </div>
+                                </div>
                             </template>
                         </div>
 

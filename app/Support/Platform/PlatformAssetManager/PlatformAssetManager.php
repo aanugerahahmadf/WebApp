@@ -54,6 +54,20 @@ class PlatformAssetManager
     {
         $buildDir = $this->getBuildDirectory();
 
+        // Vite >=5 menaruh manifest di <buildDir>/.vite/manifest.json. Path lama
+        // <buildDir>/manifest.json sudah tidak dipakai, dan akibatnya
+        // loadManifest() selalu mengembalikan [] sehingga asset() jatuh ke
+        // fallback path sumber mentah -- URL yang tidak bisa dilayani browser
+        // karena lives di luar public/.
+        //
+        // Cek lokasi baru dulu, baru lokasi lama, supaya build yang belum
+        // dimigrasi (manifest di root) tetap terbaca.
+        $viteManifest = public_path("{$buildDir}/.vite/manifest.json");
+
+        if (file_exists($viteManifest)) {
+            return $viteManifest;
+        }
+
         return public_path("{$buildDir}/manifest.json");
     }
 

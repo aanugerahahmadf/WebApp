@@ -23,6 +23,9 @@
         stream: null,
         facingMode: 'environment',
         videoReady: false,
+        cameraFacing: '',
+        cameraLabel: '',
+        mirrorSaved: true,   /* hasil jepret ikut dicermin seperti preview */
 
         // Card fixed aspect guide (KTP 85.6x54 ≈ 1.585) — normalized within the preview box
         cardGuide: { w: 0.62, h: 0.62 / 1.585, cx: 0.5, cy: 0.5 },
@@ -50,6 +53,14 @@
 
         isMobile() { return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent); },
 
+        /* Cermin seperti cermin kaca (kiri <-> kanan ditukar), HANYA saat kamera
+         * depan aktif. Default scanner ini memakai kamera belakang, yang tidak
+         * boleh dicermin karena teks KTP jadi tidak terbaca.
+         */
+        get mirroredView() {
+            return !(this.cameraFacing === 'environment' || (!this.cameraFacing && /back|rear|environment|belakang/i.test(this.cameraLabel || '')));
+        },
+
         /* ── native camera (mobile) ── */
         useNativeCamera() {
             this.close();
@@ -74,6 +85,41 @@
         },
 
         /* ── WebRTC live camera (desktop + web) ── */
+        /* Daftar kamera fisik di perangkat. Laptop biasanya cuma satu webcam;
+         * HP bisa punya beberapa (depan, belakang, ultra-wide, tele). */
+        cameras: [],
+        activeCameraId: '',
+
+        async loadCameras() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+
+                this.cameras = devices.filter((d) => d.kind === 'videoinput');
+            } catch (e) {
+                this.cameras = [];
+            }
+
+            if (this.cameras.length > 1 && !this.activeCameraId) {
+                this.activeCameraId = this.cameras[0].deviceId;
+            }
+        },
+
+        cameraConstraints() {
+            const base = { width: { ideal: 1920 }, height: { ideal: 1080 } };
+
+            if (this.activeCameraId) {
+                return { ...base, deviceId: { exact: this.activeCameraId } };
+            }
+
+            return { ...base, facingMode: this.facingMode };
+        },
+
+        /* Dipakai tombol 'Kiri' dan 'Kanan' untuk pindah kamera. */
+        async selectCamera(deviceId) {
+            this.activeCameraId = deviceId;
+            await this.startLiveCamera();
+        },
+
         async startLiveCamera() {
             this.scannerState = 'live';
             this.videoReady = false;
@@ -83,12 +129,20 @@
             try {
                 if (this.stream) { this.stream.getTracks().forEach(t => t.stop()); }
                 this.stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: this.facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
+                    video: this.cameraConstraints(),
                     audio: false,
                 });
                 video.srcObject = this.stream;
+
+                /* Panduan AI mulai begitu ada stream frame yang bisa dianalisis. */
+                this.startCoach();
                 await video.play();
+                const settings = this.stream.getVideoTracks()[0]?.getSettings?.() || {};
+                this.cameraFacing = settings.facingMode || '';
+                this.cameraLabel = this.stream.getVideoTracks()[0]?.label || '';
                 this.videoReady = true;
+
+                await this.loadCameras();
             } catch (e) {
                 alert('{{ __('Tidak dapat mengakses kamera. Pastikan izin kamera diberikan.') }}');
                 this.scannerState = 'pick';
@@ -101,6 +155,9 @@
                 this.stream = null;
             }
             this.videoReady = false;
+            /* Tanpa stream tidak ada frame untuk dianalisis, dan suara
+             * AI harus berhenti sekarang juga. */
+            this.stopCoach();
         },
 
         /* ── Edge detection ── */
@@ -323,7 +380,22 @@
                 const cc = this.$refs.captureCanvas;
                 cc.width = video.videoWidth;
                 cc.height = video.videoHeight;
-                cc.getContext('2d').drawImage(video, 0, 0, cc.width, cc.height);
+
+                const ctx = cc.getContext('2d');
+
+                // Cermin hanya efek tampilan (CSS). File hasil jepret tidak dibalik
+                // supaya teks dokumen tetap terbaca. Kotak panduan simetris di
+                // tengah, jadi area crop-nya sama.
+                if (this.mirrorSaved && this.mirroredView) {
+                    ctx.save();
+                    ctx.translate(cc.width, 0);
+                    ctx.scale(-1, 1);
+                    ctx.drawImage(video, 0, 0, cc.width, cc.height);
+                    ctx.restore();
+                } else {
+                    ctx.drawImage(video, 0, 0, cc.width, cc.height);
+                }
+
                 // Use the fixed on-screen card guide as the crop region
                 this.corners = this.guideCorners();
                 this.applyPerspective();
@@ -566,6 +638,71 @@
             this.corners[this.dragCorner] = { x: Math.min(1, Math.max(0, x)), y: Math.min(1, Math.max(0, y)) };
         },
         endDrag() { this.dragCorner = null; },
+
+        /* ── Real-time AI scan coach ──────────────────────────────────────
+         * Mengukur fokus, pencahayaan, dan posisi subjek dari frame video
+         * langsung, lalu memberi arahan secara lisan dan visual (lingkaran
+         * hijau saat kualitas siap ditekan).
+         *
+         * Seluruh algoritmanya ada di resources/js/ai-scan-coach supaya
+         * objek x-data ini tetap tipis. Analisis real-time tidak mungkin
+         * lewat server: satu round-trip per frame jauh terlalu lambat.
+         *
+         * PENTING: hanya kutip tunggal di dalam x-data. Atributnya dibungkus
+         * kutip ganda, satu saja akan menutupnya lebih awal. */
+        coach: null,
+
+        startCoach() {
+            this.stopCoach();
+
+            const factory = window.AIScanCoach && window.AIScanCoach.create;
+            if (!factory) return;
+
+            const mount = this.$refs.scanWrap;
+            if (!mount) return;
+
+            this.coach = factory({
+                mount: mount,
+                mode: 'document',
+                lang: document.documentElement.lang || '{{ app()->getLocale() }}',
+                video: () => this.$refs.scanVideo,
+                /* Bentuk bingkai dan kalimat perintah mengikuti jenis dokumen yang
+                 * sedang dipindai (ktp | npwp | sim | passport). */
+                docType: this.currentDocType(),
+                autoCapture: true,
+                onCapture: () => this.capture(),
+            });
+
+            this.coach.start();
+            this.coach.announceDocument(this.currentDocType());
+        },
+
+        /* Jenis dokumen dari form Livewire; jatuh ke ktp kalau belum diisi. */
+        currentDocType() {
+            const anchor = this.$refs.formAnchor || document.querySelector('[wire\\\\:id]');
+            return window.ScannerUI?.getFormState('data.identity_type', anchor) || 'ktp';
+        },
+
+        /* Label + petunjuk sesuai bahasa halaman dan jenis dokumen. */
+        documentLabel() {
+            return window.AIScanCoach?.docTypeName
+                ? window.AIScanCoach.docTypeName(this.currentDocType(), document.documentElement.lang)
+                : {{ json_encode(__('Kartu Identitas')) }};
+        },
+
+        documentHint() {
+            const type = this.currentDocType();
+            if (type === 'passport') {
+                return {{ json_encode(__('buka ke halaman data lalu letakkan di dalam bingkai')) }};
+            }
+            return {{ json_encode(__('letakkan di dalam bingkai, foto menghadap ke atas')) }};
+        },
+
+        stopCoach() {
+            if (!this.coach) return;
+            this.coach.stop();
+            this.coach = null;
+        },
     }"
     x-on:open-document-scanner.window="open()"
     x-on:keydown.escape.window="if (isOpen) { if (scannerState === 'live' || scannerState === 'editNative') { stopCamera(); scannerState = 'pick'; } else { close(); } }"
@@ -658,13 +795,14 @@
 
                 {{-- Live camera view --}}
                 <div x-show="scannerState === 'live'" style="display:none;">
-                    <div class="relative mx-4 mt-4 overflow-hidden rounded-lg bg-black" style="aspect-ratio:4/3;">
+                    <div x-ref="scanWrap" class="relative mx-4 mt-4 overflow-hidden rounded-lg bg-black" style="aspect-ratio:4/3;">
                         <video
                             x-ref="scanVideo"
                             autoplay
                             playsinline
                             muted
                             class="h-full w-full object-fill"
+                            :style="mirroredView ? 'transform: scaleX(-1);' : ''"
                         ></video>
                         {{-- Card guide overlay --}}
                         <div
@@ -685,33 +823,68 @@
                         {{-- Hint overlay --}}
                         <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
                             <span class="rounded-full bg-gray-900/60 px-4 py-1.5 text-xs font-medium text-white">
-                                {{ __('Posisikan kartu di dalam bingkai hijau') }}
+                                {{-- Label bingkai mengikuti jenis dokumen nyata (KTP / NPWP / SIM /
+                             Paspor), bukan teks umum "kartu". --}}
+                            <span x-text="documentLabel() + ': ' + documentHint()"></span>
                             </span>
                         </div>
                     </div>
 
+                    {{-- Satu tombol jepret di tengah, dikelilingi tombol pemilih kamera KIRI
+                         dan KANAN. Yang latter hanya tampil kalau perangkat
+                         punya lebih dari satu kamera. --}}
                     <div class="flex items-center justify-center gap-4 px-4 py-4">
                         <button
                             type="button"
+                            x-show="cameras.length > 1"
+                            x-on:click="selectCamera(cameras[0].deviceId)"
+                            x-bind:class="activeCameraId === cameras[0]?.deviceId
+                                ? 'bg-primary-600 text-white'
+                                : 'bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-gray-200'"
+                            class="flex h-11 shrink-0 items-center gap-1.5 rounded-full px-4 text-xs font-semibold transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                            :aria-label="cameras[0]?.label || 'Kamera Kiri'"
+                        >
+                            <x-filament::icon icon="heroicon-m-arrow-left" class="h-4 w-4" />
+                            <span>{{ __('Kiri') }}</span>
+                        </button>
+
+                        <button
+                            type="button"
                             x-on:click="flipCamera()"
-                            class="flex h-11 w-11 items-center justify-center rounded-full bg-gray-100 text-gray-700 transition hover:bg-gray-200 dark:bg-white/10 dark:text-gray-200"
+                            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-700 transition hover:bg-gray-200 dark:bg-white/10 dark:text-gray-200"
                             aria-label="{{ __('Balik Kamera') }}"
                         >
                             <x-filament::icon icon="heroicon-m-arrow-path" class="h-5 w-5" />
                         </button>
+
                         <button
                             type="button"
                             x-on:click="capture()"
                             x-bind:disabled="!videoReady"
-                            class="flex h-16 w-16 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg transition hover:bg-primary-500 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                            class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg transition hover:bg-primary-500 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
                             aria-label="{{ __('Ambil Foto') }}"
                         >
                             <x-filament::icon icon="heroicon-m-camera" class="h-8 w-8" />
                         </button>
+
+                        <button
+                            type="button"
+                            x-show="cameras.length > 1"
+                            x-on:click="selectCamera(cameras[cameras.length - 1].deviceId)"
+                            x-bind:class="activeCameraId === cameras[cameras.length - 1]?.deviceId
+                                ? 'bg-primary-600 text-white'
+                                : 'bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-gray-200'"
+                            class="flex h-11 shrink-0 items-center gap-1.5 rounded-full px-4 text-xs font-semibold transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                            :aria-label="cameras[cameras.length - 1]?.label || 'Kamera Kanan'"
+                        >
+                            <span>{{ __('Kanan') }}</span>
+                            <x-filament::icon icon="heroicon-m-arrow-right" class="h-4 w-4" />
+                        </button>
+
                         <button
                             type="button"
                             x-on:click="stopCamera(); scannerState = 'pick'"
-                            class="flex h-11 w-11 items-center justify-center rounded-full bg-gray-100 text-gray-700 transition hover:bg-gray-200 dark:bg-white/10 dark:text-gray-200"
+                            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-700 transition hover:bg-gray-200 dark:bg-white/10 dark:text-gray-200"
                             aria-label="{{ __('Kembali') }}"
                         >
                             <x-filament::icon icon="heroicon-m-arrow-left" class="h-5 w-5" />

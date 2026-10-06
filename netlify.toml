@@ -1,6 +1,8 @@
 [build]
   publish = "public"
-  command = "npm run prepare-deploy"
+  # `prepare-deploy` tidak pernah ada di package.json sehingga build Netlify
+  # selalu gagal. `build` adalah script yang benar-benar tersedia.
+  command = "npm run build"
 
 [[redirects]]
   from = "/*"

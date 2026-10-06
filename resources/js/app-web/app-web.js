@@ -24,6 +24,9 @@ import '../firebase-client/firebase-client';
 // client-side OCR without needing a network round-trip.
 import * as ocr from '../ocr/document-ocr/document-ocr';
 import * as scannerUi from '../ocr/scanner-ui/scanner-ui';
+// Real-time scan coaching (focus / exposure / framing + spoken guidance). The
+// module assigns window.AIScanCoach itself on import.
+import '../ai-scan-coach/ai-scan-coach';
 
 window.OCR = ocr;
 window.ScannerUI = scannerUi;

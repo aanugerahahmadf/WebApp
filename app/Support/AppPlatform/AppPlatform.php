@@ -174,6 +174,43 @@ class AppPlatform
         return static::current($request)->isWebsite();
     }
 
+    /**
+     * True when the language + theme switchers belong in the SIDEBAR rather
+     * than in the topbar.
+     *
+     * One predicate on purpose. Each of the three panels registers the
+     * switchers in its own render hooks, and the topbar hook and the sidebar
+     * hook MUST agree on the surface -- otherwise the same control gets
+     * rendered twice (desktop app did exactly that) or nowhere at all.
+     *
+     * The rule is "the topbar is the wrong home for them":
+     *
+     *   - Phone and mobile browser: the topbar sheds its controls below
+     *     640px, so the sidebar owns them. This is the original behaviour.
+     *   - Desktop app: the topbar is not narrow, but the desktop app is not
+     *     the desktop website either. Its switchers live in its sidebar, so
+     *     a second copy in the topbar is only two buttons for one setting.
+     *   - Tablet and desktop website: the topbar has room, so it keeps them.
+     *
+     * Deliberately NOT a width check: the desktop app window has no minimum
+     * width, so a breakpoint would put the controls back in the topbar as
+     * soon as somebody narrowed the window.
+     */
+    public static function switchersBelongInSidebar(?Request $request = null): bool
+    {
+        return (static::isAnyMobile($request) && ! static::isTablet($request))
+            || static::isDesktopApp($request);
+    }
+
+    /**
+     * The inverse of {@see static::switchersBelongInSidebar()}, for the topbar
+     * hooks -- so the two sides cannot drift apart in which branch they take.
+     */
+    public static function switchersBelongInTopbar(?Request $request = null): bool
+    {
+        return ! static::switchersBelongInSidebar($request);
+    }
+
     public static function cbirCameraMode(?Request $request = null): string
     {
         return static::current($request)->cbirCameraMode();

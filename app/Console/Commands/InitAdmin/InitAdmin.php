@@ -3,6 +3,7 @@
 namespace App\Console\Commands\InitAdmin;
 
 use App\Models\User\User;
+use App\Support\PasswordPolicy\PasswordPolicy;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 
@@ -31,10 +32,24 @@ class InitAdmin extends Command
         $password = $this->argument('password');
         $name = $this->argument('name');
 
+        // Command ini tidak lewat HTTP, jadi tidak ada validator yang jalan
+        // diotomatiskan. Tanpa cek di sini, admin pertama bisa dibuat
+        // dengan kata sandi 1 karakter lewat CLI.
+        $violations = PasswordPolicy::violations($password);
+        if ($violations !== []) {
+            foreach ($violations as $violation) {
+                $this->error($violation);
+            }
+            $this->line('  Contoh yang memenuhi: @Superadmin123');
+            $this->line('  (huruf besar + huruf kecil + angka + simbol, minimal '.PasswordPolicy::MIN_LENGTH.' karakter)');
+
+            return self::FAILURE;
+        }
+
         if (User::where('email', $email)->exists()) {
             $this->error("User with email {$email} already exists.");
 
-            return;
+            return self::FAILURE;
         }
 
         $user = User::create([
@@ -46,5 +61,7 @@ class InitAdmin extends Command
         ]);
 
         $this->info("Successfully created admin user: {$email}");
+
+        return self::SUCCESS;
     }
 }

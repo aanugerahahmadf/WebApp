@@ -4,6 +4,7 @@ namespace App\Services\CBIRService;
 
 use App\Models\Package\Package;
 use App\Models\Product\Product;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -89,19 +90,35 @@ class CBIRService
     public function indexMedia($media): bool
     {
         try {
-            $type = match ($media->model_type) {
+            // `model_type` yang tersimpan di tabel media adalah ALIAS morph map
+            // ("App\Models\Product"), bukan FQCN ("App\Models\Product\Product").
+            // Kalau dicocokkan langsung ke Product::class, tidak akan pernah
+            // cocok dan semua media jatuh ke default -- akibatnya gambar paket
+            // terindeks sebagai tipe yang tidak dikenal, lalu `byImage()`
+            // mencarinya di tabel products dan membuangnya diam-diam.
+            //
+            // getMorphedModel() mengembalikan null kalau nilainya memang FQCN
+            // (tidak di-alias), jadi fallback ke nilai aslinya aman.
+            $modelClass = Relation::getMorphedModel($media->model_type) ?? $media->model_type;
+
+            $type = match ($modelClass) {
                 Package::class => 'package',
                 Product::class => 'product',
-                default => 'wo_gallery',
+                default => 'unknown',
             };
 
-            // Capai model terkait (product/package) untuk mengambil vendor
+            // Capai model terkait (product/package) untuk mengambil vendor.
+            // Pakai $modelClass hasil resolusi morph map, bukan $media->model_type
+            // langsung — yang latter berisi alias dan bukan nama kelas, sehingga
+            // pemanggilan statisnya gagal dan vendor/nama selalu kosong.
             $vendorName = '';
             $itemName = '';
             try {
-                $model = $media->model_type::with('vendor')->find($media->model_id);
-                $vendorName = $model?->vendor?->store_name ?? '';
-                $itemName = (string) ($model?->name ?? '');
+                if (class_exists($modelClass)) {
+                    $model = $modelClass::with('vendor')->find($media->model_id);
+                    $vendorName = $model?->vendor?->store_name ?? '';
+                    $itemName = (string) ($model?->name ?? '');
+                }
             } catch (\Throwable $e) {
                 // abaikan bila relasi vendor tidak tersedia
             }

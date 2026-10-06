@@ -47,7 +47,7 @@ class VendorSeeder extends Seeder
                 [
                     'full_name' => $data['contact_person'],
                     'username' => "vendor{$i}",
-                    'password' => Hash::make('@Vendor123'),
+                    'password' => Hash::make('@VendorPass123'),
                     'email_verified_at' => now(),
                 ]
             );

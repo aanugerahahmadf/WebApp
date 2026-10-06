@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\PaymentMethodResource\Pages\ManagePaymentMethods;
 
+use App\Filament\Admin\Concerns\HasMobilePagination\HasMobilePagination;
 use App\Filament\Admin\Exports\PaymentMethodExporter\PaymentMethodExporter;
 use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\PaymentMethodResource\PaymentMethodResource;
@@ -12,6 +13,7 @@ use Filament\Resources\Pages\ManageRecords;
 
 class ManagePaymentMethods extends ManageRecords
 {
+    use HasMobilePagination;
     use HasDynamicBreadcrumbs;
     protected static string $resource = PaymentMethodResource::class;
 

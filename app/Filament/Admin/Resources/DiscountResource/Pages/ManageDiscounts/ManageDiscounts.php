@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\DiscountResource\Pages\ManageDiscounts;
 
+use App\Filament\Admin\Concerns\HasMobilePagination\HasMobilePagination;
 use App\Filament\Admin\Exports\DiscountExporter\DiscountExporter;
 use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\DiscountResource\DiscountResource;
@@ -11,6 +12,7 @@ use Filament\Resources\Pages\ManageRecords;
 
 class ManageDiscounts extends ManageRecords
 {
+    use HasMobilePagination;
     use HasDynamicBreadcrumbs;
     protected static string $resource = DiscountResource::class;
 

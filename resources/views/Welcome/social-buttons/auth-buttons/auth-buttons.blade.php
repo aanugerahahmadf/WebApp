@@ -1,10 +1,13 @@
 @php
     $livewire = (isset($getLivewire) && is_callable($getLivewire)) ? $getLivewire() : ($this ?? null);
     $actions = $livewire ? $livewire->getCachedFormActions() : [];
+    // Token mode bernama 'signup', bukan 'register' -- sama dengan partial User.
+    // `\Filament\Pages\Auth\Register` dan `*auth.register` tetap apa adanya:
+    // itu nama class/route vendor, bukan penamaan kita.
     $authMode = $authMode ?? (
-        ($livewire instanceof \Filament\Pages\Auth\Register) ? 'register' :
+        ($livewire instanceof \Filament\Pages\Auth\Register) ? 'signup' :
         (($livewire instanceof \Filament\Pages\Auth\Login) ? 'login' :
-        (request()->routeIs('*register*') ? 'register' : 'login'))
+        (request()->routeIs('*register*', '*signup*') ? 'signup' : 'login'))
     );
 @endphp
 
@@ -19,7 +22,7 @@
         </div>
     @endif
 
-    {{-- BUTTON Sign in with Google, Nav Link, & Modal Agreement --}}
+    {{-- BUTTON Continue With Google, Nav Link, & Modal Agreement --}}
     @include('Welcome.social-buttons.social-buttons.social-buttons', [
         'hasParentData' => true,
         'hideCheckboxes' => true,

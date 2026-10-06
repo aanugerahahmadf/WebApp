@@ -8,6 +8,7 @@ use App\Filament\Welcome\Pages\SettingsPage\SettingsPage;
 use App\Models\BackupCode\BackupCode;
 use App\Models\SecurityEmail\SecurityEmail;
 use App\Models\TrustedDevice\TrustedDevice;
+use App\Support\PasswordPolicy\PasswordPolicy;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -318,7 +319,7 @@ class PasswordSecurityPage extends Page
         $this->passwordData = $this->form->getState();
         $this->validate([
             'passwordData.current_password' => ['required', 'string'],
-            'passwordData.password' => ['required', 'string', 'min:8', 'regex:/[A-Z]/', 'regex:/[a-z]/', 'regex:/[0-9]/', 'regex:/[^A-Za-z0-9]/'],
+            'passwordData.password' => PasswordPolicy::rules(),
             'passwordData.password_confirmation' => ['required', 'same:passwordData.password'],
         ], [
             'passwordData.password.regex' => __('Kata sandi harus mengandung huruf besar, huruf kecil, angka, dan simbol.'),

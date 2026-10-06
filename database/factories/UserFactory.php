@@ -14,6 +14,11 @@ class UserFactory extends Factory
 {
     /**
      * The current password being used by the factory.
+     *
+     * Harus memenuhi App\Support\PasswordPolicy\PasswordPolicy (minimal 12
+     * karakter + huruf besar/kecil + angka + simbol). Nilai lama "password"
+     * hanya 8 karakter, jadi tidak lagi sah dan akan ditolak form mana pun
+     * yang memakai aturan ini.
      */
     protected static ?string $password;
 
@@ -29,7 +34,7 @@ class UserFactory extends Factory
             'username' => fake()->unique()->userName(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
+            'password' => static::$password ??= Hash::make('@FactoryPass123'),
             'remember_token' => Str::random(10),
             // Kolom default di DB adalah 0; user factory harus aktif agar
             // login test tidak tertolak oleh pengecekan active_status (403).

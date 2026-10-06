@@ -7,6 +7,7 @@ use App\Models\User\User;
 use App\Models\WhatsappOtp\WhatsappOtp;
 use App\Services\FaceService\FaceService;
 use App\Services\StorageService\StorageService;
+use App\Support\PasswordPolicy\PasswordPolicy;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
@@ -131,7 +132,7 @@ class ProfileController extends Controller
             ];
 
             if ($request->has('password') && filled($request->password)) {
-                $rules['password'] = 'string|min:12';
+                $rules['password'] = PasswordPolicy::rules();
             }
 
             $validatedData = $request->validate($rules);
@@ -253,7 +254,7 @@ class ProfileController extends Controller
         try {
             $request->validate([
                 'current_password' => 'required|string',
-                'new_password' => 'required|string|min:12|confirmed',
+                'new_password' => PasswordPolicy::confirmedRules(),
             ]);
 
             /** @var User $user */
@@ -285,9 +286,25 @@ class ProfileController extends Controller
                 'password_changed_at:'.now()->toIso8601String()
             );
 
+            // "Logout dari perangkat lain" -- checkbox yang sama dengan punya
+            // HandlesPasswordSecurity::updatePassword() di panel Filament.
+            //
+            // Sebelumnya field ini dikirim aplikasi tapi TIDAK dibaca di sini,
+            // jadi checkbox-nya terlihat berfungsi padahal tidak pernah
+            // melakukan apa pun. Kini benar-benar membuang token Sanctum dan
+            // baris session milik user ini, kecuali yang sedang dipakai
+            // request ini -- kalau tidak, pemanggil ikut logout di detik
+            // yang sama dengan mengetik kata sandi barunya.
+            $loggedOut = $request->boolean('logout_others')
+                ? $user->revokeOtherSessions()
+                : 0;
+
             return response()->json([
                 'status' => 'success',
                 'message' => __('Kata sandi berhasil diubah'),
+                'data' => [
+                    'logged_out_other_devices' => $loggedOut,
+                ],
             ]);
         } catch (ValidationException $e) {
             return response()->json([
@@ -489,15 +506,23 @@ class ProfileController extends Controller
                 StorageService::delete($user->ktp_photo);
             }
 
+            /* Kirim identity_type sebagai doc_type hint. Tanpa ini AI Core hanya
+             * auto-detect dari OCR, padahal client sudah tahu dokumen apa yang
+             * sedang dipindai — akurat untuk KTP, dan jauh lebih andal untuk
+             * SIM/NPWP/Pasport yang layout-nya mirip satu sama lain. */
+            $docType = $user->identity_type ?: null;
+
             [$path, $ai] = $this->storeKycUpload(
                 $request->file('ktp_photo'),
                 'ktp-photos',
                 'ktp_'.$user->id.'_'.time(),
                 $faceService,
-                fn (string $realPath) => $faceService->verifyKtp($realPath)
+                fn (string $realPath) => $faceService->verifyKtp($realPath, $docType)
             );
 
-            $user->update(['ktp_photo' => $path]);
+            $docUpdate = $this->documentVerificationUpdate($user, $ai);
+
+            $user->forceFill(array_merge(['ktp_photo' => $path], $docUpdate))->save();
 
             $ktpVerified = ($ai['success'] ?? false) && ($ai['verified'] ?? false);
 
@@ -511,7 +536,18 @@ class ProfileController extends Controller
                     'ktp_photo_url' => $user->ktp_photo_url,
                     'ktp_ai_verified' => (bool) $ktpVerified,
                     'ktp_ai_score' => $ai['score'] ?? null,
+                    // Nama resmi dokumen (Kartu Tanda Penduduk / Surat Izin Mengemudi /
+                    // Passport / Nomor Pokok Wajib Pajak) atau pesan error layanan.
                     'ktp_ai_reason' => $ai['reason'] ?? ($ai['message'] ?? 'AI_UNAVAILABLE'),
+                    // Kode diagnostik kegagalan validasi, mis. NO_FACE / BLURRY /
+                    // WRONG_ASPECT / UNKNOWN_DOCUMENT. Null bila tidak gagal.
+                    'ktp_ai_reason_code' => $ai['reason_code'] ?? null,
+                    'ktp_ai_blocking_issue' => $ai['blocking_issue'] ?? null,
+                    'ktp_ai_document_type' => $ai['document_type'] ?? null,
+                    'ktp_ai_document_number' => $ai['document_number'] ?? null,
+                    // true = nomor OCR cocok dengan nomor di profil; false = tidak
+                    // cocok; null = belum bisa dibandingkan.
+                    'ktp_ai_number_matches_profile' => $docUpdate['doc_ai_number_matches_profile'] ?? null,
                 ],
             ]);
         } catch (ValidationException $e) {
@@ -837,6 +873,81 @@ class ProfileController extends Controller
         }
 
         return $update;
+    }
+
+    /**
+     * Susun kolom hasil verifikasi dokumen identitas (AI Core) untuk disimpan.
+     *
+     * kyc_status direset agar admin melakukan review ulang, persis seperti
+     * faceVerificationUpdate(). Sebelumnya upload ulang KTP TIDAK mereset apa pun,
+     * sehingga user yang KYC-nya sudah di-approve admin bisa mengganti dokumen
+     * dan tetap berstatus verified.
+     *
+     * @param  array<string, mixed>  $ai
+     * @return array<string, mixed>
+     */
+    private function documentVerificationUpdate(User $user, array $ai): array
+    {
+        // Layanan gagal (offline / timeout): jangan sentuh data yang ada.
+        // Menyimpan null di sini akan menghapus bukti hasil scan sebelumnya.
+        if (! ($ai['success'] ?? false)) {
+            return [];
+        }
+
+        $verified = (bool) ($ai['verified'] ?? false);
+
+        return [
+            'doc_ai_document_type' => $ai['document_type'] ?? null,
+            'doc_ai_document_number' => $ai['document_number'] ?? null,
+            'doc_ai_reason' => $ai['reason'] ?? null,
+            'doc_ai_reason_code' => $ai['reason_code'] ?? null,
+            'doc_ai_blocking_issue' => $ai['blocking_issue'] ?? null,
+            'doc_ai_score' => $ai['score'] ?? null,
+            'doc_ai_verified_at' => $verified ? now() : null,
+            'doc_ai_number_matches_profile' => $this->documentNumberMatchesProfile($user, $ai),
+            'kyc_status' => null,
+        ];
+    }
+
+    /**
+     * Bandingkan nomor identitas hasil OCR dengan nomor yang tersimpan di profil.
+     *
+     *AI Core membaca nomor dari dokumen yang difoto; profil menyimpan nomor yang
+     * diketik user. Keduanya bisa berbeda karena salah ketik atau dokumen lain,
+     * jadi ketidakcocokan perlu tercatat, bukan dibuang.
+     *
+     * @param  array<string, mixed>  $ai
+     */
+    private function documentNumberMatchesProfile(User $user, array $ai): ?bool
+    {
+        $found = trim((string) ($ai['document_number'] ?? ''));
+        if ($found === '') {
+            return null; // Tidak ada nomor terbaca: tidak bisa disimpulkan apa pun.
+        }
+
+        $profile = match ($ai['document_type'] ?? null) {
+            'ktp' => $user->ktp_number,
+            'passport' => $user->passport_number,
+            'sim' => $user->sim_number,
+            'npwp' => $user->npwp_number,
+            default => null,
+        };
+
+        $profile = trim((string) $profile);
+        if ($profile === '') {
+            return null; // Profil belum punya nomor untuk tipe ini.
+        }
+
+        /* Bandingkan hanya digit, TAPI hanya untuk dokumen bernomor numerik.
+         * Nomor paspor alphanumeric ("C1234567"): aturan preg_replace('\D')
+         * akan membuang hurufnya, sehingga "C1234567" dan "1234567" terbaca sama —
+         * persis kebalikan dari yang kita inginkan. */
+        if (($ai['document_type'] ?? null) !== 'passport') {
+            $profile = preg_replace('/\D+/', '', $profile);
+            $found = preg_replace('/\D+/', '', $found);
+        }
+
+        return strtoupper($profile) === strtoupper($found);
     }
 
     /**

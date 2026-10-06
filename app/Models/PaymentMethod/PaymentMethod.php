@@ -50,6 +50,9 @@ class PaymentMethod extends Model
     {
         return match ($type) {
             'bank_transfer' => __('Transfer Bank'),
+            // Nomor VA dibuat unik per transaksi; dana masuk otomatis ke
+            // rekening BRI admin tanpa verifikasi manual.
+            'virtual_account' => __('Virtual Account'),
             'e_wallet' => __('E-Wallet'),
             'qris' => 'QRIS',
             'credit_card' => __('Kartu Kredit/Debit'),

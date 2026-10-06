@@ -1,30 +1,24 @@
 <x-filament-panels::page.simple>
     {{-- Breadcrumb (di atas logo, rata kiri) dirender lewat render hook
-         panels::simple-page.start -- lihat UserPanelProvider. --}}
-    {{-- Custom: Hidden the default registration link area --}}
-    @if (filament()->hasRegistration())
-        {{-- <x-slot name="subheading">
-            {{ __('filament-panels::pages/auth/login.actions.register.before') }}
-            {{ $this->registerAction }}
-        </x-slot> --}}
-    @endif
+         panels::simple-page.start -- lihat UserPanelProvider.
+
+         Slot "subheading" bawaan Filament yang pernah memuat link pendaftaran
+         TIDAK dirender: pendaftaran email/password dinonaktifkan (hanya
+         `->registration()` di UserPanelProvider yang dikomentari -- class
+         SignUp.php sendiri masih ada), jadi blok
+         `@if (filament()->hasRegistration())` di sini tidak pernah benar-benar
+         merender apa pun. --}}
 
     {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::AUTH_LOGIN_FORM_BEFORE, scopes: $this->getRenderHookScopes()) }}
 
-    {{-- Label identifier (KTP/.../Email) sebaris dengan font default Filament;
-         kartu sign-in dilebarkan (lg -> xl) agar label tidak mentok tepi.
-         Di HP kecil biarkan wrap agar tidak overflow. --}}
-    <style>
-        @media (min-width: 640px) {
-            .fi-simple-main {
-                max-width: 36rem;
-            }
+    {{-- Ukuran kartu ikut bawaan Filament (`.fi-simple-main`).
 
-            .signin-identifier .fi-fo-field-wrp-label > span {
-                white-space: nowrap;
-            }
-        }
-    </style>
+         View ini pernah overriding `max-width: 36rem` plus `white-space: nowrap`
+         pada label identifier, karena labelnya dulu panjang:
+         "KTP / Passport / SIM / NPWP / Username / Email". Sekarang field login
+         hanya "Email / Username", jadi tidak ada lagi yang perlu dilebarkan --
+         style itu dihapus agar lebar, padding, dan tipografi mengikuti
+         `.fi-simple-main` bawaan Filament. --}}
 
     <div
         x-data="{ 

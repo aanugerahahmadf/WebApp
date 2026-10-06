@@ -2,8 +2,8 @@
 
 namespace App\Filament\User\Resources\ProductResource\Pages\CheckoutProduct;
 
-use App\Filament\User\Resources\ProductResource\ProductResource;
 use App\Filament\User\Pages\Home\Home;
+use App\Filament\User\Resources\ProductResource\ProductResource;
 use Filament\Forms\Components\Wizard;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;

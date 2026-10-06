@@ -19,6 +19,7 @@ use App\Http\Middleware\ClerkFilamentAuth\ClerkFilamentAuth;
 use App\Http\Middleware\SetLocale\SetLocale;
 use App\Http\Middleware\SuperAdmin\SuperAdmin;
 use App\Http\Middleware\VerifyCsrfToken\VerifyCsrfToken;
+use App\Support\AppPlatform\AppPlatform;
 use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -56,7 +57,12 @@ class AdminPanelProvider extends PanelProvider
             // `filament.admin.auth.login`; URL lama `/admin/login`
             // dilayani redirect di routes/web/web.php.
             ->loginRouteSlug('signin')
-            // ->registration(SignUp::class)
+            // Tidak ada ->registration() dan memang tidak akan ada: akun admin
+            // dibuat dari luar (seed / panel user), jadi `/admin/register`
+            // sengaja 404. Class-nya sendiri tetap ada di
+            // app/Filament/Admin/Auth/Register/Register.php (tidak dihapus),
+            // kalau suatu saat dibutuhkan tinggal daftarkan di sini.
+            // ->registration(Register::class)
             ->passwordReset(
                 OtpRequestPasswordReset::class,
                 OtpResetPassword::class
@@ -80,7 +86,43 @@ class AdminPanelProvider extends PanelProvider
             // ->maxContentWidth(MaxWidth::Full)
             ->spa()
             ->databaseNotifications()
-            // Language switcher di topbar ditangani secara global oleh PlatformSupportServiceProvider
+            ->renderHook(
+                PanelsRenderHook::SIDEBAR_NAV_START,
+                // Switcher tema + bahasa di menu geser (sidebar) -- HP,
+                // mobile web Android/iOS, app shell Android/iOS, dan aplikasi
+                // desktop. Sama persis dengan WelcomePanelProvider dan
+                // UserPanelProvider, lewat predikat yang sama.
+                //
+                // Panel admin sebelumnya tidak punya switcher bahasa maupun
+                // tema di sidebar sama sekali; yang ada di topbar cuma
+                // theme switcher di dalam user menu. Di HP topbar itu menyingkir
+                // (user menu tidak dirender untuk layar sempit), jadi tanpa
+                // hook ini panel admin tidak punya cara ganti tema maupun
+                // bahasa di HP.
+                //
+                // Partial themanya di Shared/ karena isinya tanpa panel; view
+                // bahasanya tetap milik Admin (warna aktifnya indigo,
+                // mengikuti brand panel ini).
+                //
+                // Di tablet dan website desktop switcher tetap di topbar, jadi
+                // hook sidebar ini mengembalikan string kosong di sana --
+                // AppPlatform::switchersBelongInSidebar() yang memutuskan, sama
+                // seperti ketiga hook lain, supaya tidak pernah dobel.
+                //
+                // Kedua switcher teleport ke <body>, jadi overflow sidebar
+                // tidak akan memotongnya.
+                //
+                // Tanpa wrapper sendiri, sama seperti di WelcomePanelProvider
+                // dan UserPanelProvider: barisnya adalah baris logo di dalam
+                // header sidebar, dan wrapper-nya (.fi-sidebar-switchers)
+                // dimiliki file override sidebar per panel --
+                // resources/views/{Panel}/vendor/filament-panels/components/
+                // sidebar/index.blade.php.
+                fn (): View|string => AppPlatform::switchersBelongInSidebar()
+                    ? view('Shared.components.theme-switcher.theme-switcher')->render()
+                        .view('Admin.filament-language-switcher.language-switcher.language-switcher')->render()
+                    : '',
+            )
             ->renderHook(
                 'panels::styles.after',
                 fn (): string => Blade::render('@vite(\'resources/css/Admin/Admin.css\')')
