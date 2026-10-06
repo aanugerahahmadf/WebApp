@@ -627,4 +627,4 @@ Buka `/health` dari AI Core bila CBIR dipakai, lalu jalankan
 Proyek ini dilisensikan di bawah [Lisensi MIT](LICENSE). Ketentuan hukum
 lengkap ada di file [`LICENSE`](LICENSE) root.
 
-Hak Cipta (c) 2026 Anugerah Ahmad.
+Hak Cipta (c) 2026 Anugerah Ahmad Fachrurochim.
