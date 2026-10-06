@@ -45,7 +45,7 @@
 
             <x-filament::dropdown.list>
                 @foreach ($themeOptions as $theme => $icon)
-                    <li class="list-none">
+                    <div class="list-none">
                         <button
                             type="button"
                             x-on:click="(theme = '{{ $theme }}') && close()"
@@ -60,7 +60,7 @@
                                 {{ ['light' => __('Light'), 'dark' => __('Dark'), 'system' => __('System')][$theme] }}
                             </span>
                         </button>
-                    </li>
+                    </div>
                 @endforeach
             </x-filament::dropdown.list>
         </x-filament::dropdown>
