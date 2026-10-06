@@ -51,7 +51,7 @@
                             x-on:click="(theme = '{{ $theme }}') && close()"
                             @class([
                                 'group flex items-center w-full gap-3 whitespace-nowrap rounded-md p-2 text-sm outline-none transition-all',
-                                'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5',
+                                'text-gray-950 dark:text-white hover:bg-gray-50 dark:hover:bg-white/5',
                             ])
                         >
                             <x-filament::icon :icon="$icon" class="h-5 w-5 shrink-0" />

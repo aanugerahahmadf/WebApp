@@ -129,7 +129,7 @@
                         type="button"
                         x-on:click="pick(@js($cbirItem['event']), @js($cbirItem['detail']))"
                         class="group flex items-center w-full gap-3 whitespace-nowrap rounded-md px-2 py-2 text-sm outline-none transition-all
-                               text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white
+                               text-gray-950 dark:text-white
                                hover:bg-gray-50 dark:hover:bg-white/5"
                     >
                         <x-filament::icon :icon="$cbirItem['icon']" class="h-5 w-5 shrink-0" />

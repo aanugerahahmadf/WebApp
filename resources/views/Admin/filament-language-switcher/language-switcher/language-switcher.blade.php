@@ -130,7 +130,7 @@
                 @endphp
                 <button type="button" x-on:click="changeLanguage('{{ $key }}')" @class([
                     'group flex items-center w-full justify-between gap-3 whitespace-nowrap rounded-md p-2 text-sm outline-none transition-all',
-                    'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5',
+                    'text-gray-950 dark:text-white hover:bg-gray-50 dark:hover:bg-white/5',
                 ])>
                     <span class="truncate flex-1 text-start" x-bind:class="currentLocale === '{{ $key }}' ? '{{ $activeColorClass }} font-bold' : ''">{{ __($language['label']) }}</span>
                     <div class="w-6 h-4 shrink-0 bg-cover bg-center rounded-sm border border-gray-200 dark:border-gray-700 shadow-sm"
