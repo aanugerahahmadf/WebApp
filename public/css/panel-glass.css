@@ -285,6 +285,56 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     background-color: transparent !important;
 }
 
+/* --- Sidebar items: samakan dengan topbar dropdown (.fi-dropdown-list-item) --- */
+/* Font size 14px (text-sm), icon & label colors, badge size sama seperti
+   item dropdown di topbar. Override Tailwind utilities bawaan Filament. */
+
+.fi-sidebar .fi-sidebar-item-button {
+    font-size: 0.875rem !important; /* text-sm = 14px */
+    line-height: 1.25rem !important;
+}
+
+.fi-sidebar .fi-sidebar-item-label {
+    font-size: 0.875rem !important; /* text-sm = 14px */
+    line-height: 1.25rem !important;
+    font-weight: 500 !important;
+}
+
+/* Icon colors: inactive = gray-400 (light) / gray-500 (dark) to match topbar dropdown,
+   active = amber */
+.fi-sidebar .fi-sidebar-item-button .fi-sidebar-item-icon {
+    color: rgb(156 163 175) !important; /* gray-400 light */
+}
+.dark .fi-sidebar .fi-sidebar-item-button .fi-sidebar-item-icon {
+    color: rgb(107 114 128) !important; /* gray-500 dark (matches topbar dropdown) */
+}
+.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button .fi-sidebar-item-icon {
+    color: #fbbf24 !important; /* amber-400 */
+}
+
+/* Label colors: inactive = gray-700/200, active = amber */
+.fi-sidebar .fi-sidebar-item-label {
+    color: rgb(55 65 81) !important; /* gray-700 */
+}
+.dark .fi-sidebar .fi-sidebar-item-label {
+    color: rgb(229 231 235) !important; /* gray-200 */
+}
+.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-label {
+    color: #fbbf24 !important; /* amber-400 */
+}
+
+/* Badge: match topbar dropdown badge (px-1.5 py-0.5 min-w-[1.25rem] tracking-tight) */
+.fi-sidebar .fi-badge {
+    padding-left: 0.375rem !important;  /* px-1.5 */
+    padding-right: 0.375rem !important;
+    padding-top: 0.125rem !important;   /* py-0.5 */
+    padding-bottom: 0.125rem !important;
+    min-width: 1.25rem !important;      /* min-w-[theme(spacing.5)] */
+    letter-spacing: -0.025em !important; /* tracking-tight */
+    font-size: 0.75rem !important;      /* text-xs */
+    line-height: 1rem !important;
+}
+
 /* Label di kartu statistik. Di Shared.css, label stat itu dibuat
    dengan warna rgb(203 213 225) (abu sangat terang) -- cocok untuk
    teks di latar gelap, tapi dipakai tanpa kondisi terang/gelap. Di
