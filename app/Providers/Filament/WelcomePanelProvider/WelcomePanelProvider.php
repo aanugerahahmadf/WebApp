@@ -9,6 +9,7 @@ use App\Http\Middleware\ClerkFilamentAuth\ClerkFilamentAuth;
 use App\Http\Middleware\SetLocale\SetLocale;
 use App\Http\Middleware\VerifyCsrfToken\VerifyCsrfToken;
 use App\Support\AppPlatform\AppPlatform;
+use App\Support\PanelGlassCss\PanelGlassCss;
 use App\Support\MobileNav\MobileNav;
 use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -241,7 +242,13 @@ class WelcomePanelProvider extends PanelProvider
                 // User.css with the selectors re-scoped to .fi-panel-welcome, so
                 // the two storefronts look alike without forking the theme.
                 'panels::styles.after',
+                // Lapisan kaca dimuat lewat <link> statis, bukan lewat @vite, supaya
+                // mengedit public/css/panel-glass.css langsung berlaku tanpa
+                // `npm run build`. Diletakkan setelah @vite karena berkacanya
+                // memakai token --fi-glass-* yang didefinisikan di Shared.css.
                 fn (): string => Blade::render('@vite(\'resources/css/Welcome/Welcome.css\')')
+                    ."\n"
+                    .PanelGlassCss::link()
             )
             ->renderHook(
                 // Phone-only bottom navigation. Declared per panel in

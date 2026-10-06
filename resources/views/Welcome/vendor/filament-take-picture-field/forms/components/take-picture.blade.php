@@ -208,7 +208,19 @@
                     this.stopVideoRecording();
                 }
 
-                this.captureMode = 'photo';
+                // `captureMode` SENGAJA tidak diubah di sini.
+                //
+                // Dulu baris ini men-set photo, jadi menekan Depan atau
+                // Belakang saat sedang merekam melempar pengguna kembali ke
+                // mode foto: tombol rekam berubah jadi tombol Take Photo.
+                // Mengganti kamera adalah pilihan kamera, bukan pilihan mode.
+                //
+                // Mempertahankan mode juga menjaga acquireStream() tetap
+                // meminta audio, karena audio diambil dari
+                // captureMode === 'video'.
+                //
+                // Reset ke photo tetap ada di tempat yang tepat:
+                // closeModal() dan callback sukses confirmVideo().
                 this.showingVideoPreview = false;
                 this.showingPreview = false;
                 this.currentFacingMode = facing;
@@ -590,9 +602,20 @@
                 getCameras();
             }
 
+            // CATATAN: jangan pernah memakai tanda kutip ganda di komentar
+            // di dalam blok ini. x-data berada di dalam atribut HTML yang
+            // dibatasi kutip ganda; satu kutip ganda saja sudah memutus
+            // atribut itu, dan Alpine akan evaluates potongan yang terpotong
+            // sehingga listener ini tidak pernah terdaftar.
+            //
+            // detail.mode membuka modal yang sama dalam mode rekam video.
+            // Tanpa itu, satu-satunya jalan ke mode video adalah tombol
+            // Videos di bar mode -- dan tombol itu sudah dihapus karena
+            // dobel dengan item Rekam Video di dropdown ikon kamera.
+            // Default tetap photo, jadi pemanggil lama tidak berubah.
             window.addEventListener('cbir-open-webrtc-camera', (event) => {
                 if (isDisabled) return;
-                captureMode = 'photo';
+                captureMode = event.detail?.mode === 'video' ? 'video' : 'photo';
                 currentFacingMode = event.detail?.facing === 'user' ? 'user' : 'environment';
                 selectedCameraId = null;
                 startCamera();
@@ -713,12 +736,25 @@
         <!-- Modal -->
         <template x-teleport="body">
             <div x-cloak x-show="modalOpen" @click.self="closeModal()" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-gray-950/50 p-4" style="display: none;">
-                <div @click.stop x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" class="w-full max-w-xl rounded-xl bg-white dark:bg-gray-900 shadow-xl ring-1 ring-gray-950/5 dark:ring-white/10">
+                <div @click.stop x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" class="fi-glass-modal w-full max-w-xl rounded-xl bg-white dark:bg-gray-900 shadow-xl ring-1 ring-gray-950/5 dark:ring-white/10">
 
                     <!-- Modal header -->
                     <div class="flex items-center justify-between border-b border-gray-200 dark:border-white/10 px-6 py-4">
-                        <h3 class="text-base font-semibold text-gray-950 dark:text-white">
-                            {{ __('Ambil Foto') }}
+                        {{-- Judul ikut mode: Kamera saat foto, Video saat rekam.
+                             x-text menimpa isi Blade begitu Alpine inisialisasi,
+                             jadi isi Blade tetap berguna untuk dua hal: fallback
+                             tanpa JS, dan nilai awal untuk mode foto.
+
+                             Terjemahan lewat @js(), bukan __() polos. Atribut
+                             x-text dibatasi kutip ganda; @js() menghasilkan
+                             literal JS ber-kutip tunggal dan meng-escape
+                             kutip ganda maupun kutip tunggal di dalamnya,
+                             jadi teks terjemahan tidak bisa memutus atribut. --}}
+                        <h3
+                            class="text-base font-semibold text-gray-950 dark:text-white"
+                            x-text="captureMode === 'video' ? @js(__('Video')) : @js(__('Kamera'))"
+                        >
+                            {{ __('Kamera') }}
                         </h3>
                         <button type="button" @click="closeModal()" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
                             <x-filament::icon icon="heroicon-m-x-mark" class="h-5 w-5" />
@@ -800,7 +836,7 @@
                             <!-- Camera type indicator (front/back) -->
                             <div x-show="webcamActive && !webcamError && !showingPreview && !showingVideoPreview" class="absolute bottom-4 left-4">
                                 <span class="px-2 py-1 rounded-full bg-gray-900/70 text-white text-xs">
-                                    <span x-text="captureMode === 'video' ? '{{ __('Video') }} — ' : '' + (currentFacingMode === 'environment' || isBackCamera ? '{{ __('Back Camera') }}' : '{{ __('Front Camera') }}')"></span>
+                                    <span x-text="(captureMode === 'video' ? @js(__('Video')) + ' ' : '') + (currentFacingMode === 'environment' || isBackCamera ? @js(__('Back Camera')) : @js(__('Front Camera')))"></span>
                                 </span>
                             </div>
                         </div>
@@ -829,112 +865,47 @@
                             </p>
                         </div>
 
-                        <!-- CBIR: mode picker inside modal (drag/swipe to slide, centered) -->
-                        <div
-                            class="mb-4 overflow-x-auto pb-1 select-none cursor-grab active:cursor-grabbing"
-                            x-show="!showingPreview && !showingVideoPreview"
-                            x-cloak
-                            x-data="{
-                                dragging: false,
-                                moved: false,
-                                startX: 0,
-                                scrollLeft: 0,
-                                startDrag(e) {
-                                    this.dragging = true;
-                                    this.moved = false;
-                                    this.startX = e.pageX;
-                                    this.scrollLeft = e.currentTarget.scrollLeft;
-                                },
-                                moveDrag(e) {
-                                    if (! this.dragging) return;
-                                    const dx = e.pageX - this.startX;
-                                    if (Math.abs(dx) > 5) this.moved = true;
-                                    e.currentTarget.scrollLeft = this.scrollLeft - dx;
-                                },
-                                endDrag() {
-                                    this.dragging = false;
-                                }
-                            }"
-                            x-on:mousedown="startDrag($event)"
-                            x-on:mousemove="moveDrag($event)"
-                            x-on:mouseup="endDrag()"
-                            x-on:mouseleave="endDrag()"
-                            x-on:click.capture="if (moved) { $event.preventDefault(); $event.stopPropagation(); }"
-                        >
-                            <div class="flex w-max max-w-full gap-2 px-1 py-0.5 mx-auto snap-x">
-                                <button
-                                    type="button"
-                                    x-on:click="switchFacing('environment')"
-                                    class="flex shrink-0 snap-start flex-col items-center gap-1 rounded-lg border px-3 py-2.5 text-center text-xs font-medium transition-colors"
-                                    :class="captureMode === 'photo' && currentFacingMode === 'environment'
-                                        ? 'border-primary-500 bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-400'
-                                        : 'border-gray-200 text-gray-700 hover:border-primary-400 dark:border-white/10 dark:text-gray-200'"
-                            >
-                                <x-filament::icon icon="heroicon-o-camera" class="h-5 w-5" />
-                                <span>{{ __('Belakang') }}</span>
-                            </button>
-                            <button
-                                type="button"
-                                x-on:click="switchFacing('user')"
-                                class="flex shrink-0 snap-start flex-col items-center gap-1 rounded-lg border px-3 py-2.5 text-center text-xs font-medium transition-colors"
-                                :class="captureMode === 'photo' && currentFacingMode === 'user'
-                                    ? 'border-primary-500 bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-400'
-                                    : 'border-gray-200 text-gray-700 hover:border-primary-400 dark:border-white/10 dark:text-gray-200'"
-                            >
-                                <x-filament::icon icon="heroicon-o-user-circle" class="h-5 w-5" />
-                                <span>{{ __('Depan') }}</span>
-                            </button>
+                        {{-- Bar mode di dalam modal DIHAPUS.
 
-                            <button
-                                type="button"
-                                x-on:click="switchCaptureMode('video')"
-                                class="flex shrink-0 snap-start flex-col items-center gap-1 rounded-lg border px-3 py-2.5 text-center text-xs font-medium transition-colors"
-                                :class="captureMode === 'video'
-                                    ? 'border-primary-500 bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-400'
-                                    : 'border-gray-200 text-gray-700 hover:border-primary-400 dark:border-white/10 dark:text-gray-200'"
-                            >
-                                <x-filament::icon icon="heroicon-o-video-camera" class="h-5 w-5" />
-                                <span>{{ __('Video') }}</span>
-                            </button>
-                            <button
-                                type="button"
-                                x-on:click="switchCaptureMode('gallery')"
-                                class="flex shrink-0 snap-start flex-col items-center gap-1 rounded-lg border px-3 py-2.5 text-center text-xs font-medium transition-colors"
-                                :class="captureMode === 'gallery'
-                                    ? 'border-primary-500 bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-400'
-                                    : 'border-gray-200 text-gray-700 hover:border-primary-400 dark:border-white/10 dark:text-gray-200'"
-                            >
-                                <x-filament::icon icon="heroicon-o-photo" class="h-5 w-5" />
-                                <span>{{ __('Galeri') }}</span>
-                            </button>
+     Pemindah kamera sudah ada sebagai ikon di kiri atas: tombol Switch
+     Camera yang memanggil flipCamera(). Tombol tutup juga sudah ada sebagai
+     ikon X di kanan atas. Tombol teks Behind dan Depan hanya mengulang dua
+     kendali yang sudah ada, dan memakan ruang di footer.
 
-                            @php
-                                $slideSources = [
-                                    ['event' => 'cbir-pick-gallery', 'icon' => 'heroicon-o-folder', 'label' => __('File')],
-                                ];
-                            @endphp
-                            @foreach ($slideSources as $src)
-                                <button
-                                    type="button"
-                                    x-on:click="closeModal(); window.dispatchEvent(new CustomEvent('{{ $src['event'] }}'))"
-                                    class="flex shrink-0 snap-start flex-col items-center gap-1 rounded-lg border border-gray-200 px-3 py-2.5 text-center text-xs font-medium text-gray-700 transition-colors hover:border-primary-400 dark:border-white/10 dark:text-gray-200"
-                                >
-                                    <x-filament::icon :icon="$src['icon']" class="h-5 w-5" />
-                                    <span>{{ $src['label'] }}</span>
-                                </button>
-                            @endforeach
-                            </div>
-                        </div>
+     Videos, Galeri, dan File sudah dihapus lebih awal karena ketiganya
+     menjadi item di dropdown ikon kamera pada topbar. Tombol File di sini
+     juga salah wiring: event-nya cbir-pick-gallery, jadi tombol berlabel
+     File justru membuka galeri.
+
+     Untuk berpindah kamera, pakai ikon kiri atas. --}}
 
                         <!-- Action buttons -->
                         <div class="flex justify-end gap-3">
-                            <x-filament::button x-show="!showingPreview && !showingVideoPreview" color="gray" @click="closeModal()">
-                                {{ __('filament-take-picture-field::take-picture-field.cancel') }}
-                            </x-filament::button>
+                            {{-- Tombol teks Cancel dihapus: menutup modal yang
+                                 sama dengan ikon X di kanan atas, dan dengan
+                                 backdrop di belakang modal. Dua kendali untuk
+                                 satu aksi, dan yang di footer memakan ruang
+                                 kosong begitu kamera aktif.
 
-                            <x-filament::button x-show="!showingPreview && !showingVideoPreview && captureMode === 'photo' && webcamActive && !webcamError" color="primary" @click="capturePhoto()">
-                                {{ __('filament-take-picture-field::take-picture-field.capture') }}
-                            </x-filament::button>
+                                 closeModal() masih hidup: dipanggil ikon X dan
+                                 backdrop.
+
+                                 Sisa tombol di footer ini hanya Retake, Use
+                                 Photo, Repeat, dan Gunakan Video, yang
+                                 muncul di keadaan pratinjau. --}}
+
+                            {{-- Tombol teks Capture dihapus: ia memanggil
+                                 capturePhoto() yang sama persis dengan tombol
+                                 bulat di tengah pratinjau, jadi ada dua
+                                 kendali untuk satu aksi. Tombol bulat itu yang
+                                 tetap dipakai, karena di mode video tempatnya
+                                 diisi tombol rekam -- sehingga letaknya sama
+                                 dan tidak melompat saat mode berganti.
+
+                                 Retake, Use Photo, Repeat, dan Gunakan Video
+                                 TIDAK dihapus: tombol-tombol itu muncul di
+                                 keadaan pratinjau, sedangkan tombol bulat
+                                 tengah sengaja disembunyikan di keadaan itu. --}}
 
                             <x-filament::button x-show="showingPreview" color="gray" @click="retakeInModal()">
                                 {{ __('filament-take-picture-field::take-picture-field.retake') }}

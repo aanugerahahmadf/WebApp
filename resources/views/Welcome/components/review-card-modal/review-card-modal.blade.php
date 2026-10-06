@@ -12,7 +12,7 @@
         x-show="openReview"
         x-transition.scale.95
         @click.stop
-        class="my-auto max-h-[min(85vh,48rem)] w-full max-w-2xl overflow-y-auto rounded-xl bg-white shadow-xl ring-1 ring-gray-950/10 dark:bg-gray-900 dark:ring-white/10"
+        class="fi-glass-modal my-auto max-h-[min(85vh,48rem)] w-full max-w-2xl overflow-y-auto rounded-xl bg-white shadow-xl ring-1 ring-gray-950/10 dark:bg-gray-900 dark:ring-white/10"
         role="dialog"
         aria-modal="true"
         aria-label="{{ __('Detail ulasan') }}"

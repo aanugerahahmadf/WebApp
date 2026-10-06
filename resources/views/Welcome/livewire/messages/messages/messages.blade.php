@@ -670,7 +670,7 @@
         <!-- Camera Modal : Start -->
         <div id="camera-modal"
             class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" style="display:none;">
-            <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden w-full max-w-md mx-4">
+            <div class="fi-glass-modal bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden w-full max-w-md mx-4">
                 <!-- Modal Header -->
                 <div class="flex items-center justify-between px-5 py-4 border-b dark:border-gray-700">
                     <h3 class="text-base font-semibold text-gray-800 dark:text-white flex items-center gap-2">

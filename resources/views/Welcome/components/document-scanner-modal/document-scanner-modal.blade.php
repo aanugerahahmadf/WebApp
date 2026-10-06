@@ -640,7 +640,7 @@
             <div
                 x-show="isOpen"
                 x-on:click.stop
-                class="w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-900"
+                class="fi-glass-modal w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-900"
             >
                 {{-- Header --}}
                 <div class="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-white/10">

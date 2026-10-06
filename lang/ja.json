@@ -1440,8 +1440,6 @@
     "forms::validation.distinct.must_be_selected": "å°‘ãªãã¨ã‚‚1ã¤ä»¥ä¸Š:attributeã‚’é¸æŠžã—ã¦ãã ã•ã„",
     "forms::validation.distinct.only_one_must_be_selected": "1ã¤ã ã‘:attributeã‚’é¸æŠžã—ã¦ãã ã•ã„",
     "Foto": "å†™çœŸ",
-    "Foto Kamera Belakang": "ãƒªã‚¢ã‚«ãƒ¡ãƒ©ã®å†™çœŸ",
-    "Foto Kamera Depan": "ãƒ•ãƒ­ãƒ³ãƒˆã‚«ãƒ¡ãƒ©ã®å†™çœŸ",
     "Foto Product": "è£½å“å†™çœŸ",
     "Foto Profil": "ãƒ—ãƒ­ãƒ•ã‚£ãƒ¼ãƒ«å†™çœŸ",
     "Foto struk atau bukti transfer dari user.": "ãƒ¦ãƒ¼ã‚¶ãƒ¼ã‹ã‚‰ã®é ˜åŽæ›¸ã¾ãŸã¯è­²æ¸¡è¨¼æ˜Žã®å†™çœŸã€‚",

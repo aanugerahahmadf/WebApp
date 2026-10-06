@@ -35,6 +35,7 @@ use App\Http\Middleware\EnsureProfileComplete\EnsureProfileComplete;
 use App\Http\Middleware\SetLocale\SetLocale;
 use App\Http\Middleware\VerifyCsrfToken\VerifyCsrfToken;
 use App\Support\AppPlatform\AppPlatform;
+use App\Support\PanelGlassCss\PanelGlassCss;
 use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -176,7 +177,13 @@ class UserPanelProvider extends PanelProvider
             )
             ->renderHook(
                 'panels::styles.after',
+                // Lapisan kaca dimuat lewat <link> statis, bukan lewat @vite, supaya
+                // mengedit public/css/panel-glass.css langsung berlaku tanpa
+                // `npm run build`. Diletakkan setelah @vite karena berkacanya
+                // memakai token --fi-glass-* yang didefinisikan di Shared.css.
                 fn (): string => Blade::render('@vite(\'resources/css/User/User.css\')')
+                    ."\n"
+                    .PanelGlassCss::link()
             )
             ->renderHook(
                 PanelsRenderHook::SIMPLE_PAGE_START,

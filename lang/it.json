@@ -1440,8 +1440,6 @@
     "forms::validation.distinct.must_be_selected": "Ãˆ necessario selezionare almeno un campo :attribute.",
     "forms::validation.distinct.only_one_must_be_selected": "Ãˆ necessario selezionare un solo campo :attribute.",
     "Foto": "Foto",
-    "Foto Kamera Belakang": "Foto della fotocamera posteriore",
-    "Foto Kamera Depan": "Foto con fotocamera frontale",
     "Foto Product": "Foto del prodotto",
     "Foto Profil": "Immagine del profilo",
     "Foto struk atau bukti transfer dari user.": "Foto della ricevuta o prova del bonifico da parte dell'utente.",
