@@ -51,7 +51,56 @@ ketiga perintah itu.
 
 ---
 
-## 2. Menjalankan tiap mode
+## 2. Memaksa platform dari browser atau curl
+
+Untuk menguji tampilan shell **tanpa** membangun shell-nya, paksa platform
+lewat header `X-Shell` (atau `X-Capacitor`, dibaca sebagai cadangan). Header
+ini dibaca `AppPlatform::detect()` sebelum User-Agent, jadi menang terhadap
+apa pun yang dikirim browser.
+
+Nilai yang diterima:
+
+| header | platform yang terdeteksi |
+|---|---|
+| `X-Shell: android` atau `X-Shell: 1` | `mobile_app_android` |
+| `X-Shell: ios` | `mobile_app_ios` |
+| `X-Shell: desktop` atau `X-Shell: electron` | `desktop_app_windows` / `desktop_app_macos` |
+
+Di browser, pakai ekstensi yang bisa menambah header kustom. Di terminal,
+langsung ke server:
+
+```bash
+curl -s -H "X-Shell: android"  http://127.0.0.1:8000/welcome/home | grep 'slug:'
+curl -s -H "X-Shell: desktop" http://127.0.0.1:8000/welcome/home | grep 'slug:'
+curl -s                        http://127.0.0.1:8000/welcome/home | grep 'slug:'
+```
+
+Hasilnya, baris `slug:` di dalam `window.AppPlatform`:
+
+```
+slug:            "mobile_app_android",
+slug:            "desktop_app_windows",
+slug:            "website_windows",
+```
+
+`window.AppPlatform` di `<script>` itu yang jadi sumber kebenaran untuk semua
+pemeriksaan platform di sisi browser (kelas `native-mobile`/`native-desktop`,
+atribut `data-platform`, dan `localStorage`), jadi membaca `slug:` di sini
+sama dengan memeriksa apa yang dilihat JavaScript.
+
+Cara lain yang tidak butuh header: set `CAPACITOR_PLATFORM` **sebelum**
+menjalankan server, karena nilainya dibaca sekali saat proses PHP start.
+
+```bash
+CAPACITOR_PLATFORM=android php artisan serve:mobile --port=8001
+```
+
+Kalau hasilnya tetap `website_windows`, hampir selalu berarti server sudah
+jalan sebelum variabel itu di-set -- restart prosesnya.
+
+---
+
+## 3. Menjalankan tiap mode
 
 Tiga mode dilayani oleh `php artisan serve` yang sama; yang berbeda hanya file
 `.env.{mode}` dan direktori build yang dibaca. Port **wajib** diteruskan --
@@ -87,7 +136,7 @@ deteksi platform ikut ter-cache di semuanya.
 
 ---
 
-## 3. Menguji shell sungguhan
+## 4. Menguji shell sungguhan
 
 Shell Capacitor bukan bagian dari root repo; masing-masing punya folder,
 `package.json`, dan konfigurasi sendiri. Semua perintah di bawah harus
@@ -140,7 +189,7 @@ Semua perintah ini memakai `electron/electron-builder.config.js` dan
 
 ---
 
-## 4. Test suite
+## 5. Test suite
 
 ```bash
 php artisan test --testsuite=Unit
@@ -160,7 +209,7 @@ Detail pola dan batasannya ada di
 
 ---
 
-## 5. Dokumentasi terkait
+## 6. Dokumentasi terkait
 
 - [Matriks Fitur Platform](platform-features/platform-features.md) —
   fitur mana yang aktif di tiap target, dan cara memanggilnya dari kode
