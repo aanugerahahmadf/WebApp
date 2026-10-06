@@ -498,10 +498,10 @@ cd app/Capacitor/UserApp && npm run sync
 
 ## Lihat Juga
 
-- [Pohon Keputusan Penggunaan Perintah](./command-decision-tree.md) — diagram alur lengkap
-- [Arsitektur Dukungan Platform](./platform-support.md) — ikhtisar komponen dan alur data
-- [Strategi Konfigurasi Lingkungan](./environment-configuration.md) — struktur file `.env.*`
-- [Proses Kompilasi Aset](./asset-compilation.md) — pipeline build Vite dan HMR
-- [Matriks Fitur Platform](./platform-features.md) — ketersediaan fitur per platform
+- [Pohon Keputusan Penggunaan Perintah](../command-decision-tree/command-decision-tree.md) — diagram alur lengkap
+- [Arsitektur Dukungan Platform](../platform-support/platform-support.md) — ikhtisar komponen dan alur data
+- [Strategi Konfigurasi Lingkungan](../environment-configuration/environment-configuration.md) — struktur file `.env.*`
+- [Proses Kompilasi Aset](../asset-compilation/asset-compilation.md) — pipeline build Vite dan HMR
+- [Matriks Fitur Platform](../platform-features/platform-features.md) — ketersediaan fitur per platform
 - [Panduan Deployment Mobile](../deployment/mobile/mobile.md) — build APK/AAB/IPA
 - [Panduan Deployment Desktop](../deployment/desktop/desktop.md) — build .exe/.dmg

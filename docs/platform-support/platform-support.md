@@ -266,7 +266,7 @@ $registry->getPlatformsForFeature('push_notifications');
 
 ### PlatformModeServiceProvider
 
-**Lokasi:** `app/Providers/PlatformModeServiceProvider.php`
+**Lokasi:** `app/Providers/PlatformModeServiceProvider/PlatformModeServiceProvider.php`
 
 Perekat yang menghubungkan semuanya selama bootstrap. Harus didaftarkan
 **sebelum** `RouteServiceProvider` agar singleton `platform.mode` tersedia
@@ -475,8 +475,8 @@ browser, tersedia di Electron).
 
 - [Panduan Mobile](../deployment/mobile/mobile.md) — build Android/iOS
 - [Panduan Desktop](../deployment/desktop/desktop.md) — build Windows/macOS
-- [Kompilasi Aset](../asset-compilation.md) — pipeline Vite
-- [Konfigurasi Lingkungan](../environment-configuration.md) — `.env.*`
-- [Fitur Platform](../platform-features.md) — detail fitur per platform
-- [Pohon Keputusan Perintah](../command-decision-tree.md) — flowchart pemilihan perintah
-- [Panduan Perintah](../command-guide.md) — referensi perintah lengkap
+- [Kompilasi Aset](../asset-compilation/asset-compilation.md) — pipeline Vite
+- [Konfigurasi Lingkungan](../environment-configuration/environment-configuration.md) — `.env.*`
+- [Fitur Platform](../platform-features/platform-features.md) — detail fitur per platform
+- [Pohon Keputusan Perintah](../command-decision-tree/command-decision-tree.md) — flowchart pemilihan perintah
+- [Panduan Perintah](../command-guide/command-guide.md) — referensi perintah lengkap

@@ -406,8 +406,8 @@ if (__VITE_PLATFORM__ === 'desktop') {
 
 ## Dokumentasi Terkait
 
-- [Ikhtisar Dukungan Platform](./platform-support.md)
-- [Konfigurasi Lingkungan](./environment-configuration.md)
-- [Matriks Fitur Platform](./platform-features.md)
+- [Ikhtisar Dukungan Platform](../platform-support/platform-support.md)
+- [Konfigurasi Lingkungan](../environment-configuration/environment-configuration.md)
+- [Matriks Fitur Platform](../platform-features/platform-features.md)
 - [Panduan Deployment Mobile](../deployment/mobile/mobile.md)
 - [Panduan Deployment Desktop](../deployment/desktop/desktop.md)

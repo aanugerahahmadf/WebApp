@@ -220,7 +220,7 @@ melanjutkan tanpa error — tidak ada yang rusak.
 
 ## Perilaku Pemuatan EnvironmentManager
 
-Kelas `EnvironmentManager` (`app/Support/Platform/EnvironmentManager.php`)
+Kelas `EnvironmentManager` (`app/Support/Platform/EnvironmentManager/EnvironmentManager.php`)
 bertanggung jawab untuk memuat dan menggabungkan file environment platform.
 Kelas ini dipanggil oleh `PlatformModeServiceProvider` selama boot aplikasi,
 sebelum route atau view di-resolve.
@@ -442,9 +442,9 @@ Waktu pemuatan:        selama PlatformModeServiceProvider::boot(), sebelum route
 
 ## Lihat Juga
 
-- `app/Support/Platform/EnvironmentManager.php` — implementasi
-- `app/Providers/PlatformModeServiceProvider.php` — tempat pemuatan dipicu
-- `app/Enums/PlatformMode.php` — metode `environmentFile()` mengembalikan nama file per mode
+- `app/Support/Platform/EnvironmentManager/EnvironmentManager.php` — implementasi
+- `app/Providers/PlatformModeServiceProvider/PlatformModeServiceProvider.php` — tempat pemuatan dipicu
+- `app/Enums/PlatformMode/PlatformMode.php` — metode `environmentFile()` mengembalikan nama file per mode
 - `.env.web.example`, `.env.mobile.example`, `.env.desktop.example` — file awal beranotasi
 - `docs/platform-support.md` — ikhtisar arsitektur platform
 - `docs/deployment/mobile/mobile.md` — build shell mobile

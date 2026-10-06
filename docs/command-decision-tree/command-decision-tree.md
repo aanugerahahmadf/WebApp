@@ -375,10 +375,10 @@ Build DMG macOS (di shell)               cd app/Capacitor/UserApp && npx electro
 
 ## Lihat Juga
 
-- [Arsitektur Dukungan Platform](./platform-support.md) — ikhtisar komponen, alur data, enum RuntimePlatform
-- [Strategi Konfigurasi Lingkungan](./environment-configuration.md) — struktur file `.env.*` dan aturan penggabungan
-- [Proses Kompilasi Aset](./asset-compilation.md) — pipeline build Vite dan pengaturan HMR
-- [Matriks Fitur Platform](./platform-features.md) — ketersediaan fitur per platform dan cara memeriksanya
-- [Panduan Perintah Lengkap](./command-guide.md) — referensi perintah detail dengan semua flag dan opsi
+- [Arsitektur Dukungan Platform](../platform-support/platform-support.md) — ikhtisar komponen, alur data, enum RuntimePlatform
+- [Strategi Konfigurasi Lingkungan](../environment-configuration/environment-configuration.md) — struktur file `.env.*` dan aturan penggabungan
+- [Proses Kompilasi Aset](../asset-compilation/asset-compilation.md) — pipeline build Vite dan pengaturan HMR
+- [Matriks Fitur Platform](../platform-features/platform-features.md) — ketersediaan fitur per platform dan cara memeriksanya
+- [Panduan Perintah Lengkap](../command-guide/command-guide.md) — referensi perintah detail dengan semua flag dan opsi
 - [Panduan Deployment Mobile](../deployment/mobile/mobile.md) — build APK/AAB/IPA
 - [Panduan Deployment Desktop](../deployment/desktop/desktop.md) — build .exe/.dmg

@@ -425,8 +425,8 @@ spctl --assess --type open --context context:primary-signature -v \
 ## Dokumentasi Terkait
 
 - [Panduan Mobile](../mobile/mobile.md) — shell Android/iOS
-- [Kompilasi Aset](../asset-compilation.md) — cara kerja `npm run build:desktop`
-- [Konfigurasi Lingkungan](../environment-configuration.md) — referensi `.env.desktop`
-- [Dukungan Platform](../platform-support.md) — nilai `RuntimePlatform` per shell
+- [Kompilasi Aset](../../asset-compilation/asset-compilation.md) — cara kerja `npm run build:desktop`
+- [Konfigurasi Lingkungan](../../environment-configuration/environment-configuration.md) — referensi `.env.desktop`
+- [Dukungan Platform](../../platform-support/platform-support.md) — nilai `RuntimePlatform` per shell
 - `.env.desktop.example` — file starter beranotasi
 - `app/Capacitor/UserApp/electron/README.md` — dokumentasi shell Electron

@@ -361,6 +361,6 @@ untuk kasus platform mana pun.
 - [Arsitektur Dukungan Platform](platform-support.md) — ikhtisar arsitektur lengkap, pipeline deteksi, dan alur data
 - [Konfigurasi Lingkungan](environment-configuration.md) — file `.env` per platform dan penggabungan variabel
 - [Kompilasi Aset](asset-compilation.md) — titik masuk Vite dan direktori build per platform
-- `app/Support/Platform/PlatformFeatureRegistry.php` — sumber kebenaran matriks fitur
-- `app/Enums/RuntimePlatform.php` — definisi enum dengan semua metode helper fitur
+- `app/Support/Platform/PlatformFeatureRegistry/PlatformFeatureRegistry.php` — sumber kebenaran matriks fitur
+- `app/Enums/RuntimePlatform/RuntimePlatform.php` — definisi enum dengan semua metode helper fitur
 - `app/helpers.php` — `platform_feature()`, `runtime_platform()`, dan helper mode

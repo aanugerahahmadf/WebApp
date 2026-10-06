@@ -483,8 +483,8 @@ Lalu jalankan aplikasi dan pastikan:
 ## Dokumentasi Terkait
 
 - [Panduan Desktop](../desktop/desktop.md) — shell Electron untuk Windows/macOS
-- [Kompilasi Aset](../asset-compilation.md) — cara kerja `npm run build:mobile`
-- [Konfigurasi Lingkungan](../environment-configuration.md) — referensi `.env.mobile`
-- [Dukungan Platform](../platform-support.md) — nilai `RuntimePlatform` per shell
+- [Kompilasi Aset](../../asset-compilation/asset-compilation.md) — cara kerja `npm run build:mobile`
+- [Konfigurasi Lingkungan](../../environment-configuration/environment-configuration.md) — referensi `.env.mobile`
+- [Dukungan Platform](../../platform-support/platform-support.md) — nilai `RuntimePlatform` per shell
 - `.env.mobile.example` — file starter beranotasi
 - `app/Capacitor/UserApp/README.md` — dokumentasi shell

@@ -305,6 +305,6 @@ php artisan optimize
 
 ## Dokumentasi Terkait
 
-- [Kompilasi Aset](../asset-compilation.md) — cara kerja `npm run build:web` secara internal
-- [Konfigurasi Lingkungan](../environment-configuration.md) — referensi variabel lengkap dan strategi multi-platform
+- [Kompilasi Aset](../../asset-compilation/asset-compilation.md) — cara kerja `npm run build:web` secara internal
+- [Konfigurasi Lingkungan](../../environment-configuration/environment-configuration.md) — referensi variabel lengkap dan strategi multi-platform
 - `.env.web.example` — file starter beranotasi untuk variabel lingkungan web
