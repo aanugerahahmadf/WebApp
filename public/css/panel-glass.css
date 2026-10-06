@@ -215,6 +215,46 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     background-color: transparent !important;
 }
 
+/* --- Pratinjau kamera / video pada ponsel --------------------------- */
+/* Papan kamera dan video di modal viewfinder (take-picture) memakai
+ * aspect-video (16:9), jadi di layar potret lebar penuh tinggi layar
+ * hanya sekitar 56% dari lebarnya -- terlihat pendek. Permintaan:
+ * Kamera dan Video harus lebih TINGGI di aplikasi Android/iOS
+ * (Capacitor) dan di tampilan mobile responsif.
+ *
+ * .x-cam-stage adalah hook yang ditempel pada keempat wadah pratinjau
+ * (camera aktif, foto terambil, video terekam, dan panel error) di
+ * resources/views/{User,Welcome}/.../take-picture.blade.php.
+ *
+ * Dua jangkauan, satu angka:
+ *
+ *   1. @media (max-width: 640px)
+ *      -- browser mobile responsif (DevTools, ponsel menyusut, dll.).
+ *   2. [data-platform="mobile_app_android"|mobile_app_ios"]
+ *      -- aplikasi Capacitor Android & iOS. WebView-nya melaporkan lebar
+ *         perangkat, jadi selector ini juga berlaku saat ponsel diputar
+ *         landscape (di mana media query berhenti bekerja).
+ *
+ * aspect-ratio 3/4 sedikit ketinggian dari 16:9 (1.78) menjadi 0.75.
+ * Cukup untuk bingkai sekallig kepala dan buket, tidak sampai membuat
+ * modal tergulung di layar kecil. Kalau mau lebih panjang/pendek, ubah
+ * angka di bawah -- satu tempat, berlaku serentak untuk mode kamera,
+ * video, foto hasil, dan panel error.
+ *
+ * Tidak ditetesi !important pada video di dalamnya supaya max-h-[60vh]
+ * yang sudah ada tetap membatasi di layar pendek, dan object-contain
+ * tetap menyingkirkan kotak leter tanpa memaksa stream diregangkan. */
+@media (max-width: 640px) {
+    .x-cam-stage {
+        aspect-ratio: 3 / 4 !important;
+    }
+}
+
+[data-platform="mobile_app_android"] .x-cam-stage,
+[data-platform="mobile_app_ios"] .x-cam-stage {
+    aspect-ratio: 3 / 4 !important;
+}
+
 /* --- Hormati preferensi transparansi -------------------------------- */
 /* Windows "Transparency effects" off, macOS Reduce Transparency, atau iOS
    Reduce Transparency: bentuknya tetap, isinya dibuat pekat supaya teks

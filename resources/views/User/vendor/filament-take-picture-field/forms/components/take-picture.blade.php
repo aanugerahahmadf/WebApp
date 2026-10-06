@@ -766,22 +766,22 @@
                         <div class="relative rounded-lg overflow-hidden bg-gray-950 mb-4">
 
                             <!-- Video preview (camera active) -->
-                            <div x-show="webcamActive && !webcamError" class="aspect-video flex items-center justify-center">
+                            <div x-show="webcamActive && !webcamError" class="x-cam-stage aspect-video flex items-center justify-center">
                                 <video x-ref="video" autoplay playsinline :style="mirroredView ? 'transform: scaleX(-1);' : ''" class="max-w-full max-h-[60vh] object-contain"></video>
                             </div>
 
                             <!-- Photo preview (after capture) -->
-                            <div x-show="showingPreview && photoData && !webcamActive && !showingVideoPreview" class="aspect-video flex items-center justify-center bg-gray-900">
+                            <div x-show="showingPreview && photoData && !webcamActive && !showingVideoPreview" class="x-cam-stage aspect-video flex items-center justify-center bg-gray-900">
                                 <img :src="getImageUrl(photoData)" class="max-w-full max-h-[60vh] object-contain" alt="Captured preview">
                             </div>
 
                             <!-- Video preview (after recording) -->
-                            <div x-show="showingVideoPreview && recordedVideoUrl" class="aspect-video flex items-center justify-center bg-gray-900">
+                            <div x-show="showingVideoPreview && recordedVideoUrl" class="x-cam-stage aspect-video flex items-center justify-center bg-gray-900">
                                 <video :src="recordedVideoUrl" class="max-w-full max-h-[60vh] object-contain" controls playsinline></video>
                             </div>
 
                             <!-- Error display -->
-                            <div x-show="webcamError" class="aspect-video bg-gray-900 flex flex-col items-center justify-center text-center p-6">
+                            <div x-show="webcamError" class="x-cam-stage aspect-video bg-gray-900 flex flex-col items-center justify-center text-center p-6">
                                 <x-filament::icon icon="heroicon-o-exclamation-triangle" class="h-12 w-12 text-danger-500 mb-4" />
                                 <span class="text-white text-lg font-medium" x-text="webcamError"></span>
 
