@@ -37,29 +37,32 @@
  *                 filter.
  * ===================================================================== */
 
-/* --- Token KACA: 70% transparan + blur KUAT + border TERLIHAT --- */
-/* Default di Shared.css: alpha 0.62/0.70, blur(20px), ring putih tipis.
-   Permintaan: background 70% transparan (alpha 0.30), blur kelihatan,
-   border terlihat di Light & Dark. Override di sini tanpa build. */
+/* --- Token KACA: Blur 95% + color tint + 20px --- */
+/* Light: 95% putih (alpha 0.95) + blur 20px + hitam tint
+   Dark:  95% hitam (alpha 0.95) + blur 20px + putih tint
+   Override di sini tanpa build. */
 .fi-panel-welcome,
 .fi-panel-user,
 .fi-panel-admin {
-    --fi-glass-bg: rgb(255 255 255 / 0.30) !important;
-    --fi-glass-ring: rgb(0 0 0 / 0.18) !important;
-    --fi-glass-blur: blur(24px) saturate(180%) !important;
+    --fi-glass-bg: rgb(255 255 255 / 0.95) !important;
+    --fi-glass-ring: rgb(0 0 0 / 0.12) !important;
+    --fi-glass-blur: blur(20px) saturate(180%) !important;
+    --fi-glass-tint: rgba(0, 0, 0, 0.08) !important; /* hitam tint untuk light */
 }
 
 .dark .fi-panel-welcome,
 .dark .fi-panel-user,
 .dark .fi-panel-admin {
-    --fi-glass-bg: rgb(12 12 15 / 0.30) !important;
-    --fi-glass-ring: rgb(255 255 255 / 0.25) !important;
-    --fi-glass-blur: blur(24px) saturate(180%) !important;
+    --fi-glass-bg: rgb(12 12 15 / 0.95) !important;
+    --fi-glass-ring: rgb(255 255 255 / 0.15) !important;
+    --fi-glass-blur: blur(20px) saturate(180%) !important;
+    --fi-glass-tint: rgba(255, 255, 255, 0.06) !important; /* putih tint untuk dark */
 }
 
 /* Gradasi warna dilepas dari SEMUA permukaan kaca (kapsul,
    sidebar, dropdown, lang-dd, modal, kartu). background-image: none
-   menghapus gradien --fi-glass-t* tapi KEEP latar, blur, border. */
+   menghapus gradien --fi-glass-t* tapi KEEP latar, blur, border.
+   Tambahkan tint color via background-image linear-gradient. */
 .fi-panel-welcome .fi-topbar.fi-topbar,
 .fi-panel-user .fi-topbar.fi-topbar,
 .fi-panel-admin .fi-topbar.fi-topbar,
@@ -75,7 +78,7 @@
 .fi-panel-welcome .lang-dd,
 .fi-panel-user .lang-dd,
 .fi-panel-admin .lang-dd {
-    background-image: none !important;
+    background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
 }
 
 /* --- Modal ---------------------------------------------------------- */
@@ -87,10 +90,8 @@
 .fi-panel-admin .fi-modal-window {
     background-color: var(--fi-glass-bg) !important;
 
-    /* Gradasi warna dilepas (seperti dijelaskan di blok
-       "Kaca tanpa gradasi warna" di atas): blur tanpa
-       cucian warna, latar kaca tetap --fi-glass-bg. */
-    background-image: none !important;
+    /* Tint color untuk efek kaca 95% + color blur */
+    background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
 
     border: 1px solid var(--fi-glass-ring) !important;
 
@@ -145,9 +146,8 @@ body.fi-panel-user .fi-glass-panel,
 body.fi-panel-admin .fi-glass-panel {
     background-color: var(--fi-glass-bg) !important;
 
-    /* Gradasi warna dilepas: blur tanpa cucian warna, latar
-       kaca tetap --fi-glass-bg. */
-    background-image: none !important;
+    /* Tint color untuk efek kaca 95% + color blur */
+    background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
 
     border: 1px solid var(--fi-glass-ring) !important;
 
@@ -168,7 +168,7 @@ body.fi-panel-welcome .fi-section,
 body.fi-panel-user .fi-section,
 body.fi-panel-admin .fi-section {
     background-color: var(--fi-glass-bg) !important;
-    background-image: none !important;
+    background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
     border: 1px solid var(--fi-glass-ring) !important;
     box-shadow:
         inset 0 1px 0 rgb(255 255 255 / 0.35),
@@ -323,7 +323,8 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     color: #fbbf24 !important; /* amber-400 */
 }
 
-/* Badge: match topbar dropdown badge (px-1.5 py-0.5 min-w-[1.25rem] tracking-tight) */
+/* Badge: match topbar dropdown badge (px-1.5 py-0.5 min-w-[1.25rem] tracking-tight)
+   + Glass/blur effect sama seperti kaca lain. */
 .fi-sidebar .fi-badge {
     padding-left: 0.375rem !important;  /* px-1.5 */
     padding-right: 0.375rem !important;
@@ -333,6 +334,21 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     letter-spacing: -0.025em !important; /* tracking-tight */
     font-size: 0.75rem !important;      /* text-xs */
     line-height: 1rem !important;
+
+    /* Glass badge: blur + tint + border */
+    background-color: var(--fi-glass-bg) !important;
+    background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
+    border: 1px solid var(--fi-glass-ring) !important;
+    -webkit-backdrop-filter: var(--fi-glass-blur) !important;
+    backdrop-filter: var(--fi-glass-blur) !important;
+
+    /* Text color follows sidebar label */
+    color: inherit !important;
+}
+
+/* Dark mode badge text color */
+.dark .fi-sidebar .fi-badge {
+    color: rgb(229 231 235) !important; /* gray-200 */
 }
 
 /* Label di kartu statistik. Di Shared.css, label stat itu dibuat
