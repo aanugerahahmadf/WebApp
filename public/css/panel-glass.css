@@ -218,6 +218,28 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
 /* Tema aktif dikerjakan langsung dari Blade-nya, jadi tidak ada hook CSS
    khusus di sini. */
 
+/* --- Sidebar tanpa blur ----------------- */
+/*
+ * Permintaan: di sidebar, blur warna putih-nya dihapus. Blur
+ * (backdrop-filter) sudah ditetapkan di Shared.css; di sini kita
+ * menimpa supaya --fi-glass-blur dikasih none. Latar warna putih
+ * transparan yang menjadi latar halaman tetap ada, hanya efek
+ * buram dihapus. */
+/* .fi-panel-welcome .fi-sidebar,
+.fi-panel-user .fi-sidebar,
+.fi-panel-admin .fi-sidebar {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+} */
+
+/* Item aktif di sidebar -- hapus latar putih-nya (lingkaran rounded
+   yang menempel di Item "Home"). Yang dihilangkan hanya latar dasar;
+   tetap terlihat borderless. */
+.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
+.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-grouped-dropdown-trigger {
+    background-color: transparent !important;
+}
+
 /* Label di kartu statistik. Di Shared.css, label stat itu dibuat
    dengan warna rgb(203 213 225) (abu sangat terang) -- cocok untuk
    teks di latar gelap, tapi dipakai tanpa kondisi terang/gelap. Di
