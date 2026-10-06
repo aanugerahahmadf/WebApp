@@ -131,6 +131,63 @@ body.fi-panel-admin .catalog-card {
         0 12px 28px -16px rgb(0 0 0 / 0.35) !important;
 }
 
+/* --- Pengecualian: halaman Auth panel User --------------------------- */
+/* Halaman Auth (Sign In / Sign Up / OTP / Complete Profile / Security
+ * Question / Two Factor) SENGAJA tanpa kartu dan tanpa section. Ini bukan
+ * kelalaian: resources/css/User/User.css sudah punya aturan itu dengan
+ * judul "AUTH - TANPA BACKGROUND KARTU / SECTION", beserta alasannya --
+ * halaman auth membaca sebagai panel navy yang pekat, bukan sebagai
+ * kartu-kartu bertumpuk.
+ *
+ * Aturan itu kalah dari blok di atas, bukan salah. Specificity-nya sama
+ * (0,2,1) dan file ini dimuat belakangan lewat <link> di
+ * panels::styles.after, jadi yang menang adalah yang belakangan. Terukur
+ * di /user/signin:
+ *
+ *   .fi-section dengan panel-glass.css  ->  rgba(12,12,15,0.7) + gradien
+ *   .fi-section tanpa  panel-glass.css  ->  rgba(0,0,0,0)
+ *
+ * Pengecualian ini menulis ulang urutan itu, jadi pemilik aturan
+ * "auth tanpa kartu" tetap User.css. File ini cuma mundur satu langkah.
+ *
+ * Cakupannya .fi-simple-layout, bukan .fi-page, karena hanya simple layout
+ * yang memakai kartu dan section itu. Halaman auth Welcome dan Admin punya
+ * CSS sendiri yang tidak punya aturan transparan, jadi .fi-section di
+ * sana tetap berkaca seperti sebelumnya.
+ *
+ * Modal TIDAK ikut dikecualikan. Ketiga modal legal -- User Agreement,
+ * Privacy Policy, Application Policy -- adalah satu .fi-modal-window, dan
+ * markup-nya ada DI DALAM .fi-section auth, bukan di body seperti
+ * teleport. Jadi pengecualian ini sengaja memakai .fi-section dan bukan
+ * .fi-modal-window: yang dilepas latarnya section tempat form berada,
+ * sementara modalnya tetap berkaca seperti modal lain. */
+body.fi-panel-user .fi-simple-layout .fi-section,
+body.fi-panel-user .fi-simple-layout .fi-simple-main {
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+
+    /* Border wajib ikut dilepas, bukan cuma background dan shadow.
+     * Aturan --fi-glass-ring di blok "Permukaan kartu" di atas menambah
+     * border 1px, dan specificity-nya (0,2,1) lebih rendah dari
+     * pengecualian ini (0,3,1), tapi file ini memuat blok itu LEBIH DAHULU
+     * sehingga tanpa !important aturan itu yang menang. Kalau border ini
+     * tidak dilepas, yang tersisa di layar hanyalah garis
+     * 0.8px rgba(255,255,255,0.12) di keempat sisi: kartu dan section
+     * sudah tidak berwarna, tapi kotakunya masih terlihat. Itu persis
+     * yang dilaporkan.
+     *
+     * Dicatat karena mudah terlewat: menghapus background tanpa ikut
+     * menghapus border menghasilkan sesuatu yang lebih buruk daripada
+     * tidak menghapus apa pun -- hanya garis acak yang tersisa, tanpa
+     * bentuk kartu yang mengisarkannya. */
+    border: none !important;
+
+    --tw-ring-color: transparent;
+    --tw-ring-shadow: 0 0 #0000;
+    --tw-ring-offset-shadow: 0 0 #0000;
+}
+
 /* Cincin bawaan Filament pada kartu katalog digambar dengan utility
    terpisah (ring-1 + dark:ring-white/10). Kacanya sekarang memakai
    --fi-glass-ring, jadi cincin lama harus dilepas supaya tidak
