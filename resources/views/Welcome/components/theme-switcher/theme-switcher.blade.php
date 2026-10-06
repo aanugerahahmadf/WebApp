@@ -45,13 +45,22 @@
 
             <x-filament::dropdown.list>
                 @foreach ($themeOptions as $theme => $icon)
-                    <x-filament::dropdown.list.item
-                        :icon="$icon"
-                        x-on:click="(theme = '{{ $theme }}') && close()"
-                        x-bind:class="theme === '{{ $theme }}' ? 'bg-gray-50 dark:bg-white/5 font-bold text-[#fbbf24]' : ''"
-                    >
-                        {{ ['light' => __('Light'), 'dark' => __('Dark'), 'system' => __('System')][$theme] }}
-                    </x-filament::dropdown.list.item>
+                    <li class="list-none">
+                        <button
+                            type="button"
+                            x-on:click="(theme = '{{ $theme }}') && close()"
+                            @class([
+                                'group flex items-center w-full gap-3 whitespace-nowrap rounded-md p-2 text-sm outline-none transition-all',
+                                'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5',
+                            ])
+                        >
+                            <x-filament::icon :icon="$icon" class="h-5 w-5 shrink-0" />
+
+                            <span class="truncate flex-1 text-start" x-bind:class="theme === '{{ $theme }}' ? 'text-[#fbbf24] font-bold' : ''">
+                                {{ ['light' => __('Light'), 'dark' => __('Dark'), 'system' => __('System')][$theme] }}
+                            </span>
+                        </button>
+                    </li>
                 @endforeach
             </x-filament::dropdown.list>
         </x-filament::dropdown>

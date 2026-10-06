@@ -215,30 +215,8 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     background-color: transparent !important;
 }
 
-/* Tema aktif (pilih Tema di topbar): teks & ikon ikut kuning,
- * serasi dengan Home dan Language yang sedang aktif. Kondisi
- * aktif ditandai class tematik bg-gray-50 yang hanya diset lewat
- * x-bind pada item yang dipilih; item lain tidak punya kelas itu,
- * jadi tidak ada bahaya terkena hover. */
-.fi-dropdown-list-item.bg-gray-50 {
-    color: #fbbf24 !important;
-    font-weight: 700;
-}
-
-.fi-dropdown-list-item.bg-gray-50 svg {
-    color: #fbbf24 !important;
-    fill: #fbbf24 !important;
-}
-
-/* Label di dalam komponen dropdown item.span Filament membawa patern
-      text-gray-700 dark:text-gray-200 sendiri, sama seperti ikonnya membawa
-      text-gray-400. Jadi item kuning saja tidak cukup untuk membuat
-      tulisan-tulisan itu berubah warna; span labelnya perlu dikerjakan
-      terpisah agar warna kuningnya menetas ke tulisan di dalam link/item. */
-.fi-dropdown-list-item.bg-gray-50 .fi-dropdown-list-item-label {
-    color: #fbbf24 !important;
-    font-weight: 700;
-}
+/* Tema aktif dikerjakan langsung dari Blade-nya, jadi tidak ada hook CSS
+   khusus di sini. */
 
 /* --- Pratinjau kamera / video pada ponsel --------------------------- */
 /* Papan kamera dan video di modal viewfinder (take-picture) memakai
