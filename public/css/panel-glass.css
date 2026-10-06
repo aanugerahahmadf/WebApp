@@ -218,6 +218,20 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
 /* Tema aktif dikerjakan langsung dari Blade-nya, jadi tidak ada hook CSS
    khusus di sini. */
 
+/* Label di kartu statistik. Di Shared.css, label stat itu dibuat
+   dengan warna rgb(203 213 225) (abu sangat terang) -- cocok untuk
+   teks di latar gelap, tapi dipakai tanpa kondisi terang/gelap. Di
+   mode terang, kartunya putih, jadi label itu tak terbaca. Aturan
+   di sini menaruh abu gelap untuk light mode dan mengembalikan
+   warna aslinya di dark mode lewat selektor .dark. */
+.home-stat-card .fi-wi-stats-overview-stat-label {
+    color: rgb(71 85 105) !important;
+}
+
+.dark .home-stat-card .fi-wi-stats-overview-stat-label {
+    color: rgb(203 213 225) !important;
+}
+
 /* --- Pratinjau kamera / video pada ponsel --------------------------- */
 /* Papan kamera dan video di modal viewfinder (take-picture) memakai
  * aspect-video (16:9), jadi di layar potret lebar penuh tinggi layar
