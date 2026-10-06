@@ -230,6 +230,16 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     fill: #fbbf24 !important;
 }
 
+/* Label di dalam komponen dropdown item.span Filament membawa patern
+      text-gray-700 dark:text-gray-200 sendiri, sama seperti ikonnya membawa
+      text-gray-400. Jadi item kuning saja tidak cukup untuk membuat
+      tulisan-tulisan itu berubah warna; span labelnya perlu dikerjakan
+      terpisah agar warna kuningnya menetas ke tulisan di dalam link/item. */
+.fi-dropdown-list-item.bg-gray-50 .fi-dropdown-list-item-label {
+    color: #fbbf24 !important;
+    font-weight: 700;
+}
+
 /* --- Pratinjau kamera / video pada ponsel --------------------------- */
 /* Papan kamera dan video di modal viewfinder (take-picture) memakai
  * aspect-video (16:9), jadi di layar potret lebar penuh tinggi layar
