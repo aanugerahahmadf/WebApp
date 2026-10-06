@@ -14,26 +14,11 @@ class StatsOverview extends BaseWidget
 
     protected int|string|array $columnSpan = 'full';
 
-    public function getExtraAttributes(): array
-    {
-        return [
-            'class' => implode(' ', [
-                'user-home-stats',
-                '[&_.fi-wi-stats-overview-stats-ctn]:!grid',
-                '[&_.fi-wi-stats-overview-stats-ctn]:!grid-cols-2',
-                '[&_.fi-wi-stats-overview-stats-ctn]:!gap-3',
-                '[&_.fi-wi-stats-overview-stat]:!p-4',
-                '[&_.fi-wi-stats-overview-stat-label]:!text-sm',
-                '[&_.fi-wi-stats-overview-stat-value]:!text-2xl',
-                '[&_.fi-wi-stats-overview-stat-description]:!text-xs',
-                'md:[&_.fi-wi-stats-overview-stats-ctn]:!gap-4',
-            ]),
-        ];
-    }
+    protected static string $view = 'Shared.widgets.stats-overview';
 
     protected function getColumns(): int
     {
-        return 2;
+        return count($this->getStats());
     }
 
     protected function getStats(): array

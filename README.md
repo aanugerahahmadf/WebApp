@@ -300,7 +300,7 @@ curl -s -H "X-Shell: android" http://127.0.0.1:8000/welcome/home | grep 'slug:'
 curl -s -H "X-Shell: desktop" http://127.0.0.1:8000/welcome/home | grep 'slug:'
 ```
 
-Baca [docs/PLATFORM_TESTING.md](docs/PLATFORM_TESTING.md),
+Baca [docs/platform-testing/platform-testing.md](docs/platform-testing/platform-testing.md),
 [docs/command-guide.md](docs/command-guide/command-guide.md), dan
 [docs/command-decision-tree.md](docs/command-decision-tree/command-decision-tree.md)
 sebelum menyiapkan target native.
@@ -557,7 +557,7 @@ Workflow CI sudah tersedia di `.github/workflows/`: `ci.yml`,
 
 | Dokumen | Deskripsi |
 |---|---|
-| [docs/PLATFORM_TESTING.md](docs/PLATFORM_TESTING.md) | Cara menguji 8 target runtime, paksa platform via header |
+| [docs/platform-testing/platform-testing.md](docs/platform-testing/platform-testing.md) | Cara menguji 8 target runtime, paksa platform via header |
 | [docs/command-guide.md](docs/command-guide/command-guide.md) | Perintah, prasyarat, pemecahan masalah |
 | [docs/command-decision-tree.md](docs/command-decision-tree/command-decision-tree.md) | Pilih mode web, mobile, atau desktop |
 | [docs/environment-configuration.md](docs/environment-configuration/environment-configuration.md) | Pelapisan environment dan file `.env.*` |

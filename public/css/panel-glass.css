@@ -139,7 +139,10 @@ body.fi-panel-user .fi-wi-stats-overview-stat,
 body.fi-panel-admin .fi-wi-stats-overview-stat,
 body.fi-panel-welcome .catalog-card,
 body.fi-panel-user .catalog-card,
-body.fi-panel-admin .catalog-card {
+body.fi-panel-admin .catalog-card,
+body.fi-panel-welcome .fi-glass-panel,
+body.fi-panel-user .fi-glass-panel,
+body.fi-panel-admin .fi-glass-panel {
     background-color: var(--fi-glass-bg) !important;
 
     /* Gradasi warna dilepas: blur tanpa cucian warna, latar
@@ -343,18 +346,18 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
    tidak topbar dan sidebar pekat sementara modal tetap berkaca, dan panel
    di tengah layar jadi satu-satunya permukaan transparan. */
 @media (prefers-reduced-transparency: reduce) {
-    body.fi-panel-welcome :is(.fi-glass-modal, .fi-modal-window, .fi-section, .fi-wi-stats-overview-stat, .catalog-card),
-    body.fi-panel-user :is(.fi-glass-modal, .fi-modal-window, .fi-section, .fi-wi-stats-overview-stat, .catalog-card),
-    body.fi-panel-admin :is(.fi-glass-modal, .fi-modal-window, .fi-section, .fi-wi-stats-overview-stat, .catalog-card) {
+    body.fi-panel-welcome :is(.fi-glass-modal, .fi-modal-window, .fi-section, .fi-wi-stats-overview-stat, .catalog-card, .fi-glass-panel),
+    body.fi-panel-user :is(.fi-glass-modal, .fi-modal-window, .fi-section, .fi-wi-stats-overview-stat, .catalog-card, .fi-glass-panel),
+    body.fi-panel-admin :is(.fi-glass-modal, .fi-modal-window, .fi-section, .fi-wi-stats-overview-stat, .catalog-card, .fi-glass-panel) {
         background-color: rgb(255 255 255 / 0.98) !important;
         background-image: none !important;
         -webkit-backdrop-filter: none !important;
         backdrop-filter: none !important;
     }
 
-    .dark body.fi-panel-welcome :is(.fi-glass-modal, .fi-modal-window, .fi-section, .fi-wi-stats-overview-stat, .catalog-card),
-    .dark body.fi-panel-user :is(.fi-glass-modal, .fi-modal-window, .fi-section, .fi-wi-stats-overview-stat, .catalog-card),
-    .dark body.fi-panel-admin :is(.fi-glass-modal, .fi-modal-window, .fi-section, .fi-wi-stats-overview-stat, .catalog-card) {
+    .dark body.fi-panel-welcome :is(.fi-glass-modal, .fi-modal-window, .fi-section, .fi-wi-stats-overview-stat, .catalog-card, .fi-glass-panel),
+    .dark body.fi-panel-user :is(.fi-glass-modal, .fi-modal-window, .fi-section, .fi-wi-stats-overview-stat, .catalog-card, .fi-glass-panel),
+    .dark body.fi-panel-admin :is(.fi-glass-modal, .fi-modal-window, .fi-section, .fi-wi-stats-overview-stat, .catalog-card, .fi-glass-panel) {
         background-color: rgb(9 9 11 / 0.98) !important;
     }
 }

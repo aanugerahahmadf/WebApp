@@ -25,7 +25,14 @@
     x-transition:leave-end="opacity-0"
     {{
         $attributes->class([
-            'fi-global-search-results-ctn absolute inset-x-4 z-10 mt-2 max-h-96 overflow-auto rounded-lg bg-white shadow-lg ring-1 ring-gray-950/5 transition dark:bg-gray-900 dark:ring-white/10 sm:inset-x-auto sm:end-0 sm:w-screen sm:max-w-sm',
+            'fi-global-search-results-ctn absolute inset-x-4 z-10 mt-2 max-h-96 overflow-auto rounded-lg
+             bg-[var(--fi-glass-bg)]
+             backdrop-blur-[24px]
+             saturate-180
+             border border-[var(--fi-glass-ring)]
+             shadow-[inset_0_1px_0_rgb(255,255,255,0.35),0_1px_2px_rgb(0,0,0,0.05),0_12px_28px_-16px_rgb(0,0,0,0.35)]
+             transition dark:border-[var(--fi-glass-ring)]
+             sm:inset-x-auto sm:end-0 sm:w-screen sm:max-w-sm',
             '[transform:translateZ(0)]',
         ])
     }}

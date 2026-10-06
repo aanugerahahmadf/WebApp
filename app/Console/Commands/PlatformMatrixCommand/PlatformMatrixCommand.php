@@ -27,7 +27,7 @@ class PlatformMatrixCommand extends Command
             ];
         }
 
-        $this->info('8-target runtime matrix (see docs/PLATFORM_TESTING.md for test steps)');
+        $this->info('8-target runtime matrix (see docs/platform-testing/platform-testing.md for test steps)');
         $this->newLine();
 
         $this->table(

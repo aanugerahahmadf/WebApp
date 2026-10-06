@@ -23,12 +23,14 @@
     x-show="isOpen"
     x-transition:enter-start="opacity-0"
     x-transition:leave-end="opacity-0"
-    {{
-        $attributes->class([
-            'fi-global-search-results-ctn absolute inset-x-4 z-10 mt-2 max-h-96 overflow-auto rounded-lg bg-white shadow-lg ring-1 ring-gray-950/5 transition dark:bg-gray-900 dark:ring-white/10 sm:inset-x-auto sm:end-0 sm:w-screen sm:max-w-sm',
-            '[transform:translateZ(0)]',
-        ])
-    }}
+    class="fi-global-search-results-ctn absolute inset-x-4 z-10 mt-2 max-h-96 overflow-auto rounded-lg transition sm:inset-x-auto sm:end-0 sm:w-screen sm:max-w-sm [transform:translateZ(0)]"
+    style="
+        background-color: var(--fi-glass-bg);
+        -webkit-backdrop-filter: var(--fi-glass-blur);
+        backdrop-filter: var(--fi-glass-blur);
+        border: 1px solid var(--fi-glass-ring);
+        box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 1px 2px rgb(0 0 0 / 0.05), 0 12px 28px -16px rgb(0 0 0 / 0.35);
+    "
 >
     {{-- Loading state — tampil saat Livewire sedang fetch --}}
     <div

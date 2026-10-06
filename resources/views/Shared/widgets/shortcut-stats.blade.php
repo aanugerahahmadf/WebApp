@@ -6,41 +6,17 @@
     $hasHeading = filled($heading);
     $hasDescription = filled($description);
 
-    // Slide di SEMUA permukaan: aplikasi shell Android/iOS, browser mobile
-    // Android/iOS, tablet, macOS, desktop, dan desktop app.
-    //
-    // Yang berbeda antarpermukaan hanya JUMLAH KARTU PER HALAMAN, bukan
-    // mekanismenya:
-    //
-    //   HP (mobile shell + browser mobile) -> 1 kartu per halaman. Empat kolom
-    //     di lebar 400px cuma berdesakan dan teksnya terpotong.
-    //   Sisanya (tablet, macOS, desktop, desktop app) -> 2 kartu per halaman.
-    //     Bukan 1: di lebar 1600-1920px satu kartu akan selebar ~1800px,
-    //     jadi isinya jadi satu baris raksasa dan justru lebih buruk dari
-    //     grid. Dua per halaman menjaga ukuran kartu seperti yang biasa
-    //     terlihat, dan row tetap bisa digeser.
-    //
-    // AppPlatform::isAnyMobile() sudah mencakup mobile shell + browser
-    // mobile, jadi tidak perlu UA sniffing sendiri di sini.
-    $isPhone = AppPlatform::isAnyMobile();
+    // SEMUA platform (mobile, tablet, desktop, desktop app) pakai
+    // 1 kartu per halaman + carousel swipe. Sama persis seperti mobile app.
+    $isPhone = true; // selalu true -> 1 kartu per halaman
 
     $stats = $this->getCachedStats();
 
-    // Lebar satu kartu, ditulis sebagai custom property supaya aturan
-    // `flex: 0 0 ...` di Shared.css cukup punya SATU bentuk untuk kedua mode
-    // (lihat blok CARA MEMBAWA POSISI KE TITIK-TITIKNYA di bawah).
-    //
-    // `calc(50% - 0.375rem)` bukan `50%`: gap flex 0.75rem dihitung dua kali
-    // kalau kartu selebar 50% penuh, sehingga halaman kedua bergeser 0.75rem
-    // dan tidak pernah pas di titik snap. Setengah gap membuat dua kartu
-    // memenuhi persis satu lebar track.
-    $cardBasis = $isPhone
-        ? '100%'
-        : 'calc(50% - 0.375rem)';
+    // Lebar kartu selalu 100% (1 per halaman)
+    $cardBasis = '100%';
 
-    // Satu titik per HALAMAN, bukan per kartu. Di HP 4 kartu = 4 halaman,
-    // di desktop 4 kartu = 2 halaman.
-    $pageCount = max(1, (int) ceil(count($stats) / ($isPhone ? 1 : 2)));
+    // 1 halaman = 1 kartu, jadi pageCount = jumlah kartu (4)
+    $pageCount = count($stats);
 @endphp
 
 <x-filament-widgets::widget class="fi-wi-stats-overview user-home-shortcuts grid gap-y-4">

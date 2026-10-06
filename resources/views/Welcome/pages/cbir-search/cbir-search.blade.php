@@ -1,5 +1,5 @@
 <x-filament-panels::page>
-    <div class="space-y-4">
+    <div class="fi-glass-panel space-y-4">
         {{ $this->form }}
     </div>
     <x-filament-actions::modals />

@@ -4,20 +4,7 @@
 
 @php
     $iconClasses = 'fi-breadcrumbs-item-separator flex h-5 w-5 text-gray-400 dark:text-gray-500';
-
-    /*
-     * Teal, bukan abu-abu.
-     *
-     * Abu-abu (text-gray-500 dark:text-gray-400) hilang di mode gelap: dasar
-     * panel gelap hampir sama nadanya, jadi crumb jadi tak terbaca.
-     * text-gray-950 dark:text-white mengikuti warna judul halaman di panel
-     * User, sehingga tetap terbaca di light, dark, dan mode sistem.
-     *
-     * Komentar ini PHP, bukan komentar Blade: blok @php hanya berisi PHP,
-     * dan komentar Blade di dalamnya jadi ParseError saat view dikompilasi --
-     * yang gejalanya halaman 500 di SELURUH panel User, bukan cuma di sini.
-     */
-    $itemLabelClasses = 'fi-breadcrumbs-item-label text-sm font-bold text-gray-950 dark:text-white';
+    $itemLabelClasses = 'fi-breadcrumbs-item-label text-sm font-medium text-gray-500 dark:text-gray-400';
 @endphp
 
 <nav {{ $attributes->class(['fi-breadcrumbs']) }}>

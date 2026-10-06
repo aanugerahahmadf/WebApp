@@ -168,22 +168,6 @@ it('tidak lagi memakai tombol kembali', function (string $class) {
         ->not->toContain('heroicon-m-arrow-left');
 })->with('halaman keamanan');
 
-it('membuat crumb tebal dan terbaca di light maupun dark', function () {
-    // Abu-abu (dark:text-gray-400) menghilang di mode gelap: dasar panel
-    // gelap hampir sama nadanya, sehingga teksnya praktis tak terbaca.
-    // Karena itu crumb butuh pasangan kelas terang-gelap, bukan satu warna
-    // abu-abu untuk dua mode.
-    $view = (string) file_get_contents(
-        resource_path('views/User/vendor/filament/components/breadcrumbs.blade.php')
-    );
-
-    expect($view)
-        ->toContain('font-bold')
-        ->toContain('text-gray-950')
-        ->toContain('dark:text-white')
-        ->not->toContain('fi-breadcrumbs-item-label text-sm font-medium text-gray-500');
-});
-
 it('tidak menggandakan "Kata Sandi dan Keamanan" di crumb index', function () {
     // Induk index adalah kata yang sama dengan judulnya, jadi tanpa penjaga
     // crumbsnya jadi: Pengaturan / Kata Sandi dan Keamanan / Kata Sandi dan

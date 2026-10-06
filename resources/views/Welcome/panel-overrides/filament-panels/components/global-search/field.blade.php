@@ -13,12 +13,14 @@
         </label>
 
         {{-- Global Search wrapper: kaca 70% + blur 24px + border --}}
-        <div class="fi-input-wrp flex items-center rounded-lg
-            bg-[var(--fi-glass-bg)]
-            backdrop-blur-[24px]
-            saturate-180
-            border border-[var(--fi-glass-ring)]
-            shadow-[inset_0_1px_0_rgb(255,255,255,0.35),0_1px_2px_rgb(0,0,0,0.05),0_12px_28px_-16px_rgb(0,0,0,0.35)]">
+        <div class="fi-input-wrp flex items-center rounded-lg"
+            style="
+                background-color: var(--fi-glass-bg);
+                -webkit-backdrop-filter: var(--fi-glass-blur);
+                backdrop-filter: var(--fi-glass-blur);
+                border: 1px solid var(--fi-glass-ring);
+                box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 1px 2px rgb(0 0 0 / 0.05), 0 12px 28px -16px rgb(0 0 0 / 0.35);
+            ">
             {{-- Prefix icon --}}
             <div class="flex items-center ps-3 text-gray-400 dark:text-gray-500 shrink-0">
                 <x-filament::icon
