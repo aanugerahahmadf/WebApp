@@ -61,7 +61,7 @@
                     <x-filament::dropdown.list.item
                         :icon="$icon"
                         x-on:click="(theme = '{{ $theme }}') && close()"
-                        x-bind:class="theme === '{{ $theme }}' ? 'fi-active bg-gray-50 dark:bg-white/5' : ''"
+                        x-bind:class="theme === '{{ $theme }}' ? 'bg-gray-50 dark:bg-white/5 font-bold text-[#fbbf24]' : ''"
                     >
                         {{ __("filament-panels::layout.actions.theme_switcher.{$theme}.label") }}
                     </x-filament::dropdown.list.item>

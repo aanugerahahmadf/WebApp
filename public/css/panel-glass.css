@@ -215,6 +215,21 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     background-color: transparent !important;
 }
 
+/* Tema aktif (pilih Tema di topbar): teks & ikon ikut kuning,
+ * serasi dengan Home dan Language yang sedang aktif. Kondisi
+ * aktif ditandai class tematik bg-gray-50 yang hanya diset lewat
+ * x-bind pada item yang dipilih; item lain tidak punya kelas itu,
+ * jadi tidak ada bahaya terkena hover. */
+.fi-dropdown-list-item.bg-gray-50 {
+    color: #fbbf24 !important;
+    font-weight: 700;
+}
+
+.fi-dropdown-list-item.bg-gray-50 svg {
+    color: #fbbf24 !important;
+    fill: #fbbf24 !important;
+}
+
 /* --- Pratinjau kamera / video pada ponsel --------------------------- */
 /* Papan kamera dan video di modal viewfinder (take-picture) memakai
  * aspect-video (16:9), jadi di layar potret lebar penuh tinggi layar
