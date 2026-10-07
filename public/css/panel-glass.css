@@ -282,6 +282,29 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     backdrop-filter: none !important;
 } */
 
+/* --- Tombol pemicu di Top Navigation ---------------------------------
+   Tombol pemicu panel switcher di topnav (tema dan bahasa) memakai
+   utility hover Filament hover:bg-gray-50 dark:hover:bg-white/5, yang
+   di Light berupa abu opaque dan di Night putih 5% -- keduanya tidak
+   serasi dengan kotak item. Disamakan ke kotak yang sama. */
+.fi-panel-welcome .fi-theme-switcher-btn:hover,
+.fi-panel-welcome .fi-theme-switcher-btn:focus-visible,
+.fi-panel-welcome #filament-language-switcher:hover,
+.fi-panel-welcome #filament-language-switcher:focus-visible,
+.fi-panel-user .fi-theme-switcher-btn:hover,
+.fi-panel-user .fi-theme-switcher-btn:focus-visible,
+.fi-panel-user #filament-language-switcher:hover,
+.fi-panel-user #filament-language-switcher:focus-visible,
+.fi-panel-admin .fi-theme-switcher-btn:hover,
+.fi-panel-admin .fi-theme-switcher-btn:focus-visible,
+.fi-panel-admin #filament-language-switcher:hover,
+.fi-panel-admin #filament-language-switcher:focus-visible {
+    background-color: rgb(255 255 255 / 0.30) !important;
+    background-image: linear-gradient(rgb(255 255 255 / 0.10), rgb(255 255 255 / 0.10)) !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
 /* --- Kotak pilihan dan kotak klik di Sidebar dan Top Navigation ------
    Dua keadaan sama-sama berkotak, dan warnanya sama:
 
