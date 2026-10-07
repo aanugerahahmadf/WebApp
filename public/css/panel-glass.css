@@ -282,43 +282,8 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     backdrop-filter: none !important;
 } */
 
-/* Item aktif di sidebar -- kotak rounded yang menempel di Item "Home".
-
-   Dua keadaan dibedakan, sesuai referensi:
-
-     diam    kotak gold  -- bg + gold tint dari token kaca
-     hover   kotak putih -- lapisan putih tipis di atasnya
-
-   Kotak gold memakai token yang sama dengan sidebar, jadi warnanya
-   otomatis ikut mode (gold 40% di Light, 20% di Night) dan ikut
-   berubah kalau nilai kacanya diganti. Yang dipakai sebelumnya
-   adalah rgb(243 244 246) opaque, itu bg-gray-100 milik Filament,
-   dan opacitynya menutupi gold di belakang sidebar sepenuhnya. */
-.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
-.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-grouped-dropdown-trigger {
-    background-color: var(--fi-glass-bg) !important;
-    background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
-    border: 0 !important;
-    box-shadow: none !important;
-}
-
-/* Hover item sidebar: TANPA kotak.
-   Hanya item yang sedang aktif yang punya kotak gold. Kalau hover
-   juga berkotak, akan terlihat dua kotak sekaligus -- item aktif
-   dan item yang hanya disorot kursor -- dan keduanya terbaca
-   sama aktifnya.
-
-   :not(.fi-active) dipakai karena utility hover Filament
-   (hover:bg-gray-100 / dark:hover:bg-white/5) tetap berlaku pada
-   item aktif, dan tanpa itu kotak item aktif akan hilang begitu
-   kursor lewat. */
-.fi-sidebar .fi-sidebar-item-button:not(.fi-active):hover,
-.fi-sidebar .fi-sidebar-item-button:not(.fi-active):focus-visible {
-    background-color: transparent !important;
-    background-image: none !important;
-    border: 0 !important;
-    box-shadow: none !important;
-}
+/* Latar item sidebar (aktif maupun hover) memakai bawaan Filament:
+   bg-gray-100 dark:bg-white/5. Tidak ada override di sini. */
 
 /* --- Panel dropdown: tepi seragam dengan panel CBIR ------------------
    Panel dropdown milik Filament (fi-dropdown-panel) masih memakai
@@ -402,67 +367,12 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
    yang pernah ada di sini dihapus supaya tidak menumpuk dua latar
    dan tidak muncul kotak gelap bercor gold. */
 
-/* --- Kotak item di dropdown Top Navigation dan panel switcher ----------
-
-   Dua kelompok, dibedakan karena punya keadaan yang berbeda:
-
-     .fi-dropdown-list-item  punya item aktif (fi-color-custom, yaitu
-                             halaman yang sedang dibuka). Hanya item
-                             itu yang berkotak; hover item lain
-                             tanpa kotak, supaya tidak terlihat dua
-                             kotak sekaligus seperti di sidebar.
-
-     panel switcher & CBIR   tidak punya konsep item aktif -- isinya
-                             tombol aksi, bukan tautan navigasi.
-                             Hover tetap berkotak gold di sini,
-                             memakai token --fi-glass-bg dan
-                             --fi-glass-tint yang sama dengan sidebar
-                             supaya warnanya serasi.
-
-   Yang sebelumnya dipakai di utility Filament sendiri:
-     .fi-dropdown-list-item  hover:bg-custom-50 / fi-color-custom
-                             (bg-custom-50 = rgb(254 252 232) opaque)
+/* Latar item dropdown Top Navigation, item panel switcher (tema,
+   bahasa, CBIR), dan hover semua pakai bawaan Filament:
+     .fi-dropdown-list-item  hover:bg-custom-50 dark:hover:bg-custom-400/10
      panel switcher & CBIR   hover:bg-gray-50 dark:hover:bg-white/5
-   Yang opaque menutupi gold di belakang panel, jadi kotaknya terbaca
-   sebagai blok putih/krem solid, bukan lapisan di atas kaca. */
-.fi-panel-welcome .fi-topbar .fi-dropdown-list-item.fi-color-custom,
-.fi-panel-welcome .x-cam-menu button:hover,
-.fi-panel-welcome .x-cam-menu button:focus-visible,
-.fi-panel-welcome .fi-dropdown-panel button:hover,
-.fi-panel-welcome .fi-dropdown-panel button:focus-visible,
-.fi-panel-user .fi-topbar .fi-dropdown-list-item.fi-color-custom,
-.fi-panel-user .x-cam-menu button:hover,
-.fi-panel-user .x-cam-menu button:focus-visible,
-.fi-panel-user .fi-dropdown-panel button:hover,
-.fi-panel-user .fi-dropdown-panel button:focus-visible,
-.fi-panel-admin .fi-topbar .fi-dropdown-list-item.fi-color-custom,
-.fi-panel-admin .x-cam-menu button:hover,
-.fi-panel-admin .x-cam-menu button:focus-visible,
-.fi-panel-admin .fi-dropdown-panel button:hover,
-.fi-panel-admin .fi-dropdown-panel button:focus-visible {
-    background-color: var(--fi-glass-bg) !important;
-    background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
-    border: 0 !important;
-    box-shadow: none !important;
-}
 
-/* Item dropdown Top Navigation yang bukan item aktif: hover tanpa kotak.
-   Tanpa ini, utility hover Filament (hover:bg-custom-50) akan memberi
-   kotak krem opaque pada item yang hanya disorot kursor, sehingga
-   terlihat dua kotak sekaligus bersama item aktif yang sudah berkotak.
-   :not(.fi-color-custom) dipakai karena Filament menandai item aktif
-   dengan kelas itu lewat atribut fi-color-primary/gray. */
-.fi-panel-welcome .fi-topbar .fi-dropdown-list-item:not(.fi-color-custom):hover,
-.fi-panel-welcome .fi-topbar .fi-dropdown-list-item:not(.fi-color-custom):focus-visible,
-.fi-panel-user .fi-topbar .fi-dropdown-list-item:not(.fi-color-custom):hover,
-.fi-panel-user .fi-topbar .fi-dropdown-list-item:not(.fi-color-custom):focus-visible,
-.fi-panel-admin .fi-topbar .fi-dropdown-list-item:not(.fi-color-custom):hover,
-.fi-panel-admin .fi-topbar .fi-dropdown-list-item:not(.fi-color-custom):focus-visible {
-    background-color: transparent !important;
-    background-image: none !important;
-    border: 0 !important;
-    box-shadow: none !important;
-}
+   Tidak ada override di sini. */
 
 /* Baris grup Top Navigation, yaitu .fi-topbar-item-button yang memuat
    label grup dan chevron up/down (fi-topbar-group-toggle-icon). Hover
