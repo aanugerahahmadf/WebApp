@@ -31,11 +31,11 @@ class ManageUsers extends ManageRecords
             Actions\ExportAction::make()
                 ->exporter(UserExporter::class)
                 ->label(__('Ekspor Data'))
-                ->icon('heroicon-o-arrow-down-tray')
+                ->icon('heroicon-s-arrow-down-tray')
                 ->color('success'),
             Actions\CreateAction::make()
                 ->label(__('Tambah Pengguna'))
-                ->icon('heroicon-o-plus')
+                ->icon('heroicon-s-plus')
                 ->successNotification(
                     Notification::make()
                         ->success()

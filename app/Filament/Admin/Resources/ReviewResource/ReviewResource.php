@@ -24,7 +24,7 @@ class ReviewResource extends Resource
 
     protected static ?string $slug = 'reviews';
 
-    protected static ?string $navigationIcon = 'heroicon-o-star';
+    protected static ?string $navigationIcon = 'heroicon-s-star';
 
     protected static ?int $navigationSort = 6;
 
@@ -129,7 +129,7 @@ class ReviewResource extends Resource
                     ->label(__('Pengulas'))
                     ->searchable()
                     ->sortable()
-                    ->icon('heroicon-o-user'),
+                    ->icon('heroicon-s-user'),
                 Tables\Columns\TextColumn::make('item_name')
                     ->label(__('Layanan/Produk'))
                     ->getStateUsing(fn ($record) => $record->package?->name ?? $record->product?->name ?? '-')
@@ -160,7 +160,7 @@ class ReviewResource extends Resource
                     ->dateTime()
                     ->alignment('center')
                     ->sortable()
-                    ->icon('heroicon-o-calendar')
+                    ->icon('heroicon-s-calendar')
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label(__('Terakhir Diperbarui'))

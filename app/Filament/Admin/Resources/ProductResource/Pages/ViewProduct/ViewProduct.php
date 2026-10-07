@@ -31,7 +31,7 @@ class ViewProduct extends ViewRecord
                 ->label(__('Kembali'))
                 ->url(fn () => static::getResource()::getUrl('index'))
                 ->color('gray')->button()
-                ->icon('heroicon-o-arrow-left'),
+                ->icon('heroicon-s-arrow-left'),
 
             Actions\EditAction::make(),
         ];

@@ -31,11 +31,11 @@ class ManageCategories extends ManageRecords
             Actions\ExportAction::make()
                 ->exporter(CategoryExporter::class)
                 ->label(__('Ekspor Data'))
-                ->icon('heroicon-o-arrow-down-tray')
+                ->icon('heroicon-s-arrow-down-tray')
                 ->color('success'),
             Actions\CreateAction::make()
                 ->label(__('Tambah Kategori'))
-                ->icon('heroicon-o-plus')
+                ->icon('heroicon-s-plus')
                 ->successNotification(
                     Notification::make()
                         ->success()

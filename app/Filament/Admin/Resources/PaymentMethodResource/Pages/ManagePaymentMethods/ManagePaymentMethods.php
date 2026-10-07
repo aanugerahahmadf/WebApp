@@ -28,11 +28,11 @@ class ManagePaymentMethods extends ManageRecords
             Actions\ExportAction::make()
                 ->exporter(PaymentMethodExporter::class)
                 ->label(__('Ekspor Data'))
-                ->icon('heroicon-o-arrow-down-tray')
+                ->icon('heroicon-s-arrow-down-tray')
                 ->color('success'),
             Actions\CreateAction::make()
                 ->label(__('Tambah Metode Pembayaran'))
-                ->icon('heroicon-o-plus')
+                ->icon('heroicon-s-plus')
                 ->mutateFormDataUsing(function (array $data): array {
                     if (empty($data['sort_order'])) {
                         $data['sort_order'] = PaymentMethodResource::getModel()::max('sort_order') + 1;

@@ -107,7 +107,7 @@ class ManageProducts extends ManageRecords
         Notification::make()
             ->title(__('Berhasil masuk keranjang'))
             ->success()
-            ->icon('heroicon-o-shopping-cart')
+            ->icon('heroicon-s-shopping-cart')
             ->send();
     }
 

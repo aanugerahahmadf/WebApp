@@ -64,7 +64,7 @@ class ViewOrder extends ViewRecord
         return [
             Actions\Action::make('back')
                 ->label($backLabel)
-                ->icon('heroicon-o-arrow-left')
+                ->icon('heroicon-s-arrow-left')
                 ->color('gray')
                 ->url($backUrl),
 

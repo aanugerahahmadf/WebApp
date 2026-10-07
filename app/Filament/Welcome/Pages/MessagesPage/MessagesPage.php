@@ -27,7 +27,7 @@ class MessagesPage extends Page
 
     protected static string $view = 'Welcome.pages.messages.messages';
 
-    protected static ?string $activeNavigationIcon = 'heroicon-o-chat-bubble-left-right';
+    protected static ?string $activeNavigationIcon = 'heroicon-s-chat-bubble-left-right';
 
     protected static ?int $navigationSort = 1;
 

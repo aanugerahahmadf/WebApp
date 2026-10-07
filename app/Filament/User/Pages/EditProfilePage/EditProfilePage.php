@@ -13,7 +13,7 @@ class EditProfilePage extends Page
 
     protected static string $view = 'User.pages.edit-profile.edit-profile';
 
-    protected static ?string $navigationIcon = 'heroicon-o-user-circle';
+    protected static ?string $navigationIcon = 'heroicon-s-user-circle';
 
     protected static bool $shouldRegisterNavigation = false;
 

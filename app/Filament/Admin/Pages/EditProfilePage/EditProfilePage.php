@@ -17,7 +17,7 @@ class EditProfilePage extends Page
     use HasDynamicBreadcrumbs;
     protected static string $view = 'Admin.pages.edit-profile.edit-profile';
 
-    protected static ?string $navigationIcon = 'heroicon-o-user-circle';
+    protected static ?string $navigationIcon = 'heroicon-s-user-circle';
 
     protected static bool $shouldRegisterNavigation = false;
 

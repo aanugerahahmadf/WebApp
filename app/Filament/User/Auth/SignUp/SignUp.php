@@ -101,7 +101,7 @@ class SignUp extends BaseRegister
             ->schema([
                 // â”€â”€ Foto Profil â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 Section::make(__('Foto Profil'))
-                    ->icon('heroicon-o-camera')
+                    ->icon('heroicon-s-camera')
                     ->description(__('Foto profil Anda. Buka kamera atau pilih dari galeri.'))
                     ->schema([
                         FileUpload::make('avatar_url')
@@ -126,7 +126,7 @@ class SignUp extends BaseRegister
 
                 // â”€â”€ Akun â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 Section::make(__('Akun'))
-                    ->icon('heroicon-o-user-circle')
+                    ->icon('heroicon-s-user-circle')
                     ->description(__('Username, email, dan kata sandi untuk masuk.'))
                     ->schema([
                         TextInput::make('username')
@@ -166,7 +166,7 @@ class SignUp extends BaseRegister
 
                 // â”€â”€ Nama Lengkap â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 Section::make(__('Nama Lengkap'))
-                    ->icon('heroicon-o-identification')
+                    ->icon('heroicon-s-identification')
                     ->description(__('Nama sesuai dokumen identitas Anda.'))
                     ->schema([
                         TextInput::make('first_name')
@@ -195,7 +195,7 @@ class SignUp extends BaseRegister
                             ->label(__('Nama Lengkap'))
                             ->disabled()
                             ->dehydrated(false)
-                            ->prefixIcon('heroicon-o-user')
+                            ->prefixIcon('heroicon-s-user')
                             ->helperText(__('Terisi otomatis dari Nama Depan, Tengah, dan Belakang.'))
                             ->columnSpanFull(),
                     ])
@@ -203,7 +203,7 @@ class SignUp extends BaseRegister
 
                 // â”€â”€ Nomor WhatsApp â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 Section::make(__('Nomor WhatsApp'))
-                    ->icon('heroicon-o-chat-bubble-left-ellipsis')
+                    ->icon('heroicon-s-chat-bubble-left-ellipsis')
                     ->description(__('Untuk notifikasi pembayaran via WhatsApp.'))
                     ->schema([
                         WhatsappField::group(required: true),
@@ -212,7 +212,7 @@ class SignUp extends BaseRegister
 
                 // â”€â”€ Tempat & Tanggal Lahir â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 Section::make(__('Tempat & Tanggal Lahir'))
-                    ->icon('heroicon-o-map-pin')
+                    ->icon('heroicon-s-map-pin')
                     ->schema([
                         BirthPlaceDatePicker::make('birth_place_date')
                             ->label(__('Tempat & Tanggal Lahir'))
@@ -223,7 +223,7 @@ class SignUp extends BaseRegister
 
                 // â”€â”€ Identitas & Dokumen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 Section::make(__('Identitas & Dokumen'))
-                    ->icon('heroicon-o-shield-check')
+                    ->icon('heroicon-s-shield-check')
                     ->description(__('Pilih jenis identitas, lalu scan atau unggah foto dokumen dan selfie.'))
                     ->schema([
                         Select::make('identity_type')
@@ -297,7 +297,7 @@ class SignUp extends BaseRegister
 
                 // â”€â”€ Alamat â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 Section::make(__('Alamat'))
-                    ->icon('heroicon-o-home')
+                    ->icon('heroicon-s-home')
                     ->schema([
                         Select::make('country')
                             ->label(__('Negara'))
@@ -584,7 +584,7 @@ class SignUp extends BaseRegister
 
                 // â”€â”€ Data KYC â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 Section::make(__('Data KYC'))
-                    ->icon('heroicon-o-user-group')
+                    ->icon('heroicon-s-user-group')
                     ->description(__('Lengkapi data berikut sesuai dokumen. Dipakai verifikasi identitas.'))
                     ->schema([
                         Select::make('gender')
@@ -675,7 +675,7 @@ class SignUp extends BaseRegister
 
                 // â”€â”€ Verifikasi Wajah â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 Section::make(__('Verifikasi Wajah'))
-                    ->icon('heroicon-o-face-smile')
+                    ->icon('heroicon-s-face-smile')
                     ->description(__('Scan wajah Anda untuk verifikasi identitas.')
                         .' '.__('Minimal unggah foto KTP/dokumen agar wajah dapat dibandingkan.'))
                     ->schema([

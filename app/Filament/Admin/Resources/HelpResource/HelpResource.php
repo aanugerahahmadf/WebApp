@@ -17,7 +17,7 @@ class HelpResource extends Resource
 
     protected static ?string $slug = 'helps';
 
-    protected static ?string $navigationIcon = 'heroicon-o-question-mark-circle';
+    protected static ?string $navigationIcon = 'heroicon-s-question-mark-circle';
 
     public static function getNavigationGroup(): ?string
     {
@@ -131,7 +131,7 @@ class HelpResource extends Resource
                     ->color('primary')
                     ->searchable()
                     ->sortable()
-                    ->icon('heroicon-o-question-mark-circle'),
+                    ->icon('heroicon-s-question-mark-circle'),
                 Tables\Columns\TextColumn::make('subtitle')
                     ->label(__('Sub-judul'))
                     ->searchable()
@@ -141,7 +141,7 @@ class HelpResource extends Resource
                     ->dateTime('d M Y H:i')
                     ->sortable()
                     ->alignment('center')
-                    ->icon('heroicon-o-calendar'),
+                    ->icon('heroicon-s-calendar'),
             ])
             ->filters([])
             ->actions([

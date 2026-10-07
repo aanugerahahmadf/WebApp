@@ -35,7 +35,7 @@ class ListTransactions extends ListRecords
             Actions\ExportAction::make()
                 ->exporter(TransactionExporter::class)
                 ->label(__('Ekspor Data'))
-                ->icon('heroicon-o-arrow-down-tray')
+                ->icon('heroicon-s-arrow-down-tray')
                 ->color('success'),
             Actions\CreateAction::make(),
         ];

@@ -51,7 +51,7 @@ class ProfileCompletionWidget extends StatsOverviewWidget
                 ->description($percentage >= 100
                     ? __('Profil Anda sudah lengkap!')
                     : __('Masih kurang: ') . implode(', ', $missing))
-                ->descriptionIcon($percentage >= 100 ? 'heroicon-o-check-circle' : 'heroicon-o-exclamation-circle')
+                ->descriptionIcon($percentage >= 100 ? 'heroicon-s-check-circle' : 'heroicon-s-exclamation-circle')
                 ->color($color)
                 ->chart([min(100, $percentage), max(0, $percentage)]),
         ];

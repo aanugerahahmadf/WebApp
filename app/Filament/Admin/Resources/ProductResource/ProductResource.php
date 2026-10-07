@@ -112,7 +112,7 @@ class ProductResource extends Resource
                             ->relationship('vendor', 'store_name')
                             ->searchable()
                             ->preload()
-                            ->prefixIcon('heroicon-o-user'),
+                            ->prefixIcon('heroicon-s-user'),
                         Forms\Components\RichEditor::make('description')
                             ->label(__('Deskripsi'))
                             ->columnSpanFull(),
@@ -156,7 +156,7 @@ class ProductResource extends Resource
                     ->label(__('Nama Produk'))
                     ->searchable()
                     ->sortable()
-                    ->icon('heroicon-o-sparkles'),
+                    ->icon('heroicon-s-sparkles'),
                 Tables\Columns\TextColumn::make('category.name')
                     ->label(__('Kategori'))
                     ->badge()
@@ -168,20 +168,20 @@ class ProductResource extends Resource
                     ->sortable()
                     ->badge()
                     ->color('success')
-                    ->icon('heroicon-o-user'),
+                    ->icon('heroicon-s-user'),
                 Tables\Columns\TextColumn::make('price')
                     ->label(__('Harga'))
                     ->money('IDR')
                     ->sortable()
                     ->alignment('end')
-                    ->icon('heroicon-o-banknotes'),
+                    ->icon('heroicon-s-banknotes'),
                 Tables\Columns\TextColumn::make('discount_price')
                     ->label(__('Harga Diskon'))
                     ->money('IDR')
                     ->sortable()
                     ->alignment('end')
                     ->color('success')
-                    ->icon('heroicon-o-tag')
+                    ->icon('heroicon-s-tag')
                     ->toggleable(isToggledHiddenByDefault: false),
                 Tables\Columns\TextColumn::make('stock')
                     ->label(__('Stok'))

@@ -39,11 +39,11 @@ class ListOrders extends ListRecords
             Actions\ExportAction::make()
                 ->exporter(OrderExporter::class)
                 ->label(__('Ekspor Data'))
-                ->icon('heroicon-o-arrow-down-tray')
+                ->icon('heroicon-s-arrow-down-tray')
                 ->color('success'),
             Actions\CreateAction::make()
                 ->label(__('Tambah Order'))
-                ->icon('heroicon-o-plus')
+                ->icon('heroicon-s-plus')
                 ->successNotification(
                     Notification::make()
                         ->success()

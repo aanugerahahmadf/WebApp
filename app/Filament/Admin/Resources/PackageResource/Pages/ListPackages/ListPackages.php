@@ -36,11 +36,11 @@ class ListPackages extends ListRecords
             Actions\ExportAction::make()
                 ->exporter(PackageExporter::class)
                 ->label(__('Ekspor Data'))
-                ->icon('heroicon-o-arrow-down-tray')
+                ->icon('heroicon-s-arrow-down-tray')
                 ->color('success'),
             Actions\CreateAction::make()
                 ->label(__('Tambah Paket'))
-                ->icon('heroicon-o-plus')
+                ->icon('heroicon-s-plus')
                 ->successNotification(
                     Notification::make()
                         ->success()

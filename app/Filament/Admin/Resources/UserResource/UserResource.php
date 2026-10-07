@@ -33,7 +33,7 @@ class UserResource extends Resource
 
     protected static ?string $slug = 'users';
 
-    protected static ?string $navigationIcon = 'heroicon-o-users';
+    protected static ?string $navigationIcon = 'heroicon-s-users';
 
     protected static ?int $navigationSort = 7;
 
@@ -83,7 +83,7 @@ class UserResource extends Resource
                     ->schema([
                         Forms\Components\Section::make(__('Data Pribadi'))
                             ->description(__('Informasi profil detail pengguna.'))
-                            ->icon('heroicon-o-user')
+                            ->icon('heroicon-s-user')
                             ->schema([
                                 Forms\Components\FileUpload::make('avatar_url')
                                     ->label(__('Avatar Profil'))
@@ -97,7 +97,7 @@ class UserResource extends Resource
                                     ->label(__('Nama Lengkap'))
                                     ->required()
                                     ->maxLength(255)
-                                    ->prefixIcon('heroicon-o-user-circle')
+                                    ->prefixIcon('heroicon-s-user-circle')
                                     ->live(onBlur: true)
                                     ->afterStateUpdated(function ($state, Set $set) {
                                         if (blank($state)) {
@@ -129,7 +129,7 @@ class UserResource extends Resource
                                         'Wanita' => __('Wanita'),
                                     ])
                                     ->native(false)
-                                    ->prefixIcon('heroicon-o-variable'),
+                                    ->prefixIcon('heroicon-s-variable'),
                                 Forms\Components\Select::make('religion')
                                     ->label(__('Agama'))
                                     ->options([
@@ -141,7 +141,7 @@ class UserResource extends Resource
                                         'Konghucu' => __('Konghucu'),
                                     ])
                                     ->native(false)
-                                    ->prefixIcon('heroicon-o-variable'),
+                                    ->prefixIcon('heroicon-s-variable'),
                                 Forms\Components\Select::make('marital_status')
                                     ->label(__('Status Pernikahan'))
                                     ->options([
@@ -150,11 +150,11 @@ class UserResource extends Resource
                                         'Cerai' => __('Cerai'),
                                     ])
                                     ->native(false)
-                                    ->prefixIcon('heroicon-o-heart'),
+                                    ->prefixIcon('heroicon-s-heart'),
                                 Forms\Components\TextInput::make('mother_name')
                                     ->label(__('Nama Ibu Kandung'))
                                     ->maxLength(255)
-                                    ->prefixIcon('heroicon-o-user'),
+                                    ->prefixIcon('heroicon-s-user'),
                                 Forms\Components\Select::make('occupation')
                                     ->label(__('Pekerjaan'))
                                     ->options([
@@ -166,7 +166,7 @@ class UserResource extends Resource
                                         'Lainnya' => __('Lainnya'),
                                     ])
                                     ->native(false)
-                                    ->prefixIcon('heroicon-o-briefcase'),
+                                    ->prefixIcon('heroicon-s-briefcase'),
                                 Forms\Components\Select::make('income_range')
                                     ->label(__('Rentang Penghasilan'))
                                     ->options([
@@ -177,7 +177,7 @@ class UserResource extends Resource
                                         '> Rp 50 Juta' => __('> Rp 50 Juta'),
                                     ])
                                     ->native(false)
-                                    ->prefixIcon('heroicon-o-currency-dollar'),
+                                    ->prefixIcon('heroicon-s-currency-dollar'),
                                 Forms\Components\Select::make('source_of_funds')
                                     ->label(__('Sumber Dana'))
                                     ->options([
@@ -188,11 +188,11 @@ class UserResource extends Resource
                                         'Lainnya' => __('Lainnya'),
                                     ])
                                     ->native(false)
-                                    ->prefixIcon('heroicon-o-banknotes'),
+                                    ->prefixIcon('heroicon-s-banknotes'),
                                 Forms\Components\TextInput::make('whatsapp')
                                     ->label(__('Nomor WhatsApp'))
                                     ->tel()
-                                    ->prefixIcon('heroicon-o-chat-bubble-left-ellipsis')
+                                    ->prefixIcon('heroicon-s-chat-bubble-left-ellipsis')
                                     ->maxLength(255)
                                     ->helperText(__('Untuk notifikasi pembayaran. Format: 08xxx atau 628xxx'))
                                     ->columnSpanFull(),
@@ -215,7 +215,7 @@ class UserResource extends Resource
                                     ->rules(fn (Get $get, ?string $operation): array => $operation === 'edit'
                                         ? ['nullable', 'string', 'size:16', Rule::unique('users')->ignore($get('id'))]
                                         : ['nullable', 'string', 'size:16', Rule::unique('users')])
-                                    ->prefixIcon('heroicon-o-identification')
+                                    ->prefixIcon('heroicon-s-identification')
                                     ->columnSpan(1),
                                 Forms\Components\TextInput::make('passport_number')
                                     ->label(__('Nomer Passport'))
@@ -224,7 +224,7 @@ class UserResource extends Resource
                                     ->rules(fn (Get $get, ?string $operation): array => $operation === 'edit'
                                         ? ['nullable', 'string', 'min:6', Rule::unique('users')->ignore($get('id'))]
                                         : ['nullable', 'string', 'min:6', Rule::unique('users')])
-                                    ->prefixIcon('heroicon-o-identification')
+                                    ->prefixIcon('heroicon-s-identification')
                                     ->columnSpan(1),
                                 Forms\Components\TextInput::make('sim_number')
                                     ->label(__('Nomor SIM'))
@@ -233,7 +233,7 @@ class UserResource extends Resource
                                     ->rules(fn (Get $get, ?string $operation): array => $operation === 'edit'
                                         ? ['nullable', 'string', 'min:6', 'max:20', Rule::unique('users')->ignore($get('id'))]
                                         : ['nullable', 'string', 'min:6', 'max:20', Rule::unique('users')])
-                                    ->prefixIcon('heroicon-o-identification')
+                                    ->prefixIcon('heroicon-s-identification')
                                     ->columnSpan(1),
                                 Forms\Components\TextInput::make('npwp_number')
                                     ->label(__('Nomor NPWP'))
@@ -242,22 +242,22 @@ class UserResource extends Resource
                                     ->rules(fn (Get $get, ?string $operation): array => $operation === 'edit'
                                         ? ['nullable', 'string', 'min:15', 'max:20', Rule::unique('users')->ignore($get('id'))]
                                         : ['nullable', 'string', 'min:15', 'max:20', Rule::unique('users')])
-                                    ->prefixIcon('heroicon-o-identification')
+                                    ->prefixIcon('heroicon-s-identification')
                                     ->columnSpan(1),
                                 Forms\Components\TextInput::make('birth_place')
                                     ->label(__('Tempat Lahir'))
                                     ->maxLength(255)
-                                    ->prefixIcon('heroicon-o-map-pin')
+                                    ->prefixIcon('heroicon-s-map-pin')
                                     ->columnSpan(1),
                                 Forms\Components\DatePicker::make('birth_date')
                                     ->label(__('Tanggal Lahir'))
                                     ->native(false)
-                                    ->prefixIcon('heroicon-o-calendar')
+                                    ->prefixIcon('heroicon-s-calendar')
                                     ->columnSpan(1),
                                 Forms\Components\TextInput::make('country')
                                     ->label(__('Negara'))
                                     ->maxLength(255)
-                                    ->prefixIcon('heroicon-o-globe-alt')
+                                    ->prefixIcon('heroicon-s-globe-alt')
                                     ->columnSpan(1),
                                 Forms\Components\Select::make('province_id')
                                     ->label(__('Provinsi'))
@@ -394,18 +394,18 @@ class UserResource extends Resource
                     ->schema([
                         Forms\Components\Section::make(__('Akses & Akun'))
                             ->description(__('Manajemen login, keamanan, dan perizinan.'))
-                            ->icon('heroicon-o-shield-check')
+                            ->icon('heroicon-s-shield-check')
                             ->schema([
                                 Forms\Components\TextInput::make('username')
                                     ->label(__('Username'))
                                     ->maxLength(255)
-                                    ->prefixIcon('heroicon-o-at-symbol'),
+                                    ->prefixIcon('heroicon-s-at-symbol'),
                                 Forms\Components\TextInput::make('email')
                                     ->label(__('Alamat Email'))
                                     ->email()
                                     ->required()
                                     ->maxLength(255)
-                                    ->prefixIcon('heroicon-o-envelope'),
+                                    ->prefixIcon('heroicon-s-envelope'),
                                 Forms\Components\TextInput::make('password')
                                     ->label(__('Kata Sandi'))
                                     ->password()
@@ -417,16 +417,16 @@ class UserResource extends Resource
                                     ->required(fn (string $context): bool => $context === 'create')
                                     ->maxLength(255)
                                     ->revealable()
-                                    ->prefixIcon('heroicon-o-key'),
+                                    ->prefixIcon('heroicon-s-key'),
                                 Forms\Components\DateTimePicker::make('email_verified_at')
                                     ->label(__('Waktu Verifikasi Email'))
                                     ->native(false)
-                                    ->prefixIcon('heroicon-o-check-badge'),
+                                    ->prefixIcon('heroicon-s-check-badge'),
                             ]),
 
                         Forms\Components\Section::make(__('Koneksi Sosial'))
                             ->description(__('Informasi akun yang terhubung melalui pihak ketiga.'))
-                            ->icon('heroicon-o-link')
+                            ->icon('heroicon-s-link')
                             ->schema([
                                 Forms\Components\Grid::make(2)
                                     ->schema([
@@ -436,13 +436,13 @@ class UserResource extends Resource
                                             ->formatStateUsing(fn ($state) => $state === 'google' ? 'Google' : $state)
                                             ->disabled()
                                             ->dehydrated(false)
-                                            ->prefixIcon('heroicon-o-globe-alt'),
+                                            ->prefixIcon('heroicon-s-globe-alt'),
                                         Forms\Components\TextInput::make('social_id')
                                             ->label(__('ID Akun Google'))
                                             ->placeholder(__('N/A'))
                                             ->disabled()
                                             ->dehydrated(false)
-                                            ->prefixIcon('heroicon-o-identification'),
+                                            ->prefixIcon('heroicon-s-identification'),
                                     ]),
                             ])
                             ->collapsible()
@@ -450,7 +450,7 @@ class UserResource extends Resource
 
                         Forms\Components\Section::make(__('Verifikasi Wajah (KYC)'))
                             ->description(__('Verifikasi identitas pengguna: KTP, selfie, dan face scan untuk keperluan KYC. Berbeda dari Kunci Aplikasi Wajah yang disimpan terpisah.'))
-                            ->icon('heroicon-o-face-smile')
+                            ->icon('heroicon-s-face-smile')
                             ->schema([
                                 Forms\Components\Grid::make(3)
                                     ->schema([
@@ -484,12 +484,12 @@ class UserResource extends Resource
                                             ->suffix('%')
                                             ->placeholder('-')
                                             ->helperText(__('Kombinasi cosine FaceNet + ORB (0-100).'))
-                                            ->prefixIcon('heroicon-o-chart-bar'),
+                                            ->prefixIcon('heroicon-s-chart-bar'),
                                         Forms\Components\TextInput::make('face_reason')
                                             ->label(__('Alasan Hasil AI'))
                                             ->disabled()
                                             ->placeholder('-')
-                                            ->prefixIcon('heroicon-o-document-text'),
+                                            ->prefixIcon('heroicon-s-document-text'),
                                         Forms\Components\Toggle::make('liveness_completed')
                                             ->label(__('Liveness di Perangkat Selesai'))
                                             ->disabled()
@@ -509,7 +509,7 @@ class UserResource extends Resource
                                             ->placeholder(__('Menunggu Review'))
                                             ->helperText(__('Kosongkan untuk mengembalikan ke status menunggu review.'))
                                             ->native(false)
-                                            ->prefixIcon('heroicon-o-shield-check'),
+                                            ->prefixIcon('heroicon-s-shield-check'),
                                         Forms\Components\Placeholder::make('kyc_reviewer')
                                             ->label(__('Direview Oleh'))
                                             ->content(fn (?User $record) => $record?->kycReviewer?->full_name ?? '-'),
@@ -517,12 +517,12 @@ class UserResource extends Resource
                                             ->label(__('Waktu Review'))
                                             ->disabled()
                                             ->native(false)
-                                            ->prefixIcon('heroicon-o-clock'),
+                                            ->prefixIcon('heroicon-s-clock'),
                                         Forms\Components\DateTimePicker::make('identity_verified_at')
                                             ->label(__('Waktu Verifikasi Identitas (AI)'))
                                             ->disabled()
                                             ->native(false)
-                                            ->prefixIcon('heroicon-o-check-badge'),
+                                            ->prefixIcon('heroicon-s-check-badge'),
                                         Forms\Components\Textarea::make('kyc_notes')
                                             ->label(__('Catatan Admin'))
                                             ->rows(3)
@@ -534,7 +534,7 @@ class UserResource extends Resource
                             ->collapsed(),
 
                         Forms\Components\Section::make(__('Otorisasi'))
-                            ->icon('heroicon-o-identification')
+                            ->icon('heroicon-s-identification')
                             ->schema([
                                 Forms\Components\Select::make('roles')
                                     ->searchable()
@@ -554,7 +554,7 @@ class UserResource extends Resource
 
                         Forms\Components\Section::make(__('Kunci Aplikasi'))
                             ->description(__('Pengaturan kunci aplikasi per pengguna: sidik jari perangkat, wajah terdaftar (AI Core), dan PIN lokal.'))
-                            ->icon('heroicon-o-lock-closed')
+                            ->icon('heroicon-s-lock-closed')
                             ->schema([
                                 Forms\Components\Grid::make(3)
                                     ->schema([
@@ -774,7 +774,7 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('whatsapp')
                     ->label(__('WhatsApp'))
                     ->searchable()
-                    ->icon('heroicon-o-chat-bubble-left-ellipsis')
+                    ->icon('heroicon-s-chat-bubble-left-ellipsis')
                     ->iconColor('success')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->placeholder('-'),
@@ -935,7 +935,7 @@ class UserResource extends Resource
             ->actions([
                 Tables\Actions\Action::make('approveKyc')
                     ->label(__('Setujui KYC'))
-                    ->icon('heroicon-o-check-circle')
+                    ->icon('heroicon-s-check-circle')
                     ->color('success')
                     ->requiresConfirmation()
                     ->modalHeading(__('Setujui Verifikasi Identitas'))
@@ -957,7 +957,7 @@ class UserResource extends Resource
                     }),
                 Tables\Actions\Action::make('rejectKyc')
                     ->label(__('Tolak KYC'))
-                    ->icon('heroicon-o-x-circle')
+                    ->icon('heroicon-s-x-circle')
                     ->color('danger')
                     ->requiresConfirmation()
                     ->modalHeading(__('Tolak Verifikasi Identitas'))
@@ -987,7 +987,7 @@ class UserResource extends Resource
                     }),
                 Tables\Actions\Action::make('resetAppLock')
                     ->label(__('Reset Kunci Aplikasi'))
-                    ->icon('heroicon-o-lock-open')
+                    ->icon('heroicon-s-lock-open')
                     ->color('warning')
                     ->requiresConfirmation()
                     ->modalHeading(__('Reset Kunci Aplikasi'))

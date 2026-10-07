@@ -23,7 +23,7 @@ class CategoryResource extends Resource
 
     protected static ?string $slug = 'categories';
 
-    protected static ?string $navigationIcon = 'heroicon-o-squares-2x2';
+    protected static ?string $navigationIcon = 'heroicon-s-squares-2x2';
 
     protected static ?int $navigationSort = 2;
 
@@ -80,7 +80,7 @@ class CategoryResource extends Resource
                     ->schema([
                         Forms\Components\Section::make(__('Detail Kategori'))
                             ->description(__('Klasifikasi layanan pernikahan untuk memudahkan pencarian.'))
-                            ->icon('heroicon-o-tag')
+                            ->icon('heroicon-s-tag')
                             ->schema([
                                 Forms\Components\TextInput::make('name')
                                     ->label(__('Nama Kategori'))
@@ -88,13 +88,13 @@ class CategoryResource extends Resource
                                     ->maxLength(255)
                                     ->live(onBlur: true)
                                     ->afterStateUpdated(fn (Forms\Set $set, ?string $state) => $set('slug', str($state)->slug()))
-                                    ->prefixIcon('heroicon-o-bookmark'),
+                                    ->prefixIcon('heroicon-s-bookmark'),
                                 Forms\Components\TextInput::make('slug')
                                     ->label(__('URL Slug'))
                                     ->required()
                                     ->unique(ignorable: fn (?Category $record) => $record)
                                     ->maxLength(255)
-                                    ->prefixIcon('heroicon-o-link'),
+                                    ->prefixIcon('heroicon-s-link'),
                                 Forms\Components\Select::make('type')
                                     ->label(__('Tipe'))
                                     ->required()
@@ -103,7 +103,7 @@ class CategoryResource extends Resource
                                         'product' => __('Produk'),
                                     ])
                                     ->default('package')
-                                    ->prefixIcon('heroicon-o-tag'),
+                                    ->prefixIcon('heroicon-s-tag'),
                                 Forms\Components\RichEditor::make('description')
                                     ->label(__('Deskripsi Kategori'))
                                     ->columnSpanFull()
@@ -114,13 +114,13 @@ class CategoryResource extends Resource
                 Forms\Components\Group::make()
                     ->schema([
                         Forms\Components\Section::make(__('Visual'))
-                            ->icon('heroicon-o-photo')
+                            ->icon('heroicon-s-photo')
                             ->schema([
                                 Forms\Components\TextInput::make('icon')
                                     ->label(__('Ikon Representasi (Class Name)'))
                                     ->maxLength(255)
-                                    ->prefixIcon('heroicon-o-star')
-                                    ->helperText(__('Gunakan Heroicons (contoh: heroicon-o-camera).')),
+                                    ->prefixIcon('heroicon-s-star')
+                                    ->helperText(__('Gunakan Heroicons (contoh: heroicon-s-camera).')),
                             ]),
                     ])->columnSpan(['lg' => 1]),
             ])->columns(3);
@@ -135,7 +135,7 @@ class CategoryResource extends Resource
                     ->searchable()
                     ->label(__('Nama Kategori'))
                     ->sortable()
-                    ->icon('heroicon-o-bookmark'),
+                    ->icon('heroicon-s-bookmark'),
                 Tables\Columns\TextColumn::make('slug')
                     ->label(__('URL Slug'))
                     ->badge()
@@ -160,7 +160,7 @@ class CategoryResource extends Resource
                     ->dateTime()
                     ->alignment('center')
                     ->sortable()
-                    ->icon('heroicon-o-calendar'),
+                    ->icon('heroicon-s-calendar'),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label(__('Terakhir Diperbarui'))
                     ->dateTime()

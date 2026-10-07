@@ -16,7 +16,7 @@ class TransactionResource extends Resource
 
     protected static ?string $slug = 'transactions';
 
-    protected static ?string $navigationIcon = 'heroicon-o-banknotes';
+    protected static ?string $navigationIcon = 'heroicon-s-banknotes';
 
     public static function getNavigationGroup(): ?string
     {
@@ -68,12 +68,12 @@ class TransactionResource extends Resource
                     ->sortable()
                     ->copyable()
                     ->copyableState(fn ($state) => $state)
-                    ->icon('heroicon-o-document-text'),
+                    ->icon('heroicon-s-document-text'),
                 TextColumn::make('user.full_name')
                     ->label(__('Pengguna'))
                     ->searchable()
                     ->sortable()
-                    ->icon('heroicon-o-user'),
+                    ->icon('heroicon-s-user'),
                 TextColumn::make('type')
                     ->label(__('Tipe'))
                     ->badge()
@@ -84,7 +84,7 @@ class TransactionResource extends Resource
                     ->money('idr')
                     ->sortable()
                     ->alignment('end')
-                    ->icon('heroicon-o-banknotes'),
+                    ->icon('heroicon-s-banknotes'),
                 TextColumn::make('payment_gateway')
                     ->label(__('Gateway Pembayaran'))
                     ->badge()
@@ -117,14 +117,14 @@ class TransactionResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->alignment('center')
-                    ->icon('heroicon-o-calendar')
+                    ->icon('heroicon-s-calendar')
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
                     ->label(__('Dibuat Pada'))
                     ->dateTime()
                     ->sortable()
                     ->alignment('center')
-                    ->icon('heroicon-o-calendar'),
+                    ->icon('heroicon-s-calendar'),
             ])
             ->filters([
                 SelectFilter::make('type')

@@ -28,11 +28,11 @@ class ManageWeddingDecorationPolicies extends ManageRecords
             Actions\ExportAction::make()
                 ->exporter(WeddingDecorationPolicyExporter::class)
                 ->label(__('Ekspor Data'))
-                ->icon('heroicon-o-arrow-down-tray')
+                ->icon('heroicon-s-arrow-down-tray')
                 ->color('success'),
             Actions\CreateAction::make()
                 ->label(__('Tambah Kebijakan'))
-                ->icon('heroicon-o-plus')
+                ->icon('heroicon-s-plus')
                 ->successNotification(
                     Notification::make()
                         ->success()

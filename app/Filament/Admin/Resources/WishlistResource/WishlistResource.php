@@ -23,7 +23,7 @@ class WishlistResource extends Resource
 
     protected static ?string $slug = 'wishlists';
 
-    protected static ?string $navigationIcon = 'heroicon-o-heart';
+    protected static ?string $navigationIcon = 'heroicon-s-heart';
 
     protected static ?int $navigationSort = 6;
 
@@ -97,7 +97,7 @@ class WishlistResource extends Resource
                     ->searchable()
                     ->label(__('Pelanggan'))
                     ->sortable()
-                    ->icon('heroicon-o-user'),
+                    ->icon('heroicon-s-user'),
                 Tables\Columns\TextColumn::make('package.name')
                     ->searchable()
                     ->label(__('Paket Dekorasi'))
@@ -109,7 +109,7 @@ class WishlistResource extends Resource
                     ->dateTime()
                     ->alignment('center')
                     ->sortable()
-                    ->icon('heroicon-o-calendar'),
+                    ->icon('heroicon-s-calendar'),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label(__('Terakhir Diubah'))
                     ->dateTime()

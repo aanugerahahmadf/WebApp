@@ -117,7 +117,7 @@ class TransactionsRelationManager extends RelationManager
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\Action::make('check_payment_status')
                     ->label(__('Cek Status Pembayaran'))
-                    ->icon('heroicon-o-arrow-path')
+                    ->icon('heroicon-s-arrow-path')
                     ->color('info')
                     ->action(function (Transaction $record) {
                         Notification::make()

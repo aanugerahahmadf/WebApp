@@ -20,7 +20,7 @@ class DiscountResource extends Resource
 
     protected static ?string $slug = 'discounts';
 
-    protected static ?string $navigationIcon = 'heroicon-o-currency-dollar';
+    protected static ?string $navigationIcon = 'heroicon-s-currency-dollar';
 
     protected static ?int $navigationSort = 4;
 

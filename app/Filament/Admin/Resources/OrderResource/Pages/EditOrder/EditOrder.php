@@ -29,7 +29,7 @@ class EditOrder extends EditRecord
         return [
             Actions\Action::make('back')
                 ->label(__('Kembali'))
-                ->icon('heroicon-o-arrow-left')
+                ->icon('heroicon-s-arrow-left')
                 ->color('gray')
                 ->url(fn () => request()->query('from') === 'view'
                     ? OrderResource::getUrl('view', ['record' => $this->record])
@@ -37,7 +37,7 @@ class EditOrder extends EditRecord
 
             Actions\Action::make('view')
                 ->label(__('Lihat Detail'))
-                ->icon('heroicon-o-eye')
+                ->icon('heroicon-s-eye')
                 ->color('gray')
                 ->url(fn () => OrderResource::getUrl('view', ['record' => $this->record])),
 

@@ -27,7 +27,7 @@ class WishlistResource extends Resource
 
     protected static ?int $navigationSort = 3;
 
-    protected static ?string $navigationIcon = 'heroicon-o-heart';
+    protected static ?string $navigationIcon = 'heroicon-s-heart';
 
     protected static bool $shouldRegisterNavigation = false;
 
@@ -95,7 +95,7 @@ class WishlistResource extends Resource
             ->schema([
                 Forms\Components\Section::make(__('Favorit Baru'))
                     ->description(__('Pilih paket yang ingin disimpan ke daftar wishlist Anda.'))
-                    ->icon('heroicon-o-heart')
+                    ->icon('heroicon-s-heart')
                     ->schema([
                         Forms\Components\Select::make('package_id')
                             ->searchable()
@@ -103,7 +103,7 @@ class WishlistResource extends Resource
                             ->required()
                             ->preload()
                             ->live()
-                            ->prefixIcon('heroicon-o-gift')
+                            ->prefixIcon('heroicon-s-gift')
                             ->label(__('Pilih Paket')),
 
                         Forms\Components\Placeholder::make('package_preview')
@@ -153,7 +153,7 @@ class WishlistResource extends Resource
             ->poll(AppPlatform::isNativeMobile() ? null : '30s')
             ->emptyStateHeading(__('Belum ada favorit'))
             ->emptyStateDescription(__('Temukan produk atau layanan impian Anda dan simpan di sini.'))
-            ->emptyStateIcon('heroicon-o-heart')
+            ->emptyStateIcon('heroicon-s-heart')
             ->emptyStateActions([
                 Tables\Actions\Action::make('explore')
                     ->label(__('Cari Produk & Layanan'))
@@ -289,7 +289,7 @@ class WishlistResource extends Resource
             ->actions([
                 Tables\Actions\DeleteAction::make()
                     ->label(__('Hapus'))
-                    ->icon('heroicon-o-trash')
+                    ->icon('heroicon-s-trash')
                     ->button()
                     ->color('danger')
                     ->size('sm')

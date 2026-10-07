@@ -27,7 +27,7 @@ class ManagePaymentGateways extends ManageRecords
             Actions\ExportAction::make()
                 ->exporter(PaymentGatewayExporter::class)
                 ->label(__('Ekspor Data'))
-                ->icon('heroicon-o-arrow-down-tray')
+                ->icon('heroicon-s-arrow-down-tray')
                 ->color('success'),
         ];
     }

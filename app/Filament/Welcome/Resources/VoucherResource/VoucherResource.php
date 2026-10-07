@@ -25,7 +25,7 @@ class VoucherResource extends Resource
 
     protected static ?int $navigationSort = 3;
 
-    protected static ?string $navigationIcon = 'heroicon-o-ticket';
+    protected static ?string $navigationIcon = 'heroicon-s-ticket';
 
     protected static bool $shouldRegisterNavigation = false;
 
@@ -113,7 +113,7 @@ class VoucherResource extends Resource
             ->paginated(false)
             ->emptyStateHeading(__('Belum ada promo baru'))
             ->emptyStateDescription(__('Voucher spesial dari kami akan otomatis muncul di sini. Coba tanyakan admin untuk promo menarik!'))
-            ->emptyStateIcon('heroicon-o-ticket')
+            ->emptyStateIcon('heroicon-s-ticket')
             ->emptyStateActions([
                 Tables\Actions\Action::make('chat_admin')
                     ->label(__('Tanya Admin'))
@@ -180,7 +180,7 @@ class VoucherResource extends Resource
                         ->formatStateUsing(fn ($state) => $state ? __('Berlaku s/d').' '.Carbon::parse($state)->translatedFormat('d M Y') : __('Berlaku Selamanya'))
                         ->size(Tables\Columns\TextColumn\TextColumnSize::ExtraSmall)
                         ->color(fn ($state) => $state && Carbon::parse($state)->diffInDays(now()) <= 3 ? 'danger' : 'gray')
-                        ->icon('heroicon-o-clock')
+                        ->icon('heroicon-s-clock')
                         ->alignCenter(),
 
                     // -- KODE VOUCHER (KOTAK BERWARNA DI TENGAH) --
@@ -220,7 +220,7 @@ class VoucherResource extends Resource
                             Notification::make()
                                 ->title(__('Voucher Berhasil Diklaim!'))
                                 ->body(__('Kini Anda bisa menggunakan voucher ini pada saat Checkout.'))
-                                ->icon('heroicon-o-check-circle')
+                                ->icon('heroicon-s-check-circle')
                                 ->iconColor('success')
                                 ->success()
                                 ->send();

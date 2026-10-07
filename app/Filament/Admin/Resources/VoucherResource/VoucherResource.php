@@ -25,7 +25,7 @@ class VoucherResource extends Resource
 
     protected static ?string $slug = 'vouchers';
 
-    protected static ?string $navigationIcon = 'heroicon-o-ticket';
+    protected static ?string $navigationIcon = 'heroicon-s-ticket';
 
     protected static ?int $navigationSort = 5;
 
@@ -123,7 +123,7 @@ class VoucherResource extends Resource
 
                 Forms\Components\Section::make(__('Distribusi ke User'))
                     ->description(__('Assign voucher ini ke user tertentu. Kosongkan jika voucher global.'))
-                    ->icon('heroicon-o-users')
+                    ->icon('heroicon-s-users')
                     ->schema([
                         Forms\Components\Select::make('users')
                             ->searchable()

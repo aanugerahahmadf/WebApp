@@ -37,7 +37,7 @@ class ProfileOverview extends BaseWidget
         return [
             // Row 1: Edit Profile — full width (span 2)
             Stat::make(__('Edit Profile'), '')
-                ->icon('heroicon-o-user-circle')
+                ->icon('heroicon-s-user-circle')
                 ->color('warning')
                 ->extraAttributes([
                     'class' => 'home-stat-card profile-stat-card cursor-pointer hover:scale-105 transition-transform h-full',
@@ -48,7 +48,7 @@ class ProfileOverview extends BaseWidget
             // Row 2: 2 kolom — Katalog Paket | Katalog Dekorasi Bunga
 
             Stat::make(__('Katalog Paket Bunga'), '')
-                ->icon('heroicon-o-gift')
+                ->icon('heroicon-s-gift')
                 ->color('warning')
                 ->extraAttributes([
                     'class' => 'home-stat-card profile-stat-card cursor-pointer hover:scale-105 transition-transform h-full',
@@ -56,7 +56,7 @@ class ProfileOverview extends BaseWidget
                 ]),
 
             Stat::make(__('Katalog Dekorasi Bunga'), '')
-                ->icon('heroicon-o-shopping-bag')
+                ->icon('heroicon-s-shopping-bag')
                 ->color('warning')
                 ->extraAttributes([
                     'class' => 'home-stat-card profile-stat-card cursor-pointer hover:scale-105 transition-transform h-full',
@@ -65,7 +65,7 @@ class ProfileOverview extends BaseWidget
 
             // Row 3: Riwayat — full width (span 2)
             Stat::make(__('Riwayat'), '')
-                ->icon('heroicon-o-clock')
+                ->icon('heroicon-s-clock')
                 ->color('warning')
                 ->extraAttributes([
                     'class' => 'home-stat-card profile-stat-card cursor-pointer hover:scale-105 transition-transform h-full',
@@ -75,7 +75,7 @@ class ProfileOverview extends BaseWidget
 
             // Row 4: Ulasan — full width (span 2)
             Stat::make(__('Ulasan'), '')
-                ->icon('heroicon-o-star')
+                ->icon('heroicon-s-star')
                 ->color('warning')
                 ->extraAttributes([
                     'class' => 'home-stat-card profile-stat-card cursor-pointer hover:scale-105 transition-transform h-full',

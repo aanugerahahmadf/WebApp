@@ -32,7 +32,7 @@ class OrderResource extends Resource
 
     protected static ?string $slug = 'orders';
 
-    protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
+    protected static ?string $navigationIcon = 'heroicon-s-shopping-bag';
 
     protected static ?int $navigationSort = 1;
 
@@ -89,37 +89,37 @@ class OrderResource extends Resource
                     ->schema([
                         Forms\Components\Section::make(__('Informasi Pelanggan & Layanan'))
                             ->description(__('Hubungkan pesanan ke pelanggan dan paket yang dipilih.'))
-                            ->icon('heroicon-o-shopping-bag')
+                            ->icon('heroicon-s-shopping-bag')
                             ->schema([
                                 Forms\Components\Select::make('user_id')
                                     ->searchable()
                                     ->label(__('Pelanggan'))
                                     ->options(User::query()->pluck('full_name', 'id')->toArray())
                                     ->preload()
-                                    ->prefixIcon('heroicon-o-user')
+                                    ->prefixIcon('heroicon-s-user')
                                     ->required(),
                                 Forms\Components\Select::make('package_id')
                                     ->searchable()
                                     ->label(__('Paket Layanan'))
                                     ->relationship('package', 'name')
                                     ->preload()
-                                    ->prefixIcon('heroicon-o-gift')
+                                    ->prefixIcon('heroicon-s-gift')
                                     ->required(),
                             ])->columns(2),
 
                         Forms\Components\Section::make(__('Detail Eksekusi & Acara'))
                             ->description(__('Jadwal, referensi, dan instruksi penanganan dari pelanggan.'))
-                            ->icon('heroicon-o-calendar-days')
+                            ->icon('heroicon-s-calendar-days')
                             ->schema([
                                 Forms\Components\TextInput::make('order_number')
                                     ->label(__('Nomor Referensi'))
                                     ->required()
                                     ->maxLength(255)
-                                    ->prefixIcon('heroicon-o-hashtag'),
+                                    ->prefixIcon('heroicon-s-hashtag'),
                                 Forms\Components\DatePicker::make('booking_date')
                                     ->label(__('Tanggal Acara (Booking)'))
                                     ->required()
-                                    ->prefixIcon('heroicon-o-calendar'),
+                                    ->prefixIcon('heroicon-s-calendar'),
                                 Forms\Components\RichEditor::make('notes')
                                     ->label(__('Catatan / Permintaan Khusus'))
                                     ->columnSpanFull()
@@ -131,7 +131,7 @@ class OrderResource extends Resource
                     ->schema([
                         Forms\Components\Section::make(__('Status & Keuangan'))
                             ->description(__('Pantau dan update perkembangan pembayaran dan layanan.'))
-                            ->icon('heroicon-o-banknotes')
+                            ->icon('heroicon-s-banknotes')
                             ->schema([
                                 Forms\Components\TextInput::make('total_price')
                                     ->label(__('Total Harga (Tagihan)'))
@@ -166,7 +166,7 @@ class OrderResource extends Resource
                     ->label(__('Pelanggan'))
                     ->searchable()
                     ->sortable()
-                    ->icon('heroicon-o-user'),
+                    ->icon('heroicon-s-user'),
                 Tables\Columns\TextColumn::make('package.name')
                     ->searchable()
                     ->label(__('Paket Layanan'))
@@ -187,7 +187,7 @@ class OrderResource extends Resource
                     ->money('IDR')
                     ->alignment('end')
                     ->sortable()
-                    ->icon('heroicon-o-banknotes'),
+                    ->icon('heroicon-s-banknotes'),
                 Tables\Columns\TextColumn::make('status')
                     ->label(__('Status'))
                     ->badge()
@@ -203,7 +203,7 @@ class OrderResource extends Resource
                     ->date('d M Y')
                     ->alignment('center')
                     ->sortable()
-                    ->icon('heroicon-o-calendar'),
+                    ->icon('heroicon-s-calendar'),
                 Tables\Columns\TextColumn::make('booking_time')
                     ->label(__('Waktu'))
                     ->time('H:i')
@@ -248,7 +248,7 @@ class OrderResource extends Resource
                     // ── Manual Payment Confirmation Actions ─────────────────
                     Tables\Actions\Action::make('mark_paid')
                         ->label(__('Tandai Dibayar'))
-                        ->icon('heroicon-o-check-circle')
+                        ->icon('heroicon-s-check-circle')
                         ->color('success')
                         ->visible(fn ($record) => in_array($record?->payment_status?->value, ['unpaid', 'pending', 'failed']))
                         ->requiresConfirmation()
@@ -277,7 +277,7 @@ class OrderResource extends Resource
 
                     Tables\Actions\Action::make('mark_failed')
                         ->label(__('Tandai Gagal'))
-                        ->icon('heroicon-o-x-circle')
+                        ->icon('heroicon-s-x-circle')
                         ->color('danger')
                         ->visible(fn ($record) => in_array($record?->payment_status?->value, ['unpaid', 'pending']))
                         ->requiresConfirmation()
@@ -305,7 +305,7 @@ class OrderResource extends Resource
 
                     Tables\Actions\Action::make('mark_pending')
                         ->label(__('Tandai Pending'))
-                        ->icon('heroicon-o-clock')
+                        ->icon('heroicon-s-clock')
                         ->color('warning')
                         ->visible(fn ($record) => $record?->payment_status?->value === 'failed')
                         ->requiresConfirmation()
@@ -333,7 +333,7 @@ class OrderResource extends Resource
                     // ── Kirim Notifikasi Pembayaran Manual ──────────────────
                     Tables\Actions\Action::make('send_payment_notification')
                         ->label(__('Kirim Notifikasi'))
-                        ->icon('heroicon-o-bell-alert')
+                        ->icon('heroicon-s-bell-alert')
                         ->color('info')
                         ->requiresConfirmation()
                         ->modalHeading(__('Kirim Notifikasi Pembayaran'))
@@ -381,7 +381,7 @@ class OrderResource extends Resource
 
                 Tables\Actions\Action::make('chat')
                     ->label(__('Hubungi'))
-                    ->icon('heroicon-o-chat-bubble-left-right')
+                    ->icon('heroicon-s-chat-bubble-left-right')
                     ->color('success')
                     ->button()
                     ->size('lg')
@@ -488,7 +488,7 @@ class OrderResource extends Resource
                     ->extraAttributes(['class' => 'bg-gray-50 dark:bg-white/5 border-0 shadow-none rounded-2xl']),
 
                 Infolists\Components\Section::make(__('Pelanggan'))
-                    ->icon('heroicon-o-user')
+                    ->icon('heroicon-s-user')
                     ->iconColor('info')
                     ->compact()
                     ->schema([
@@ -501,19 +501,19 @@ class OrderResource extends Resource
                                 ->color('gray'),
                             Infolists\Components\TextEntry::make('user.phone')
                                 ->label(__('Telepon'))
-                                ->icon('heroicon-o-phone')
+                                ->icon('heroicon-s-phone')
                                 ->color('gray')
                                 ->placeholder('-'),
                             Infolists\Components\TextEntry::make('user.whatsapp')
                                 ->label(__('WhatsApp'))
-                                ->icon('heroicon-o-chat-bubble-left-ellipsis')
+                                ->icon('heroicon-s-chat-bubble-left-ellipsis')
                                 ->color('success')
                                 ->placeholder(__('Belum diisi')),
                         ]),
                     ]),
 
                 Infolists\Components\Section::make(__('Paket / Produk Dipesan'))
-                    ->icon('heroicon-o-shopping-bag')
+                    ->icon('heroicon-s-shopping-bag')
                     ->iconColor('primary')
                     ->compact()
                     ->schema([
@@ -565,7 +565,7 @@ class OrderResource extends Resource
                     ]),
 
                 Infolists\Components\Section::make(__('Rincian Harga'))
-                    ->icon('heroicon-o-banknotes')
+                    ->icon('heroicon-s-banknotes')
                     ->iconColor('success')
                     ->compact()
                     ->schema([
@@ -579,7 +579,7 @@ class OrderResource extends Resource
                     ]),
 
                 Infolists\Components\Section::make(__('Catatan'))
-                    ->icon('heroicon-o-document-text')
+                    ->icon('heroicon-s-document-text')
                     ->iconColor('gray')
                     ->compact()
                     ->schema([

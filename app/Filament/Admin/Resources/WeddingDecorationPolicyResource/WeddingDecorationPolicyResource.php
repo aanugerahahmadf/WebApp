@@ -17,7 +17,7 @@ class WeddingDecorationPolicyResource extends Resource
 
     protected static ?string $slug = 'wedding-decoration-policies';
 
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static ?string $navigationIcon = 'heroicon-s-document-text';
 
     public static function getNavigationGroup(): ?string
     {
@@ -91,13 +91,13 @@ class WeddingDecorationPolicyResource extends Resource
                     ->color('primary')
                     ->searchable()
                     ->sortable()
-                    ->icon('heroicon-o-rectangle-stack'),
+                    ->icon('heroicon-s-rectangle-stack'),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label(__('Terakhir Diupdate'))
                     ->dateTime('d M Y H:i')
                     ->sortable()
                     ->alignment('center')
-                    ->icon('heroicon-o-calendar'),
+                    ->icon('heroicon-s-calendar'),
             ])
             ->filters([])
             ->actions([

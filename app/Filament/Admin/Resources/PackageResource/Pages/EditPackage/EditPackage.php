@@ -40,7 +40,7 @@ class EditPackage extends EditRecord
                 ->label(__('Kembali'))
                 ->url(fn () => static::getResource()::getUrl('index'))
                 ->color('gray')->button()
-                ->icon('heroicon-o-arrow-left'),
+                ->icon('heroicon-s-arrow-left'),
 
             Actions\ViewAction::make(),
             Actions\DeleteAction::make(),

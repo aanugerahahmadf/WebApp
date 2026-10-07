@@ -23,7 +23,7 @@ class CartResource extends Resource
 
     protected static ?string $slug = 'carts';
 
-    protected static ?string $navigationIcon = 'heroicon-o-shopping-cart';
+    protected static ?string $navigationIcon = 'heroicon-s-shopping-cart';
 
     protected static bool $shouldRegisterNavigation = false;
 
@@ -99,7 +99,7 @@ class CartResource extends Resource
             ->paginated(false)
             ->emptyStateHeading(__('Keranjang Kosong'))
             ->emptyStateDescription(__('Mulai belanja dan temukan dekorasi impian Anda sekarang!'))
-            ->emptyStateIcon('heroicon-o-shopping-cart')
+            ->emptyStateIcon('heroicon-s-shopping-cart')
             ->emptyStateActions([
                 Tables\Actions\Action::make('shop_products')
                     ->label(__('Belanja Bunga'))
@@ -161,7 +161,7 @@ class CartResource extends Resource
                                     ->prefix(__('Jumlah').': ')
                                     ->weight('medium')
                                     ->size('sm')
-                                    ->icon('heroicon-o-shopping-bag')
+                                    ->icon('heroicon-s-shopping-bag')
                                     ->extraAttributes(['class' => 'text-gray-500']),
 
                                 Tables\Columns\TextColumn::make('product.stock')
@@ -213,7 +213,7 @@ class CartResource extends Resource
 
                     Tables\Actions\DeleteAction::make()
                         ->label(__('Hapus Item'))
-                        ->icon('heroicon-o-trash')
+                        ->icon('heroicon-s-trash')
                         ->button()
                         ->color('danger')
                         ->outlined()

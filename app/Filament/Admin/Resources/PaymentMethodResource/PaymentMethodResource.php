@@ -17,7 +17,7 @@ class PaymentMethodResource extends Resource
 
     protected static ?string $slug = 'payment-methods';
 
-    protected static ?string $navigationIcon = 'heroicon-o-credit-card';
+    protected static ?string $navigationIcon = 'heroicon-s-credit-card';
 
     protected static ?int $navigationSort = 3;
 

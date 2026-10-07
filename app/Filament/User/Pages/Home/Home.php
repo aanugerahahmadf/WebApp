@@ -11,7 +11,7 @@ class Home extends BaseDashboard
 {
     protected static string $routePath = 'home';
 
-    protected static ?string $navigationIcon = 'heroicon-o-home';
+    protected static ?string $navigationIcon = 'heroicon-s-home';
 
     protected static ?int $navigationSort = 1;
 

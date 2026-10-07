@@ -17,7 +17,7 @@ class PrivacyPolicyResource extends Resource
 
     protected static ?string $slug = 'privacy-policies';
 
-    protected static ?string $navigationIcon = 'heroicon-o-shield-check';
+    protected static ?string $navigationIcon = 'heroicon-s-shield-check';
 
     public static function getNavigationGroup(): ?string
     {
@@ -92,13 +92,13 @@ class PrivacyPolicyResource extends Resource
                     ->color('primary')
                     ->searchable()
                     ->sortable()
-                    ->icon('heroicon-o-shield-check'),
+                    ->icon('heroicon-s-shield-check'),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label(__('Terakhir Diupdate'))
                     ->dateTime('d M Y H:i')
                     ->sortable()
                     ->alignment('center')
-                    ->icon('heroicon-o-calendar'),
+                    ->icon('heroicon-s-calendar'),
             ])
             ->filters([])
             ->actions([

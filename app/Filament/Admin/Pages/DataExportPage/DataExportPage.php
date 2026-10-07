@@ -21,7 +21,7 @@ class DataExportPage extends Page implements HasForms
 
     protected static string $view = 'Admin.pages.data-export-page.data-export-page';
 
-    protected static ?string $navigationIcon = 'heroicon-o-arrow-down-tray';
+    protected static ?string $navigationIcon = 'heroicon-s-arrow-down-tray';
 
     protected static ?int $navigationSort = 99;
 
@@ -70,7 +70,7 @@ class DataExportPage extends Page implements HasForms
             ->schema([
                 Forms\Components\Section::make(__('Unduh Semua Data Aplikasi'))
                     ->description(__('Aktif/nonaktifkan toggle per dataset, lalu klik Unduh Data dan pilih format file (Excel atau PDF) pada modal yang muncul.'))
-                    ->icon('heroicon-o-arrow-down-tray')
+                    ->icon('heroicon-s-arrow-down-tray')
                     ->schema([
                         Forms\Components\Grid::make(['default' => 1, 'md' => 2])
                             ->schema(

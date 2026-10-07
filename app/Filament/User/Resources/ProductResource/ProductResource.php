@@ -238,7 +238,7 @@ class ProductResource extends Resource
                                     Actions::make([
                                         Action::make('share_item')
                                             ->label(__('Bagikan'))
-                                            ->icon('heroicon-o-share')
+                                            ->icon('heroicon-s-share')
                                             ->button()
                                             ->color('info')
                                             ->outlined()
@@ -385,12 +385,12 @@ class ProductResource extends Resource
                                                 ->html()
                                                 ->prose()
                                                 ->extraAttributes(['class' => 'leading-relaxed text-sm']),
-                                        ])->icon('heroicon-o-document-text')->iconColor('primary'),
+                                        ])->icon('heroicon-s-document-text')->iconColor('primary'),
 
                                     // FEATURES (mobile "Fitur" section parity)
                                     Infolists\Components\Section::make(__('Fitur'))
                                         ->compact()
-                                        ->icon('heroicon-o-check-circle')
+                                        ->icon('heroicon-s-check-circle')
                                         ->iconColor('success')
                                         ->visible(fn ($record) => filled($record->features))
                                         ->schema([
@@ -443,7 +443,7 @@ class ProductResource extends Resource
                                                     ->title(__('Berhasil masuk keranjang'))
                                                     ->body(__('Berhasil menambahkan :count item ke keranjang.', ['count' => $data['quantity']]))
                                                     ->success()
-                                                    ->icon('heroicon-o-shopping-cart')
+                                                    ->icon('heroicon-s-shopping-cart')
                                                     ->send();
                                             })
                                             ->visible(fn ($record) => $record->stock > 0),
@@ -486,7 +486,7 @@ class ProductResource extends Resource
 
                                         Action::make('wishlist_detail')
                                             ->label(fn ($record) => $record->is_wishlisted ? __('Hapus dari Favorit') : __('Tambah ke Favorit'))
-                                            ->icon(fn ($record) => $record->is_wishlisted ? 'heroicon-s-heart' : 'heroicon-o-heart')
+                                            ->icon(fn ($record) => $record->is_wishlisted ? 'heroicon-s-heart' : 'heroicon-s-heart')
                                             ->button()
                                             ->color(fn ($record) => $record->is_wishlisted ? 'danger' : 'gray')
                                             ->outlined(fn ($record) => ! $record->is_wishlisted)
@@ -505,7 +505,7 @@ class ProductResource extends Resource
                                                     Notification::make()
                                                         ->title(__('Dihapus dari Favorit'))
                                                         ->warning()
-                                                        ->icon('heroicon-o-heart')
+                                                        ->icon('heroicon-s-heart')
                                                         ->send();
                                                 } else {
                                                     Wishlist::create([
@@ -556,7 +556,7 @@ class ProductResource extends Resource
 
                                     // REVIEWS (mobile _buildReviewCard parity)
                                     Infolists\Components\Section::make(__('Ulasan'))
-                                        ->icon('heroicon-o-chat-bubble-oval-left-ellipsis')
+                                        ->icon('heroicon-s-chat-bubble-oval-left-ellipsis')
                                         ->iconColor('warning')
                                         ->compact()
                                         ->visible(fn ($record) => $record->reviews()->count() > 0)
@@ -734,7 +734,7 @@ class ProductResource extends Resource
     {
         return [
             Forms\Components\Wizard\Step::make(__('Detail Acara'))
-                ->icon('heroicon-o-calendar-days')
+                ->icon('heroicon-s-calendar-days')
                 ->schema([
                     Forms\Components\Section::make(__('Pilih Waktu & Kebutuhan'))
                         ->schema([
@@ -747,7 +747,7 @@ class ProductResource extends Resource
                                 ->label(__('Waktu Pelaksanaan'))
                                 ->required()
                                 ->native(false)
-                                ->prefixIcon('heroicon-o-clock')
+                                ->prefixIcon('heroicon-s-clock')
                                 ->columnSpanFull(),
                             Forms\Components\TextInput::make('quantity')
                                 ->label(__('Jumlah yang ingin dibeli'))
@@ -770,7 +770,7 @@ class ProductResource extends Resource
                         ]),
                 ]),
             Forms\Components\Wizard\Step::make(__('Info Kontak'))
-                ->icon('heroicon-o-user-circle')
+                ->icon('heroicon-s-user-circle')
                 ->schema([
                     Forms\Components\Section::make(__('Verifikasi Data Anda'))
                         ->schema([
@@ -787,16 +787,16 @@ class ProductResource extends Resource
                         ])->columns(2),
                 ]),
             Forms\Components\Wizard\Step::make(__('Voucher & Diskon'))
-                ->icon('heroicon-o-ticket')
+                ->icon('heroicon-s-ticket')
                 ->schema([
                     Forms\Components\Section::make(__('Pilih Voucher Anda'))
                         ->description(__('Gunakan voucher yang telah Anda klaim di menu Voucher.'))
-                        ->icon('heroicon-o-ticket')
+                        ->icon('heroicon-s-ticket')
                         ->schema([
                             Forms\Components\Select::make('voucher_id')
                                 ->searchable()
                                 ->label(__('Voucher Tersedia'))
-                                ->prefixIcon('heroicon-o-ticket')
+                                ->prefixIcon('heroicon-s-ticket')
                                 ->options(function () use ($product) {
                                     $user = Filament::auth()->user();
                                     if (! $user) {
@@ -882,11 +882,11 @@ class ProductResource extends Resource
                 ]),
 
             Forms\Components\Wizard\Step::make(__('Metode Pembayaran'))
-                ->icon('heroicon-o-credit-card')
+                ->icon('heroicon-s-credit-card')
                 ->schema([
                     Forms\Components\Section::make(__('Pilih Metode Pembayaran'))
                         ->description(__('Pilih cara pembayaran yang Anda inginkan.'))
-                        ->icon('heroicon-o-credit-card')
+                        ->icon('heroicon-s-credit-card')
                         ->schema([
                             Forms\Components\Radio::make('payment_method_id')
                                 ->label('')
@@ -904,7 +904,7 @@ class ProductResource extends Resource
                 ]),
 
             Forms\Components\Wizard\Step::make(__('Konfirmasi'))
-                ->icon('heroicon-o-check-badge')
+                ->icon('heroicon-s-check-badge')
                 ->schema([
                     Forms\Components\Section::make(__('Ringkasan Pembayaran'))
                         ->schema([

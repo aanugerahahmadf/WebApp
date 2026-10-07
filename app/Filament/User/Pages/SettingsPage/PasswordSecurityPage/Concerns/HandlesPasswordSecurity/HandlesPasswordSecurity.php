@@ -108,17 +108,17 @@ trait HandlesPasswordSecurity
             [
                 'label' => __('Sign In dan Pemulihan'),
                 'items' => [
-                    [ChangePassword::class, 'heroicon-o-lock-closed', __('Ubah Kata Sandi'), __('Perbarui kata sandi dan lindungi akun Anda.')],
-                    [TwoFactor::class, 'heroicon-o-shield-check', __('Autentikasi Dua Faktor'), __('Atur WhatsApp, kode cadangan, dan perangkat tepercaya.')],
-                    [SavedLogin::class, 'heroicon-o-bookmark', __('Sign In Tersimpan'), __('Kelola info Sign In yang tersimpan di perangkat.')],
+                    [ChangePassword::class, 'heroicon-s-lock-closed', __('Ubah Kata Sandi'), __('Perbarui kata sandi dan lindungi akun Anda.')],
+                    [TwoFactor::class, 'heroicon-s-shield-check', __('Autentikasi Dua Faktor'), __('Atur WhatsApp, kode cadangan, dan perangkat tepercaya.')],
+                    [SavedLogin::class, 'heroicon-s-bookmark', __('Sign In Tersimpan'), __('Kelola info Sign In yang tersimpan di perangkat.')],
                 ],
             ],
             [
                 'label' => __('Pemeriksaan Keamanan'),
                 'items' => [
-                    [SignInActivity::class, 'heroicon-o-map-pin', __('Tempat Anda Sign In'), __('Lihat dan keluarkan sesi perangkat yang aktif.')],
-                    [RecentEmails::class, 'heroicon-o-envelope', __('Ubah Email'), __('Ganti email akun dengan verifikasi kode OTP.')],
-                    [Checkup::class, 'heroicon-o-shield-check', __('Pemeriksaan Keamanan'), __('Tinjau perlindungan penting untuk akun Anda.')],
+                    [SignInActivity::class, 'heroicon-s-map-pin', __('Tempat Anda Sign In'), __('Lihat dan keluarkan sesi perangkat yang aktif.')],
+                    [RecentEmails::class, 'heroicon-s-envelope', __('Ubah Email'), __('Ganti email akun dengan verifikasi kode OTP.')],
+                    [Checkup::class, 'heroicon-s-shield-check', __('Pemeriksaan Keamanan'), __('Tinjau perlindungan penting untuk akun Anda.')],
                 ],
             ],
         ];

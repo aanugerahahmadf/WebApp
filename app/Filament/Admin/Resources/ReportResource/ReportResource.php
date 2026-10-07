@@ -19,7 +19,7 @@ class ReportResource extends Resource
 
     protected static ?string $slug = 'reports';
 
-    protected static ?string $navigationIcon = 'heroicon-o-flag';
+    protected static ?string $navigationIcon = 'heroicon-s-flag';
 
     protected static ?int $navigationSort = 3;
 
@@ -109,7 +109,7 @@ class ReportResource extends Resource
                     ->label(__('Pelapor'))
                     ->searchable()
                     ->sortable()
-                    ->icon('heroicon-o-user'),
+                    ->icon('heroicon-s-user'),
                 Tables\Columns\TextColumn::make('category')
                     ->label(__('Kategori'))
                     ->badge()
@@ -182,7 +182,7 @@ class ReportResource extends Resource
                     ->color('info'),
                 Tables\Actions\Action::make('downloadPdf')
                     ->label(__('Unduh PDF'))
-                    ->icon('heroicon-o-arrow-down-tray')
+                    ->icon('heroicon-s-arrow-down-tray')
                     ->button()
                     ->color('success')
                     ->action(function (Report $record) {

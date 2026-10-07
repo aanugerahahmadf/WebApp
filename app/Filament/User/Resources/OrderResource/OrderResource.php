@@ -43,7 +43,7 @@ class OrderResource extends Resource
 
     protected static ?string $slug = 'orders';
 
-    protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
+    protected static ?string $navigationIcon = 'heroicon-s-shopping-bag';
 
     protected static bool $shouldRegisterNavigation = false;
 
@@ -110,7 +110,7 @@ class OrderResource extends Resource
             ->schema([
                 Forms\Components\Wizard::make([
                     Forms\Components\Wizard\Step::make(__('Detail Acara'))
-                        ->icon('heroicon-o-calendar-days')
+                        ->icon('heroicon-s-calendar-days')
                         ->schema([
                             Forms\Components\Section::make(__('Pilih Waktu & Kebutuhan'))
                                 ->schema([
@@ -119,13 +119,13 @@ class OrderResource extends Resource
                                         ->required()
                                         ->native(false)
                                         ->minDate(now()->startOfDay())
-                                        ->prefixIcon('heroicon-o-calendar-days')
+                                        ->prefixIcon('heroicon-s-calendar-days')
                                         ->columnSpanFull(),
                                     Forms\Components\TimePicker::make('booking_time')
                                         ->label(__('Waktu Pelaksanaan'))
                                         ->required()
                                         ->native(false)
-                                        ->prefixIcon('heroicon-o-clock')
+                                        ->prefixIcon('heroicon-s-clock')
                                         ->columnSpanFull(),
                                     Forms\Components\TextInput::make('quantity')
                                         ->label(__('Jumlah yang ingin dibeli'))
@@ -143,7 +143,7 @@ class OrderResource extends Resource
                         ]),
 
                     Forms\Components\Wizard\Step::make(__('Info Kontak'))
-                        ->icon('heroicon-o-user-circle')
+                        ->icon('heroicon-s-user-circle')
                         ->schema([
                             Forms\Components\Section::make(__('Verifikasi Data Anda'))
                                 ->schema([
@@ -163,16 +163,16 @@ class OrderResource extends Resource
                         ]),
 
                     Forms\Components\Wizard\Step::make(__('Voucher & Diskon'))
-                        ->icon('heroicon-o-ticket')
+                        ->icon('heroicon-s-ticket')
                         ->schema([
                             Forms\Components\Section::make(__('Pilih Voucher Anda'))
                                 ->description(__('Gunakan voucher yang telah Anda klaim di menu Voucher.'))
-                                ->icon('heroicon-o-ticket')
+                                ->icon('heroicon-s-ticket')
                                 ->schema([
                                     Forms\Components\Select::make('voucher_id')
                                         ->searchable()
                                         ->label(__('Voucher Tersedia'))
-                                        ->prefixIcon('heroicon-o-ticket')
+                                        ->prefixIcon('heroicon-s-ticket')
                                         ->options(function ($record) {
                                             $user = auth()->user();
                                             if (! $user || ! $record) {
@@ -260,7 +260,7 @@ class OrderResource extends Resource
                         ]),
 
                     Forms\Components\Wizard\Step::make(__('Konfirmasi'))
-                        ->icon('heroicon-o-check-badge')
+                        ->icon('heroicon-s-check-badge')
                         ->schema([
                             Forms\Components\Section::make(__('Ringkasan Pembayaran'))
                                 ->schema([
@@ -298,7 +298,7 @@ class OrderResource extends Resource
             ->poll(AppPlatform::isNativeMobile() ? null : '30s')
             ->emptyStateHeading(__('Belum ada pesanan'))
             ->emptyStateDescription(__('Wujudkan acara impianmu dengan paket terbaik dari kami. Mulai pesan sekarang!'))
-            ->emptyStateIcon('heroicon-o-shopping-bag')
+            ->emptyStateIcon('heroicon-s-shopping-bag')
             ->emptyStateActions([
                 Tables\Actions\Action::make('shop_products')
                     ->label(__('Belanja Bunga'))
@@ -496,7 +496,7 @@ class OrderResource extends Resource
                     // Preview & Download Invoice PDF
                     Tables\Actions\Action::make('preview_invoice')
                         ->label(__('Lihat Invoice'))
-                        ->icon('heroicon-o-document-text')
+                        ->icon('heroicon-s-document-text')
                         ->color('gray')
                         ->modalHeading(fn (Order $record) => 'Invoice #'.$record->order_number)
                         ->modalContent(fn (Order $record) => new HtmlString(
@@ -510,7 +510,7 @@ class OrderResource extends Resource
                         ->modalFooterActions(fn (Order $record) => [
                             Action::make('download_pdf')
                                 ->label(__('Download PDF'))
-                                ->icon('heroicon-o-arrow-down-tray')
+                                ->icon('heroicon-s-arrow-down-tray')
                                 ->color('primary')
                                 ->url(route('invoice.pdf', ['order' => $record, 'download' => 1]))
                                 ->openUrlInNewTab(),
@@ -562,7 +562,7 @@ class OrderResource extends Resource
             ->headerActions([
                 Tables\Actions\Action::make('clear_history')
                     ->label(__('Bersihkan Riwayat'))
-                    ->icon('heroicon-o-trash')
+                    ->icon('heroicon-s-trash')
                     ->color('danger')
                     ->button()
                     ->size('sm')
@@ -573,7 +573,7 @@ class OrderResource extends Resource
                         Forms\Components\Tabs::make('Delete Options')
                             ->tabs([
                                 Forms\Components\Tabs\Tab::make(__('Berdasarkan Status'))
-                                    ->icon('heroicon-o-tag')
+                                    ->icon('heroicon-s-tag')
                                     ->schema([
                                         Forms\Components\Select::make('type')
                                             ->label(__('Hapus Pesanan Berdasarkan Status'))
@@ -586,7 +586,7 @@ class OrderResource extends Resource
                                             ->native(false),
                                     ]),
                                 Forms\Components\Tabs\Tab::make(__('Pilih Pesanan Spesifik'))
-                                    ->icon('heroicon-o-list-bullet')
+                                    ->icon('heroicon-s-list-bullet')
                                     ->schema([
                                         Forms\Components\CheckboxList::make('order_ids')
                                             ->label(__('Pilih Nomor Pesanan'))
@@ -653,7 +653,7 @@ class OrderResource extends Resource
 
                 // Ordered Product
                 Infolists\Components\Section::make(__('Paket Dipesan'))
-                    ->icon('heroicon-o-shopping-bag')
+                    ->icon('heroicon-s-shopping-bag')
                     ->iconColor('primary')
                     ->compact()
                     ->schema([
@@ -696,7 +696,7 @@ class OrderResource extends Resource
 
                 // Pricing
                 Infolists\Components\Section::make(__('Rincian Harga'))
-                    ->icon('heroicon-o-currency-dollar')
+                    ->icon('heroicon-s-currency-dollar')
                     ->iconColor('success')
                     ->compact()
                     ->schema([
@@ -711,7 +711,7 @@ class OrderResource extends Resource
 
                 // Notes
                 Infolists\Components\Section::make(__('Catatan Pemesan'))
-                    ->icon('heroicon-o-document-text')
+                    ->icon('heroicon-s-document-text')
                     ->iconColor('gray')
                     ->compact()
                     ->schema([
@@ -724,7 +724,7 @@ class OrderResource extends Resource
 
                 // Metode Pembayaran & Countdown
                 Infolists\Components\Section::make(__('Metode Pembayaran & Batas Waktu'))
-                    ->icon('heroicon-o-credit-card')
+                    ->icon('heroicon-s-credit-card')
                     ->iconColor('success')
                     ->compact()
                     ->schema([
@@ -734,7 +734,7 @@ class OrderResource extends Resource
                         Infolists\Components\Actions::make([
                             Infolists\Components\Actions\Action::make('upload_proof')
                                 ->label(__('Upload Bukti Pembayaran'))
-                                ->icon('heroicon-o-photo')
+                                ->icon('heroicon-s-photo')
                                 ->button()
                                 ->color('success')
                                 ->visible(fn (Order $record) => in_array($record->payment_status, [

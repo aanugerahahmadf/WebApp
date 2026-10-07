@@ -56,7 +56,7 @@ return [
         | You can customize it if your application uses a different icon.
         |
         */
-        'navigation_icon' => 'heroicon-o-chat-bubble-left-right',
+        'navigation_icon' => 'heroicon-s-chat-bubble-left-right',
 
         /*
         |--------------------------------------------------------------------------

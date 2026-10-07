@@ -50,7 +50,7 @@ class ViewOrder extends ViewRecord
         return [
             Actions\Action::make('back')
                 ->label(__('Kembali'))
-                ->icon('heroicon-o-arrow-left')
+                ->icon('heroicon-s-arrow-left')
                 ->color('gray')
                 ->url(function () {
                     $from = request()->query('from');
@@ -72,7 +72,7 @@ class ViewOrder extends ViewRecord
 
             Actions\EditAction::make()
                 ->label(__('Edit Pesanan'))
-                ->icon('heroicon-o-pencil-square')
+                ->icon('heroicon-s-pencil-square')
                 ->url(fn () => OrderResource::getUrl('edit', ['record' => $this->record, 'from' => 'view']))
                 ->visible(fn () => in_array($this->record->status, [
                     OrderStatus::PENDING,

@@ -17,7 +17,7 @@ class PaymentGatewayResource extends Resource
 
     protected static ?string $slug = 'payment-gateways';
 
-    protected static ?string $navigationIcon = 'heroicon-o-server-stack';
+    protected static ?string $navigationIcon = 'heroicon-s-server-stack';
 
     protected static ?int $navigationSort = 4;
 

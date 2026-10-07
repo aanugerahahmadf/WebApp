@@ -27,7 +27,7 @@ class HistoryResource extends Resource
 
     protected static ?int $navigationSort = 5;
 
-    protected static ?string $navigationIcon = 'heroicon-o-clock';
+    protected static ?string $navigationIcon = 'heroicon-s-clock';
 
     public static function getGloballySearchableAttributes(): array
     {
@@ -95,7 +95,7 @@ class HistoryResource extends Resource
             ->paginated(false)
             ->emptyStateHeading(__('Belum ada histori transaksi'))
             ->emptyStateDescription(__('Temukan layanan pernikahan impianmu dan mulai transaksi pertama hari ini!'))
-            ->emptyStateIcon('heroicon-o-clock')
+            ->emptyStateIcon('heroicon-s-clock')
             ->emptyStateActions([
                 Tables\Actions\Action::make('explore')
                     ->label(__('Cari Layanan'))

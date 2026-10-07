@@ -82,7 +82,7 @@ class PackageResource extends Resource
                     ->schema([
                         Forms\Components\Section::make(__('Informasi Utama'))
                             ->description(__('Penamaan dan deskripsi paket dekorasi.'))
-                            ->icon('heroicon-o-information-circle')
+                            ->icon('heroicon-s-information-circle')
                             ->schema([
                                 Forms\Components\TextInput::make('name')
                                     ->label(__('Nama Paket'))
@@ -90,20 +90,20 @@ class PackageResource extends Resource
                                     ->maxLength(255)
                                     ->live(onBlur: true)
                                     ->afterStateUpdated(fn (Forms\Set $set, ?string $state) => $set('slug', str($state)->slug()))
-                                    ->prefixIcon('heroicon-o-gift'),
+                                    ->prefixIcon('heroicon-s-gift'),
                                 Forms\Components\TextInput::make('slug')
                                     ->label(__('Slug'))
                                     ->required()
                                     ->unique(ignorable: fn (?Package $record) => $record)
                                     ->maxLength(255)
-                                    ->prefixIcon('heroicon-o-link'),
+                                    ->prefixIcon('heroicon-s-link'),
 
                                 Forms\Components\Select::make('category_id')
                                     ->searchable()
                                     ->label(__('Kategori Dekorasi'))
                                     ->relationship('category', 'name', fn ($query) => $query->forPackages())
                                     ->preload()
-                                    ->prefixIcon('heroicon-o-tag')
+                                    ->prefixIcon('heroicon-s-tag')
                                     ->columnSpanFull()
                                     ->required(),
                                 Forms\Components\TextInput::make('stock')
@@ -112,7 +112,7 @@ class PackageResource extends Resource
                                     ->numeric()
                                     ->default(10)
                                     ->required()
-                                    ->prefixIcon('heroicon-o-archive-box'),
+                                    ->prefixIcon('heroicon-s-archive-box'),
                                 Forms\Components\RichEditor::make('description')
                                     ->label(__('Deskripsi Lengkap'))
                                     ->columnSpanFull()
@@ -124,7 +124,7 @@ class PackageResource extends Resource
 
                         Forms\Components\Section::make(__('Harga & Fitur'))
                             ->description(__('Informasi finansial dan fasilitas yang didapatkan.'))
-                            ->icon('heroicon-o-currency-dollar')
+                            ->icon('heroicon-s-currency-dollar')
                             ->schema([
                                 Forms\Components\TextInput::make('price')
                                     ->label(__('Harga Dasar'))
@@ -153,7 +153,7 @@ class PackageResource extends Resource
                     ->schema([
                         Forms\Components\Section::make(__('Media Portfolio'))
                             ->description(__('Upload foto utama dan video presentasi dari paket ini.'))
-                            ->icon('heroicon-o-photo')
+                            ->icon('heroicon-s-photo')
                             ->schema([
                                 Forms\Components\SpatieMediaLibraryFileUpload::make('image')
                                     ->label(__('Foto Paket (boleh lebih dari satu)'))
@@ -189,18 +189,18 @@ class PackageResource extends Resource
                             ]),
 
                         Forms\Components\Section::make(__('Status & Klasifikasi'))
-                            ->icon('heroicon-o-sparkles')
+                            ->icon('heroicon-s-sparkles')
                             ->schema([
                                 Forms\Components\Toggle::make('is_featured')
                                     ->label(__('Paket Unggulan'))
                                     ->helperText(__('Tampilkan paket ini di halaman rekomendasi.'))
                                     ->onIcon('heroicon-s-star')
-                                    ->offIcon('heroicon-o-star')
+                                    ->offIcon('heroicon-s-star')
                                     ->onColor('warning'),
                             ]),
 
                         Forms\Components\Section::make(__('Tema & Kapasitas'))
-                            ->icon('heroicon-o-users')
+                            ->icon('heroicon-s-users')
                             ->schema([
                                 Forms\Components\ColorPicker::make('color')
                                     ->label(__('Warna Aksen')),
@@ -210,7 +210,7 @@ class PackageResource extends Resource
                             ->relationship('vendor', 'store_name')
                             ->searchable()
                             ->preload()
-                            ->prefixIcon('heroicon-o-user'),
+                            ->prefixIcon('heroicon-s-user'),
                     ])->columnSpan(['lg' => 1]),
             ])->columns(3);
     }
@@ -242,20 +242,20 @@ class PackageResource extends Resource
                     ->searchable()
                     ->label(__('Nama Paket'))
                     ->sortable()
-                    ->icon('heroicon-o-gift'),
+                    ->icon('heroicon-s-gift'),
                 Tables\Columns\TextColumn::make('vendor.store_name')
                     ->label(__('Vendor'))
                     ->searchable()
                     ->sortable()
                     ->badge()
                     ->color('success')
-                    ->icon('heroicon-o-user'),
+                    ->icon('heroicon-s-user'),
                 Tables\Columns\TextColumn::make('price')
                     ->label(__('Harga Dasar'))
                     ->money('IDR')
                     ->sortable()
                     ->alignment('end')
-                    ->icon('heroicon-o-banknotes'),
+                    ->icon('heroicon-s-banknotes'),
                 Tables\Columns\TextColumn::make('stock')
                     ->label(__('Stok'))
                     ->badge()
@@ -291,7 +291,7 @@ class PackageResource extends Resource
                     ->dateTime()
                     ->alignment('center')
                     ->sortable()
-                    ->icon('heroicon-o-calendar')
+                    ->icon('heroicon-s-calendar')
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label(__('Diperbarui Pada'))

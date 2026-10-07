@@ -30,7 +30,7 @@ class ReviewResource extends Resource
 
     protected static ?string $slug = 'reviews';
 
-    protected static ?string $navigationIcon = 'heroicon-o-star';
+    protected static ?string $navigationIcon = 'heroicon-s-star';
 
     protected static ?int $navigationSort = 4;
 
@@ -152,7 +152,7 @@ class ReviewResource extends Resource
                             ->relationship('package', 'name', fn ($query) => $query->whereHas('orders', fn ($q) => $q->where('user_id', Filament::auth()->id())))
                             ->preload()
                             ->label(__('Layanan Paket'))
-                            ->prefixIcon('heroicon-o-gift')
+                            ->prefixIcon('heroicon-s-gift')
                             ->requiredWithout('product_id'),
 
                         Forms\Components\Select::make('product_id')
@@ -160,7 +160,7 @@ class ReviewResource extends Resource
                             ->relationship('product', 'name', fn ($query) => $query->whereHas('orders', fn ($q) => $q->where('user_id', Filament::auth()->id())))
                             ->preload()
                             ->label(__('Produk'))
-                            ->prefixIcon('heroicon-o-shopping-bag')
+                            ->prefixIcon('heroicon-s-shopping-bag')
                             ->requiredWithout('package_id'),
                     ])->columns(2),
                 Forms\Components\Section::make(__('Rating & Ceritakan Pengalaman Anda'))
@@ -324,7 +324,7 @@ class ReviewResource extends Resource
                             ->date('d M Y, H:i')
                             ->size('xs')
                             ->color('gray')
-                            ->icon('heroicon-o-clock'),
+                            ->icon('heroicon-s-clock'),
                     ])->extraAttributes(['class' => 'mt-2 pt-2']),
 
                 ])->space(3)->extraAttributes(['class' => 'p-4 bg-white dark:bg-gray-950 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800']),

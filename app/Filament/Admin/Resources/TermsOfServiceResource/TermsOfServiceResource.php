@@ -17,7 +17,7 @@ class TermsOfServiceResource extends Resource
 
     protected static ?string $slug = 'terms-of-services';
 
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static ?string $navigationIcon = 'heroicon-s-document-text';
 
     public static function getNavigationGroup(): ?string
     {
@@ -92,13 +92,13 @@ class TermsOfServiceResource extends Resource
                     ->color('primary')
                     ->searchable()
                     ->sortable()
-                    ->icon('heroicon-o-document-text'),
+                    ->icon('heroicon-s-document-text'),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label(__('Terakhir Diupdate'))
                     ->dateTime('d M Y H:i')
                     ->sortable()
                     ->alignment('center')
-                    ->icon('heroicon-o-calendar'),
+                    ->icon('heroicon-s-calendar'),
             ])
             ->filters([])
             ->actions([

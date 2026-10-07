@@ -17,7 +17,7 @@ class ReferenceOptionResource extends Resource
 
     protected static ?string $slug = 'reference-options';
 
-    protected static ?string $navigationIcon = 'heroicon-o-list-bullet';
+    protected static ?string $navigationIcon = 'heroicon-s-list-bullet';
 
     protected static ?int $navigationSort = 8;
 
@@ -89,7 +89,7 @@ class ReferenceOptionResource extends Resource
                     ->color('primary')
                     ->searchable()
                     ->sortable()
-                    ->icon('heroicon-o-tag'),
+                    ->icon('heroicon-s-tag'),
                 Tables\Columns\TextColumn::make('key')
                     ->label(__('Nilai'))
                     ->searchable()

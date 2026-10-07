@@ -78,6 +78,6 @@ class LatestBookings extends BaseWidget
             ->paginated(false)
             ->emptyStateHeading(__('Belum ada pesanan'))
             ->emptyStateDescription(__('Mulai rencanakan pernikahan Anda sekarang.'))
-            ->emptyStateIcon('heroicon-o-shopping-bag');
+            ->emptyStateIcon('heroicon-s-shopping-bag');
     }
 }

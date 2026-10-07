@@ -54,7 +54,7 @@ class NotificationDetailPage extends Page
         $this->notificationDetail = [
             'title' => (string) ($data['title'] ?? __('Notifikasi')),
             'body' => (string) ($data['body'] ?? ''),
-            'icon' => (string) ($data['icon'] ?? 'heroicon-o-bell-alert'),
+            'icon' => (string) ($data['icon'] ?? 'heroicon-s-bell-alert'),
             'received_at' => $notification->created_at?->translatedFormat('d F Y, H:i:s') ?? '-',
             'action_url' => $this->withNotificationReturnUrl($actionUrl),
             'action_label' => is_array($firstAction) && is_string($firstAction['label'] ?? null) ? $firstAction['label'] : null,

@@ -23,7 +23,7 @@ class VendorResource extends Resource
 
     protected static ?string $slug = 'vendors';
 
-    protected static ?string $navigationIcon = 'heroicon-o-building-storefront';
+    protected static ?string $navigationIcon = 'heroicon-s-building-storefront';
 
     protected static ?int $navigationSort = 8;
 
@@ -71,22 +71,22 @@ class VendorResource extends Resource
             ->schema([
                 Forms\Components\Section::make(__('Informasi Vendor'))
                     ->description(__('Data profil vendor penyedia layanan dekorasi.'))
-                    ->icon('heroicon-o-building-storefront')
+                    ->icon('heroicon-s-building-storefront')
                     ->schema([
                         Forms\Components\TextInput::make('store_name')
                             ->label(__('Nama Toko'))
                             ->required()
                             ->maxLength(255)
-                            ->prefixIcon('heroicon-o-tag'),
+                            ->prefixIcon('heroicon-s-tag'),
                         Forms\Components\TextInput::make('contact_person')
                             ->label(__('Nama Kontak'))
                             ->maxLength(255)
-                            ->prefixIcon('heroicon-o-user'),
+                            ->prefixIcon('heroicon-s-user'),
                         Forms\Components\TextInput::make('no_telp')
                             ->label(__('No. Telepon'))
                             ->tel()
                             ->maxLength(255)
-                            ->prefixIcon('heroicon-o-phone'),
+                            ->prefixIcon('heroicon-s-phone'),
                         Forms\Components\RichEditor::make('store_description')
                             ->label(__('Deskripsi Toko'))
                             ->toolbarButtons([
@@ -124,7 +124,7 @@ class VendorResource extends Resource
                     ->searchable()
                     ->label(__('Nama Toko'))
                     ->sortable()
-                    ->icon('heroicon-o-building-storefront'),
+                    ->icon('heroicon-s-building-storefront'),
                 Tables\Columns\TextColumn::make('contact_person')
                     ->searchable()
                     ->label(__('Nama Kontak'))
@@ -132,7 +132,7 @@ class VendorResource extends Resource
                     ->placeholder('-'),
                 Tables\Columns\TextColumn::make('no_telp')
                     ->label(__('No. Telepon'))
-                    ->icon('heroicon-o-phone')
+                    ->icon('heroicon-s-phone')
                     ->placeholder('-'),
                 Tables\Columns\IconColumn::make('is_active')
                     ->label(__('Status'))

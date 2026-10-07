@@ -85,7 +85,7 @@ return [
             'admin' => [
                 [
                     'label' => 'Beranda',
-                    'icon' => 'heroicon-o-home',
+                    'icon' => 'heroicon-s-home',
                     'url' => \App\Filament\Admin\Pages\Dashboard\Dashboard::class,
                 ],
                 [
@@ -116,7 +116,7 @@ return [
             'user' => [
                 [
                     'label' => 'Beranda',
-                    'icon' => 'heroicon-o-home',
+                    'icon' => 'heroicon-s-home',
                     'url' => \App\Filament\User\Pages\Dashboard\Dashboard::class,
                 ],
                 [
@@ -132,7 +132,7 @@ return [
                 ],
                 [
                     'label' => 'Pesan',
-                    'icon' => 'heroicon-o-chat-bubble-left-right',
+                    'icon' => 'heroicon-s-chat-bubble-left-right',
                     'url' => \App\Filament\User\Pages\MessagesPage\MessagesPage::class,
                     'match' => 'starts',
                 ],
