@@ -293,6 +293,22 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     background-color: transparent !important;
 }
 
+/* --- Panel dropdown: tepi seragam dengan panel CBIR ------------------
+   Panel dropdown milik Filament (fi-dropdown-panel) masih memakai
+   ring-1 dari blade, jadi cincinnya digambar lewat box-shadow dan
+   tepinya tidak cekl. Panel CBIR sudah memakai border --fi-glass-ring
+   dan tanpa shadow. Ketiganya diseragamkan ke bentuk CBIR. */
+.fi-panel-welcome .fi-dropdown-panel,
+.fi-panel-user .fi-dropdown-panel,
+.fi-panel-admin .fi-dropdown-panel {
+    --tw-ring-color: transparent;
+    --tw-ring-shadow: 0 0 #0000;
+    --tw-ring-offset-shadow: 0 0 #0000;
+
+    border: 1px solid var(--fi-glass-ring) !important;
+    box-shadow: none !important;
+}
+
 /* --- Panel dropdown CBIR / bahasa ------------------------------------
    Panel CBIR memakai kelas `ring-1` di blade, jadi Filament menggambar
    cincin lewat box-shadow --tw-ring-shadow, bukan border. Cincin itu
