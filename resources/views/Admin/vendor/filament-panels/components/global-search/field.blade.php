@@ -16,7 +16,7 @@
     <div class="fi-input-wrp flex items-center rounded-lg"
         style="
             background-color: var(--fi-glass-bg);
-            background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint));
+            background-image: linear-gradient(var(--fi-glass-tint-search), var(--fi-glass-tint-search));
             -webkit-backdrop-filter: var(--fi-glass-blur);
             backdrop-filter: var(--fi-glass-blur);
             border: 1px solid var(--fi-glass-ring);

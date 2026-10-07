@@ -48,6 +48,8 @@
     --fi-glass-ring: rgb(0 0 0 / 0.12) !important;
     --fi-glass-blur: blur(20px) saturate(180%) !important;
     --fi-glass-tint: rgba(250, 204, 21, 0.35) !important; /* gold tint 35% */
+    /* Global Search / CBIR: gold tint 25% (lebih tipis dari permukaan lain) */
+    --fi-glass-tint-search: rgba(250, 204, 21, 0.25) !important;
 }
 
 .dark .fi-panel-welcome,
@@ -57,6 +59,8 @@
     --fi-glass-ring: rgb(255 255 255 / 0.15) !important;
     --fi-glass-blur: blur(20px) saturate(180%) !important;
     --fi-glass-tint: rgba(250, 204, 21, 0.35) !important; /* gold tint 35% */
+    /* Global Search / CBIR: gold tint 25% (lebih tipis dari permukaan lain) */
+    --fi-glass-tint-search: rgba(250, 204, 21, 0.25) !important;
 }
 
 /* Gradasi warna dilepas dari SEMUA permukaan kaca (kapsul,
