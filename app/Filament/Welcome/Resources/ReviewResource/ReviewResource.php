@@ -182,14 +182,12 @@ class ReviewResource extends Resource
                             ->columnSpanFull(),
                         Forms\Components\Repeater::make('photos')
                             ->label(__('Foto Ulasan'))
-                            ->relationship()
                             ->schema([
                                 TakePicture::make('photo')
                                     ->label(__('Foto'))
                                     ->disk('public')
                                     ->directory('review-photos')
                                     ->visibility('public')
-                                    ->maxSize(5120)
                                     ->imageQuality(90)
                                     ->aspect('3:4')
                                     ->useModal(true)
@@ -204,7 +202,6 @@ class ReviewResource extends Resource
                             ->maxItems(10)
                             ->addActionLabel(__('Tambah Foto'))
                             ->itemLabel(fn (array $state): ?string => $state['photo'] ? __('Foto') . ' ' . (array_search($state, $get('photos')) + 1) : null)
-                            ->columnSpanFull()
                             ->helperText(__('Opsional — tambah beberapa foto. Setiap foto bisa diambil dari kamera, video, galeri, atau file.')),
                     ]),
             ]);
@@ -235,14 +232,12 @@ class ReviewResource extends Resource
                 ->columnSpanFull(),
             Forms\Components\Repeater::make('photos')
                             ->label(__('Foto Ulasan'))
-                            ->relationship()
                             ->schema([
                                 TakePicture::make('photo')
                                     ->label(__('Foto'))
                                     ->disk('public')
                                     ->directory('review-photos')
                                     ->visibility('public')
-                                    ->maxSize(5120)
                                     ->imageQuality(90)
                                     ->aspect('3:4')
                                     ->useModal(true)
@@ -257,7 +252,6 @@ class ReviewResource extends Resource
                             ->maxItems(10)
                             ->addActionLabel(__('Tambah Foto'))
                             ->itemLabel(fn (array $state): ?string => $state['photo'] ? __('Foto') . ' ' . (array_search($state, $get('photos')) + 1) : null)
-                            ->columnSpanFull()
                             ->helperText(__('Opsional — tambah beberapa foto. Setiap foto bisa diambil dari kamera, video, galeri, atau file.')),
         ];
     }
@@ -282,14 +276,12 @@ class ReviewResource extends Resource
                 ->rows(5),
             Forms\Components\Repeater::make('photos')
                             ->label(__('Foto Ulasan'))
-                            ->relationship()
                             ->schema([
                                 TakePicture::make('photo')
                                     ->label(__('Foto'))
                                     ->disk('public')
                                     ->directory('review-photos')
                                     ->visibility('public')
-                                    ->maxSize(5120)
                                     ->imageQuality(90)
                                     ->aspect('3:4')
                                     ->useModal(true)

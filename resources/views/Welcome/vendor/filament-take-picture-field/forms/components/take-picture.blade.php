@@ -27,6 +27,7 @@
             initialized: false,
             isHovering: false,
             captureMode: 'photo',
+            sourceModalOpen: false,
             mediaRecorder: null,
             recordedChunks: [],
             isRecording: false,
@@ -474,6 +475,34 @@
                 this.startCamera();
             },
 
+            onGalleryPicked(event) {
+                const file = event.target.files?.[0];
+                if (!file) return;
+
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        this.photoData = e.target.result;
+                        this.showingPreview = true;
+                        this.stopCamera();
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    // Video file: upload directly
+                    this.$wire.upload(
+                        'cameraUpload',
+                        file,
+                        () => {
+                            this.closeModal();
+                        },
+                        () => {
+                            this.webcamError = '{{ __('Gagal mengunggah file.') }}';
+                        }
+                    );
+                }
+                event.target.value = '';
+            },
+
             stopCamera() {
                 this.webcamActive = false;
 
@@ -628,34 +657,100 @@
 
             <!-- Empty -->
             <template x-if="!photoData">
-                <button type="button" @click="!isDisabled && startCamera()" :disabled="isDisabled" class="
-                        relative w-full rounded-lg border-2 border-dashed
-                        bg-white shadow-sm
-                        border-gray-300 hover:border-primary-500 hover:bg-gray-50
-                        dark:bg-white/5 dark:border-white/10 dark:hover:border-primary-400 dark:hover:bg-white/10
-                        ring-1 ring-transparent dark:ring-white/10
-                        transition-all duration-200
-                        focus:outline-none focus:ring-2 focus:ring-primary-600/30 dark:focus:ring-primary-400/30
-                    " :class="{
-                        'cursor-not-allowed opacity-50': isDisabled,
-                        'cursor-pointer': !isDisabled,
-                    }">
-                    <div class="flex flex-col items-center justify-center py-8 px-4">
-                        <div class="mb-3 rounded-full p-3 bg-gray-100 dark:bg-white/10">
-                            <x-filament::icon icon="heroicon-o-camera" class="h-6 w-6 text-gray-500 dark:text-gray-200" />
+                <div>
+                    <!-- Tombol sumber: membuka modal pilihan -->
+                    <button type="button" @click="sourceModalOpen = true" :disabled="isDisabled" class="
+                            relative w-full rounded-lg border-2 border-dashed
+                            bg-white shadow-sm
+                            border-gray-300 hover:border-primary-500 hover:bg-gray-50
+                            dark:bg-white/5 dark:border-white/10 dark:hover:border-primary-400 dark:hover:bg-white/10
+                            ring-1 ring-transparent dark:ring-white/10
+                            transition-all duration-200
+                            focus:outline-none focus:ring-2 focus:ring-primary-600/30 dark:focus:ring-primary-400/30
+                        " :class="{
+                            'cursor-not-allowed opacity-50': isDisabled,
+                            'cursor-pointer': !isDisabled,
+                        }">
+                        <div class="flex flex-col items-center justify-center py-8 px-4">
+                            <div class="mb-3 rounded-full p-3 bg-gray-100 dark:bg-white/10">
+                                <x-filament::icon icon="heroicon-o-camera" class="h-6 w-6 text-gray-500 dark:text-gray-200" />
+                            </div>
+
+                            <p class="text-sm font-medium text-gray-900 dark:text-white">
+                                {{ __('filament-take-picture-field::take-picture-field.click_to_capture') }}
+                            </p>
+
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-300">
+                                {{ __('filament-take-picture-field::take-picture-field.opens_camera_hint') }}
+                            </p>
                         </div>
+                    </button>
 
-                        <p class="text-sm font-medium text-gray-900 dark:text-white">
-                            {{ __('filament-take-picture-field::take-picture-field.click_to_capture') }}
-                        </p>
+                    {{-- Modal Pilihan Sumber --}}
+                    <template x-teleport="body">
+                        <div x-show="sourceModalOpen" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 z-50 flex items-end justify-center bg-gray-950/50 p-3 sm:items-center sm:p-4" x-on:click.self="sourceModalOpen = false" style="display:none;">
+                            <div class="w-full max-w-sm rounded-xl bg-white shadow-xl ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10" @click.stop>
+                                {{-- Header --}}
+                                <div class="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-white/10">
+                                    <h3 class="text-base font-semibold text-gray-950 dark:text-white">{{ __('Pilih Sumber') }}</h3>
+                                    <button type="button" @click="sourceModalOpen = false" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
+                                        <x-filament::icon icon="heroicon-m-x-mark" class="h-5 w-5" />
+                                    </button>
+                                </div>
+                                {{-- Body --}}
+                                <div class="space-y-1 px-4 py-3">
+                                    <button type="button" @click="sourceModalOpen = false; captureMode = 'photo'; startCamera()" class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5">
+                                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600 ring-1 ring-primary-600/10 dark:bg-primary-400/10 dark:text-primary-400">
+                                            <x-filament::icon icon="heroicon-o-camera" class="h-5 w-5" />
+                                        </span>
+                                        <span class="flex-1 text-left text-gray-700 dark:text-gray-200">{{ __('Kamera') }}</span>
+                                    </button>
+                                    <button type="button" @click="sourceModalOpen = false; captureMode = 'video'; startCamera()" class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5">
+                                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600 ring-1 ring-primary-600/10 dark:bg-primary-400/10 dark:text-primary-400">
+                                            <x-filament::icon icon="heroicon-o-video-camera" class="h-5 w-5" />
+                                        </span>
+                                        <span class="flex-1 text-left text-gray-700 dark:text-gray-200">{{ __('Video') }}</span>
+                                    </button>
+                                    <button type="button" @click="sourceModalOpen = false; $refs.galleryInput.click()" class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5">
+                                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600 ring-1 ring-primary-600/10 dark:bg-primary-400/10 dark:text-primary-400">
+                                            <x-filament::icon icon="heroicon-o-photo" class="h-5 w-5" />
+                                        </span>
+                                        <span class="flex-1 text-left text-gray-700 dark:text-gray-200">{{ __('Galeri') }}</span>
+                                    </button>
+                                    <button type="button" @click="sourceModalOpen = false; $refs.fileInput.click()" class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5">
+                                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600 ring-1 ring-primary-600/10 dark:bg-primary-400/10 dark:text-primary-400">
+                                            <x-filament::icon icon="heroicon-o-folder" class="h-5 w-5" />
+                                        </span>
+                                        <span class="flex-1 text-left text-gray-700 dark:text-gray-200">{{ __('File') }}</span>
+                                    </button>
+                                    <div class="my-1 border-t border-gray-100 dark:border-white/10"></div>
+                                    <button type="button" @click="sourceModalOpen = false" class="w-full rounded-lg px-3 py-2.5 text-center text-sm font-semibold text-danger-600 dark:text-danger-400">
+                                        {{ __('Batal') }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
 
-                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-300">
-                            {{ __('filament-take-picture-field::take-picture-field.opens_camera_hint') }}
-                        </p>
-                    </div>
-                </button>
+                    <input x-ref="galleryInput" type="file" accept="image/*,video/*" class="sr-only" x-on:change="onGalleryPicked($event)">
+                    <input x-ref="fileInput" type="file" accept="image/*,video/*,.pdf,.doc,.docx" class="sr-only" x-on:change="onGalleryPicked($event)">
+                </div>
             </template>
 
+            {{-- Tombol Galeri dan File -- untuk memilih file dari galeri atau file manager --}}
+            <div x-show="!photoData" class="mt-2 grid grid-cols-2 gap-2">
+                <button type="button" @click="$refs.galleryInput.click()" class="flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/10">
+                    <x-filament::icon icon="heroicon-o-photo" class="h-5 w-5" />
+                    {{ __('Galeri') }}
+                </button>
+                <button type="button" @click="$refs.fileInput.click()" class="flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/10">
+                    <x-filament::icon icon="heroicon-o-folder" class="h-5 w-5" />
+                    {{ __('File') }}
+                </button>
+            </div>
+
+            <input x-ref="galleryInput" type="file" accept="image/*,video/*" class="sr-only" x-on:change="onGalleryPicked($event)">
+            <input x-ref="fileInput" type="file" accept="image/*,video/*,.pdf,.doc,.docx" class="sr-only" x-on:change="onGalleryPicked($event)">
 
             <!-- Photo preview -->
             <template x-if="photoData">
