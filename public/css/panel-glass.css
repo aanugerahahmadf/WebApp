@@ -37,9 +37,9 @@
  *                 filter.
  * ===================================================================== */
 
-/* --- Token KACA: Blur 80% + color tint 15px --- */
-/* Light: 80% putih (alpha 0.80) + blur 15px + hitam tint 15%
-   Dark:  80% hitam (alpha 0.80) + blur 15px + putih tint 15%
+/* --- Token KACA: Blur 80% + Gold tint 15px --- */
+/* Light: 80% putih (alpha 0.80) + blur 15px + gold tint 15%
+   Dark:  80% hitam (alpha 0.80) + blur 15px + gold tint 15%
    Override di sini tanpa build. */
 .fi-panel-welcome,
 .fi-panel-user,
@@ -47,7 +47,7 @@
     --fi-glass-bg: rgb(255 255 255 / 0.80) !important;
     --fi-glass-ring: rgb(0 0 0 / 0.12) !important;
     --fi-glass-blur: blur(15px) saturate(180%) !important;
-    --fi-glass-tint: rgba(0, 0, 0, 0.15) !important; /* hitam tint 15% untuk light */
+    --fi-glass-tint: rgba(250, 204, 21, 0.15) !important; /* gold tint 15% */
 }
 
 .dark .fi-panel-welcome,
@@ -56,7 +56,7 @@
     --fi-glass-bg: rgb(12 12 15 / 0.80) !important;
     --fi-glass-ring: rgb(255 255 255 / 0.15) !important;
     --fi-glass-blur: blur(15px) saturate(180%) !important;
-    --fi-glass-tint: rgba(255, 255, 255, 0.15) !important; /* putih tint 15% untuk dark */
+    --fi-glass-tint: rgba(250, 204, 21, 0.15) !important; /* gold tint 15% */
 }
 
 /* Gradasi warna dilepas dari SEMUA permukaan kaca (kapsul,
@@ -283,44 +283,6 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
 .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
 .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-grouped-dropdown-trigger {
     background-color: transparent !important;
-}
-
-/* --- Sidebar items: samakan dengan topbar dropdown (.fi-dropdown-list-item) --- */
-/* Font size 14px (text-sm), icon & label colors, badge size sama seperti
-   item dropdown di topbar. Override Tailwind utilities bawaan Filament. */
-
-.fi-sidebar .fi-sidebar-item-button {
-    font-size: 0.875rem !important; /* text-sm = 14px */
-    line-height: 1.25rem !important;
-}
-
-.fi-sidebar .fi-sidebar-item-label {
-    font-size: 0.875rem !important; /* text-sm = 14px */
-    line-height: 1.25rem !important;
-    font-weight: 500 !important;
-}
-
-/* Icon colors: inactive = SAMA dengan label (gray-700 light / gray-200 dark),
-   active = amber */
-.fi-sidebar .fi-sidebar-item-button .fi-sidebar-item-icon {
-    color: rgb(55 65 81) !important; /* gray-700 light = label color */
-}
-.dark .fi-sidebar .fi-sidebar-item-button .fi-sidebar-item-icon {
-    color: rgb(229 231 235) !important; /* gray-200 dark = label color */
-}
-.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button .fi-sidebar-item-icon {
-    color: #fbbf24 !important; /* amber-400 */
-}
-
-/* Label colors: inactive = gray-700/200, active = amber */
-.fi-sidebar .fi-sidebar-item-label {
-    color: rgb(55 65 81) !important; /* gray-700 */
-}
-.dark .fi-sidebar .fi-sidebar-item-label {
-    color: rgb(229 231 235) !important; /* gray-200 */
-}
-.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-label {
-    color: #fbbf24 !important; /* amber-400 */
 }
 
 /* Badge: background ngikutin topnav & sidebar (glass), tapi text/border pakai Filament default */
