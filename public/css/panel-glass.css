@@ -127,14 +127,49 @@
         0 24px 60px -20px rgb(0 0 0 / 0.45) !important;
 }
 
-/* Header sticky di modal Filament punya `bg-white` sendiri (kelas
-   .fi-sticky). Kalau tidak dilepas, bagian atas modal tetap pekat dan
-   terlihat seperti dua permukaan yang tidak menyambung. */
+/* Header dan footer sticky di modal Filament (kelas .fi-sticky).
+ *
+ * sebelumnya di sini ditulis `background-color: transparent` dengan
+ * alasan "biar tidak terlihat seperti dua permukaan yang tidak
+ * menyambung". Latar yang sama persis dengan induknya memang rapi
+ * saat modal tidak bergulir -- tapi hanya itu. .fi-sticky punya
+ * position: sticky dengan top-0 dan bottom-0, jadi saat isinya
+ * bergulir, konten form berjalan DI BAWAH header dan footer. Dengan
+ * latar transparan, teksnya tidak tertutup dan dua lapisan teks
+ * bertumpuk.
+ *
+ * Di layar desktop tinggi modal jarang bergulir, jadi tidak terlihat.
+ * Di ponsel (400 x 632) dan di aplikasi Android/iOS yang tinggi
+ * jendela lebih pendek lagi, modal selalu bergulir -- judul modal
+ * menimpa baris rating bintang, dan tombol Kirim/Batal menimpa isi
+ * form. Itu yang diperbaiki di sini.
+ *
+ * MASALAH: "Write a Review / Share your experience" header transparan,
+ * konten form lewat di bawahnya dan bertumpuk. Di ponsel (400px lebar,
+ * 600px tinggi) dan aplikasi Android/iOS, modal selalu bergulir.
+ *
+ * SOLUSI: header dan footer PEKAT 100% (Blur 100), bukan kaca.
+ *   - Light: bg putih 100% + light tint 50%
+ *   - Night: bg hitam 100% + dark tint 50%
+ *
+ * Ini menghentikan ketimpahan total karena latar sudah tidak tembus
+ * pandang. Blur/backdrop-filter tidak diperlukan lagi. */
 .fi-panel-welcome .fi-modal-window .fi-sticky,
 .fi-panel-user .fi-modal-window .fi-sticky,
 .fi-panel-admin .fi-modal-window .fi-sticky {
-    background-color: transparent !important;
-    background-image: none !important;
+    background-color: rgb(255 255 255 / 1.00) !important;
+    background-image: linear-gradient(rgb(255 255 255 / 0.50), rgb(255 255 255 / 0.50)) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+}
+
+.dark .fi-panel-welcome .fi-modal-window .fi-sticky,
+.dark .fi-panel-user .fi-modal-window .fi-sticky,
+.dark .fi-panel-admin .fi-modal-window .fi-sticky {
+    background-color: rgb(12 12 15 / 1.00) !important;
+    background-image: linear-gradient(rgb(0 0 0 / 0.50), rgb(0 0 0 / 0.50)) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
 }
 
 /* Garis pemisah di dalam modal mengikuti intensitas yang sama seperti di
