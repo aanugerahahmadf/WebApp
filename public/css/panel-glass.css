@@ -302,16 +302,22 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     box-shadow: none !important;
 }
 
-/* Hover item aktif: lapisan putih tipis di atas kotak gold.
-   Nilai 5% dipakai di kedua mode. Di Light 5% memang nyaris tak
-   kelihatan, dan itu memang yang diminta -- Kotak gold-nya yang
-   menandai item aktif, hover cukup berupa lapisan tipis di atasnya. */
+/* Hover item sidebar: kotak gold yang sama persis dengan item aktif,
+   supaya keduanya tidak terlihat berbeda. Nilai diambil dari token
+   --fi-glass-bg dan --fi-glass-tint, jadi otomatis ikut mode.
+
+   Aturan ini menimpa utility hover Filament
+   (hover:bg-gray-100 dark:hover:bg-white/5) yang tidak setara: di
+   Light bg-gray-100 opaque dan menutupi gold di belakang sidebar,
+   sehingga item yang disorot terlihat seperti blok putih. */
+.fi-sidebar .fi-sidebar-item-button:hover,
+.fi-sidebar .fi-sidebar-item-button:focus-visible,
 .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button:hover,
-.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button:focus-visible,
-.dark .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button:hover,
-.dark .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button:focus-visible {
-    background-color: rgb(255 255 255 / 0.05) !important;
-    background-image: none !important;
+.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button:focus-visible {
+    background-color: var(--fi-glass-bg) !important;
+    background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
+    border: 0 !important;
+    box-shadow: none !important;
 }
 
 /* --- Panel dropdown: tepi seragam dengan panel CBIR ------------------
@@ -397,12 +403,8 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
    dan tidak muncul kotak gelap bercor gold. */
 
 /* --- Kotak item di dropdown Top Navigation dan panel switcher ----------
-   Kotak rounded yang sama persis dengan item aktif di sidebar: lapisan
-   putih tipis tanpa gold tint, tanpa border, tanpa bayangan.
-
-   Dua mode memakai nilai berbeda karena alpha putih yang terlihat di
-   latar gelap tidak terlihat di latar terang. Light naik ke 55% supaya
-   kotaknya ada, Night tetap 5%.
+   Kotak gold yang sama persis dengan item sidebar, memakai token
+   --fi-glass-bg dan --fi-glass-tint, jadi otomatis ikut mode.
 
    Yang sebelumnya dipakai di sini adalah utility Filament sendiri:
      .fi-dropdown-list-item  hover:bg-custom-50 / fi-color-custom
@@ -431,8 +433,8 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
 .fi-panel-admin .x-cam-menu button:focus-visible,
 .fi-panel-admin .fi-dropdown-panel button:hover,
 .fi-panel-admin .fi-dropdown-panel button:focus-visible {
-    background-color: rgb(255 255 255 / 0.55) !important;
-    background-image: none !important;
+    background-color: var(--fi-glass-bg) !important;
+    background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
     border: 0 !important;
     box-shadow: none !important;
 }
@@ -458,7 +460,8 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
 .dark .fi-panel-admin .x-cam-menu button:focus-visible,
 .dark .fi-panel-admin .fi-dropdown-panel button:hover,
 .dark .fi-panel-admin .fi-dropdown-panel button:focus-visible {
-    background-color: rgb(255 255 255 / 0.05) !important;
+    background-color: var(--fi-glass-bg) !important;
+    background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
 }
 
 /* Baris grup Top Navigation, yaitu .fi-topbar-item-button yang memuat
