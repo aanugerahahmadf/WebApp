@@ -355,8 +355,17 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
 
    Berlaku untuk:
      - item sidebar (aktif dan hover)
-     - item dropdown Top Navigation (aktif dan hover)
+     - SEMUA item menu dropdown (aktif dan hover)
      - tombol panel switcher tema, bahasa, dan CBIR (hover)
+
+   Item menu dropdown sengaja TIDAK dipersempit ke .fi-topbar. Panel
+   dropdown Filament di-teleport ke <body>, jadi saat terbuka markup-nya
+   berada di luar .fi-topbar. Selector yang diawali .fi-topbar hanya
+   kebetulan cocok pada panel yang belum sempat teleport -- yaitu menu
+   akun di panel Welcome, yang ikut rule sidebar di baris pertama. Menu
+   profil di panel User dan Admin, dan menu grup sidebar, semuanya
+   tidak pernah kena. Scopenya karena itu hanya .fi-panel-* -- yang
+   menempel di <body> -- sehingga panel di mana pun ikut berlaku.
 
    Nilai ditulis lewat token --fi-box-*, bukan --fi-glass-*: yang diatur
    hanya kotak item, bukan panel kapsul topbar dan sidebar. Dan bukan
@@ -366,15 +375,15 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
 .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-grouped-dropdown-trigger,
 .fi-sidebar .fi-sidebar-item-button:hover,
 .fi-sidebar .fi-sidebar-item-button:focus-visible,
-.fi-panel-welcome .fi-topbar .fi-dropdown-list-item.fi-color-custom,
-.fi-panel-welcome .fi-topbar .fi-dropdown-list-item:hover,
-.fi-panel-welcome .fi-topbar .fi-dropdown-list-item:focus-visible,
-.fi-panel-user .fi-topbar .fi-dropdown-list-item.fi-color-custom,
-.fi-panel-user .fi-topbar .fi-dropdown-list-item:hover,
-.fi-panel-user .fi-topbar .fi-dropdown-list-item:focus-visible,
-.fi-panel-admin .fi-topbar .fi-dropdown-list-item.fi-color-custom,
-.fi-panel-admin .fi-topbar .fi-dropdown-list-item:hover,
-.fi-panel-admin .fi-topbar .fi-dropdown-list-item:focus-visible,
+.fi-panel-welcome .fi-dropdown-list-item.fi-color-custom,
+.fi-panel-welcome .fi-dropdown-list-item:hover,
+.fi-panel-welcome .fi-dropdown-list-item:focus-visible,
+.fi-panel-user .fi-dropdown-list-item.fi-color-custom,
+.fi-panel-user .fi-dropdown-list-item:hover,
+.fi-panel-user .fi-dropdown-list-item:focus-visible,
+.fi-panel-admin .fi-dropdown-list-item.fi-color-custom,
+.fi-panel-admin .fi-dropdown-list-item:hover,
+.fi-panel-admin .fi-dropdown-list-item:focus-visible,
 .fi-panel-welcome .x-cam-menu button:hover,
 .fi-panel-welcome .x-cam-menu button:focus-visible,
 .fi-panel-welcome .lang-dd button:hover,
