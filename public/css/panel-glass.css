@@ -37,15 +37,15 @@
  *                 filter.
  * ===================================================================== */
 
-/* --- Token KACA: Blur 25% + tint 50% (Light pakai Light, Night pakai Dark)
-   Light: 25% putih (alpha 0.25) + blur 20px + light tint 50%
-   Dark:  25% hitam (alpha 0.25) + blur 20px + dark tint 50%
+/* --- Token KACA: Blur 20% + tint 50% (Light pakai Light, Night pakai Dark)
+   Light: 20% putih (alpha 0.20) + blur 20px + light tint 50%
+   Dark:  20% hitam (alpha 0.20) + blur 20px + dark tint 50%
    Tint searah dengan mode: di Light yang ditambahkan terang, di Night
    yang ditambahkan gelap. Override di sini tanpa build. */
 .fi-panel-welcome,
 .fi-panel-user,
 .fi-panel-admin {
-    --fi-glass-bg: rgb(255 255 255 / 0.25) !important;
+    --fi-glass-bg: rgb(255 255 255 / 0.20) !important;
     --fi-glass-ring: rgb(0 0 0 / 0.12) !important;
     --fi-glass-blur: blur(20px) saturate(180%) !important;
     --fi-glass-tint: rgb(255 255 255 / 0.50) !important; /* light tint 50% */
@@ -58,7 +58,7 @@
 .dark .fi-panel-welcome,
 .dark .fi-panel-user,
 .dark .fi-panel-admin {
-    --fi-glass-bg: rgb(12 12 15 / 0.25) !important;
+    --fi-glass-bg: rgb(12 12 15 / 0.20) !important;
     --fi-glass-ring: rgb(255 255 255 / 0.15) !important;
     --fi-glass-blur: blur(20px) saturate(180%) !important;
     --fi-glass-tint: rgb(0 0 0 / 0.50) !important; /* dark tint 50% */
