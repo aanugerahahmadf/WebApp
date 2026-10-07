@@ -282,8 +282,39 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     backdrop-filter: none !important;
 } */
 
-/* Latar item sidebar (aktif maupun hover) memakai bawaan Filament:
-   bg-gray-100 dark:bg-white/5. Tidak ada override di sini. */
+/* --- Kotak item sidebar dan Top Navigation ----------------------------
+   Dua keadaan sama-sama berkotak, dan warnanya sama:
+
+     kotak pilihan (item aktif)  white 40% + white tint 20%
+     kotak klik      (hover)     white 40% + white tint 20%
+
+   Nilai sama di Light dan Night karena yang diwarnai putih, bukan
+   gold: di sidebar ber-gold, lapisan putih membaca sebagai lapisan
+   kebiruan di kedua mode, sementara utility bawaan Filament
+   (bg-gray-100 dark:bg-white/5) di Light berupa abu opaque yang
+   menutupi gold dan di Night berupa putih 5% yang hampir tak
+   terlihat.
+
+   Dipisah dari token --fi-glass-* karena hanya berlaku untuk kotak
+   item, bukan untuk panel kapsul topbar dan sidebar. */
+.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
+.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-grouped-dropdown-trigger,
+.fi-sidebar .fi-sidebar-item-button:hover,
+.fi-sidebar .fi-sidebar-item-button:focus-visible,
+.fi-panel-welcome .fi-topbar .fi-dropdown-list-item.fi-color-custom,
+.fi-panel-welcome .fi-topbar .fi-dropdown-list-item:hover,
+.fi-panel-welcome .fi-topbar .fi-dropdown-list-item:focus-visible,
+.fi-panel-user .fi-topbar .fi-dropdown-list-item.fi-color-custom,
+.fi-panel-user .fi-topbar .fi-dropdown-list-item:hover,
+.fi-panel-user .fi-topbar .fi-dropdown-list-item:focus-visible,
+.fi-panel-admin .fi-topbar .fi-dropdown-list-item.fi-color-custom,
+.fi-panel-admin .fi-topbar .fi-dropdown-list-item:hover,
+.fi-panel-admin .fi-topbar .fi-dropdown-list-item:focus-visible {
+    background-color: rgb(255 255 255 / 0.40) !important;
+    background-image: linear-gradient(rgb(255 255 255 / 0.20), rgb(255 255 255 / 0.20)) !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
 
 /* --- Panel dropdown: tepi seragam dengan panel CBIR ------------------
    Panel dropdown milik Filament (fi-dropdown-panel) masih memakai
