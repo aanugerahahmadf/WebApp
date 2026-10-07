@@ -323,7 +323,19 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     color: #fbbf24 !important; /* amber-400 */
 }
 
-/* Badge: pakai Filament default (bg-custom-50 / dark:bg-custom-400/10) */
+/* Badge: background ngikutin topnav & sidebar (glass), tapi text/border pakai Filament default */
+.fi-sidebar .fi-badge,
+.fi-topbar .fi-badge {
+    /* Glass background ngikutin topnav & sidebar */
+    background-color: var(--fi-glass-bg) !important;
+    background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
+    border: 1px solid var(--fi-glass-ring) !important;
+    -webkit-backdrop-filter: var(--fi-glass-blur) !important;
+    backdrop-filter: var(--fi-glass-blur) !important;
+
+    /* Text & ring color: pakai Filament default (jangan override) */
+    /* class: text-custom-600 dark:text-custom-400 ring-custom-600/10 dark:ring-custom-400/30 */
+}
 
 /* Label di kartu statistik. Di Shared.css, label stat itu dibuat
    dengan warna rgb(203 213 225) (abu sangat terang) -- cocok untuk
