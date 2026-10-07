@@ -80,11 +80,6 @@ class MessagesPage extends Page
         return __('Pesan belum dibaca');
     }
 
-    public static function getNavigationBadgeColor(): string|array|null
-    {
-        return 'danger';
-    }
-
     public static function getNavigationIcon(): string|Htmlable|null
     {
         return config('messages.navigation.navigation_icon', static::$activeNavigationIcon);
