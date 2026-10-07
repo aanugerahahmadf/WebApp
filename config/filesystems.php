@@ -60,11 +60,29 @@ return [
             'report' => false,
         ],
 
-        'cloudinary' => [
+        // Firebase Storage (Google Cloud Storage) — gratis 5 GB, auto-scaling
+        // Butuh: composer require superbalist/laravel-google-cloud-storage
+        'firebase' => [
+            'driver' => 'gcs',
+            'project_id' => env('FIREBASE_PROJECT_ID'),
+            'key_file' => env('FIREBASE_CREDENTIALS', storage_path('keys/firebase-service-account.json')),
+            'bucket' => env('FIREBASE_STORAGE_BUCKET'),
+            'path_prefix' => env('FIREBASE_STORAGE_PATH_PREFIX', 'uploads'),
+            'visibility' => 'public',
+            'metadata' => [
+                'cacheControl' => 'public, max-age=31536000',
+            ],
+        ],
+
+        // Disk gabungan: simpan lokal dulu, lalu sync ke Firebase di background
+        // Pakai untuk upload user (Packages, Products, review-photos)
+        'public_firebase' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => env('CLOUDINARY_URL'),
+            'url' => env('APP_URL', 'http://localhost').'/storage',
             'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
         ],
 
     ],

@@ -61,6 +61,9 @@ pglite-debug.log
 patches.lock.json
 skills-lock.json
 firebase-debug.log
+
+# Firebase service account (private key) — jangan commit!
+/storage/keys/firebase-service-account.json
 .git-rewrite/
 coverage/
 .phpunit.cache/
