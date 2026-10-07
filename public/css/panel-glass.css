@@ -49,6 +49,11 @@
     --fi-glass-ring: rgb(0 0 0 / 0.12) !important;
     --fi-glass-blur: blur(20px) saturate(180%) !important;
     --fi-glass-tint: rgb(255 255 255 / 0.50) !important; /* light tint 50% */
+    /* Kotak pilihan dan kotak klik (lihat blok "Kotak pilihan dan kotak
+       klik" di bawah). Di Light digelapkan supaya tidak sama dengan panel
+       di sekitarnya yang terang; di Night tetap putih. */
+    --fi-box-bg: rgb(0 0 0 / 0.12) !important;
+    --fi-box-tint: rgb(0 0 0 / 0.08) !important;
     /* Placeholder Global Search: topbar ber-gold terang, warna bawaan
        terlalu tipis. Utilitas Tailwind mengatur opacity placeholder lewat
        variabel terpisah, jadi harus lewat ::placeholder. */
@@ -62,6 +67,8 @@
     --fi-glass-ring: rgb(255 255 255 / 0.15) !important;
     --fi-glass-blur: blur(20px) saturate(180%) !important;
     --fi-glass-tint: rgb(0 0 0 / 0.50) !important; /* dark tint 50% */
+    --fi-box-bg: rgb(255 255 255 / 0.30) !important;
+    --fi-box-tint: rgb(255 255 255 / 0.10) !important;
     --fi-glass-input-fg: rgb(255 255 255 / 0.55) !important;
 }
 
@@ -300,27 +307,33 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
 .fi-panel-admin .fi-theme-switcher-btn:focus-visible,
 .fi-panel-admin #filament-language-switcher:hover,
 .fi-panel-admin #filament-language-switcher:focus-visible {
-    background-color: rgb(255 255 255 / 0.30) !important;
-    background-image: linear-gradient(rgb(255 255 255 / 0.10), rgb(255 255 255 / 0.10)) !important;
+    background-color: var(--fi-box-bg) !important;
+    background-image: linear-gradient(var(--fi-box-tint), var(--fi-box-tint)) !important;
     border: 0 !important;
     box-shadow: none !important;
 }
 
 /* --- Kotak pilihan dan kotak klik di Sidebar dan Top Navigation ------
-   Dua keadaan sama-sama berkotak, dan warnanya sama:
+   Dua keadaan sama-sama berkotak, dan warnanya sama antara keduanya.
+   Berbeda per mode, lewat token --fi-box-bg dan --fi-box-tint:
 
-     kotak pilihan (item aktif)  white 30% + white tint 10%
-     kotak klik      (hover)     white 30% + white tint 10%
+     Light  kotak gelap   rgb(0 0 0 / 0.12) + dark tint  rgb(0 0 0 / 0.08)
+     Night  kotak putih   rgb(255 255 255 / 0.30) + white tint rgb(255 255 255 / 0.10)
+
+   Light digelapkan karena panel di sekitarnya terang: kotak putih 30%
+   di atas panel putih 20% praktis tidak terlihat, jadi item aktif dan
+   hover kehilangan kotak. Di Night kebalikannya -- panel gelap, jadi
+   kotak putih justru yang membedakan.
 
    Berlaku untuk:
      - item sidebar (aktif dan hover)
      - item dropdown Top Navigation (aktif dan hover)
      - tombol panel switcher tema, bahasa, dan CBIR (hover)
 
-   Nilai sama di Light dan Night karena yang diwarnai putih, bukan
-   gold. Nilai ditulis langsung, bukan lewat token --fi-glass-*, karena
-   yang diatur hanya kotak item, bukan panel kapsul topbar dan
-   sidebar. */
+   Nilai ditulis lewat token --fi-box-*, bukan --fi-glass-*: yang diatur
+   hanya kotak item, bukan panel kapsul topbar dan sidebar. Dan bukan
+   ditulis langsung di tiap blok, supaya blok di atas dan blok ini
+   tidak perlu menyalin angka yang sama. */
 .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
 .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-grouped-dropdown-trigger,
 .fi-sidebar .fi-sidebar-item-button:hover,
@@ -352,8 +365,8 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
 .fi-panel-admin .lang-dd button:focus-visible,
 .fi-panel-admin .fi-dropdown-panel button:hover,
 .fi-panel-admin .fi-dropdown-panel button:focus-visible {
-    background-color: rgb(255 255 255 / 0.30) !important;
-    background-image: linear-gradient(rgb(255 255 255 / 0.10), rgb(255 255 255 / 0.10)) !important;
+    background-color: var(--fi-box-bg) !important;
+    background-image: linear-gradient(var(--fi-box-tint), var(--fi-box-tint)) !important;
     border: 0 !important;
     box-shadow: none !important;
 }
