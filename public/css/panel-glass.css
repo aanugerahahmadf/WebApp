@@ -350,21 +350,22 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     box-shadow: var(--fi-glass-halo) !important;
 }
 
-/* --- Hover sidebar: bukan blok putih solid ---------------------------
-   Blade sidebar pakai hover:bg-gray-100, jadi di atas sidebar
-   ber-gold item yang disorot jadi kotak putih opaque. Diganti ke
-   token kaca yang sama dengan topnav, ditambah halo putih blur 60px
-   supaya item yang disorot terlihat melayang di atas sidebar. */
+/* --- Hover sidebar: tanpa kotak --------------------------------------
+   Item sidebar yang disorot tidak boleh punya kotak sama sekali.
+   Semula diberi latar kaca 100% (hitam pekat di mode gelap) plus
+   gold tint, dan kombinasi itu terbaca seperti kotak gelap
+   bercor gold. Sekarang hanya berubah warna teks, sama seperti
+   baris yang punya chevron. */
 .fi-panel-welcome .fi-sidebar .fi-sidebar-item-button:hover,
 .fi-panel-welcome .fi-sidebar .fi-sidebar-item-button:focus-visible,
 .fi-panel-user .fi-sidebar .fi-sidebar-item-button:hover,
 .fi-panel-user .fi-sidebar .fi-sidebar-item-button:focus-visible,
 .fi-panel-admin .fi-sidebar .fi-sidebar-item-button:hover,
 .fi-panel-admin .fi-sidebar .fi-sidebar-item-button:focus-visible {
-    background-color: var(--fi-glass-bg) !important;
-    background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
-    -webkit-backdrop-filter: var(--fi-glass-blur) !important;
-    backdrop-filter: var(--fi-glass-blur) !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
     border: 0 !important;
     box-shadow: none !important;
 }
