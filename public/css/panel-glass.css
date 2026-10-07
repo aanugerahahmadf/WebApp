@@ -37,16 +37,15 @@
  *                 filter.
  * ===================================================================== */
 
-/* --- Token KACA: gelap olive/gold 85% + blur 20px --- */
-/* Permintaan: Light DAN Night sama-sama gelap olive/gold.
-   Latar gelap + gold tint menghasilkan warna olive seperti pada
-   gambar acuan, dan teksnya putih di kedua mode.
+/* --- Token KACA: Blur 85% + Gold tint 20px --- */
+/* Light: 85% putih (alpha 0.85) + blur 20px + gold tint
+   Dark:  85% hitam (alpha 0.85) + blur 20px + gold tint
    Override di sini tanpa build. */
 .fi-panel-welcome,
 .fi-panel-user,
 .fi-panel-admin {
-    --fi-glass-bg: rgb(12 12 15 / 0.85) !important;
-    --fi-glass-ring: rgb(255 255 255 / 0.15) !important;
+    --fi-glass-bg: rgb(255 255 255 / 0.85) !important;
+    --fi-glass-ring: rgb(0 0 0 / 0.12) !important;
     --fi-glass-blur: blur(20px) saturate(180%) !important;
     --fi-glass-tint: rgba(250, 204, 21, 0.15) !important; /* gold tint */
 }
