@@ -63,7 +63,7 @@ return [
         // Firebase Storage (Google Cloud Storage) — gratis 5 GB, auto-scaling
         // Butuh: composer require superbalist/laravel-google-cloud-storage
         'firebase' => [
-            'driver' => 'gcs',
+            'driver' => 'google-cloud-storage',
             'project_id' => env('FIREBASE_PROJECT_ID'),
             'key_file' => env('FIREBASE_CREDENTIALS', storage_path('keys/firebase-service-account.json')),
             'bucket' => env('FIREBASE_STORAGE_BUCKET'),
