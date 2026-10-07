@@ -37,26 +37,26 @@
  *                 filter.
  * ===================================================================== */
 
-/* --- Token KACA: Blur 85% + Gold tint 20px --- */
-/* Light: 85% putih (alpha 0.85) + blur 20px + gold tint
-   Dark:  85% hitam (alpha 0.85) + blur 20px + gold tint
+/* --- Token KACA: Blur 95% + Gold tint 25px --- */
+/* Light: 95% putih (alpha 0.95) + blur 20px + gold tint 25%
+   Dark:  95% hitam (alpha 0.95) + blur 20px + gold tint 25%
    Override di sini tanpa build. */
 .fi-panel-welcome,
 .fi-panel-user,
 .fi-panel-admin {
-    --fi-glass-bg: rgb(255 255 255 / 0.85) !important;
+    --fi-glass-bg: rgb(255 255 255 / 0.95) !important;
     --fi-glass-ring: rgb(0 0 0 / 0.12) !important;
     --fi-glass-blur: blur(20px) saturate(180%) !important;
-    --fi-glass-tint: rgba(250, 204, 21, 0.15) !important; /* gold tint */
+    --fi-glass-tint: rgba(250, 204, 21, 0.25) !important; /* gold tint 25% */
 }
 
 .dark .fi-panel-welcome,
 .dark .fi-panel-user,
 .dark .fi-panel-admin {
-    --fi-glass-bg: rgb(12 12 15 / 0.85) !important;
+    --fi-glass-bg: rgb(12 12 15 / 0.95) !important;
     --fi-glass-ring: rgb(255 255 255 / 0.15) !important;
     --fi-glass-blur: blur(20px) saturate(180%) !important;
-    --fi-glass-tint: rgba(250, 204, 21, 0.15) !important; /* gold tint */
+    --fi-glass-tint: rgba(250, 204, 21, 0.25) !important; /* gold tint 25% */
 }
 
 /* Gradasi warna dilepas dari SEMUA permukaan kaca (kapsul,
