@@ -48,6 +48,9 @@
     --fi-glass-ring: rgb(0 0 0 / 0.12) !important;
     --fi-glass-blur: blur(20px) saturate(180%) !important;
     --fi-glass-tint: rgba(250, 204, 21, 0.30) !important; /* gold tint 30% */
+    /* Halo putih blur 60px di sekitar kotak hover, supaya item yang
+       disorot terlihat melayang di atas sidebar dan topnav. */
+    --fi-glass-halo: 0 0 60px rgb(255 255 255 / 0.85) !important;
     /* Placeholder Global Search: topbar ber-gold terang, warna bawaan
        terlalu tipis. Utilitas Tailwind mengatur opacity placeholder lewat
        variabel terpisah, jadi harus lewat ::placeholder. */
@@ -61,6 +64,7 @@
     --fi-glass-ring: rgb(255 255 255 / 0.15) !important;
     --fi-glass-blur: blur(20px) saturate(180%) !important;
     --fi-glass-tint: rgba(250, 204, 21, 0.30) !important; /* gold tint 30% */
+    --fi-glass-halo: 0 0 60px rgb(255 255 255 / 0.30) !important;
     --fi-glass-input-fg: rgb(255 255 255 / 0.55) !important;
 }
 
@@ -293,8 +297,8 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
 /* --- Hover sidebar: bukan blok putih solid ---------------------------
    Blade sidebar pakai hover:bg-gray-100, jadi di atas sidebar
    ber-gold item yang disorot jadi kotak putih opaque. Diganti ke
-   token kaca yang sama dengan topnav:
-   bg 65% + blur 20px + gold 35%, jadi tetap transparan. */
+   token kaca yang sama dengan topnav, ditambah halo putih blur 60px
+   supaya item yang disorot terlihat melayang di atas sidebar. */
 .fi-panel-welcome .fi-sidebar .fi-sidebar-item-button:hover,
 .fi-panel-welcome .fi-sidebar .fi-sidebar-item-button:focus-visible,
 .fi-panel-user .fi-sidebar .fi-sidebar-item-button:hover,
@@ -306,6 +310,7 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     -webkit-backdrop-filter: var(--fi-glass-blur) !important;
     backdrop-filter: var(--fi-glass-blur) !important;
     border: 1px solid var(--fi-glass-ring) !important;
+    box-shadow: var(--fi-glass-halo) !important;
 }
 
 /* Baris grup yang punya chevron (label + chevron up/down): hover hanya
@@ -327,7 +332,7 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
    Item topnav dan isi dropdownnya memakai hover:bg-custom-50, yaitu
    rgb(254 252 232) kreput opaque. Di atas panel ber-gold itu terlihat
    seperti kotak putih terpisah. Diganti ke token kaca yang sama
-   dengan topnav dan sidebar: bg 65% + blur 20px + gold 35%. */
+   dengan topnav dan sidebar, ditambah halo putih blur 60px. */
 .fi-panel-welcome .fi-topbar .fi-dropdown-list-item:hover,
 .fi-panel-welcome .fi-topbar .fi-dropdown-list-item:focus-visible,
 .fi-panel-welcome .fi-topbar .fi-user-menu-list-item-button:hover,
@@ -342,6 +347,7 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     -webkit-backdrop-filter: var(--fi-glass-blur) !important;
     backdrop-filter: var(--fi-glass-blur) !important;
     border: 1px solid var(--fi-glass-ring) !important;
+    box-shadow: var(--fi-glass-halo) !important;
 }
 
 /* Baris grup Top Navigation, yaitu .fi-topbar-item-button yang memuat
