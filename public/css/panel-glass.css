@@ -351,6 +351,56 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     color: rgb(229 231 235) !important; /* gray-200 */
 }
 
+/* --- Topbar dropdown items: icon colors match label colors --- */
+/* Light mode: inactive icons = gray-950 (same as label), active = amber */
+.fi-topbar .fi-dropdown-list-item svg,
+.fi-topbar .fi-dropdown-list-item [class*="icon"] {
+    color: rgb(3 7 18) !important; /* gray-950 = label color */
+}
+.fi-topbar .fi-dropdown-list-item.fi-active svg,
+.fi-topbar .fi-dropdown-list-item.fi-active [class*="icon"],
+.fi-topbar .fi-dropdown-list-item.fi-dropdown-list-item-active svg,
+.fi-topbar .fi-dropdown-list-item.fi-dropdown-list-item-active [class*="icon"] {
+    color: #fbbf24 !important; /* amber-400 */
+}
+
+/* Dark mode: inactive icons = white (same as label), active = amber */
+.dark .fi-topbar .fi-dropdown-list-item svg,
+.dark .fi-topbar .fi-dropdown-list-item [class*="icon"] {
+    color: rgb(255 255 255) !important; /* white = label color */
+}
+.dark .fi-topbar .fi-dropdown-list-item.fi-active svg,
+.dark .fi-topbar .fi-dropdown-list-item.fi-active [class*="icon"],
+.dark .fi-topbar .fi-dropdown-list-item.fi-dropdown-list-item-active svg,
+.dark .fi-topbar .fi-dropdown-list-item.fi-dropdown-list-item-active [class*="icon"] {
+    color: #fbbf24 !important; /* amber-400 */
+}
+
+/* --- Topbar nav items (.fi-topbar-item): icon colors match labels --- */
+/* Light: inactive icons = gray-950 (same as label), active = amber */
+.fi-topbar .fi-topbar-item:not(.fi-active):not(.fi-topbar-item-active) svg,
+.fi-topbar .fi-topbar-item:not(.fi-active):not(.fi-topbar-item-active) [class*="icon"] {
+    color: rgb(3 7 18) !important; /* gray-950 = label color */
+}
+.fi-topbar .fi-topbar-item.fi-active svg,
+.fi-topbar .fi-topbar-item.fi-active [class*="icon"],
+.fi-topbar .fi-topbar-item.fi-topbar-item-active svg,
+.fi-topbar .fi-topbar-item.fi-topbar-item-active [class*="icon"] {
+    color: #ca8a04 !important; /* amber-600 for light mode active */
+}
+
+/* Dark mode: inactive icons = white (same as label), active = amber */
+.dark .fi-topbar .fi-topbar-item:not(.fi-active):not(.fi-topbar-item-active) svg,
+.dark .fi-topbar .fi-topbar-item:not(.fi-active):not(.fi-topbar-item-active) [class*="icon"] {
+    color: rgb(255 255 255) !important; /* white = label color */
+}
+.dark .fi-topbar .fi-topbar-item.fi-active svg,
+.dark .fi-topbar .fi-topbar-item.fi-active [class*="icon"],
+.dark .fi-topbar .fi-topbar-item.fi-topbar-item-active svg,
+.dark .fi-topbar .fi-topbar-item.fi-topbar-item-active [class*="icon"] {
+    color: #fbbf24 !important; /* amber-400 for dark mode active */
+}
+
 /* Label di kartu statistik. Di Shared.css, label stat itu dibuat
    dengan warna rgb(203 213 225) (abu sangat terang) -- cocok untuk
    teks di latar gelap, tapi dipakai tanpa kondisi terang/gelap. Di
