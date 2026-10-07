@@ -350,24 +350,32 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     box-shadow: var(--fi-glass-halo) !important;
 }
 
-/* --- Hover sidebar: tanpa kotak --------------------------------------
-   Item sidebar yang disorot tidak boleh punya kotak sama sekali.
-   Semula diberi latar kaca 100% (hitam pekat di mode gelap) plus
-   gold tint, dan kombinasi itu terbaca seperti kotak gelap
-   bercor gold. Sekarang hanya berubah warna teks, sama seperti
-   baris yang punya chevron. */
+/* --- Hover sidebar: sama seperti Theme / Language / CBIR -------------
+   Ketiga dropdown itu memakai hover:bg-gray-50 dark:hover:bg-white/5,
+   yaitu lapisan putih sangat tipis tanpa blur, tanpa gold, tanpa
+   border, dan tanpa bayangan. Item sidebar sekarang ikut persis,
+   supaya tidak terlihat ada kotak gelap bercor gold. */
 .fi-panel-welcome .fi-sidebar .fi-sidebar-item-button:hover,
 .fi-panel-welcome .fi-sidebar .fi-sidebar-item-button:focus-visible,
 .fi-panel-user .fi-sidebar .fi-sidebar-item-button:hover,
 .fi-panel-user .fi-sidebar .fi-sidebar-item-button:focus-visible,
 .fi-panel-admin .fi-sidebar .fi-sidebar-item-button:hover,
 .fi-panel-admin .fi-sidebar .fi-sidebar-item-button:focus-visible {
-    background-color: transparent !important;
+    background-color: rgb(249 250 251 / 0.8) !important;
     background-image: none !important;
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
     border: 0 !important;
     box-shadow: none !important;
+}
+
+.dark .fi-panel-welcome .fi-sidebar .fi-sidebar-item-button:hover,
+.dark .fi-panel-welcome .fi-sidebar .fi-sidebar-item-button:focus-visible,
+.dark .fi-panel-user .fi-sidebar .fi-sidebar-item-button:hover,
+.dark .fi-panel-user .fi-sidebar .fi-sidebar-item-button:focus-visible,
+.dark .fi-panel-admin .fi-sidebar .fi-sidebar-item-button:hover,
+.dark .fi-panel-admin .fi-sidebar .fi-sidebar-item-button:focus-visible {
+    background-color: rgb(255 255 255 / 0.05) !important;
 }
 
 /* Baris grup yang punya chevron (label + chevron up/down): hover hanya
