@@ -282,18 +282,23 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     backdrop-filter: none !important;
 } */
 
-/* --- Kotak item sidebar dan Top Navigation ----------------------------
+/* --- Kotak item sidebar, Top Navigation, dan panel switcher -----------
    Dua keadaan sama-sama berkotak, dan warnanya sama:
 
      kotak pilihan (item aktif)  white 40% + white tint 20%
      kotak klik      (hover)     white 40% + white tint 20%
 
+   Berlaku untuk:
+     - item sidebar (aktif dan hover)
+     - item dropdown Top Navigation (aktif dan hover)
+     - tombol panel switcher tema, bahasa, dan CBIR
+
    Nilai sama di Light dan Night karena yang diwarnai putih, bukan
-   gold: di sidebar ber-gold, lapisan putih membaca sebagai lapisan
-   kebiruan di kedua mode, sementara utility bawaan Filament
-   (bg-gray-100 dark:bg-white/5) di Light berupa abu opaque yang
-   menutupi gold dan di Night berupa putih 5% yang hampir tak
-   terlihat.
+   gold: di sidebar dan panel ber-gold, lapisan putih membaca sebagai
+   lapisan kebiruan di kedua mode, sementara utility bawaan Filament
+   (bg-gray-100 / hover:bg-gray-50 / dark:hover:bg-white/5) di Light
+   berupa abu opaque yang menutupi gold dan di Night berupa putih 5%
+   yang hampir tak terlihat.
 
    Dipisah dari token --fi-glass-* karena hanya berlaku untuk kotak
    item, bukan untuk panel kapsul topbar dan sidebar. */
@@ -309,7 +314,25 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
 .fi-panel-user .fi-topbar .fi-dropdown-list-item:focus-visible,
 .fi-panel-admin .fi-topbar .fi-dropdown-list-item.fi-color-custom,
 .fi-panel-admin .fi-topbar .fi-dropdown-list-item:hover,
-.fi-panel-admin .fi-topbar .fi-dropdown-list-item:focus-visible {
+.fi-panel-admin .fi-topbar .fi-dropdown-list-item:focus-visible,
+.fi-panel-welcome .x-cam-menu button:hover,
+.fi-panel-welcome .x-cam-menu button:focus-visible,
+.fi-panel-welcome .lang-dd button:hover,
+.fi-panel-welcome .lang-dd button:focus-visible,
+.fi-panel-welcome .fi-dropdown-panel button:hover,
+.fi-panel-welcome .fi-dropdown-panel button:focus-visible,
+.fi-panel-user .x-cam-menu button:hover,
+.fi-panel-user .x-cam-menu button:focus-visible,
+.fi-panel-user .lang-dd button:hover,
+.fi-panel-user .lang-dd button:focus-visible,
+.fi-panel-user .fi-dropdown-panel button:hover,
+.fi-panel-user .fi-dropdown-panel button:focus-visible,
+.fi-panel-admin .x-cam-menu button:hover,
+.fi-panel-admin .x-cam-menu button:focus-visible,
+.fi-panel-admin .lang-dd button:hover,
+.fi-panel-admin .lang-dd button:focus-visible,
+.fi-panel-admin .fi-dropdown-panel button:hover,
+.fi-panel-admin .fi-dropdown-panel button:focus-visible {
     background-color: rgb(255 255 255 / 0.40) !important;
     background-image: linear-gradient(rgb(255 255 255 / 0.20), rgb(255 255 255 / 0.20)) !important;
     border: 0 !important;
