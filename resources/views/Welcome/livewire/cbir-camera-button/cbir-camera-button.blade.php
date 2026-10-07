@@ -119,7 +119,7 @@
             x-transition:leave="transition ease-in duration-75"
             x-transition:leave-start="opacity-100 scale-100"
             x-transition:leave-end="opacity-0 scale-95"
-            class="lang-dd fixed rounded-lg shadow-2xl ring-1 bg-white ring-gray-950/10 dark:bg-gray-900 dark:ring-white/20"
+            class="lang-dd x-cam-menu fixed rounded-lg shadow-2xl ring-1 bg-white ring-gray-950/10 dark:bg-gray-900 dark:ring-white/20"
             style="z-index:100000; min-width:230px;"
             x-cloak
         >
@@ -128,11 +128,11 @@
                     <button
                         type="button"
                         x-on:click="pick(@js($cbirItem['event']), @js($cbirItem['detail']))"
-                        class="group flex items-center w-full gap-3 whitespace-nowrap rounded-md px-2 py-2 text-sm outline-none transition-all
-                               text-gray-950 dark:text-white
+                        class="group flex items-center w-full gap-2 whitespace-nowrap rounded-md px-2 py-2 text-sm outline-none transition-all
+                               text-gray-700 dark:text-gray-200
                                hover:bg-gray-50 dark:hover:bg-white/5"
                     >
-                        <x-filament::icon :icon="$cbirItem['icon']" class="h-5 w-5 shrink-0" />
+                        <x-filament::icon :icon="$cbirItem['icon']" class="h-5 w-5 shrink-0 text-gray-400 dark:text-gray-500" />
                         <span class="truncate flex-1 text-start">{{ $cbirItem['label'] }}</span>
                     </button>
                 @endforeach

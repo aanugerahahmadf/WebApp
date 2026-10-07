@@ -50,11 +50,11 @@
                             type="button"
                             x-on:click="(theme = '{{ $theme }}') && close()"
                             @class([
-                                'group flex items-center w-full gap-3 whitespace-nowrap rounded-md p-2 text-sm outline-none transition-all',
-                                'text-gray-950 dark:text-white hover:bg-gray-50 dark:hover:bg-white/5',
+                                'group flex items-center w-full gap-2 whitespace-nowrap rounded-md p-2 text-sm outline-none transition-all',
+                                'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5',
                             ])
                         >
-                            <x-filament::icon :icon="$icon" class="h-5 w-5 shrink-0" />
+                            <x-filament::icon :icon="$icon" class="h-5 w-5 shrink-0 text-gray-400 dark:text-gray-500" />
 
                             <span class="truncate flex-1 text-start" x-bind:class="theme === '{{ $theme }}' ? 'text-[#fbbf24] font-bold' : ''">
                                 {{ ['light' => __('Light'), 'dark' => __('Dark'), 'system' => __('System')][$theme] }}
