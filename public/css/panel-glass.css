@@ -297,18 +297,30 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
    bg 65% + blur 20px + gold 35%, jadi tetap transparan. */
 .fi-panel-welcome .fi-sidebar .fi-sidebar-item-button:hover,
 .fi-panel-welcome .fi-sidebar .fi-sidebar-item-button:focus-visible,
-.fi-panel-welcome .fi-sidebar .fi-sidebar-group-button:hover,
 .fi-panel-user .fi-sidebar .fi-sidebar-item-button:hover,
 .fi-panel-user .fi-sidebar .fi-sidebar-item-button:focus-visible,
-.fi-panel-user .fi-sidebar .fi-sidebar-group-button:hover,
 .fi-panel-admin .fi-sidebar .fi-sidebar-item-button:hover,
-.fi-panel-admin .fi-sidebar .fi-sidebar-item-button:focus-visible,
-.fi-panel-admin .fi-sidebar .fi-sidebar-group-button:hover {
+.fi-panel-admin .fi-sidebar .fi-sidebar-item-button:focus-visible {
     background-color: var(--fi-glass-bg) !important;
     background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
     -webkit-backdrop-filter: var(--fi-glass-blur) !important;
     backdrop-filter: var(--fi-glass-blur) !important;
     border: 1px solid var(--fi-glass-ring) !important;
+}
+
+/* Baris grup yang punya chevron (label + chevron up/down): hover hanya
+   menunjukkan isinya lewat warna teks, tanpa kotak dan tanpa ring.
+   Kotak rounded di sini membuat baris grup terlihat seperti kartu
+   tersendiri dan tidak serasi dengan item di bawahnya. */
+.fi-panel-welcome .fi-sidebar .fi-sidebar-group-button:hover,
+.fi-panel-user .fi-sidebar .fi-sidebar-group-button:hover,
+.fi-panel-admin .fi-sidebar .fi-sidebar-group-button:hover {
+    background-color: transparent !important;
+    background-image: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
 }
 
 /* --- Tombol buka/tutup sidebar (buka/tutup + chevron up/down grup) ------
