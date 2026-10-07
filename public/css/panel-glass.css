@@ -406,6 +406,71 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
    yang pernah ada di sini dihapus supaya tidak menumpuk dua latar
    dan tidak muncul kotak gelap bercor gold. */
 
+/* --- Kotak item di dropdown Top Navigation dan panel switcher ----------
+   Kotak rounded yang sama persis dengan item aktif di sidebar: lapisan
+   putih tipis tanpa gold tint, tanpa border, tanpa bayangan.
+
+   Dua mode memakai nilai berbeda karena alpha putih yang terlihat di
+   latar gelap tidak terlihat di latar terang. Light naik ke 55% supaya
+   kotaknya ada, Night tetap 5%.
+
+   Yang sebelumnya dipakai di sini adalah utility Filament sendiri:
+     .fi-dropdown-list-item  hover:bg-custom-50 / fi-color-custom
+                             (bg-custom-50 = rgb(254 252 232) opaque)
+     panel switcher & CBIR   hover:bg-gray-50 dark:hover:bg-white/5
+   Yang opaque menutupi gold di belakang panel, jadi kotaknya terbaca
+   sebagai blok putih/krem solid, bukan lapisan di atas kaca. */
+.fi-panel-welcome .fi-topbar .fi-dropdown-list-item:hover,
+.fi-panel-welcome .fi-topbar .fi-dropdown-list-item:focus-visible,
+.fi-panel-welcome .fi-topbar .fi-dropdown-list-item.fi-color-custom,
+.fi-panel-welcome .x-cam-menu button:hover,
+.fi-panel-welcome .x-cam-menu button:focus-visible,
+.fi-panel-welcome .fi-dropdown-panel button:hover,
+.fi-panel-welcome .fi-dropdown-panel button:focus-visible,
+.fi-panel-user .fi-topbar .fi-dropdown-list-item:hover,
+.fi-panel-user .fi-topbar .fi-dropdown-list-item:focus-visible,
+.fi-panel-user .fi-topbar .fi-dropdown-list-item.fi-color-custom,
+.fi-panel-user .x-cam-menu button:hover,
+.fi-panel-user .x-cam-menu button:focus-visible,
+.fi-panel-user .fi-dropdown-panel button:hover,
+.fi-panel-user .fi-dropdown-panel button:focus-visible,
+.fi-panel-admin .fi-topbar .fi-dropdown-list-item:hover,
+.fi-panel-admin .fi-topbar .fi-dropdown-list-item:focus-visible,
+.fi-panel-admin .fi-topbar .fi-dropdown-list-item.fi-color-custom,
+.fi-panel-admin .x-cam-menu button:hover,
+.fi-panel-admin .x-cam-menu button:focus-visible,
+.fi-panel-admin .fi-dropdown-panel button:hover,
+.fi-panel-admin .fi-dropdown-panel button:focus-visible {
+    background-color: rgb(255 255 255 / 0.55) !important;
+    background-image: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+.dark .fi-panel-welcome .fi-topbar .fi-dropdown-list-item:hover,
+.dark .fi-panel-welcome .fi-topbar .fi-dropdown-list-item:focus-visible,
+.dark .fi-panel-welcome .fi-topbar .fi-dropdown-list-item.fi-color-custom,
+.dark .fi-panel-welcome .x-cam-menu button:hover,
+.dark .fi-panel-welcome .x-cam-menu button:focus-visible,
+.dark .fi-panel-welcome .fi-dropdown-panel button:hover,
+.dark .fi-panel-welcome .fi-dropdown-panel button:focus-visible,
+.dark .fi-panel-user .fi-topbar .fi-dropdown-list-item:hover,
+.dark .fi-panel-user .fi-topbar .fi-dropdown-list-item:focus-visible,
+.dark .fi-panel-user .fi-topbar .fi-dropdown-list-item.fi-color-custom,
+.dark .fi-panel-user .x-cam-menu button:hover,
+.dark .fi-panel-user .x-cam-menu button:focus-visible,
+.dark .fi-panel-user .fi-dropdown-panel button:hover,
+.dark .fi-panel-user .fi-dropdown-panel button:focus-visible,
+.dark .fi-panel-admin .fi-topbar .fi-dropdown-list-item:hover,
+.dark .fi-panel-admin .fi-topbar .fi-dropdown-list-item:focus-visible,
+.dark .fi-panel-admin .fi-topbar .fi-dropdown-list-item.fi-color-custom,
+.dark .fi-panel-admin .x-cam-menu button:hover,
+.dark .fi-panel-admin .x-cam-menu button:focus-visible,
+.dark .fi-panel-admin .fi-dropdown-panel button:hover,
+.dark .fi-panel-admin .fi-dropdown-panel button:focus-visible {
+    background-color: rgb(255 255 255 / 0.05) !important;
+}
+
 /* Baris grup Top Navigation, yaitu .fi-topbar-item-button yang memuat
    label grup dan chevron up/down (fi-topbar-group-toggle-icon). Hover
    di sini tidak memberi kotak sama sekali, hanya perubahan warna teks.
