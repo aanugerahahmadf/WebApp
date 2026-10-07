@@ -27,6 +27,13 @@
         <div
             @if ($collapsible)
                 x-on:click="$store.sidebar.toggleCollapsedGroup(label)"
+                {{-- Satu mouseenter di seluruh baris grup, bukan satu per anak.
+                     mouseenter tidak terpicu ulang saat kursor berpindah dari
+                     label ke chevron di dalam baris yang sama, jadi cukup satu
+                     arahkan kursor untuk membuka maupun menutup grup.
+                     Di perangkat sentuh event ini tidak pernah terpicu, jadi
+                     perilaku klik tetap berlaku seperti sebelumnya. --}}
+                x-on:mouseenter="$store.sidebar.toggleCollapsedGroup(label)"
             @endif
             @if ($sidebarCollapsible)
                 x-show="$store.sidebar.isOpen"
@@ -60,10 +67,6 @@
                     :label="$label"
                     x-bind:aria-expanded="! $store.sidebar.groupIsCollapsed(label)"
                     x-on:click.stop="$store.sidebar.toggleCollapsedGroup(label)"
-                    {{-- Arahkan kursor ke chevron untuk buka/tutup grup tanpa perlu klik.
-                         mouseenter hanya terpicu oleh pointer, jadi di perangkat sentuh
-                         perilaku klik tetap berlaku seperti sebelumnya. --}}
-                    x-on:mouseenter.stop="$store.sidebar.toggleCollapsedGroup(label)"
                     class="fi-sidebar-group-collapse-button"
                     x-bind:class="{ '-rotate-180': $store.sidebar.groupIsCollapsed(label) }"
                 />
