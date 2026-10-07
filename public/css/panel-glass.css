@@ -48,8 +48,6 @@
     --fi-glass-ring: rgb(0 0 0 / 0.12) !important;
     --fi-glass-blur: blur(20px) saturate(180%) !important;
     --fi-glass-tint: rgba(250, 204, 21, 0.30) !important; /* gold tint 30% */
-    /* Halo putih blur 60px di sekitar kotak sidebar dan topnav. */
-    --fi-glass-halo: 0 0 60px rgb(255 255 255 / 0.85) !important;
     /* Placeholder Global Search: topbar ber-gold terang, warna bawaan
        terlalu tipis. Utilitas Tailwind mengatur opacity placeholder lewat
        variabel terpisah, jadi harus lewat ::placeholder. */
@@ -63,7 +61,6 @@
     --fi-glass-ring: rgb(255 255 255 / 0.15) !important;
     --fi-glass-blur: blur(20px) saturate(180%) !important;
     --fi-glass-tint: rgba(250, 204, 21, 0.30) !important; /* gold tint 30% */
-    --fi-glass-halo: 0 0 60px rgb(255 255 255 / 0.30) !important;
     --fi-glass-input-fg: rgb(255 255 255 / 0.55) !important;
 }
 
@@ -347,12 +344,12 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     box-shadow: none !important;
 }
 
-/* --- Halo putih pada kotak Sidebar dan Top Navigation ----------------
-   Kaca sidebar dan topnav diberi halo putih blur 60px supaya panelnya
-   terlihat melayang, tidak menempel datar ke latar halaman. Nilai
-   disimpan di token supaya bisa diubah dari satu tempat.
-   Item di dalam panel (termasuk baris yang punya chevron) tidak ikut
-   bayangan apa pun. */
+/* --- Kotak Sidebar dan Top Navigation tanpa bayangan ------------------
+   Kaca sidebar dan topnav sama sekali tidak memakai bayangan, termasuk
+   glow putih di sekelilingnya yang pernah ada. Panelnya hanya terlihat
+   dari tepi border dan blur kaca.
+   Item di dalam panel (termasuk baris yang punya chevron) juga tidak
+   punya bayangan apa pun. */
 .fi-panel-welcome .fi-sidebar.fi-sidebar,
 .fi-panel-user .fi-sidebar.fi-sidebar,
 .fi-panel-admin .fi-sidebar.fi-sidebar,
@@ -365,7 +362,7 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
 .dark .fi-panel-welcome .fi-topbar.fi-topbar,
 .dark .fi-panel-user .fi-topbar.fi-topbar,
 .dark .fi-panel-admin .fi-topbar.fi-topbar {
-    box-shadow: var(--fi-glass-halo) !important;
+    box-shadow: none !important;
 }
 
 /* Hover item sidebar memakai bawaan Filament (hover:bg-gray-100
@@ -446,18 +443,22 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     opacity: 1 !important;
 }
 
-/* Badge: background ngikutin topnav & sidebar (glass), tapi text/border pakai Filament default */
+/* Badge: hanya latar yang memakai kaca.
+   Garis dan warna angka TIDAK boleh disentuh, keduanya milik Filament:
+   `ring-1 ring-inset ring-custom-600/10 dark:ring-custom-400/30` untuk
+   garis, dan `text-custom-600 dark:text-custom-400` untuk angka.
+
+   Sebelumnya di sini ada `border: 1px solid var(--fi-glass-ring)`.
+   Itu menggambar garis kedua di luar ring bawaan Filament, jadi badge
+   terlihat punya dua lapis garis dan warnanya tidak lagi ikut warna
+   status (danger, primary, dan seterusnya). Border itu dihapus; angka
+   tetap bawaan Filament karena tidak pernah di-override. */
 .fi-sidebar .fi-badge,
 .fi-topbar .fi-badge {
-    /* Glass background ngikutin topnav & sidebar */
     background-color: var(--fi-glass-bg) !important;
     background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
-    border: 1px solid var(--fi-glass-ring) !important;
     -webkit-backdrop-filter: var(--fi-glass-blur) !important;
     backdrop-filter: var(--fi-glass-blur) !important;
-
-    /* Text & ring color: pakai Filament default (jangan override) */
-    /* class: text-custom-600 dark:text-custom-400 ring-custom-600/10 dark:ring-custom-400/30 */
 }
 
 /* Label di kartu statistik. Di Shared.css, label stat itu dibuat
