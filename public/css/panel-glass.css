@@ -37,15 +37,16 @@
  *                 filter.
  * ===================================================================== */
 
-/* --- Token KACA: Blur 85% + Gold tint 20px --- */
-/* Light: 85% putih (alpha 0.85) + blur 20px + gold tint
-   Dark:  85% hitam (alpha 0.85) + blur 20px + gold tint
+/* --- Token KACA: gelap olive/gold 85% + blur 20px --- */
+/* Permintaan: Light DAN Night sama-sama gelap olive/gold.
+   Latar gelap + gold tint menghasilkan warna olive seperti pada
+   gambar acuan, dan teksnya putih di kedua mode.
    Override di sini tanpa build. */
 .fi-panel-welcome,
 .fi-panel-user,
 .fi-panel-admin {
-    --fi-glass-bg: rgb(255 255 255 / 0.85) !important;
-    --fi-glass-ring: rgb(0 0 0 / 0.12) !important;
+    --fi-glass-bg: rgb(12 12 15 / 0.85) !important;
+    --fi-glass-ring: rgb(255 255 255 / 0.15) !important;
     --fi-glass-blur: blur(20px) saturate(180%) !important;
     --fi-glass-tint: rgba(250, 204, 21, 0.15) !important; /* gold tint */
 }
@@ -333,23 +334,35 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
  *         perangkat, jadi selector ini juga berlaku saat ponsel diputar
  *         landscape (di mana media query berhenti bekerja).
  *
- * aspect-ratio 3/4 sedikit ketinggian dari 16:9 (1.78) menjadi 0.75.
- * Cukup untuk bingkai sekallig kepala dan buket, tidak sampai membuat
- * modal tergulung di layar kecil. Kalau mau lebih panjang/pendek, ubah
- * angka di bawah -- satu tempat, berlaku serentak untuk mode kamera,
- * video, foto hasil, dan panel error.
+ * aspect-ratio 9/16 menukarbingkai potret layar ponsel natural:
+ * bingkai jauh lebih TINGGI dari 16:9 (1.78) atau 3/4 (1.33).
  *
  * Tidak ditetesi !important pada video di dalamnya supaya max-h-[60vh]
  * yang sudah ada tetap membatasi di layar pendek, dan object-contain
  * tetap menyingkirkan kotak leter tanpa memaksa stream diregangkan. */
 @media (max-width: 640px) {
     .x-cam-stage {
-        aspect-ratio: 3 / 4 !important;
+        aspect-ratio: 9 / 16 !important;
     }
 }
 
 [data-platform="mobile_app_android"] .x-cam-stage,
 [data-platform="mobile_app_ios"] .x-cam-stage {
+    aspect-ratio: 9 / 16 !important;
+}
+
+/* Modal kamera lain (messages, identity, face scan, avatar, document,
+ * scanner) memakai inline style="aspect-ratio:4/3". Di ponsel bingkai
+ * 4/3 terlihat pendek, jadi ditegakkan ke 3/4 hanya di layar kecil dan
+ * saat berjalan sebagai aplikasi Android/iOS. */
+@media (max-width: 640px) {
+    div[style*="aspect-ratio:4/3"] {
+        aspect-ratio: 3 / 4 !important;
+    }
+}
+
+[data-platform="mobile_app_android"] div[style*="aspect-ratio:4/3"],
+[data-platform="mobile_app_ios"] div[style*="aspect-ratio:4/3"] {
     aspect-ratio: 3 / 4 !important;
 }
 
