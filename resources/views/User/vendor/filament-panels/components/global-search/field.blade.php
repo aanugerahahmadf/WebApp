@@ -12,15 +12,13 @@
         {{ __('filament-panels::global-search.field.label') }}
     </label>
 
-    {{-- Global Search wrapper: Blur 95% + color tint 20px --}}
+    {{-- Global Search: nested di dalam topbar yang sudah ber-glass, jadi
+         TANPA backdrop-filter (blur dobel bikin teks kabur) dan tanpa
+         gold tint tambahan. Hanya well tipis + ring. --}}
     <div class="fi-input-wrp flex items-center rounded-lg"
         style="
-            background-color: var(--fi-glass-bg);
-            background-image: linear-gradient(var(--fi-glass-tint-search), var(--fi-glass-tint-search));
-            -webkit-backdrop-filter: var(--fi-glass-blur);
-            backdrop-filter: var(--fi-glass-blur);
+            background-color: var(--fi-glass-input-bg);
             border: 1px solid var(--fi-glass-ring);
-            box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 1px 2px rgb(0 0 0 / 0.05), 0 12px 28px -16px rgb(0 0 0 / 0.35);
         ">
         {{-- Prefix icon --}}
         <div class="flex items-center ps-3 text-gray-400 dark:text-gray-500 shrink-0">
