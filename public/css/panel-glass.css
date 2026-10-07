@@ -290,37 +290,26 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     background-color: transparent !important;
 }
 
-/* --- Tombol buka/tutup sidebar ------------------------------------------
-   Di blade sidebar, tombol collapse memakai color="gray" sehingga
-   ikonnya jadi gray-400 (terang) dan nyaris tak terlihat di atas
-   sidebar ber-gold. Warnanya disamakan dengan item Top Navigation:
-   gray-950 di Light, white di Night. */
+/* --- Tombol buka/tutup sidebar (buka/tutup + chevron up/down grup) ------
+   Warnanya warna Primary (amber), sama seperti item aktif di Top
+   Navigation. Nilai diambil dari primary Filament supaya ikut
+   berubah kalau tema primary diganti. */
 .fi-panel-welcome .fi-sidebar header button,
 .fi-panel-user .fi-sidebar header button,
-.fi-panel-admin .fi-sidebar header button {
-    color: rgb(3 7 18) !important;
+.fi-panel-admin .fi-sidebar header button,
+.fi-panel-welcome .fi-sidebar .fi-sidebar-group-collapse-button,
+.fi-panel-user .fi-sidebar .fi-sidebar-group-collapse-button,
+.fi-panel-admin .fi-sidebar .fi-sidebar-group-collapse-button {
+    color: rgb(202 138 4) !important; /* yellow-600 */
 }
 
 .dark .fi-panel-welcome .fi-sidebar header button,
 .dark .fi-panel-user .fi-sidebar header button,
-.dark .fi-panel-admin .fi-sidebar header button {
-    color: rgb(255 255 255) !important;
-}
-
-/* --- Chevron up/down grup sidebar ---------------------------------------
-   Sama halnya: blade grup sidebar memakai color="gray" untuk tombol
-   collapse, jadi chevron-nya gray-400 dan hampir tidak terlihat di atas
-   sidebar ber-gold. Dibuat sama dengan item Top Navigation. */
-.fi-panel-welcome .fi-sidebar .fi-sidebar-group-collapse-button,
-.fi-panel-user .fi-sidebar .fi-sidebar-group-collapse-button,
-.fi-panel-admin .fi-sidebar .fi-sidebar-group-collapse-button {
-    color: rgb(3 7 18) !important;
-}
-
+.dark .fi-panel-admin .fi-sidebar header button,
 .dark .fi-panel-welcome .fi-sidebar .fi-sidebar-group-collapse-button,
 .dark .fi-panel-user .fi-sidebar .fi-sidebar-group-collapse-button,
 .dark .fi-panel-admin .fi-sidebar .fi-sidebar-group-collapse-button {
-    color: rgb(255 255 255) !important;
+    color: rgb(250 204 21) !important; /* yellow-400 */
 }
 
 /* Global Search: teks placeholder harus tetap tajam di atas topbar
