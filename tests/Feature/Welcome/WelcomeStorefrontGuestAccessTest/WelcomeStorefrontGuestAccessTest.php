@@ -259,9 +259,11 @@ test('the theme switcher is a dropdown offering all three modes', function (): v
     get('/welcome/home')
         ->assertOk()
         ->assertSee('fi-dropdown', escape: false)
-        ->assertSee(__('filament-panels::layout.actions.theme_switcher.light.label'), escape: false)
-        ->assertSee(__('filament-panels::layout.actions.theme_switcher.dark.label'), escape: false)
-        ->assertSee(__('filament-panels::layout.actions.theme_switcher.system.label'), escape: false)
+        // Welcome panel uses Shared theme switcher with simple labels
+        // "Light", "Dark", "System" (not Filament's "Enable X theme")
+        ->assertSee('Light', escape: false)
+        ->assertSee('Dark', escape: false)
+        ->assertSee('System', escape: false)
         // One trigger, not the stock strip of three buttons.
         ->assertSee('fi-theme-switcher-btn', escape: false);
 });

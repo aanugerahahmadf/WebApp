@@ -85,17 +85,18 @@ it('tetap slide di tablet, macOS, desktop, dan desktop app, dua kartu per halama
         ->assertSee('scroll-snap-type: x mandatory')
         ->assertSee('display: flex')
         ->assertDontSee('grid-template-columns')
-        // Dua kartu per halaman. `calc(50% - 0.375rem)`, bukan `50%`: gap flex
-        // 0.75rem dihitung dua kali kalau kartu selebar 50% penuh, sehingga
-        // halaman kedua tidak pernah pas di titik snap.
-        ->assertSee('--shortcut-stats-page: calc(50% - 0.375rem)')
+        // Satu kartu per halaman untuk SEMUA platform (mobile, tablet, desktop).
+        // View sekarang hardcoded $isPhone = true, jadi cardBasis = 100%.
+        ->assertSee('--shortcut-stats-page: 100%')
         ->html();
 
-    // Empat kartu jadi DUA halaman, jadi hanya dua titik. Titik per kartu
-    // akan menyesatkan: tidak ada halaman yang cuma berisi satu kartu.
+    // Empat kartu = empat halaman (1 kartu per halaman untuk SEMUA platform).
+    // Jadi ada 4 titik: snap === 0, 1, 2, 3.
     expect(substr_count($html, 'snap === 0'))->toBe(1)
         ->and(substr_count($html, 'snap === 1'))->toBe(1)
-        ->and($html)->not->toContain('snap === 2');
+        ->and(substr_count($html, 'snap === 2'))->toBe(1)
+        ->and(substr_count($html, 'snap === 3'))->toBe(1)
+        ->and($html)->not->toContain('snap === 4');
 })->with([
     'desktop windows' => RuntimePlatform::WebsiteWindows,
     'macos' => RuntimePlatform::WebsiteMacOS,
