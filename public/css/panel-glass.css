@@ -285,12 +285,30 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     backdrop-filter: none !important;
 } */
 
-/* Item aktif di sidebar -- hapus latar putih-nya (lingkaran rounded
-   yang menempel di Item "Home"). Yang dihilangkan hanya latar dasar;
-   tetap terlihat borderless. */
-.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
-.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-grouped-dropdown-trigger {
+/* Item aktif di sidebar -- hapus latar putihnya yang menempel di Item
+   "Home", supaya tetap terlihat borderless.
+   Hanya latar DASAR yang dihapus, itu pun lewat :not(:hover) dan
+   :not(:focus-visible) supaya tidak menimpa utility hover milik
+   Filament. Tanpa pengecualian itu, kursor di item aktif tidak
+   memberi respons apa pun -- berbeda dari Top Navigation yang tetap
+   berubah saat disorot. */
+.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button:not(:hover):not(:focus-visible),
+.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-grouped-dropdown-trigger:not(:hover):not(:focus-visible) {
     background-color: transparent !important;
+}
+
+/* Hover item AKTIF: nilai yang sama dengan utility Filament untuk item
+   non-aktif (gray-100 / white 5%). Perlu ditulis eksplisit karena
+   !important pada aturan di atas selalu menang atas utility hover,
+   termasuk ketika kursor benar-benar ada di item itu. */
+.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button:hover,
+.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button:focus-visible {
+    background-color: rgb(243 244 246) !important;
+}
+
+.dark .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button:hover,
+.dark .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button:focus-visible {
+    background-color: rgb(255 255 255 / 0.05) !important;
 }
 
 /* --- Panel dropdown: tepi seragam dengan panel CBIR ------------------
