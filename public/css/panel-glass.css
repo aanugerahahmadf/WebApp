@@ -323,6 +323,33 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     box-shadow: none !important;
 }
 
+/* --- Hover Top Navigation: bukan blok putih solid ----------------------
+   Item topnav dan isi dropdownnya memakai hover:bg-custom-50, yaitu
+   rgb(254 252 232) kreput opaque. Di atas panel ber-gold itu terlihat
+   seperti kotak putih terpisah. Diganti ke token kaca yang sama
+   dengan topnav dan sidebar: bg 65% + blur 20px + gold 35%. */
+.fi-panel-welcome .fi-topbar .fi-topbar-item-button:hover,
+.fi-panel-welcome .fi-topbar .fi-topbar-item-button:focus-visible,
+.fi-panel-welcome .fi-topbar .fi-dropdown-list-item:hover,
+.fi-panel-welcome .fi-topbar .fi-dropdown-list-item:focus-visible,
+.fi-panel-welcome .fi-topbar .fi-user-menu-list-item-button:hover,
+.fi-panel-user .fi-topbar .fi-topbar-item-button:hover,
+.fi-panel-user .fi-topbar .fi-topbar-item-button:focus-visible,
+.fi-panel-user .fi-topbar .fi-dropdown-list-item:hover,
+.fi-panel-user .fi-topbar .fi-dropdown-list-item:focus-visible,
+.fi-panel-user .fi-topbar .fi-user-menu-list-item-button:hover,
+.fi-panel-admin .fi-topbar .fi-topbar-item-button:hover,
+.fi-panel-admin .fi-topbar .fi-topbar-item-button:focus-visible,
+.fi-panel-admin .fi-topbar .fi-dropdown-list-item:hover,
+.fi-panel-admin .fi-topbar .fi-dropdown-list-item:focus-visible,
+.fi-panel-admin .fi-topbar .fi-user-menu-list-item-button:hover {
+    background-color: var(--fi-glass-bg) !important;
+    background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
+    -webkit-backdrop-filter: var(--fi-glass-blur) !important;
+    backdrop-filter: var(--fi-glass-blur) !important;
+    border: 1px solid var(--fi-glass-ring) !important;
+}
+
 /* --- Tombol buka/tutup sidebar (buka/tutup + chevron up/down grup) ------
    Warnanya warna Primary (amber), sama seperti item aktif di Top
    Navigation. Nilai diambil dari primary Filament supaya ikut
