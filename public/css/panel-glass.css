@@ -283,16 +283,25 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
 } */
 
 /* Item aktif di sidebar -- kotak rounded yang menempel di Item "Home".
-   LatarFilament (bg-gray-100 / dark:bg-white/5) diganti dengan putih
-   transparan tipis yang sama, TANPA gold tint dan tanpa border.
-   Gold tint di sini membuat kotak terlihat bercor kuning di atas
-   sidebar yang warnanya sudah keemasan, dan border 1px menggambar
-   garis tepi yang tidak ada pada referensi.
-   Nilai hover tetap ditulis eksplisit karena !important pada aturan
-   sebelumnya selalu menang atas utility hover milik Filament. */
+
+   Dua mode memakai nilai yang berbeda karena alpha putih yang
+   kelihatan di latar gelap jadi tidak terlihat di latar terang:
+
+     Light  rgb(255 255 255 / 0.55)  -- putih 55%, masih meneruskan
+                                        gold 40% di belakangnya
+     Night  rgb(255 255 255 / 0.05)  -- putih 5%
+
+   Yang dipakai sebelumnya di Light adalah rgb(243 244 246) opaque,
+   itu nilai bg-gray-100 milik Filament. Oppositionya menutupi
+   gold tint sidebar sepenuhnya, jadi kotaknya terlihat sebagai
+   blok putih solid, bukan lapisan di atas kaca.
+
+   Tanpa gold tint sendiri (sidebar sudah keemasan) dan tanpa
+   border, sesuai referensi. Hover ditulis eksplisit dengan nilai
+   yang sama supaya kursor lewat tidak mengubah apa pun. */
 .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
 .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-grouped-dropdown-trigger {
-    background-color: rgb(243 244 246) !important;
+    background-color: rgb(255 255 255 / 0.55) !important;
     background-image: none !important;
     border: 0 !important;
     box-shadow: none !important;
@@ -303,13 +312,11 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     background-color: rgb(255 255 255 / 0.05) !important;
 }
 
-/* Hover item aktif tidak boleh lebih terang dari keadaan diamnya.
-   Kalau tidak ada aturan ini, utility hover Filament akan menimpa
-   nilai di atas dan item aktif ikut berubah saat kursor lewat,
-   padahal yang diminta hanya kotak rounded tipis. */
+/* Hover item aktif: nilai sama dengan keadaan diamnya. Tanpa aturan
+   ini, utility hover Filament akan menimpa nilai di atas. */
 .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button:hover,
 .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button:focus-visible {
-    background-color: rgb(243 244 246) !important;
+    background-color: rgb(255 255 255 / 0.55) !important;
 }
 
 .dark .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button:hover,
