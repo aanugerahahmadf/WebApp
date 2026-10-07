@@ -293,6 +293,26 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     background-color: transparent !important;
 }
 
+/* --- Panel dropdown CBIR / bahasa ------------------------------------
+   Panel CBIR memakai kelas `ring-1` di blade, jadi Filament menggambar
+   cincin lewat box-shadow --tw-ring-shadow, bukan border. Cincin itu
+   berbentrok dengan halo kotak sidebar dan topnav sehingga tepinya
+   tidak Interactive. Diganti border sungguhan dari token --fi-glass-ring
+   supaya tepi panel cekl dan sama seperti permukaan kaca lain. */
+.fi-panel-welcome .x-cam-menu,
+.fi-panel-user .x-cam-menu,
+.fi-panel-admin .x-cam-menu,
+.fi-panel-welcome .lang-dd,
+.fi-panel-user .lang-dd,
+.fi-panel-admin .lang-dd {
+    --tw-ring-color: transparent;
+    --tw-ring-shadow: 0 0 #0000;
+    --tw-ring-offset-shadow: 0 0 #0000;
+
+    border: 1px solid var(--fi-glass-ring) !important;
+    box-shadow: none !important;
+}
+
 /* --- Halo putih pada kotak Sidebar dan Top Navigation ----------------
    Kaca sidebar dan topnav diberi halo putih blur 60px supaya panelnya
    terlihat melayang, tidak menempel datar ke latar halaman. Nilai
