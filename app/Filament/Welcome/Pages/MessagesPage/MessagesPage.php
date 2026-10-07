@@ -87,8 +87,19 @@ class MessagesPage extends Page
             }
         );
 
-        // Jangan tampilkan badge kalau 0
-        return $count > 0 ? (string) $count : null;
+        // Badge selalu tampil, termasuk "0".
+        //
+        // Sebelumnya di sini ada kondisi `$count > 0 ? ... : null`, jadi
+        // badge hilang begitu tidak ada pesan belum dibaca. Untuk tamu atau
+        // pengunjung yang memang belum pernah chatted, itu membuat item
+        // "Messages" di sidebar/topnav terlihat tidak punya badge sama
+        // sekali, padahal item lain (My Review, Transaction History)
+        // tetap menampilkan "0" pada kondisi yang sama.
+        //
+        // Side effect yang disengaja: cache 30 detiknya ikut berubah,
+        // karena nilai "0" sekarang ikut tersimpan dan tidak lagi
+        // melewati jalur return null.
+        return (string) $count;
     }
 
     public static function getNavigationBadgeTooltip(): ?string

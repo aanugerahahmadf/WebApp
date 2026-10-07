@@ -147,14 +147,16 @@ it('the admin can open any conversation', function (): void {
 // Navigation badge — unread count
 // ---------------------------------------------------------------------------
 
-it('navigation badge returns null when there are no unread messages', function (): void {
+it('navigation badge returns zero when there are no unread messages', function (): void {
     actingAs($this->customer, 'web');
     Cache::flush();
 
     Filament::setCurrentPanel(Filament::getPanel('welcome'));
 
-    // No inbox => no unread
-    expect(MessagesPage::getNavigationBadge())->toBeNull();
+    // No inbox => no unread. Badge tetap tampil "0" supaya item Messages
+    // tidak terlihat kehilangan badge untuk tamu atau pengunjung yang
+    // belum pernah chatted, sama seperti My Review dan Transaction History.
+    expect(MessagesPage::getNavigationBadge())->toBe('0');
 });
 
 it('navigation badge returns the unread inbox count', function (): void {
