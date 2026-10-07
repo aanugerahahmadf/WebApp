@@ -737,21 +737,6 @@
                 </div>
             </template>
 
-            {{-- Tombol Galeri dan File -- untuk memilih file dari galeri atau file manager --}}
-            <div x-show="!photoData" class="mt-2 grid grid-cols-2 gap-2">
-                <button type="button" @click="$refs.galleryInput.click()" class="flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/10">
-                    <x-filament::icon icon="heroicon-o-photo" class="h-5 w-5" />
-                    {{ __('Galeri') }}
-                </button>
-                <button type="button" @click="$refs.fileInput.click()" class="flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/10">
-                    <x-filament::icon icon="heroicon-o-folder" class="h-5 w-5" />
-                    {{ __('File') }}
-                </button>
-            </div>
-
-            <input x-ref="galleryInput" type="file" accept="image/*,video/*" class="sr-only" x-on:change="onGalleryPicked($event)">
-            <input x-ref="fileInput" type="file" accept="image/*,video/*,.pdf,.doc,.docx" class="sr-only" x-on:change="onGalleryPicked($event)">
-
             <!-- Photo preview -->
             <template x-if="photoData">
                 <div class="relative w-full rounded-lg bg-white dark:bg-gray-900 ring-1 ring-gray-950/5 dark:ring-white/10 shadow-sm overflow-hidden" @mouseenter="isHovering = true" @mouseleave="isHovering = false">

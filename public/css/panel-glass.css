@@ -585,22 +585,16 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     opacity: 1 !important;
 }
 
-/* Badge: hanya latar yang memakai kaca.
-   Garis dan warna angka TIDAK boleh disentuh, keduanya milik Filament:
-   `ring-1 ring-inset ring-custom-600/10 dark:ring-custom-400/30` untuk
-   garis, dan `text-custom-600 dark:text-custom-400` untuk angka.
-
-   Sebelumnya di sini ada `border: 1px solid var(--fi-glass-ring)`.
-   Itu menggambar garis kedua di luar ring bawaan Filament, jadi badge
-   terlihat punya dua lapis garis dan warnanya tidak lagi ikut warna
-   status (danger, primary, dan seterusnya). Border itu dihapus; angka
-   tetap bawaan Filament karena tidak pernah di-override. */
+/* Badge: transparan total — hanya pakai ring bawaan Filament
+   (`ring-1 ring-inset ring-custom-600/10 dark:ring-custom-400/30`
+   untuk garis, `text-custom-600 dark:text-custom-400` untuk angka).
+   Tidak ada background kaca, tidak ada blur. */
 .fi-sidebar .fi-badge,
 .fi-topbar .fi-badge {
-    background-color: var(--fi-glass-bg) !important;
-    background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
-    -webkit-backdrop-filter: var(--fi-glass-blur) !important;
-    backdrop-filter: var(--fi-glass-blur) !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
 }
 
 /* Label di kartu statistik. Di Shared.css, label stat itu dibuat
