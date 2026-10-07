@@ -60,6 +60,10 @@
                     :label="$label"
                     x-bind:aria-expanded="! $store.sidebar.groupIsCollapsed(label)"
                     x-on:click.stop="$store.sidebar.toggleCollapsedGroup(label)"
+                    {{-- Arahkan kursor ke chevron untuk buka/tutup grup tanpa perlu klik.
+                         mouseenter hanya terpicu oleh pointer, jadi di perangkat sentuh
+                         perilaku klik tetap berlaku seperti sebelumnya. --}}
+                    x-on:mouseenter.stop="$store.sidebar.toggleCollapsedGroup(label)"
                     class="fi-sidebar-group-collapse-button"
                     x-bind:class="{ '-rotate-180': $store.sidebar.groupIsCollapsed(label) }"
                 />
