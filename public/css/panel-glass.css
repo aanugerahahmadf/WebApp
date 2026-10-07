@@ -302,19 +302,16 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     box-shadow: none !important;
 }
 
-/* Hover item aktif: lapisan putih tipis, sama seperti hover item
-   non-aktif. Nilai sebelumnya disamakan dengan keadaan diam supaya
-   kursor lewat tidak mengubah apa pun; sekarang kursor lewat memang
-   boleh menambah lapisan putih di atas kotak gold. */
+/* Hover item aktif: lapisan putih tipis di atas kotak gold.
+   Nilai 5% dipakai di kedua mode. Di Light 5% memang nyaris tak
+   kelihatan, dan itu memang yang diminta -- Kotak gold-nya yang
+   menandai item aktif, hover cukup berupa lapisan tipis di atasnya. */
 .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button:hover,
-.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button:focus-visible {
-    background-color: rgb(255 255 255 / 0.55) !important;
-    background-image: none !important;
-}
-
+.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button:focus-visible,
 .dark .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button:hover,
 .dark .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button:focus-visible {
     background-color: rgb(255 255 255 / 0.05) !important;
+    background-image: none !important;
 }
 
 /* --- Panel dropdown: tepi seragam dengan panel CBIR ------------------
