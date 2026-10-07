@@ -351,32 +351,6 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     color: rgb(229 231 235) !important; /* gray-200 */
 }
 
-/* --- Topbar dropdown items: icon colors match label colors --- */
-/* Light mode: inactive/active icons = gray-950 (same as label) */
-.fi-topbar .fi-dropdown-list-item svg,
-.fi-topbar .fi-dropdown-list-item [class*="icon"] {
-    color: rgb(3 7 18) !important; /* gray-950 = label color */
-}
-
-/* Dark mode: inactive/active icons = white (same as label) */
-.dark .fi-topbar .fi-dropdown-list-item svg,
-.dark .fi-topbar .fi-dropdown-list-item [class*="icon"] {
-    color: rgb(255 255 255) !important; /* white = label color */
-}
-
-/* --- Topbar nav items (.fi-topbar-item): icon colors match labels --- */
-/* Light: inactive/active icons = gray-950 (same as label) */
-.fi-topbar .fi-topbar-item svg,
-.fi-topbar .fi-topbar-item [class*="icon"] {
-    color: rgb(3 7 18) !important; /* gray-950 = label color */
-}
-
-/* Dark mode: inactive/active icons = white (same as label) */
-.dark .fi-topbar .fi-topbar-item svg,
-.dark .fi-topbar .fi-topbar-item [class*="icon"] {
-    color: rgb(255 255 255) !important; /* white = label color */
-}
-
 /* Label di kartu statistik. Di Shared.css, label stat itu dibuat
    dengan warna rgb(203 213 225) (abu sangat terang) -- cocok untuk
    teks di latar gelap, tapi dipakai tanpa kondisi terang/gelap. Di
