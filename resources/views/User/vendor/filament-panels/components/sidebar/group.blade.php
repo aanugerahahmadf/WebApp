@@ -27,13 +27,27 @@
         <div
             @if ($collapsible)
                 x-on:click="$store.sidebar.toggleCollapsedGroup(label)"
-                {{-- Satu mouseenter di seluruh baris grup, bukan satu per anak.
-                     mouseenter tidak terpicu ulang saat kursor berpindah dari
-                     label ke chevron di dalam baris yang sama, jadi cukup satu
-                     arahkan kursor untuk membuka maupun menutup grup.
-                     Di perangkat sentuh event ini tidak pernah terpicu, jadi
-                     perilaku klik tetap berlaku seperti sebelumnya. --}}
-                x-on:mouseenter="$store.sidebar.toggleCollapsedGroup(label)"
+                {{-- Satu pointerenter di seluruh baris grup, bukan satu per
+                     anak. Pointerenter tidak terpicu ulang saat kursor
+                     berpindah dari label ke chevron di dalam baris yang
+                     sama, jadi cukup satu arahkan kursor -- baik di label
+                     maupun tepat di chevron up/down -- untuk membuka maupun
+                     menutup grup tanpa perlu klik.
+
+                     Pointer, bukan mouse, karena mouseenter juga ikut
+                     terpicu saat ketukan di perangkat sentuh. Kalau dipakai
+                     apa adanya di Android/iOS, satu ketukan pada chevron
+                     akan toggle dua kali: sekali dari pointerenter di baris
+                     ini, sekali lagi dari x-on:click.stop pada tombol
+                     chevron di bawah. Hasilnya grup tidak bergerak sama
+                     sekali. Penjaga pointerType !== 'touch' membuat jalur
+                     hover hanya milik mouse dan pena, sementara perangkat
+                     sentuh tetap bertumpu pada klik seperti sebelumnya.
+
+                     Chevron tidak diberi listener sendiri dengan sengaja:
+                     dengan begitu kursor yang berhenti tepat di chevron
+                     tidak memicu toggle kedua di atas toggle pertama. --}}
+                x-on:pointerenter="if ($event.pointerType !== 'touch') $store.sidebar.toggleCollapsedGroup(label)"
             @endif
             @if ($sidebarCollapsible)
                 x-show="$store.sidebar.isOpen"
