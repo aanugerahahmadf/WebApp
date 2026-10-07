@@ -290,6 +290,27 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     background-color: transparent !important;
 }
 
+/* --- Hover sidebar: bukan blok putih solid ---------------------------
+   Blade sidebar pakai hover:bg-gray-100, jadi di atas sidebar
+   ber-gold item yang disorot jadi kotak putih opaque. Diganti ke
+   token kaca yang sama dengan topnav:
+   bg 65% + blur 20px + gold 35%, jadi tetap transparan. */
+.fi-panel-welcome .fi-sidebar .fi-sidebar-item-button:hover,
+.fi-panel-welcome .fi-sidebar .fi-sidebar-item-button:focus-visible,
+.fi-panel-welcome .fi-sidebar .fi-sidebar-group-button:hover,
+.fi-panel-user .fi-sidebar .fi-sidebar-item-button:hover,
+.fi-panel-user .fi-sidebar .fi-sidebar-item-button:focus-visible,
+.fi-panel-user .fi-sidebar .fi-sidebar-group-button:hover,
+.fi-panel-admin .fi-sidebar .fi-sidebar-item-button:hover,
+.fi-panel-admin .fi-sidebar .fi-sidebar-item-button:focus-visible,
+.fi-panel-admin .fi-sidebar .fi-sidebar-group-button:hover {
+    background-color: var(--fi-glass-bg) !important;
+    background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
+    -webkit-backdrop-filter: var(--fi-glass-blur) !important;
+    backdrop-filter: var(--fi-glass-blur) !important;
+    border: 1px solid var(--fi-glass-ring) !important;
+}
+
 /* --- Tombol buka/tutup sidebar (buka/tutup + chevron up/down grup) ------
    Warnanya warna Primary (amber), sama seperti item aktif di Top
    Navigation. Nilai diambil dari primary Filament supaya ikut
