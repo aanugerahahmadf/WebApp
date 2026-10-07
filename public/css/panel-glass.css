@@ -37,9 +37,9 @@
  *                 filter.
  * ===================================================================== */
 
-/* --- Token KACA: Blur 25% + tint 30% (Light pakai Light, Night pakai Dark)
-   Light: 25% putih (alpha 0.25) + blur 20px + light tint 30%
-   Dark:  25% hitam (alpha 0.25) + blur 20px + dark tint 30%
+/* --- Token KACA: Blur 25% + tint 50% (Light pakai Light, Night pakai Dark)
+   Light: 25% putih (alpha 0.25) + blur 20px + light tint 50%
+   Dark:  25% hitam (alpha 0.25) + blur 20px + dark tint 50%
    Tint searah dengan mode: di Light yang ditambahkan terang, di Night
    yang ditambahkan gelap. Override di sini tanpa build. */
 .fi-panel-welcome,
@@ -48,7 +48,7 @@
     --fi-glass-bg: rgb(255 255 255 / 0.25) !important;
     --fi-glass-ring: rgb(0 0 0 / 0.12) !important;
     --fi-glass-blur: blur(20px) saturate(180%) !important;
-    --fi-glass-tint: rgb(255 255 255 / 0.30) !important; /* light tint 30% */
+    --fi-glass-tint: rgb(255 255 255 / 0.50) !important; /* light tint 50% */
     /* Placeholder Global Search: topbar ber-gold terang, warna bawaan
        terlalu tipis. Utilitas Tailwind mengatur opacity placeholder lewat
        variabel terpisah, jadi harus lewat ::placeholder. */
@@ -61,7 +61,7 @@
     --fi-glass-bg: rgb(12 12 15 / 0.25) !important;
     --fi-glass-ring: rgb(255 255 255 / 0.15) !important;
     --fi-glass-blur: blur(20px) saturate(180%) !important;
-    --fi-glass-tint: rgb(0 0 0 / 0.30) !important; /* dark tint 30% */
+    --fi-glass-tint: rgb(0 0 0 / 0.50) !important; /* dark tint 50% */
     --fi-glass-input-fg: rgb(255 255 255 / 0.55) !important;
 }
 
