@@ -282,22 +282,31 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     backdrop-filter: none !important;
 } */
 
-/* Item aktif di sidebar -- hapus latar putihnya yang menempel di Item
-   "Home", supaya tetap terlihat borderless.
-   Hanya latar DASAR yang dihapus, itu pun lewat :not(:hover) dan
-   :not(:focus-visible) supaya tidak menimpa utility hover milik
-   Filament. Tanpa pengecualian itu, kursor di item aktif tidak
-   memberi respons apa pun -- berbeda dari Top Navigation yang tetap
-   berubah saat disorot. */
-.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button:not(:hover):not(:focus-visible),
-.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-grouped-dropdown-trigger:not(:hover):not(:focus-visible) {
-    background-color: transparent !important;
+/* Item aktif di sidebar -- kotak rounded yang menempel di Item "Home".
+   LatarFilament (bg-gray-100 / dark:bg-white/5) diganti dengan putih
+   transparan tipis yang sama, TANPA gold tint dan tanpa border.
+   Gold tint di sini membuat kotak terlihat bercor kuning di atas
+   sidebar yang warnanya sudah keemasan, dan border 1px menggambar
+   garis tepi yang tidak ada pada referensi.
+   Nilai hover tetap ditulis eksplisit karena !important pada aturan
+   sebelumnya selalu menang atas utility hover milik Filament. */
+.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
+.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-grouped-dropdown-trigger {
+    background-color: rgb(243 244 246) !important;
+    background-image: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
 }
 
-/* Hover item AKTIF: nilai yang sama dengan utility Filament untuk item
-   non-aktif (gray-100 / white 5%). Perlu ditulis eksplisit karena
-   !important pada aturan di atas selalu menang atas utility hover,
-   termasuk ketika kursor benar-benar ada di item itu. */
+.dark .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
+.dark .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-grouped-dropdown-trigger {
+    background-color: rgb(255 255 255 / 0.05) !important;
+}
+
+/* Hover item aktif tidak boleh lebih terang dari keadaan diamnya.
+   Kalau tidak ada aturan ini, utility hover Filament akan menimpa
+   nilai di atas dan item aktif ikut berubah saat kursor lewat,
+   padahal yang diminta hanya kotak rounded tipis. */
 .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button:hover,
 .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button:focus-visible {
     background-color: rgb(243 244 246) !important;
