@@ -8,6 +8,7 @@ use App\Filament\Welcome\Resources\ProductResource\ProductResource;
 use App\Forms\Components\StarRating\StarRating;
 use App\Models\Review\Review;
 use App\Models\Order\Order;
+use emmanpbarrameda\FilamentTakePictureField\Forms\Components\TakePicture;
 use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -179,15 +180,32 @@ class ReviewResource extends Resource
                             ->required()
                             ->rows(5)
                             ->columnSpanFull(),
-                        Forms\Components\FileUpload::make('photo')
+                        Forms\Components\Repeater::make('photos')
                             ->label(__('Foto Ulasan'))
-                            ->image()
-                            ->directory('review-photos')
-                            ->disk('public')
-                            ->visibility('public')
-                            ->maxSize(5120)
-                            ->helperText(__('Opsional — unggah foto hasil dekorasi Anda.'))
-                            ->columnSpanFull(),
+                            ->relationship()
+                            ->schema([
+                                TakePicture::make('photo')
+                                    ->label(__('Foto'))
+                                    ->disk('public')
+                                    ->directory('review-photos')
+                                    ->visibility('public')
+                                    ->maxSize(5120)
+                                    ->imageQuality(90)
+                                    ->aspect('3:4')
+                                    ->useModal(true)
+                                    ->showCameraSelector(true)
+                                    ->captureMaxDimensions(1280, 720)
+                                    ->autoStart(false)
+                                    ->helperText(__('Ambil foto dengan kamera, rekam video, atau pilih dari galeri/file.')),
+                            ])
+                            ->columns(1)
+                            ->defaultItems(0)
+                            ->minItems(0)
+                            ->maxItems(10)
+                            ->addActionLabel(__('Tambah Foto'))
+                            ->itemLabel(fn (array $state): ?string => $state['photo'] ? __('Foto') . ' ' . (array_search($state, $get('photos')) + 1) : null)
+                            ->columnSpanFull()
+                            ->helperText(__('Opsional — tambah beberapa foto. Setiap foto bisa diambil dari kamera, video, galeri, atau file.')),
                     ]),
             ]);
     }
@@ -215,15 +233,32 @@ class ReviewResource extends Resource
                 ->required()
                 ->rows(4)
                 ->columnSpanFull(),
-            Forms\Components\FileUpload::make('photo')
-                ->label(__('Foto Ulasan'))
-                ->image()
-                ->directory('review-photos')
-                ->disk('public')
-                ->visibility('public')
-                ->maxSize(5120)
-                ->helperText(__('Opsional — unggah foto hasil dekorasi Anda.'))
-                ->columnSpanFull(),
+            Forms\Components\Repeater::make('photos')
+                            ->label(__('Foto Ulasan'))
+                            ->relationship()
+                            ->schema([
+                                TakePicture::make('photo')
+                                    ->label(__('Foto'))
+                                    ->disk('public')
+                                    ->directory('review-photos')
+                                    ->visibility('public')
+                                    ->maxSize(5120)
+                                    ->imageQuality(90)
+                                    ->aspect('3:4')
+                                    ->useModal(true)
+                                    ->showCameraSelector(true)
+                                    ->captureMaxDimensions(1280, 720)
+                                    ->autoStart(false)
+                                    ->helperText(__('Ambil foto dengan kamera, rekam video, atau pilih dari galeri/file.')),
+                            ])
+                            ->columns(1)
+                            ->defaultItems(0)
+                            ->minItems(0)
+                            ->maxItems(10)
+                            ->addActionLabel(__('Tambah Foto'))
+                            ->itemLabel(fn (array $state): ?string => $state['photo'] ? __('Foto') . ' ' . (array_search($state, $get('photos')) + 1) : null)
+                            ->columnSpanFull()
+                            ->helperText(__('Opsional — tambah beberapa foto. Setiap foto bisa diambil dari kamera, video, galeri, atau file.')),
         ];
     }
 
@@ -245,14 +280,31 @@ class ReviewResource extends Resource
                 ->label(__('Komentar Anda'))
                 ->required()
                 ->rows(5),
-            Forms\Components\FileUpload::make('photo')
-                ->label(__('Foto Ulasan'))
-                ->image()
-                ->directory('review-photos')
-                ->disk('public')
-                ->visibility('public')
-                ->maxSize(5120)
-                ->helperText(__('Opsional — unggah foto hasil dekorasi Anda.')),
+            Forms\Components\Repeater::make('photos')
+                            ->label(__('Foto Ulasan'))
+                            ->relationship()
+                            ->schema([
+                                TakePicture::make('photo')
+                                    ->label(__('Foto'))
+                                    ->disk('public')
+                                    ->directory('review-photos')
+                                    ->visibility('public')
+                                    ->maxSize(5120)
+                                    ->imageQuality(90)
+                                    ->aspect('3:4')
+                                    ->useModal(true)
+                                    ->showCameraSelector(true)
+                                    ->captureMaxDimensions(1280, 720)
+                                    ->autoStart(false)
+                                    ->helperText(__('Ambil foto dengan kamera, rekam video, atau pilih dari galeri/file.')),
+                            ])
+                            ->columns(1)
+                            ->defaultItems(0)
+                            ->minItems(0)
+                            ->maxItems(10)
+                            ->addActionLabel(__('Tambah Foto'))
+                            ->itemLabel(fn (array $state): ?string => $state['photo'] ? __('Foto') . ' ' . (array_search($state, $get('photos')) + 1) : null)
+                            ->helperText(__('Opsional — tambah beberapa foto. Setiap foto bisa diambil dari kamera, video, galeri, atau file.')),
         ];
     }
 
