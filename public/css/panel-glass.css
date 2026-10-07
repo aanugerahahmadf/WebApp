@@ -365,7 +365,7 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
     -webkit-backdrop-filter: var(--fi-glass-blur) !important;
     backdrop-filter: var(--fi-glass-blur) !important;
-    border: 1px solid var(--fi-glass-ring) !important;
+    border: 0 !important;
     box-shadow: none !important;
 }
 
@@ -402,7 +402,7 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
     -webkit-backdrop-filter: var(--fi-glass-blur) !important;
     backdrop-filter: var(--fi-glass-blur) !important;
-    border: 1px solid var(--fi-glass-ring) !important;
+    border: 0 !important;
     box-shadow: none !important;
 }
 
