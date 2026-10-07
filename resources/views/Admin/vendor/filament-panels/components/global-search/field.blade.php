@@ -12,13 +12,16 @@
         {{ __('filament-panels::global-search.field.label') }}
     </label>
 
-    {{-- Global Search: nested di dalam topbar yang sudah ber-glass, jadi
-         TANPA backdrop-filter (blur dobel bikin teks kabur) dan tanpa
-         gold tint tambahan. Hanya well tipis + ring. --}}
+    {{-- Global Search: transparan dan tanpa shadow. Field ini ada DI DALAM
+         topbar yang sudah ber-glass, jadi efek blur 20px + gold 35%
+         milik topnav terlihat langsung lewat field. Menambah
+         backdrop-filter, warna latar, atau bayangan sendiri hanya
+         membuat menumpuk dan teks jadi kabur. --}}
     <div class="fi-input-wrp flex items-center rounded-lg"
         style="
-            background-color: var(--fi-glass-input-bg);
+            background-color: transparent;
             border: 1px solid var(--fi-glass-ring);
+            box-shadow: none;
         ">
         {{-- Prefix icon --}}
         <div class="flex items-center ps-3 text-gray-400 dark:text-gray-500 shrink-0">
