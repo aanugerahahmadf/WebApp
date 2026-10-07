@@ -48,6 +48,8 @@
     --fi-glass-ring: rgb(0 0 0 / 0.12) !important;
     --fi-glass-blur: blur(20px) saturate(180%) !important;
     --fi-glass-tint: rgba(250, 204, 21, 0.30) !important; /* gold tint 30% */
+    /* Halo putih blur 60px di sekitar kotak sidebar dan topnav. */
+    --fi-glass-halo: 0 0 60px rgb(255 255 255 / 0.85) !important;
     /* Placeholder Global Search: topbar ber-gold terang, warna bawaan
        terlalu tipis. Utilitas Tailwind mengatur opacity placeholder lewat
        variabel terpisah, jadi harus lewat ::placeholder. */
@@ -61,6 +63,7 @@
     --fi-glass-ring: rgb(255 255 255 / 0.15) !important;
     --fi-glass-blur: blur(20px) saturate(180%) !important;
     --fi-glass-tint: rgba(250, 204, 21, 0.30) !important; /* gold tint 30% */
+    --fi-glass-halo: 0 0 60px rgb(255 255 255 / 0.30) !important;
     --fi-glass-input-fg: rgb(255 255 255 / 0.55) !important;
 }
 
@@ -288,6 +291,27 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
 .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
 .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-grouped-dropdown-trigger {
     background-color: transparent !important;
+}
+
+/* --- Halo putih pada kotak Sidebar dan Top Navigation ----------------
+   Kaca sidebar dan topnav diberi halo putih blur 60px supaya panelnya
+   terlihat melayang, tidak menempel datar ke latar halaman. Nilai
+   disimpan di token supaya bisa diubah dari satu tempat.
+   Item di dalam panel (termasuk baris yang punya chevron) tidak ikut
+   bayangan apa pun. */
+.fi-panel-welcome .fi-sidebar.fi-sidebar,
+.fi-panel-user .fi-sidebar.fi-sidebar,
+.fi-panel-admin .fi-sidebar.fi-sidebar,
+.fi-panel-welcome .fi-topbar.fi-topbar,
+.fi-panel-user .fi-topbar.fi-topbar,
+.fi-panel-admin .fi-topbar.fi-topbar,
+.dark .fi-panel-welcome .fi-sidebar.fi-sidebar,
+.dark .fi-panel-user .fi-sidebar.fi-sidebar,
+.dark .fi-panel-admin .fi-sidebar.fi-sidebar,
+.dark .fi-panel-welcome .fi-topbar.fi-topbar,
+.dark .fi-panel-user .fi-topbar.fi-topbar,
+.dark .fi-panel-admin .fi-topbar.fi-topbar {
+    box-shadow: var(--fi-glass-halo) !important;
 }
 
 /* --- Hover sidebar: bukan blok putih solid ---------------------------
