@@ -328,18 +328,12 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
    rgb(254 252 232) kreput opaque. Di atas panel ber-gold itu terlihat
    seperti kotak putih terpisah. Diganti ke token kaca yang sama
    dengan topnav dan sidebar: bg 65% + blur 20px + gold 35%. */
-.fi-panel-welcome .fi-topbar .fi-topbar-item-button:hover,
-.fi-panel-welcome .fi-topbar .fi-topbar-item-button:focus-visible,
 .fi-panel-welcome .fi-topbar .fi-dropdown-list-item:hover,
 .fi-panel-welcome .fi-topbar .fi-dropdown-list-item:focus-visible,
 .fi-panel-welcome .fi-topbar .fi-user-menu-list-item-button:hover,
-.fi-panel-user .fi-topbar .fi-topbar-item-button:hover,
-.fi-panel-user .fi-topbar .fi-topbar-item-button:focus-visible,
 .fi-panel-user .fi-topbar .fi-dropdown-list-item:hover,
 .fi-panel-user .fi-topbar .fi-dropdown-list-item:focus-visible,
 .fi-panel-user .fi-topbar .fi-user-menu-list-item-button:hover,
-.fi-panel-admin .fi-topbar .fi-topbar-item-button:hover,
-.fi-panel-admin .fi-topbar .fi-topbar-item-button:focus-visible,
 .fi-panel-admin .fi-topbar .fi-dropdown-list-item:hover,
 .fi-panel-admin .fi-topbar .fi-dropdown-list-item:focus-visible,
 .fi-panel-admin .fi-topbar .fi-user-menu-list-item-button:hover {
@@ -348,6 +342,25 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     -webkit-backdrop-filter: var(--fi-glass-blur) !important;
     backdrop-filter: var(--fi-glass-blur) !important;
     border: 1px solid var(--fi-glass-ring) !important;
+}
+
+/* Baris grup Top Navigation, yaitu .fi-topbar-item-button yang memuat
+   label grup dan chevron up/down (fi-topbar-group-toggle-icon). Hover
+   di sini tidak memberi kotak sama sekali, hanya perubahan warna teks.
+   Baris ini adalah header grup, bukan tujuan navigasi, jadi tidak
+   perlu latar kaca seperti item menu di dalam dropdown. */
+.fi-panel-welcome .fi-topbar .fi-topbar-item-button:hover,
+.fi-panel-welcome .fi-topbar .fi-topbar-item-button:focus-visible,
+.fi-panel-user .fi-topbar .fi-topbar-item-button:hover,
+.fi-panel-user .fi-topbar .fi-topbar-item-button:focus-visible,
+.fi-panel-admin .fi-topbar .fi-topbar-item-button:hover,
+.fi-panel-admin .fi-topbar .fi-topbar-item-button:focus-visible {
+    background-color: transparent !important;
+    background-image: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
 }
 
 /* --- Tombol buka/tutup sidebar (buka/tutup + chevron up/down grup) ------
