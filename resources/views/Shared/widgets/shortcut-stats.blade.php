@@ -44,8 +44,14 @@
         Track-nya bukan carousel berbasis JS — scroll-snap CSS yang
         menggesernya, jadi tetap jalan walau Alpine belum hydrate.
 
+        KACA KARTU — sama persis dengan widget StatsOverview. Kartu di
+        sini memakai kelas .fi-wi-stats-overview-stat yang persis sama,
+        jadi keduanya ditentukan oleh satu aturan di panel-glass.css
+        (bg 20% + tint 50% + blur 20px). Tidak ada aturan kaca terpisah
+        per widget; angka kacanya hanya ada di panel-glass.css.
+
         Di mobile: satu kartu per halaman, digeser dengan swipe (lihat
-        .shortcut-stats-track di Shared.css). Di selain mobile: grid 4 kolom
+        .shortcut-stats-track di Shared.css). Di luar mobile: grid 4 kolom
         seperti biasa.
 
         CARA MEMBAWA POSISI KE TITIK-TITIKNYA — dan kenapa bukan `x-data`

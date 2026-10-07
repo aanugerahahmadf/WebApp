@@ -8,7 +8,12 @@
 
     // SAMA persis seperti shortcut-stats: 1 kartu per halaman,
     // carousel swipe di SEMUA platform (mobile, tablet, desktop,
-    // desktop app). Glass 70% + blur 24px dari panel-glass.css.
+    // desktop app). Kacanya ikut token --fi-glass-* dari
+    // panel-glass.css, sama dengan widget ShortcutStats: kartu Stat ini
+    // memakai kelas .fi-wi-stats-overview-stat yang persis sama dengan
+    // kartu ShortcutStats, jadi tidak ada aturan kaca terpisah per
+    // widget. Angka kacanya (bg 20% + tint 50% + blur 20px) hanya ada
+    // di panel-glass.css -- jangan ditulis di sini.
     $cardBasis = '100%';
     $pageCount = max(1, count($stats));
 @endphp
