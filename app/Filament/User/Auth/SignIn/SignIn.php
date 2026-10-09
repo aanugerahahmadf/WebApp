@@ -17,6 +17,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Auth\Login as BaseLogin;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Validation\ValidationException;
+use Mews\Captcha\Facades\Captcha;
 
 class SignIn extends BaseLogin
 {
@@ -151,6 +152,7 @@ class SignIn extends BaseLogin
                     ->schema([
                         $this->getEmailFormComponent(),
                         $this->getPasswordFormComponent(),
+                        $this->getCaptchaFormComponent(),
                         View::make('User.social-buttons.agreement-checkboxes.agreement-checkboxes'),
                         View::make('User.social-buttons.auth-buttons.auth-buttons')
                             ->viewData(['authMode' => 'login']),
@@ -160,6 +162,28 @@ class SignIn extends BaseLogin
                 Hidden::make('remember'),
             ])
             ->statePath('data');
+    }
+
+    protected function getCaptchaFormComponent(): Component
+    {
+        return TextInput::make('captcha')
+            ->label(__('Kode Keamanan'))
+            ->placeholder(__('Masukkan kode dari gambar'))
+            ->required()
+            ->autocomplete('off')
+            ->extraAttributes([
+                'class' => 'captcha-input',
+                'data-captcha' => 'true',
+            ])
+            ->suffix(function (): string {
+                return '<div class="captcha-image-wrapper">
+                    <img src="' . route('captcha.image') . '" alt="CAPTCHA" class="captcha-image" onclick="this.src=\'' . route('captcha.image') . '?reload=' . time() . '\'" title="' . __('Klik untuk refresh') . '">
+                    <button type="button" class="captcha-refresh" onclick="document.querySelector(\'.captcha-image\').src=\'' . route('captcha.image') . '?reload=\' + Date.now()" aria-label="' . __('Refresh CAPTCHA') . '">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    </button>
+                </div>';
+            })
+            ->columnSpanFull();
     }
 
     /**
@@ -250,6 +274,19 @@ class SignIn extends BaseLogin
                 ->send();
             throw ValidationException::withMessages([
                 'data.remember' => __('Anda harus mencentang Ingat Saya untuk melanjutkan.'),
+            ]);
+        }
+
+        // Validate CAPTCHA
+        $captchaInput = $this->data['captcha'] ?? null;
+        if (! $captchaInput || ! Captcha::check($captchaInput)) {
+            Notification::make()
+                ->title(__('Kode Keamanan Salah'))
+                ->body(__('Kode keamanan yang Anda masukkan tidak valid. Silakan coba lagi.'))
+                ->danger()
+                ->send();
+            throw ValidationException::withMessages([
+                'data.captcha' => __('Kode keamanan tidak valid.'),
             ]);
         }
 

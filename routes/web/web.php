@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\DataExportDownloadController\DataExportDownloadCo
 use App\Http\Controllers\Admin\InvoicePdfController\InvoicePdfController as AdminInvoicePdfController;
 use App\Http\Controllers\Admin\ReportPdfController\ReportPdfController as AdminReportPdfController;
 use App\Http\Controllers\Admin\ReviewVoteController\ReviewVoteController as AdminReviewVoteController;
+use App\Http\Controllers\CookieConsent\CookieConsentController;
 use App\Http\Controllers\User\ClerkLoginController\ClerkLoginController;
 use App\Http\Controllers\User\ConsultationFormPdfController\ConsultationFormPdfController;
 use App\Http\Controllers\User\FirebaseAuthController\FirebaseAuthController;
@@ -242,3 +243,26 @@ Route::prefix('welcome')->name('welcome.')->group(function (): void {
     Route::get('/reports/{report}/pdf', [WelcomeReportPdfController::class, 'download'])
         ->name('reports.pdf');
 });
+
+// -----------------------------------------------------------------------------
+// COOKIE CONSENT — GDPR/ePrivacy compliant
+// -----------------------------------------------------------------------------
+Route::prefix('cookie-consent')->name('cookie-consent.')->group(function (): void {
+    Route::post('/accepted', [CookieConsentController::class, 'accept'])->name('accept');
+    Route::post('/essential_only', [CookieConsentController::class, 'essentialOnly'])->name('essential');
+    Route::post('/rejected', [CookieConsentController::class, 'reject'])->name('reject');
+    Route::post('/reset', [CookieConsentController::class, 'reset'])->name('reset');
+    Route::get('/status', [CookieConsentController::class, 'status'])->name('status');
+});
+
+// Cookie Preferences Page (accessible from banner link)
+Route::get('/cookie-preferences', function () {
+    return view('components.cookie-consent.preferences');
+})->name('cookie.preferences');
+
+// CAPTCHA Route (mews/captcha)
+Route::get('/captcha/image', function () {
+    return response(Captcha::img())
+        ->header('Content-Type', 'image/png')
+        ->header('Cache-Control', 'no-cache, no-store, must-revalidate');
+})->name('captcha.image');

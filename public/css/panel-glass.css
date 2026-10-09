@@ -687,3 +687,114 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
         background-color: rgb(9 9 11 / 0.98) !important;
     }
 }
+
+/* =====================================================================
+ * CAPTCHA Styles
+ * ===================================================================== */
+.captcha-input {
+    font-family: monospace !important;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+.captcha-image-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: 0.5rem;
+}
+
+.captcha-image {
+    height: 40px;
+    max-height: 40px;
+    border: 1px solid rgb(229 231 235);
+    border-radius: 6px;
+    cursor: pointer;
+    user-select: none;
+    transition: opacity 0.2s;
+}
+
+.dark .captcha-image {
+    border-color: rgb(75 85 99);
+}
+
+.captcha-image:hover {
+    opacity: 0.8;
+}
+
+.captcha-refresh {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid rgb(229 231 235);
+    border-radius: 6px;
+    background: white;
+    color: rgb(75 85 99);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.dark .captcha-refresh {
+    background: rgb(31 41 55);
+    border-color: rgb(75 85 99);
+    color: rgb(209 213 219);
+}
+
+.captcha-refresh:hover {
+    background: rgb(243 244 246);
+    color: rgb(37 99 235);
+}
+
+.dark .captcha-refresh:hover {
+    background: rgb(55 65 81);
+    color: rgb(96 165 250);
+}
+
+.captcha-refresh:focus-visible {
+    outline: none;
+    ring: 2px;
+    ring-color: rgb(59 130 246);
+    ring-offset: 2px;
+}
+
+/* =====================================================================
+ * Cookie Consent Banner Styles
+ * ===================================================================== */
+#cookie-consent-banner {
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+#cookie-consent-banner.x-cloak {
+    display: none !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    #cookie-consent-banner .flex {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    #cookie-consent-banner button {
+        width: 100%;
+    }
+}
+
+/* Ensure banner is above other fixed elements */
+#cookie-consent-banner {
+    z-index: 9999;
+}

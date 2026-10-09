@@ -42,6 +42,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
         // Mendaftarkan middleware SetLocale ke group web agar session dan auth tersedia
         $middleware->web(append: [
             SetLocale::class,
+            \App\Http\Middleware\CookieConsent\CookieConsentMiddleware::class,
         ]);
 
         // Mendaftarkan middleware SetLocale ke group api untuk sinkronisasi bahasa aplikasi mobile
