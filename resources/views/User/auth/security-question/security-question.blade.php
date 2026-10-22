@@ -26,7 +26,7 @@
 <x-filament-panels::page>
     <div class="flex flex-col items-center gap-6 text-center">
         <x-filament::icon
-            icon="heroicon-o-shield-check"
+            icon="/images/icons/shield_check.svg"
             class="h-12 w-12 text-primary-500"
         />
 

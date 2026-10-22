@@ -2,7 +2,7 @@
 
 namespace App\Filament\User\Auth\OtpEmailOrTwoFactory;
 
-use App\Filament\User\Pages\Home\Home;
+use App\Filament\Welcome\Pages\Home\Home;
 use App\Models\BackupCode\BackupCode;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;

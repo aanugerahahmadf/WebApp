@@ -78,20 +78,20 @@ class SocialiteController extends Controller
         } catch (\Exception $e) {
             Log::error("[Socialite] Web callback error: {$e->getMessage()}");
 
-            return redirect()->route('filament.user.auth.login')
+            return redirect()->route('filament.welcome.auth.login')
                 ->with('error', __('Gagal mengambil data dari :provider.', ['provider' => ucfirst($provider)]));
         }
 
         $user = $this->findOrCreateUser($socialUser, $provider);
 
         if (! $user) {
-            return redirect()->route('filament.user.auth.login');
+            return redirect()->route('filament.welcome.auth.login');
         }
 
         if (is_null($user->email_verified_at)) {
             Auth::login($user, remember: true);
 
-            return redirect()->route('filament.user.auth.email-verification.prompt');
+            return redirect()->route('filament.welcome.auth.email-verification.prompt');
         }
 
         Auth::login($user, remember: true);
@@ -120,7 +120,7 @@ class SocialiteController extends Controller
         if (! $token) {
             Log::warning('[Socialite Mobile] verifyMobileToken: no token');
 
-            return redirect()->route('filament.user.auth.login')
+            return redirect()->route('filament.welcome.auth.login')
                 ->with('error', __('Token tidak valid.'));
         }
 
@@ -129,14 +129,14 @@ class SocialiteController extends Controller
         if (! $userId) {
             Log::warning("[Socialite Mobile] verifyMobileToken: token expired or invalid: $token");
 
-            return redirect()->route('filament.user.auth.login')
+            return redirect()->route('filament.welcome.auth.login')
                 ->with('error', __('Token sudah kadaluarsa. Silakan coba lagi.'));
         }
 
         $user = User::find($userId);
 
         if (! $user) {
-            return redirect()->route('filament.user.auth.login')
+            return redirect()->route('filament.welcome.auth.login')
                 ->with('error', __('Akun tidak ditemukan.'));
         }
 
@@ -251,6 +251,9 @@ class SocialiteController extends Controller
                 'active_status' => true,
                 'ip_address' => request()->ip(),
                 'password' => null,
+                // 2FA TIDAK PERNAH aktif untuk Google OAuth users.
+                'two_factor_type' => \MixCode\FilamentMulti2fa\Enums\TwoFactorAuthType::None->value,
+                'two_factor_enabled' => false,
             ]);
 
             if (method_exists($user, 'assignRole')) {
@@ -260,6 +263,13 @@ class SocialiteController extends Controller
                     $user->assignRole($role);
                 }
             }
+
+            // Akun BARU wajib melewati SecurityQuestion sendiri (OTP ->
+            // CompleteProfile -> SecurityQuestion -> TwoFactorAuth / SignIn
+            // -> Home). Kalau flag sisa sesi lama tidak dibuang, mount()
+            // SecurityQuestion mem-pull-nya dan akun baru langsung melompat
+            // ke Home tanpa ditanya.
+            session()->forget('security_question_answered');
 
             return $user;
         } catch (\Exception $e) {
@@ -274,13 +284,13 @@ class SocialiteController extends Controller
         // Tombol Google yang belum terdaftar (akun social baru, data minimal)
         // wajib lewat Complete Profile dulu sebelum ke home.
         if (method_exists($user, 'shouldCompleteProfile') && $user->shouldCompleteProfile()) {
-            return redirect()->route('filament.user.pages.complete-profile');
+            return redirect()->route('filament.welcome.pages.complete-profile');
         }
 
         // Callback ini hanya dilayani dari halaman auth panel user/welcome,
         // jadi super_admin pun mendarat di home panel user. Sebelumnya role
         // super_admin dipaksa ke `/admin`, padahal panel admin punya halaman
         // sign-in sendiri (`/admin/signin`) tanpa tombol Google.
-        return redirect()->intended(route('filament.user.pages.home'));
+        return redirect()->intended(route('filament.welcome.pages.home'));
     }
 }

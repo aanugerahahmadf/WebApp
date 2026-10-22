@@ -68,7 +68,7 @@
 
         @if (! $url)
             <x-filament::icon
-                icon="heroicon-m-chevron-down"
+                icon="/images/icons/chevron_down.svg"
                 icon-alias="panels::topbar.group.toggle-button"
                 @class([
                     'fi-topbar-group-toggle-icon h-5 w-5 transition-transform duration-200',

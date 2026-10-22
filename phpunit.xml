@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
-         bootstrap="vendor/autoload.php"
+         bootstrap="tests/bootstrap.php"
          colors="true"
 >
     <testsuites>
@@ -32,6 +32,28 @@
     <php>
         <ini name="memory_limit" value="512M"/>
         <env name="APP_ENV" value="testing"/>
+        <!--
+            APP_URL WAJIB dikunci di sini, bukan hanya karena isinya kebetulan cocok
+            dengan .env lokal.
+
+            Hampir semua route helper (`route()`, `Page::getUrl()`,
+            `Panel::getLoginUrl()`) mengembalikan URL ABSOLUT, jadi nilainya ikut
+            `APP_URL`. Tanpa kunci ini, assertion seperti
+
+                ->assertSee(route('filament.user.pages.home'), escape: false)
+
+            membandingkan tautan di HTML terhadap host yang tertulis di `.env`
+            mesin itu. Di mesin dengan `APP_URL=https://produksi.domain`, test
+            membandingkan `https://produksi.domain/user/home` dengan HTML yang
+            dirender memakai host yang sama, jadi hijau. Di mesin lain nilainya
+            berbeda dan test yang sama gagal. Hasilnya: test yang perilakunya
+            tidak bermasalah, tapi kelulusannya bergantung pada file lokal yang
+            tidak ikut di-commit.
+
+            Mengunci ke `http://127.0.0.1:8000` membuat hasil test sama di
+            mana saja, dan cocok dengan host yang dipakai request test.
+        -->
+        <env name="APP_URL" value="http://127.0.0.1:8000"/>
         <env name="APP_KEY" value="base64:qlfLQwBtJA/blNrn3/qZ8T3NZYaj9cSHCPI88Ldmelo="/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>

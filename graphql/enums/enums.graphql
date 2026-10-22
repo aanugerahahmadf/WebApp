@@ -1,0 +1,180 @@
+# Enum Definitions
+# Wedding Flower Decoration App - GraphQL Enums
+
+# Search and Filter Enums
+enum SearchType {
+  CATALOG
+  PACKAGE
+  BOTH
+}
+
+enum CatalogSortField {
+  NAME
+  PRICE
+  CREATED_AT
+  UPDATED_AT
+  RATING
+  POPULARITY
+}
+
+enum PackageSortField {
+  NAME
+  PRICE
+  CREATED_AT
+  UPDATED_AT
+  RATING
+  POPULARITY
+  MIN_CAPACITY
+  MAX_CAPACITY
+}
+
+enum SortDirection {
+  ASC
+  DESC
+}
+
+# Order Enums
+enum PaymentMethod {
+  MIDTRANS
+  BANK_TRANSFER
+  CASH_ON_DELIVERY
+  E_WALLET
+  CREDIT_CARD
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum RefundStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PROCESSED
+}
+
+# Review Enums
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  HIDDEN
+}
+
+enum ReportReason {
+  SPAM
+  INAPPROPRIATE
+  FAKE
+  OFFENSIVE
+  IRRELEVANT
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+  DISMISSED
+}
+
+# Voucher Enums
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FREE_SHIPPING
+}
+
+# User Enums
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+enum SocialProvider {
+  GOOGLE
+  FACEBOOK
+  APPLE
+}
+
+# Search Suggestion Enums
+enum SearchSuggestionType {
+  CATALOG
+  PACKAGE
+  CATEGORY
+  KEYWORD
+}
+
+# Wishlist Enums
+enum WishlistActionType {
+  ADDED
+  REMOVED
+}
+
+# CBIR Enums
+enum CbirItemType {
+  CATALOG
+  PACKAGE
+}
+
+# Address Enums
+enum AddressType {
+  HOME
+  WORK
+  OTHER
+}
+
+# Notification Enums
+enum NotificationChannel {
+  EMAIL
+  SMS
+  PUSH
+  IN_APP
+}
+
+enum NotificationType {
+  ORDER_CONFIRMED
+  ORDER_SHIPPED
+  ORDER_DELIVERED
+  ORDER_CANCELLED
+  PAYMENT_RECEIVED
+  PAYMENT_FAILED
+  REVIEW_REQUEST
+  PROMOTION
+  PRICE_DROP
+  BACK_IN_STOCK
+  WISHLIST_ON_SALE
+}
+
+# Media Enums
+enum MediaCollectionType {
+  AVATAR
+  CATALOG_IMAGE
+  PACKAGE_IMAGE
+  REVIEW_PHOTO
+  ORDER_PROOF
+  KTP_DOCUMENT
+  PAYMENT_PROOF
+}
+
+# Category Enums
+enum CategoryType {
+  CATALOG
+  PACKAGE
+  BOTH
+}

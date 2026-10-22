@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\File;
  *      Foto lama tidak pernah dihapus, jadi satu kali seed = ratusan file
  *      yang langsung menjadi sampah (pernah menumpuk 7 GB).
  *
- *   2. Products/ & Packages/ -- layout datar hasil CollectionPathGenerator.
+ *   2. Catalogs/ & Packages/ -- layout datar hasil CollectionPathGenerator.
  *      Nama file yang valid adalah yang dihitung baris tabel `media`; file
  *      lain di folder itu duplikat atau sisa.
  *

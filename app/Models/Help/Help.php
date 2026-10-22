@@ -4,10 +4,12 @@ namespace App\Models\Help;
 use App\Models\Traits\LegacyMorphClass\LegacyMorphClass;
 
 use App\Traits\HasTranslations\HasTranslations;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Help extends Model
 {
+    use HasFactory;
     use LegacyMorphClass;
     use HasTranslations;
 

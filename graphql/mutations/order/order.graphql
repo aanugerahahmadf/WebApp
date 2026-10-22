@@ -1,0 +1,123 @@
+# Order Mutations
+# Wedding Flower Decoration App - Order GraphQL Mutations
+
+input CreateOrderInput {
+  catalogId: ID
+  packageId: ID
+  quantity: Int! = 1
+  bookingDate: String
+  notes: String
+  addressId: ID!
+  voucherCode: String
+  paymentMethod: PaymentMethod! = MIDTRANS
+  customOptions: JSON
+}
+
+input UpdateOrderInput {
+  status: OrderStatus
+  paymentStatus: PaymentStatus
+  notes: String
+  trackingNumber: String
+  estimatedDelivery: String
+}
+
+input CancelOrderInput {
+  reason: String!
+  reasonDetail: String
+}
+
+input OrderItemCustomOptions {
+  selectedFeatures: [String!]
+  deliveryDate: String
+  notes: String
+  specialInstructions: String
+}
+
+enum PaymentMethod {
+  MIDTRANS
+  BANK_TRANSFER
+  CASH_ON_DELIVERY
+  E_WALLET
+  CREDIT_CARD
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+type Mutation {
+  # Create new order
+  createOrder(input: CreateOrderInput!): Order @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@store")
+  
+  # Cancel order
+  cancelOrder(orderId: ID!, input: CancelOrderInput!): Order @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@cancel")
+  
+  # Reorder (create new order from existing)
+  reorder(orderId: ID!): Order @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@reorder")
+  
+  # Admin: Update order
+  updateOrder(orderId: ID!, input: UpdateOrderInput!): Order @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@update")
+  
+  # Admin: Update order status
+  updateOrderStatus(orderId: ID!, status: OrderStatus!): Order @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@updateStatus")
+  
+  # Admin: Update payment status
+  updatePaymentStatus(orderId: ID!, paymentStatus: PaymentStatus!): Order @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@updatePaymentStatus")
+  
+  # Process payment callback
+  processPaymentCallback(orderId: ID!, paymentData: JSON!): PaymentResult @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@processPayment")
+  
+  # Generate invoice
+  generateInvoice(orderId: ID!): Invoice @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@generateInvoice")
+  
+  # Request refund
+  requestRefund(orderId: ID!, reason: String!, amount: Float): RefundRequest @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@requestRefund")
+}
+
+type PaymentResult {
+  success: Boolean!
+  order: Order
+  redirectUrl: String
+  message: String
+}
+
+type Invoice {
+  id: ID!
+  order: Order!
+  invoiceNumber: String!
+  pdfUrl: String!
+  issuedAt: String!
+  dueAt: String!
+  status: String!
+}
+
+type RefundRequest {
+  id: ID!
+  order: Order!
+  reason: String!
+  amount: Float!
+  status: RefundStatus!
+  requestedAt: String!
+  processedAt: String
+}
+
+enum RefundStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PROCESSED
+}

@@ -2,7 +2,7 @@
 
 namespace App\Observers\MediaObserver;
 
-use App\Support\AppPlatform\AppPlatform;
+use App\Jobs\IndexMediaToCBIR\IndexMediaToCBIR;
 use App\Services\CBIRService\CBIRService;
 use Illuminate\Support\Facades\Log;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -16,31 +16,35 @@ class MediaObserver
         $this->cbirService = $cbirService;
     }
 
+    /**
+     * Media collections that must end up in the CBIR index.
+     *
+     * `catalog_image` is the only photo collection: every catalog photo lives
+     * there (the former package photos were moved onto their catalog).
+     *
+     * @return array<int, string>
+     */
+    public static function indexableCollections(): array
+    {
+        return ['catalog_image', 'gallery', 'category_image'];
+    }
+
     public function created(Media $media)
     {
-        $targetCollections = ['gallery', 'product_image', 'package_image', 'category_image'];
-
-        if (in_array($media->collection_name, $targetCollections)) {
-            // Skip CBIR indexing di mobile — AI server tidak tersedia dari device
-            if (AppPlatform::isNativeMobile()) {
-                return;
-            }
-
+        if (in_array($media->collection_name, static::indexableCollections(), true)) {
+            // Gunakan queue job agar media dari mobile (Capacitor) tetap terindeks
+            // di server, meskipun request berasal dari device yang tidak bisa
+            // menjangkau AI Core secara langsung.
             try {
-                $this->cbirService->indexMedia($media);
+                IndexMediaToCBIR::dispatch($media->id);
             } catch (\Throwable $e) {
-                Log::warning('[MediaObserver] CBIR indexing failed: '.$e->getMessage());
+                Log::warning('[MediaObserver] Failed to dispatch CBIR index job: '.$e->getMessage());
             }
         }
     }
 
     public function deleted(Media $media)
     {
-        // Skip di mobile
-        if (AppPlatform::isNativeMobile()) {
-            return;
-        }
-
         try {
             $this->cbirService->removeFromIndex($media->id);
         } catch (\Throwable $e) {

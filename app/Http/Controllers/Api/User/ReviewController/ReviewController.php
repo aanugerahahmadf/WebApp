@@ -8,6 +8,7 @@ use App\Models\Review\Review;
 use App\Models\ReviewReply\ReviewReply;
 use App\Models\ReviewVote\ReviewVote;
 use App\Services\StorageService\StorageService;
+use App\Support\ChatStaff\ChatStaff;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,7 +24,7 @@ class ReviewController extends Controller
         try {
             $validatedData = $request->validate([
                 'package_id' => 'nullable|exists:packages,id',
-                'product_id' => 'nullable|exists:products,id',
+                'catalog_id' => 'nullable|exists:catalogs,id',
                 'rating' => 'required|integer|min:1|max:5',
                 'comment' => 'nullable|string|max:1000',
                 'title' => 'nullable|string|max:255',
@@ -32,10 +33,10 @@ class ReviewController extends Controller
                 'photos.*' => 'file|mimes:jpeg,png,jpg,webp,mp4,mov,m4v,webm,3gp|max:51200',
             ]);
 
-            if (! filled($validatedData['package_id'] ?? null) && ! filled($validatedData['product_id'] ?? null)) {
+            if (! filled($validatedData['package_id'] ?? null) && ! filled($validatedData['catalog_id'] ?? null)) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => __('Pilih paket atau produk terlebih dahulu'),
+                    'message' => __('Pilih paket atau katalog terlebih dahulu'),
                 ], 422);
             }
 
@@ -44,8 +45,8 @@ class ReviewController extends Controller
                     if (filled($validatedData['package_id'] ?? null)) {
                         $q->where('package_id', $validatedData['package_id']);
                     }
-                    if (filled($validatedData['product_id'] ?? null)) {
-                        $q->orWhere('product_id', $validatedData['product_id']);
+                    if (filled($validatedData['catalog_id'] ?? null)) {
+                        $q->orWhere('catalog_id', $validatedData['catalog_id']);
                     }
                 })
                 ->where('status', 'completed')
@@ -63,8 +64,8 @@ class ReviewController extends Controller
                     if (filled($validatedData['package_id'] ?? null)) {
                         $q->where('package_id', $validatedData['package_id']);
                     }
-                    if (filled($validatedData['product_id'] ?? null)) {
-                        $q->orWhere('product_id', $validatedData['product_id']);
+                    if (filled($validatedData['catalog_id'] ?? null)) {
+                        $q->orWhere('catalog_id', $validatedData['catalog_id']);
                     }
                 })
                 ->first(['*']);
@@ -89,7 +90,7 @@ class ReviewController extends Controller
             $review = Review::create([
                 'user_id' => Auth::id(),
                 'package_id' => $validatedData['package_id'] ?? null,
-                'product_id' => $validatedData['product_id'] ?? null,
+                'catalog_id' => $validatedData['catalog_id'] ?? null,
                 'rating' => $validatedData['rating'],
                 'title' => $validatedData['title'] ?? null,
                 'comment' => $validatedData['comment'] ?? null,
@@ -97,7 +98,7 @@ class ReviewController extends Controller
                 'photos' => $photoPaths,
             ]);
 
-            $review->load(['user:id,full_name,avatar_url', 'package:id,name', 'product:id,name', 'replies' => function ($q) {
+            $review->load(['user:id,full_name,avatar_url', 'package:id,name', 'catalog:id,name', 'replies' => function ($q) {
                 $q->with('user:id,full_name,avatar_url');
             }]);
 
@@ -214,9 +215,9 @@ class ReviewController extends Controller
     }
 
     /**
-     * Get reviews for a specific product
+     * Get reviews for a specific catalog
      */
-    public function getProductReviews($productId, Request $request)
+    public function getCatalogReviews($catalogId, Request $request)
     {
         try {
             $query = Review::with([
@@ -225,7 +226,7 @@ class ReviewController extends Controller
                     $q->with('user:id,full_name,avatar_url');
                 },
             ])
-                ->where('product_id', $productId);
+                ->where('catalog_id', $catalogId);
 
             $this->applyFilters($query, $request);
             $this->applySort($query, $request);
@@ -268,11 +269,11 @@ class ReviewController extends Controller
     }
 
     /**
-     * Get rating summary for a product
+     * Get rating summary for a catalog
      */
-    public function getProductRatingSummary($productId)
+    public function getCatalogRatingSummary($catalogId)
     {
-        return $this->ratingSummary('product_id', $productId);
+        return $this->ratingSummary('catalog_id', $catalogId);
     }
 
     private function ratingSummary(string $column, $id)
@@ -364,7 +365,7 @@ class ReviewController extends Controller
     {
         try {
             $user = Auth::user();
-            $isAdmin = $user->roles()->whereIn('name', ['super_admin', 'admin'])->exists();
+            $isAdmin = ChatStaff::isStaff($user);
             if (! $isAdmin) {
                 return response()->json([
                     'status' => 'error',
@@ -418,7 +419,7 @@ class ReviewController extends Controller
     {
         try {
             $user = Auth::user();
-            $isAdmin = $user->roles()->whereIn('name', ['super_admin', 'admin'])->exists();
+            $isAdmin = ChatStaff::isStaff($user);
             if (! $isAdmin) {
                 return response()->json([
                     'status' => 'error',
@@ -448,57 +449,12 @@ class ReviewController extends Controller
     }
 
     /**
-     * Get reviews for a specific organizer
-     */
-    public function getOrganizerReviews($organizerId, Request $request)
-    {
-        try {
-            $query = Review::with(['user:id,full_name,avatar_url', 'package:id,name,name_translations', 'replies' => function ($q) {
-                $q->with('user:id,full_name,avatar_url');
-            }])
-                ->join('packages', 'reviews.package_id', '=', 'packages.id')
-                ->where('packages.vendor_id', $organizerId)
-                ->select('reviews.*');
-
-            $this->applyFilters($query, $request);
-            $this->applySort($query, $request);
-
-            $userId = Auth::id();
-            $reviews = $query->paginate($request->get('per_page', 10));
-
-            $items = $reviews->getCollection()->map(function ($review) use ($userId) {
-                $review->is_voted = $review->isVotedBy($userId);
-
-                return $review;
-            });
-
-            return response()->json([
-                'status' => 'success',
-                'data' => $items,
-                'pagination' => [
-                    'current_page' => $reviews->currentPage(),
-                    'last_page' => $reviews->lastPage(),
-                    'per_page' => $reviews->perPage(),
-                    'total' => $reviews->total(),
-                    'has_more_pages' => $reviews->hasMorePages(),
-                ],
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => __('Gagal mengambil ulasan organizer'),
-                'error' => $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    /**
      * Get user's own reviews
      */
     public function getUserReviews(Request $request)
     {
         try {
-            $query = Review::with(['package.media', 'product.media', 'user:id,full_name,avatar_url', 'replies' => function ($q) {
+            $query = Review::with(['package.media', 'catalog.media', 'user:id,full_name,avatar_url', 'replies' => function ($q) {
                 $q->with('user:id,full_name,avatar_url');
             }])
                 ->where('user_id', Auth::id())
@@ -535,7 +491,7 @@ class ReviewController extends Controller
             $query = Review::with([
                 'user:id,full_name,avatar_url',
                 'package:id,name,name_translations',
-                'product:id,name,name_translations',
+                'catalog:id,name,name_translations',
                 'replies' => function ($q) {
                     $q->with('user:id,full_name,avatar_url');
                 },
@@ -639,7 +595,7 @@ class ReviewController extends Controller
             }
 
             $review->update($validatedData);
-            $review->load(['user:id,full_name,avatar_url', 'package:id,name', 'replies' => function ($q) {
+            $review->load(['user:id,full_name,avatar_url', 'package:id,name', 'catalog:id,name', 'replies' => function ($q) {
                 $q->with('user:id,full_name,avatar_url');
             }]);
 

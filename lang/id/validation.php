@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'kode Pos',
         'preview'                  => 'pratinjau',
         'price'                    => 'harga',
-        'product_id'               => 'ID Produk',
+        'catalog_id'               => 'ID Produk',
         'product_uid'              => 'UID produk',
         'product_uuid'             => 'UUID produk',
         'promo_code'               => 'Kode promosi',

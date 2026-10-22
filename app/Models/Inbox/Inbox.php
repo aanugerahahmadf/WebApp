@@ -5,7 +5,10 @@ use App\Models\Traits\LegacyMorphClass\LegacyMorphClass;
 
 
 use App\Models\Message\Message;
+use App\Models\Admin\Admin;
 use App\Models\User\User;
+use App\Services\GuestIdentity\GuestIdentity;
+use App\Support\ChatStaff\ChatStaff;
 
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
@@ -74,6 +77,57 @@ class Inbox extends Model
         ];
     }
 
+    /**
+     * The account reading this inbox, whoever that happens to be.
+     *
+     * Three identities, in order, because the project has three ways of knowing
+     * who is asking:
+     *
+     *   - `web` guard  -> panel User and panel Admin, both signed in.
+     *   - `sanctum`    -> the mobile app, which sends a bearer token.
+     *   - guest cookie -> panel Welcome, where nobody is signed in at all.
+     *
+     * The third one is why this method exists. The Welcome panel serves guests,
+     * and a guest is deliberately NOT logged in (see GuestIdentity): their id
+     * lives in the `welcome_guest_id` cookie. Without the fallback below,
+     * Auth::id() is null on Welcome, `inbox_title` bailed out with 'Unknown'
+     * and `primary_avatar` fell through to ui-avatars.com, so a guest talking
+     * to the super admin saw their own thread titled "Unknown" with the
+     * initials "UN" -- even though the access check right next to it, which
+     * does go through GuestIdentity, happily granted that very same thread.
+     *
+     * Only the COOKIE is read, never GuestIdentity::id(). That would be one
+     * line shorter, but it mints a cookie and INSERTs a users row as a side
+     * effect of reading an attribute, so an unauthenticated API call or a
+     * console command could silently create accounts. Nothing here writes.
+     */
+    protected function viewer(): ?User
+    {
+        $user = Auth::user() ?? auth('sanctum')->user();
+
+        if ($user instanceof User) {
+            return $user;
+        }
+
+        // Panel admin: `Auth::user()` adalah App\Models\Admin\Admin (guard
+        // `admin`, tabel `admins`), sementara `user_ids` menyimpan users.id.
+        // Identitas chat admin adalah baris `users` yang tertaut
+        // (ChatStaff::adminUser()). Tanpa cabang ini, `inbox_title` jatuh ke
+        // "Unknown", `primary_avatar` ke ui-avatars "Unknown", dan
+        // `other_users` kosong untuk SEMUA percakapan di panel admin.
+        if ($user instanceof Admin) {
+            return ChatStaff::adminUser();
+        }
+
+        $guestId = request()->cookie(GuestIdentity::COOKIE);
+
+        if (! is_string($guestId) || $guestId === '') {
+            return null;
+        }
+
+        return User::query()->where('email', GuestIdentity::emailFor($guestId))->first();
+    }
+
     protected function inboxTitle(): Attribute
     {
         return Attribute::make(
@@ -82,17 +136,20 @@ class Inbox extends Model
                     return $this->title;
                 }
 
-                // Support both web (Auth::id) dan mobile (sanctum)
-                $authId = Auth::id() ?? auth('sanctum')->id();
-                if (! $authId) {
+                $viewerId = $this->viewer()?->getKey();
+
+                if (! $viewerId) {
                     return 'Unknown';
                 }
 
                 $userIds = collect($this->user_ids);
-                $otherParticipants = $userIds->filter(fn ($id) => $id != $authId);
+                $otherParticipants = $userIds->filter(fn ($id) => (int) $id !== (int) $viewerId);
 
                 if ($otherParticipants->isEmpty()) {
-                    return Auth::user()?->full_name ?? auth('sanctum')->user()?->full_name ?? 'Diri Sendiri';
+                    // Percakapan dengan diri sendiri: nama orangnya adalah nama
+                    // penonton, yang di panel Welcome tetap ada -- hanya lewat
+                    // cookie, bukan lewat Auth.
+                    return $this->viewer()?->full_name ?? 'Diri Sendiri';
                 }
 
                 return $otherParticipants->map(function ($userId) {
@@ -116,13 +173,14 @@ class Inbox extends Model
     {
         return Attribute::make(
             get: function () {
-                $authId = Auth::id() ?? auth('sanctum')->id();
-                if (! $authId || empty($this->user_ids)) {
+                $viewerId = $this->viewer()?->getKey();
+
+                if (! $viewerId || empty($this->user_ids)) {
                     return collect();
                 }
 
                 return User::whereIn('id', $this->user_ids)
-                    ->where('id', '!=', $authId)
+                    ->where('id', '!=', $viewerId)
                     ->get(['*']);
             }
         );
@@ -134,12 +192,36 @@ class Inbox extends Model
             get: function () {
                 $otherUser = $this->other_users->first();
                 if ($otherUser) {
-                    return $otherUser->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode($this->inbox_title);
+                    return $this->avatarUrl($otherUser->avatar_url);
                 }
 
-                // If no other user (chat with self), use current user's avatar
-                return Auth::user()?->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode($this->inbox_title);
+                // No other participant (chat with self, or a viewer we cannot
+                // resolve): fall back to the viewer's own avatar, then to their
+                // initials. The viewer, not Auth::user(), because on the Welcome
+                // panel the viewer IS a real row and Auth is empty.
+                return $this->avatarUrl($this->viewer()?->avatar_url);
             }
         );
+    }
+
+    /**
+     * URL avatar untuk ditampilkan.
+     *
+     * `avatar_url` sudah dinormalkan oleh accessor `avatarUrl()` di model
+     * User dan Admin: URL yang menunjuk host produksi dipindahkan ke origin
+     * request yang sedang berjalan. Jadi di sini tidak perlu normalisasi
+     * lagi -- yang tersisa hanya fallback-nya.
+     *
+     * Tanpa avatar sama sekali, pakai initials dari ui-avatars.com --
+     * layanan pihak ketiga juga, jadi tetap perlu CSP yang mengizinkan
+     * gambar dari luar (lihat csp.devPolicy di shell Electron).
+     */
+    protected function avatarUrl(?string $url): string
+    {
+        if (filled($url)) {
+            return $url;
+        }
+
+        return 'https://ui-avatars.com/api/?name='.urlencode($this->inbox_title);
     }
 }

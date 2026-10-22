@@ -2,7 +2,7 @@
     <div class="flex items-center px-3 py-1">
         <x-filament::badge
             color="warning"
-            icon="heroicon-m-wallet"
+            icon="/images/icons/wallet.svg"
             size="lg"
             class="rounded-full font-bold"
         >

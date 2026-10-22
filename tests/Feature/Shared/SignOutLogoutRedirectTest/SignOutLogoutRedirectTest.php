@@ -9,6 +9,7 @@
  */
 
 use App\Http\Middleware\VerifyCsrfToken\VerifyCsrfToken;
+use App\Models\Admin\Admin;
 use App\Models\User\User;
 use App\Providers\Filament\AdminPanelProvider\AdminPanelProvider;
 use App\Providers\Filament\UserPanelProvider\UserPanelProvider;
@@ -24,20 +25,44 @@ beforeEach(fn () => seed());
 test('logout panel user -> welcome/home', function (): void {
     $user = User::factory()->create();
 
-    actingAs($user, 'web')->post('/user/logout')->assertRedirect('/welcome/home');
+    actingAs($user, 'web')->post('/user/logout')->assertRedirect('/home');
 });
 
 test('logout panel admin -> welcome/home', function (): void {
-    $user = User::factory()->create();
-    $user->assignRole('super_admin');
+    // Logout panel ADMIN memakai guard `admin` (tabel `admins`), jadi actor-nya
+    // harus `Admin` -- bukan `User`.
+    //
+    // Test lama memakai `User::factory()` + `assignRole('super_admin')`, yang
+    // sekarang gagal di `RoleDoesNotExist`: role `super_admin` ber-guard
+    // `admin`, sedangkan `User::assignRole()` mencari di guard `web`. Yang
+    // dipanggil bukan logout admin sama sekali.
+    //
+    // `active_status` harus true: middleware `SuperAdmin` menolak admin yang
+    // tidak aktif dengan 403, jadi admin nonaktif tidak akan sampai ke route
+    // logout sama sekali.
+    $admin = Admin::factory()->create([
+        'email_verified_at' => now(),
+        'active_status'     => true,
+    ]);
 
-    actingAs($user, 'web')->post('/admin/logout')->assertRedirect('/welcome/home');
+    $admin->assignRole('super_admin');
+
+    actingAs($admin, 'admin')->post('/admin/logout')->assertRedirect('/home');
 });
 
 test('logout panel welcome -> welcome/home', function (): void {
     $user = User::factory()->create();
 
-    actingAs($user, 'web')->post('/welcome/logout')->assertRedirect('/welcome/home');
+    // Panel welcome hidup di root, jadi route logout-nya di /logout
+    // (bukan /welcome/logout seperti sebelum merge).
+    actingAs($user, 'web')->post('/logout')->assertRedirect('/home');
+});
+
+test('logout panel welcome via URL legacy /welcome/logout -> welcome/home', function (): void {
+    $user = User::factory()->create();
+
+    // Bookmark lama: /welcome/logout harus tetap logout, bukan 405.
+    actingAs($user, 'web')->post('/welcome/logout')->assertRedirect('/home');
 });
 
 test('item SignOut berlabel "Sign Out" di panel user dan admin', function (): void {
@@ -122,3 +147,4 @@ test('pengecualian CSRF aplikasi menutup route logout tiap panel', function (): 
         );
     }
 });
+

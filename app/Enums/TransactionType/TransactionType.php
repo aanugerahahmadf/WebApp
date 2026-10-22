@@ -30,8 +30,8 @@ enum TransactionType: string implements HasColor, HasIcon, HasLabel
     public function getIcon(): ?string
     {
         return match ($this) {
-            self::TOPUP => 'heroicon-m-arrow-up-circle',
-            self::ORDER => 'heroicon-m-shopping-bag',
+            self::TOPUP => '/images/icons/arrow_circle.svg',
+            self::ORDER => '/images/icons/bag.svg',
         };
     }
 }

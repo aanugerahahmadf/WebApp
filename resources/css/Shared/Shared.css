@@ -1,3 +1,10 @@
+/* Catalog detail page: larger title */
+.fi-resource-flowerdecorationscatalog .fi-header-heading {
+    font-size: 2rem !important;
+    line-height: 2.25rem !important;
+    font-weight: 800 !important;
+}
+
 /* Global Scrollbar Hiding & Performance Strategy
  *
  * PENTING: Hanya sembunyikan scrollbar secara visual — JANGAN set overflow:hidden
@@ -333,11 +340,20 @@ select:focus[data-flux-control] {
 }
 
 
-/* Stats Overview 5 columns on XL & Center Align */
+/* Stats Overview 6 columns on XL & Center Align
+ *
+ * ENAM kolom, bukan lima: dashboard admin punya 18 kartu statistik, jadi
+ * enam kolom = TIGA BARIS PENUH. Dengan lima kolom, baris terakhir cuma
+ * berisi tiga kartu -- grid-nya terlihat setengah kosong.
+ *
+ * Widget lain (profil, pintasan cepat) punya kelasnya sendiri yang lebih
+ * spesifik (`[&_.fi-wi-stats-overview-stats-ctn]:!grid-cols-2/5`), jadi
+ * aturan ini tidak mengubah tata letak mereka.
+ */
 
 @media (min-width: 1280px) { 
     .fi-wi-stats-overview-stats-ctn { 
-        grid-template-columns: repeat(5, minmax(0, 1fr)) !important; 
+        grid-template-columns: repeat(6, minmax(0, 1fr)) !important; 
     }
 }
 
@@ -1107,6 +1123,42 @@ body.cbir-browse-modal-open .fi-bottom-nav {
     /* padding horizontal DI DALAM kapsul (menggantikan px-4 / md:px-6 /
        lg:px-8 milik Filament) */
     --fi-capsule-inset: 0.5rem;
+
+    /* Sudut tumpul untuk dua UJUNG ATAS sidebar.
+     *
+     * Sidebar dimulai tepat di bawah kapsul (lihat blok 6b di override
+     * sidebar), jadi bentuknya harus membaca sebagai satu kesimpulan dari
+     * header, bukan dua kotak yang kebetulan bersentuhan. Sudut atasnya
+     * dibulatkan, dua sudut bawahnya tetap siku -- sidebar menyambung ke
+     * tepi layar dan tepi bawah, jadi membulatkan bawahnya akan membuat
+     * sisanya melayang.
+     *
+     * Ikut naik per breakpoint sama seperti --fi-capsule-side, supaya sudut
+     * sidebar dan jarak kapsul dari tepi terasa satu skala. */
+    --fi-capsule-radius: 0.75rem;
+
+    /* Total tinggi yang dipakai kapsul di layar: jarak atas + tinggi kapsul
+     * + jarak napas bawah. Ini SATU-SATUNYA definisi angka itu.
+     *
+     * Dipakai dua kali, dan itu justru tujuannya:
+     *   - `padding-top` .fi-layout, supaya konten di flow tidak tertutup kapsul
+     *   - `top` sidebar, supaya sidebar tidak mulai di belakang kapsul (lihat
+     *     blok 6b)
+     *
+     * Dulu kedua angka itu ditulis terpisah di dua tempat, jadi sidebar bisa
+     * meleset 2px dari kapsul -- persis kelas bug yang happens kalau satu angka
+     * diubah di satu tempat saja. Dengan token, mustahil: yang berubah adalah
+     * variabel di atas, keduanya ikut.
+     *
+     * declared sekali di sini, bukan di tiap `@media` bawah: nilai custom
+     * property dihitung saat DIPAKAI, jadi breakpoint yang menimpa
+     * --fi-capsule-top/-h/-gap otomatis ikut terhitung di sini. */
+    --fi-capsule-stack: calc(
+        env(safe-area-inset-top, 0px) +
+        var(--fi-capsule-top) +
+        var(--fi-capsule-h) +
+        var(--fi-capsule-gap)
+    );
 }
 
 @media (min-width: 640px) {
@@ -1117,6 +1169,7 @@ body.cbir-browse-modal-open .fi-bottom-nav {
         --fi-capsule-side: 0.75rem;
         --fi-capsule-gap: 0.75rem;
         --fi-capsule-inset: 0.75rem;
+        --fi-capsule-radius: 1rem;
     }
 }
 
@@ -1128,6 +1181,7 @@ body.cbir-browse-modal-open .fi-bottom-nav {
         --fi-capsule-side: 1.25rem;
         --fi-capsule-gap: 1.25rem;
         --fi-capsule-inset: 1rem;
+        --fi-capsule-radius: 1.25rem;
     }
 }
 
@@ -1311,17 +1365,13 @@ body.cbir-browse-modal-open .fi-bottom-nav {
 /* Topbar-nya fixed, jadi tidak menyisakan ruang untuk dirinya sendiri di
    flow. Padding-top di .fi-layout-lah yang mengembalikannya:
      jarak atas + tinggi kapsul + jarak bawah.
-   Nilai-nilai itu dibaca dari custom property yang sama, jadi kapsul
-   tidak mungkin tertutup kalau nanti satu angka diubah. */
+   Angka itu dibaca dari --fi-capsule-stack (blok 1), token yang sama dengan
+   yang dipakai sidebar di blok 6b -- jadi kapsul, konten, dan sidebar tidak
+   mungkin punya tiga angka yang berbeda. */
 .fi-panel-welcome .fi-layout.fi-layout,
 .fi-panel-user .fi-layout.fi-layout,
 .fi-panel-admin .fi-layout.fi-layout {
-    padding-top: calc(
-        env(safe-area-inset-top, 0px) +
-        var(--fi-capsule-top) +
-        var(--fi-capsule-h) +
-        var(--fi-capsule-gap)
-    ) !important;
+    padding-top: var(--fi-capsule-stack) !important;
 }
 
 /* --- 6. SIDEBAR: latar sama persis dengan kapsul topbar -------------
@@ -1370,6 +1420,21 @@ body.cbir-browse-modal-open .fi-bottom-nav {
     box-shadow: none !important;
 }
 
+/* CATATAN: offset `top` sidebar TIDAK ditulis di CSS ini, tapi inline di tiap
+   override sidebar:
+     resources/views/{User,Welcome,Admin}/vendor/filament-panels/components/
+     sidebar/index.blade.php
+
+   Alasannya, keputusannya bukan soal lebar layar, tapi soal APAKAH topbar-nya
+   sedang ada. Kalau topbar disembunyikan (panel tanpa chrome di luar Home),
+   menggeser sidebar ke bawah hanya menyisakan ruang kosong di atasnya. CSS tidak
+   bisa menanyakan "ada topbar atau tidak" -- blade bisa, lewat
+   filament()->hasTopbar().
+
+   Yang tetap di sini cuma angkanya: --fi-capsule-stack (blok 1), sama persis
+   dengan padding-top .fi-layout di blok 5. Blade membacanya lewat var(), jadi
+   sidebar berhenti di garis yang sama dengan kapsul dan tidak mungkin meleset
+   kalau kapsul nanti lebih tinggi. */
 /* --- 7. GLOBAL SEARCH: tengah & melebar di HP SAJA ------------------
  *
  * Permintaan: di aplikasi mobile Android/iOS dan website mobile
@@ -1580,4 +1645,60 @@ body.cbir-browse-modal-open .fi-bottom-nav {
     .dark .fi-panel-admin .lang-dd {
         background-color: rgb(9 9 11 / 0.98) !important;
     }
+}
+
+/*
+|--------------------------------------------------------------------------
+| Ikon navigasi berwarna
+|--------------------------------------------------------------------------
+|
+| Ikon navigasi, ikon menu, dan ikon kartu stat memakai SVG berwarna
+| (public/images/icons/). Warnanya MID-TONE supaya terbaca di latar terang
+| maupun gelap.
+|
+| Di dark mode latarnya jauh lebih gelap, jadi warnanya dinaikkan sedikit --
+| satu aturan untuk semua ikon, bukan satu per ikon.
+|
+| Hanya kena ikon dari folder images/icons: ikon lain (ikon action, ikon
+| kolom tabel) tetap monokrom dan mengikuti warna teks Filament seperti
+| biasanya.
+|
+*/
+.dark img[src*='/images/icons/'] {
+    filter: brightness(1.2) saturate(1.05);
+}
+
+/*
+|--------------------------------------------------------------------------
+| Sidebar: label menu TIDAK BOLEH DIPOTONG
+|--------------------------------------------------------------------------
+|
+| Filament memberi kelas `truncate` pada `.fi-sidebar-item-label`, jadi label
+| panjang seperti "Kustomisasi Website, Mobile Android & iOS" tampil sebagai
+| "Kustomisasi Website, M..." -- pengguna tidak bisa tahu menu apa itu.
+|
+| Di sini label dibiarkan MEMBUNGKUS (baris kedua/ketiga), bukan dipotong.
+| `overflow: visible` + `white-space: normal` menimpa `truncate`; `flex-1`
+| dari Filament tetap membuat label mengisi sisa lebar sidebar.
+|
+| Ini SATU aturan untuk ketiga panel (file ini diimpor oleh Admin.css,
+| User.css, dan Welcome.css), supaya tidak ada panel yang berbeda pendapat.
+|
+*/
+.fi-panel-admin .fi-sidebar-item-label,
+.fi-panel-user .fi-sidebar-item-label,
+.fi-panel-welcome .fi-sidebar-item-label {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    line-height: 1.35;
+}
+
+/* Ikon tidak boleh menyusut saat labelnya jadi dua/3 baris. */
+.fi-panel-admin .fi-sidebar-item-icon,
+.fi-panel-user .fi-sidebar-item-icon,
+.fi-panel-welcome .fi-sidebar-item-icon {
+    flex-shrink: 0;
 }

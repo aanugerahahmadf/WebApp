@@ -1,0 +1,70 @@
+# Voucher Type Definitions
+# Wedding Flower Decoration App - Voucher GraphQL Types
+
+type Voucher @model(class: "App\\Models\\Voucher\\Voucher") {
+  id: ID!
+  name: String
+  code: String!
+  description: String
+  isActive: Boolean!
+  isGlobal: Boolean!
+  maxUses: Int
+  usesCount: Int!
+  expiresAt: String
+  discountAmount: Float!
+  discountType: DiscountType!
+  minPurchase: Float!
+  applicableCatalogs: [Catalog!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@applicableCatalogs")
+  applicablePackages: [Package!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@applicablePackages")
+  applicableCategories: [Category!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@applicableCategories")
+  excludedCatalogs: [Catalog!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@excludedCatalogs")
+  excludedPackages: [Package!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@excludedPackages")
+  excludedCategories: [Category!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@excludedCategories")
+  users: [User!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@users")
+  createdAt: String!
+  updatedAt: String!
+}
+
+type VoucherValidation {
+  valid: Boolean!
+  voucher: Voucher
+  discount: Float!
+  message: String!
+  appliedItems: [ValidatedItem!]!
+}
+
+type ValidatedItem {
+  id: ID!
+  type: String!
+  originalPrice: Float!
+  discountedPrice: Float!
+  discount: Float!
+}
+
+type VoucherStats {
+  voucher: Voucher!
+  totalUses: Int!
+  remainingUses: Int!
+  usageByUser: [VoucherUserUsage!]!
+  revenueImpact: Float!
+}
+
+type VoucherUserUsage {
+  user: User!
+  usesCount: Int!
+  firstUsedAt: String!
+  lastUsedAt: String!
+}
+
+type VoucherExport {
+  voucher: Voucher!
+  codes: [String!]!
+  csvUrl: String!
+  exportedAt: String!
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FREE_SHIPPING
+}

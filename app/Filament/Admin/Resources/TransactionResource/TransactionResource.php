@@ -2,35 +2,31 @@
 
 namespace App\Filament\Admin\Resources\TransactionResource;
 
-use App\Models\Transaction\Transaction;
+use App\Filament\Shared\Concerns\HasModelColumns\HasModelColumns;
+use App\Filament\Shared\Concerns\HasStandardActions\HasStandardActions;
+use App\Support\AppIcon\AppIcon;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Tables;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 class TransactionResource extends Resource
 {
-    protected static ?string $model = Transaction::class;
+    use HasModelColumns;
+    use HasStandardActions;
+
+    protected static ?string $model = \App\Models\Transaction\Transaction::class;
 
     protected static ?string $slug = 'transactions';
 
-    protected static ?string $navigationIcon = 'heroicon-s-banknotes';
+    protected static ?string $navigationIcon = AppIcon::TRANSACTION;
 
-    public static function getNavigationGroup(): ?string
+    protected static ?int $navigationSort = 306;
+
+    public static function getNavigationLabel(): string
     {
         return __('Transaksi');
-    }
-
-    public static function getNavigationBadge(): ?string
-    {
-        return (string) static::getModel()::count();
-    }
-
-    public static function getNavigationBadgeColor(): ?string
-    {
-        return 'primary';
     }
 
     public static function getModelLabel(): string
@@ -43,112 +39,35 @@ class TransactionResource extends Resource
         return __('Transaksi');
     }
 
-    public static function canCreate(): bool
+    public static function getNavigationGroup(): ?string
     {
-        return false;
+        return __('Transaksi');
+    }
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return static::getAllSearchableAttributes();
     }
 
     public static function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                // Readonly or no form needed since it's just for viewing
-            ]);
+        return $form->schema(static::formSchema());
     }
 
     public static function table(Table $table): Table
     {
         return $table
-            ->paginated([5])
-            ->defaultSort('created_at', 'desc')
-            ->columns([
-                TextColumn::make('reference_number')
-                    ->label(__('Referensi'))
-                    ->searchable()
-                    ->sortable()
-                    ->copyable()
-                    ->copyableState(fn ($state) => $state)
-                    ->icon('heroicon-s-document-text'),
-                TextColumn::make('user.full_name')
-                    ->label(__('Pengguna'))
-                    ->searchable()
-                    ->sortable()
-                    ->icon('heroicon-s-user'),
-                TextColumn::make('type')
-                    ->label(__('Tipe'))
-                    ->badge()
-                    ->alignment('center')
-                    ->sortable(),
-                TextColumn::make('total_amount')
-                    ->label(__('Jumlah'))
-                    ->money('idr')
-                    ->sortable()
-                    ->alignment('end')
-                    ->icon('heroicon-s-banknotes'),
-                TextColumn::make('payment_gateway')
-                    ->label(__('Gateway Pembayaran'))
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'manual' => 'success',
-                        'stripe' => 'warning',
-                        default => 'gray',
-                    })
-                    ->searchable()
-                    ->sortable()
-                    ->alignment('center'),
-                TextColumn::make('payment_method')
-                    ->label(__('Metode'))
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'credit_card' => 'info',
-                        'bank_transfer' => 'warning',
-                        'e_wallet' => 'success',
-                        default => 'gray',
-                    })
-                    ->searchable()
-                    ->alignment('center'),
-                TextColumn::make('status')
-                    ->label(__('Status'))
-                    ->badge()
-                    ->alignment('center')
-                    ->sortable(),
-                TextColumn::make('paid_at')
-                    ->label(__('Waktu Pembayaran'))
-                    ->dateTime()
-                    ->sortable()
-                    ->alignment('center')
-                    ->icon('heroicon-s-calendar')
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('created_at')
-                    ->label(__('Dibuat Pada'))
-                    ->dateTime()
-                    ->sortable()
-                    ->alignment('center')
-                    ->icon('heroicon-s-calendar'),
-            ])
-            ->filters([
-                SelectFilter::make('type')
-                    ->options([
-                        'order' => 'Order',
-                        'topup' => 'Topup',
-                    ]),
-                SelectFilter::make('status')
-                    ->options([
-                        'pending' => 'Pending',
-                        'success' => 'Success',
-                        'failed' => 'Failed',
-                        'expired' => 'Expired',
-                        'cancelled' => 'Cancelled',
-                    ]),
-            ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
+                        ->headerActions(static::standardTableHeaderActions())
+            ->actions(static::standardTableActions())
+            ->bulkActions(static::standardBulkActions())
+            ->columns(static::tableColumns())
+            ->paginated(false)
+            ->defaultSort('id');
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery();
     }
 
     public static function getPages(): array

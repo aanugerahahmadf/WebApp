@@ -31,14 +31,14 @@
                 <div class="min-w-0 flex-1">
                     <div class="flex min-w-0 items-start justify-between gap-2">
                         <p class="min-w-0 flex-1 truncate text-sm font-semibold">{{ $review->user?->full_name ?? __('Pengguna') }}</p>
-                        <form method="POST" action="{{ route('welcome.reviews.report', $review) }}" @click.stop class="shrink-0">
+                        <form method="POST" action="{{ route('reviews.report', $review) }}" @click.stop class="shrink-0">
                             @csrf
-                            <x-filament::button type="submit" color="danger" outlined size="xs" icon="heroicon-m-flag">{{ __('Lapor') }}</x-filament::button>
+                            <x-filament::button type="submit" color="danger" outlined size="xs" icon="/images/icons/flag.svg">{{ __('Lapor') }}</x-filament::button>
                         </form>
                     </div>
                     <div class="mt-0.5 flex items-center gap-1" role="img" aria-label="{{ __('Rating') }} {{ (int) $review->rating }} dari 5">
                         @for ($star = 1; $star <= 5; $star++)
-                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="16" height="16" class="h-4 w-4 {{ $star <= (int) $review->rating ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600' }}"><path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005Z" clip-rule="evenodd"/></svg>
+                            <x-filament::icon icon="/images/icons/star.svg" class="h-4 w-4 {{ $star <= (int) $review->rating ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600' }}" />
                         @endfor
                     </div>
                     @if (filled($review->title))
@@ -48,9 +48,11 @@
                         <p class="mt-0.5 whitespace-pre-line break-words text-sm">{{ $review->comment }}</p>
                     @endif
                     @if ($hasMedia)
-                        <div class="mt-2 flex min-w-0 flex-row flex-wrap gap-2">
+                        <div class="mt-2 flex min-w-0 flex-row flex-wrap gap-1.5">
                             @foreach ($review->photo_urls as $photo)
-                                <img src="{{ $photo }}" alt="{{ __('Foto ulasan') }}" class="h-16 w-16 shrink-0 rounded-lg object-cover" loading="lazy">
+                                <button type="button" @click.stop="openReview = true" class="block">
+                                    <img src="{{ $photo }}" alt="{{ __('Foto ulasan') }}" class="h-16 w-16 shrink-0 rounded-lg object-cover cursor-pointer" loading="lazy">
+                                </button>
                             @endforeach
                         </div>
                     @endif

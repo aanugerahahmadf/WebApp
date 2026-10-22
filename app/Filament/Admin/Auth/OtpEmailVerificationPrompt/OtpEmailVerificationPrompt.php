@@ -2,10 +2,12 @@
 
 namespace App\Filament\Admin\Auth\OtpEmailVerificationPrompt;
 
-use App\Filament\Concerns\HasDynamicBreadcrumbs;
-use App\Models\User\User;
+use App\Filament\Admin\Auth\Concerns\HasAuthBreadcrumbs;
+use App\Models\Admin\Admin;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\View;
 use Filament\Forms\Components\ViewField;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -17,19 +19,25 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
+/**
+ * Verifikasi email admin lewat kode OTP.
+ *
+ * Panel admin memakai guard `admin`, jadi yang diverifikasi adalah model
+ * `Admin` -- bukan `User`.
+ */
 class OtpEmailVerificationPrompt extends EmailVerificationPrompt
 {
-    use HasDynamicBreadcrumbs;
+    use HasAuthBreadcrumbs;
     use InteractsWithFormActions;
 
-    protected static string $view = 'Admin.pages.auth.otp-email-verification-prompt.otp-email-verification-prompt';
-
     public ?array $data = [];
+
+    public int $resendCooldown = 0;
 
     public function mount(): void
     {
         if (Filament::auth()->check() && $this->getVerifiable()->hasVerifiedEmail()) {
-            redirect()->intended(Filament::getUrl());
+            $this->redirect(Filament::getUrl());
 
             return;
         }
@@ -37,9 +45,21 @@ class OtpEmailVerificationPrompt extends EmailVerificationPrompt
         $this->form->fill();
 
         $userId = Filament::auth()->id();
-        if ($userId && ! Cache::has('otp_sent_'.$userId)) {
+        $lastSent = Cache::get('admin_otp_last_sent_'.$userId);
+
+        if ($lastSent) {
+            $diff = now()->timestamp - $lastSent;
+
+            if ($diff < 300) {
+                $this->resendCooldown = 300 - $diff;
+            }
+        }
+
+        if ($userId && ! Cache::has('admin_otp_sent_'.$userId)) {
             $this->sendEmailVerificationNotification($this->getVerifiable());
-            Cache::put('otp_sent_'.$userId, true, now()->addMinutes(5));
+            Cache::put('admin_otp_sent_'.$userId, true, now()->addMinutes(5));
+            Cache::put('admin_otp_last_sent_'.$userId, now()->timestamp, now()->addMinutes(10));
+            $this->resendCooldown = 300;
         }
     }
 
@@ -49,12 +69,12 @@ class OtpEmailVerificationPrompt extends EmailVerificationPrompt
             return;
         }
 
-        /** @var User $user */
+        /** @var Admin $user */
         $otp = random_int(100000, 999999);
-        Cache::put('otp_'.$user->id, $otp, now()->addMinutes(5));
+        Cache::put('admin_otp_'.$user->id, $otp, now()->addMinutes(5));
 
         try {
-            Mail::send('User.emails.otp.otp', [
+            Mail::send('Admin.emails.otp.otp', [
                 'title' => __('Verifikasi Email'),
                 'description' => __('Kami menerima permintaan untuk memverifikasi alamat email Anda. Silakan gunakan kode berikut untuk menyelesaikan proses verifikasi. Kode ini berlaku selama 5 menit.'),
                 'otp' => $otp,
@@ -69,15 +89,15 @@ class OtpEmailVerificationPrompt extends EmailVerificationPrompt
     public function verify(): void
     {
         $data = $this->form->getState();
-        /** @var User $user */
+        /** @var Admin $user */
         $user = $this->getVerifiable();
 
-        $cachedOtp = Cache::get('otp_'.$user->id);
+        $cachedOtp = Cache::get('admin_otp_'.$user->id);
 
         if ($cachedOtp && (string) $cachedOtp === (string) $data['otp']) {
             $user->markEmailAsVerified();
-            Cache::forget('otp_'.$user->id);
-            Cache::forget('otp_sent_'.$user->id);
+            Cache::forget('admin_otp_'.$user->id);
+            Cache::forget('admin_otp_sent_'.$user->id);
 
             Notification::make()->title(__('Email berhasil diverifikasi!'))->success()->send();
 
@@ -94,10 +114,15 @@ class OtpEmailVerificationPrompt extends EmailVerificationPrompt
     {
         return $form
             ->schema([
-                ViewField::make('otp')
-                    ->label(__('Kode Verifikasi'))
-                    ->view('Admin.auth.otp-field.otp-field')
-                    ->required(),
+                Section::make()
+                    ->schema([
+                        ViewField::make('otp')
+                            ->label(__('Kode Verifikasi'))
+                            ->view('Admin.auth.otp-field.otp-field')
+                            ->required(),
+                        View::make('Admin.pages.auth.otp-email-verification-prompt.actions'),
+                    ])
+                    ->columns(1),
             ])
             ->statePath('data');
     }
@@ -121,24 +146,6 @@ class OtpEmailVerificationPrompt extends EmailVerificationPrompt
         return __('Verifikasi Email Anda');
     }
 
-    public function getBreadcrumbs(): array
-    {
-        return [...$this->breadcrumbParentCrumb(), $this->getAuthCrumbLabel()];
-    }
-
-    protected function getAuthCrumbLabel(): string
-    {
-        if (method_exists($this, 'getHeading')) {
-            return (string) $this->getHeading();
-        }
-
-        if (method_exists($this, 'getTitle')) {
-            return (string) $this->getTitle();
-        }
-
-        return class_basename(static::class);
-    }
-
     public function getSubheading(): string
     {
         return __('Silakan masukkan 6 digit kode verifikasi yang telah kami kirimkan ke alamat email Anda.');
@@ -147,15 +154,32 @@ class OtpEmailVerificationPrompt extends EmailVerificationPrompt
     public function resendNotificationAction(): Action
     {
         return Action::make('resendNotification')
-            ->label(__('Kirim ulang kode'))
+            ->label(__('Kirim Ulang Kode'))
             ->color('gray')
             ->action(function (): void {
+                $userId = Filament::auth()->id();
+
+                $lastSent = Cache::get('admin_otp_last_sent_'.$userId);
+
+                if ($lastSent && (now()->timestamp - $lastSent) < 300) {
+                    Notification::make()
+                        ->title(__('Harap tunggu sebelum meminta kode baru.'))
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
                 $this->sendEmailVerificationNotification($this->getVerifiable());
+                Cache::put('admin_otp_last_sent_'.$userId, now()->timestamp, now()->addMinutes(10));
+                $this->resendCooldown = 300;
 
                 Notification::make()
                     ->title(__('Kode verifikasi baru telah dikirim.'))
                     ->success()
                     ->send();
+
+                $this->dispatch('otp-resent');
             });
     }
 
@@ -171,7 +195,6 @@ class OtpEmailVerificationPrompt extends EmailVerificationPrompt
     public function loginAction(): Action
     {
         return parent::loginAction()
-            ->label(__('Sudah punya akun? Sign In'))
-            ->url(Filament::getLoginUrl());
+            ->label(__('Kembali ke Halaman Sign In'));
     }
 }

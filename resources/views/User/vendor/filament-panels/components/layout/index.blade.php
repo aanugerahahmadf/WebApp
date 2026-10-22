@@ -85,7 +85,24 @@
             {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::FOOTER, scopes: $livewire?->getRenderHookScopes()) }}
         </div>
 
-        @if (filament()->hasNavigation())
+        {{--
+            Sidebar + penutupnya (overlay dan script scroll-ke-item-aktif).
+
+            conditions Added: TopNavigation::hasChrome(). Panel Welcome dan
+            User sekarang menampilkan chrome di SEMUA halaman, jadi sidebar
+            juga ada di semua halaman: di desktop jadi kolom navigasi, di HP
+            jadi drawer seperti biasa. Panel admin tidak tersentuh: chrome-nya
+            memang sudah penuh di semua halaman.
+
+            Syaratnya helper yang sama dengan topbar dan sidebar, jadi ketiga
+            potongan chrome tidak mungkin berbeda pendapat soal halaman mana yang
+            boleh punya navigasi.
+
+            CATATAN: blok ini adalah salinan view Filament. Kalau
+            filament/filament di-upgrade, bandingkan dulu dengan
+            vendor/filament/filament/resources/views/components/layout/index.blade.php.
+        --}}
+        @if (filament()->hasNavigation() && \App\Support\TopNavigation\TopNavigation::hasChrome())
             <div
                 x-cloak
                 x-data="{}"

@@ -1,5 +1,9 @@
-@extends('Welcome.errors.minimal.minimal')
+{{--
+    Halaman error 503 (storefront -- panel Welcome).
 
-@section('title', __('Service Unavailable'))
-@section('code', '503')
-@section('message', __('Service Unavailable'))
+    Seluruh tampilan berasal dari satu view bersama:
+    Shared.errors.glass.glass (kaca + animasi). File ini hanya meneruskan
+    kode status; isi, warna, dan tombolnya ada di
+    App\Support\ErrorPage\ErrorPage.
+--}}
+@include('Shared.errors.glass.glass', ['status' => 503])

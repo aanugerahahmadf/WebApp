@@ -2,14 +2,13 @@
 
 namespace Database\Seeders;
 
-use App\Models\Package\Package;
-use App\Models\Product\Product;
+use App\Models\Catalog\Catalog;
 use App\Models\Review\Review;
 use App\Models\ReviewVote\ReviewVote;
 use App\Models\User\User;
 use App\Services\ReviewPhotoStorage\ReviewPhotoStorage;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class ReviewSeeder extends Seeder
 {
@@ -64,12 +63,8 @@ class ReviewSeeder extends Seeder
             $this->deletePhotoFiles();
         }
 
-        foreach (Package::all() as $package) {
-            $this->seedForItem($testUsers, 'package_id', $package->id, $package);
-        }
-
-        foreach (Product::all() as $product) {
-            $this->seedForItem($testUsers, 'product_id', $product->id, $product);
+        foreach (Catalog::all() as $catalog) {
+            $this->seedForItem($testUsers, 'catalog_id', $catalog->id, $catalog);
         }
     }
 
@@ -89,7 +84,9 @@ class ReviewSeeder extends Seeder
                     'first_name' => $name,
                     'last_name' => 'User',
                     'username' => strtolower($name).'_reviewer',
-                    'password' => Hash::make('@ReviewerPass123'),
+                    // Password MENTAH — model User punya cast 'password' => 'hashed'
+                    // yang akan hash otomatis. JANGAN Hash::make di sini (double-hash).
+                    'password' => '@ReviewerPass123',
                     'email_verified_at' => now(),
                     'whatsapp' => '628'.str_pad((string) random_int(100000000, 999999999), 9, '0', STR_PAD_LEFT),
                 ]
@@ -172,7 +169,7 @@ class ReviewSeeder extends Seeder
         $source = null;
 
         if (method_exists($item, 'getFirstMedia')) {
-            $media = $item->getFirstMedia('product_image') ?: $item->getFirstMedia('package_image');
+            $media = $item->getFirstMedia('catalog_image');
             if ($media && method_exists($media, 'getPath') && $media->getPath() && file_exists($media->getPath())) {
                 $source = $media->getPath();
             }

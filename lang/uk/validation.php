@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'поштовий індекс',
         'preview'                  => 'попередній перегляд',
         'price'                    => 'ціна',
-        'product_id'               => 'ID товару',
+        'catalog_id'               => 'ID товару',
         'product_uid'              => 'UID товару',
         'product_uuid'             => 'UUID товару',
         'promo_code'               => 'промокод',

@@ -54,7 +54,7 @@ class NotificationDetailPage extends Page
         $this->notificationDetail = [
             'title' => (string) ($data['title'] ?? __('Notifikasi')),
             'body' => (string) ($data['body'] ?? ''),
-            'icon' => (string) ($data['icon'] ?? 'heroicon-s-bell-alert'),
+            'icon' => (string) ($data['icon'] ?? '/images/icons/bell_alert.svg'),
             'received_at' => $notification->created_at?->translatedFormat('d F Y, H:i:s') ?? '-',
             'action_url' => $this->withNotificationReturnUrl($actionUrl),
             'action_label' => is_array($firstAction) && is_string($firstAction['label'] ?? null) ? $firstAction['label'] : null,
@@ -87,7 +87,7 @@ class NotificationDetailPage extends Page
         $actions = [
             Action::make('backToDashboard')
                 ->label(__('Kembali ke Beranda'))
-                ->icon('heroicon-m-arrow-left')
+                ->icon('/images/icons/arrow_left.svg')
                 ->color('gray')
                 ->url(Home::getUrl(panel: 'user')),
         ];
@@ -98,12 +98,12 @@ class NotificationDetailPage extends Page
         if ($actionUrl) {
             $actions[] = Action::make('openNotificationAction')
                 ->label($actionLabel ?: __('Lihat detail'))
-                ->icon('heroicon-m-arrow-top-right-on-square')
+                ->icon('/images/icons/external.svg')
                 ->url($actionUrl);
         } elseif ($this->isSignInNotification()) {
             $actions[] = Action::make('viewSignInActivity')
                 ->label(__('Lihat aktivitas Sign In'))
-                ->icon('heroicon-m-shield-check')
+                ->icon('/images/icons/shield_check.svg')
                 ->url(SignInActivity::getUrl([
                     'returnTo' => static::getUrl(['id' => $this->notificationId], panel: 'user'),
                 ], panel: 'user'));
@@ -118,6 +118,7 @@ class NotificationDetailPage extends Page
 
         return str_contains($title, 'login detected')
             || str_contains($title, 'login terdeteksi')
+            || str_contains($title, 'apakah ini anda')
             || str_contains($title, 'sign in');
     }
 

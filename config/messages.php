@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\AppIcon\AppIcon;
 use Filament\Support\Enums\MaxWidth;
 
 return [
@@ -56,7 +57,7 @@ return [
         | You can customize it if your application uses a different icon.
         |
         */
-        'navigation_icon' => 'heroicon-s-chat-bubble-left-right',
+        'navigation_icon' => AppIcon::MESSAGES,
 
         /*
         |--------------------------------------------------------------------------

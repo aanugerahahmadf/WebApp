@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'postinumero',
         'preview'                  => 'esikatselu',
         'price'                    => 'hinta',
-        'product_id'               => 'Tuotetunnus',
+        'catalog_id'               => 'Tuotetunnus',
         'product_uid'              => 'tuotteen UID',
         'product_uuid'             => 'tuotteen UUID',
         'promo_code'               => 'Tarjouskoodi',

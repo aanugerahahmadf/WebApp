@@ -3,6 +3,7 @@
 namespace App\Providers\AppServiceProvider;
 
 use App\Enums\RuntimePlatform\RuntimePlatform;
+use App\Support\AppIcon\VendorIconAliases;
 use App\Filament\Admin\Auth\SignIn\SignIn as AdminSignIn;
 use App\Filament\Admin\Auth\OtpEmailVerificationPrompt\OtpEmailVerificationPrompt as AdminOtpEmailVerificationPrompt;
 use App\Filament\Admin\Auth\OtpRequestPasswordReset\OtpRequestPasswordReset as AdminOtpRequestPasswordReset;
@@ -13,9 +14,10 @@ use App\Filament\User\Auth\SignIn\SignIn as UserSignIn;
 use App\Filament\User\Auth\OtpEmailVerificationPrompt\OtpEmailVerificationPrompt as UserOtpEmailVerificationPrompt;
 use App\Filament\User\Auth\OtpRequestPasswordReset\OtpRequestPasswordReset as UserOtpRequestPasswordReset;
 use App\Filament\User\Auth\OtpResetPassword\OtpResetPassword as UserOtpResetPassword;
-// use App\Filament\User\Auth\SignUp\SignUp as UserSignUp;
+use App\Filament\User\Auth\SignUp\SignUp as UserSignUp;
 use App\Filament\User\Auth\VerifyOtp\VerifyOtp as UserVerifyOtp;
-use App\Filament\User\Pages\SettingsPage\PasswordSecurityPage\SecurityCheck\SignInActivity\SignInActivity;
+use App\Livewire\Admin\CatalogTables\CategoryTable as AdminCatalogCategoryTable;
+use App\Livewire\Admin\CatalogTables\PackageTable as AdminCatalogPackageTable;
 use App\Livewire\Admin\Messages\Inbox\Inbox as AdminMessagesInbox;
 use App\Livewire\Admin\Messages\Messages\Messages as AdminMessagesContent;
 use App\Livewire\Admin\Messages\Search\Search as AdminMessagesSearch;
@@ -49,7 +51,7 @@ use App\Models\Package\Package;
 use App\Models\PaymentGateway\PaymentGateway;
 use App\Models\PaymentMethod\PaymentMethod;
 use App\Models\PrivacyPolicy\PrivacyPolicy;
-use App\Models\Product\Product;
+use App\Models\Catalog\Catalog;
 use App\Models\ReferenceOption\ReferenceOption;
 use App\Services\GuestIdentity\GuestIdentity;
 use App\Models\Report\Report;
@@ -65,7 +67,6 @@ use App\Models\User\User;
 use App\Models\UserFcmDevice\UserFcmDevice;
 use App\Models\UserLanguage\UserLanguage;
 use App\Models\UserSession\UserSession;
-use App\Models\Vendor\Vendor;
 use App\Models\Voucher\Voucher;
 use App\Models\WeddingDecorationPolicy\WeddingDecorationPolicy;
 use App\Models\WhatsappOtp\WhatsappOtp;
@@ -77,8 +78,8 @@ use App\Observers\TransactionObserver\TransactionObserver;
 use App\Providers\Filament\UserPanelProvider\UserPanelProvider;
 use App\Providers\FirebaseServiceProvider\FirebaseServiceProvider;
 use App\Services\GeoLocationService\GeoLocationService;
-use App\Services\PlatformNotificationService\PlatformNotificationService;
 use App\Support\AppPlatform\AppPlatform;
+use App\Support\DeviceTrust\DeviceTrustService;
 use App\Support\PlatformContext\PlatformContext;
 use App\Support\PasswordPolicy\PasswordPolicy;
 use Filament\Actions\Exports\ExportColumn;
@@ -95,12 +96,13 @@ use Filament\Events\ServingFilament;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Auth\Events\Login as LoginEvent;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
@@ -125,8 +127,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(GuestIdentity::class);
 
         // FIX: model autentikasi aplikasi (App\Models\User\User), bukan
-        // bawaan Filament (App\Models\User) — dipakai relasi user() pada
-        // Filament Export agar tombol "Ekspor Data" native berfungsi.
+        // bawaan Filament (App\Models\User).
+        //
+        // Dipakai `Import::user()` (tabel `imports`, FK ke `users.id`) --
+        // tombol "Ekspor Data" native sudah ditangani lewat relasi
+        // polimorfik di bawah.
         $this->app->bind(
             \Illuminate\Contracts\Auth\Authenticatable::class,
             \App\Models\User\User::class
@@ -242,10 +247,85 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
+     * Terjemahkan nilai kolom, TETAPI aman kalau kuncinya mengembalikan array.
+     *
+     * `__($key)` tidak selalu mengembalikan string. Sebuah kunci terjemahan
+     * bisa bernilai ARRAY -- misalnya `lang`, `attributes`, `max`, `min`,
+     * `size`, `password`, `between`, `named`, `target_link` (semua ada di
+     * `lang/*.php` bawaan Laravel).
+     *
+     * Nilai kolom bisa saja persis salah satu kunci itu. Contoh nyata:
+     * tabel `fm_app_settings` punya baris dengan `key` = "lang". Waktu
+     * diekspor, `__("lang")` mengembalikan ARRAY, dan `(string) $array`
+     * meledak dengan "Array to string conversion" -- export gagal total.
+     *
+     * Jadi: kalau hasil terjemahan bukan string, nilai ASLINYA yang dipakai.
+     */
+    protected static function translateValue(string $value): string
+    {
+        $translated = __($value);
+
+        return is_string($translated) ? $translated : $value;
+    }
+
+    /**
      * Bootstrap any application services.
      */
     public function boot(): void
     {
+        // IkoN vendor Filament ikut BERWARNA: alias internal (tombol aksi
+        // bawaan, editor file upload, boolean, notifikasi, filter tabel...)
+        // dan SEMUA nama Heroicon yang di-hardcode vendor ditimpa dengan
+        // path SVG berwarna. Chevron TIDAK ikut -- ia tetap Heroicon.
+        VendorIconAliases::register();
+
+        // ── Relasi `user` pada Filament Export/Import jadi POLIMORFIK ────
+        //
+        // Aplikasi ini punya DUA model autentikasi: `users` (shopper + tamu,
+        // guard `web`) dan `admins` (tim internal, guard `admin`). Tabel
+        // `exports` asalnya hanya punya `user_id` dengan FK ke `users.id`,
+        // jadi begitu admin dipisah ke tabelnya sendiri, asumsi Filament
+        // ("semua yang export adalah baris `users`") sudah tidak benar.
+        //
+        // Tanpa baris ini gejalanya HALUS dan justru itu yang berbahaya:
+        //   - `Export::user()` tetap `belongsTo(User::class)`, jadi
+        //     `associate($admin)` menulis `admins.id` ke kolom yang maknanya
+        //     `users.id`. Tidak error (FK tetap valid selama id-nya kebetulan
+        //     ada), tapi export tercatat atas nama shopper yang tidak ada
+        //     hubungannya dengan export tersebut.
+        //   - Notifikasi "ekspor selesai" dikirim ke shopper itu, bukan ke
+        //     admin yang menjemduh.
+        //
+        // Dengan relasi polimorfik, `user_type` menyimpan model aktualnya
+        // (`App\Models\User\User` atau `App\Models\Admin\Admin`), jadi audit
+        // trail-nya jujur dan `Export::user()` mengembalikan model yang benar.
+        //
+        // `Import` ikut, walau `ImportAction` belum dipakai di aplikasi ini --
+        // tabel `imports` sudah ada dengan bentuk yang sama.
+        //
+        // @see \Database\Migrations\2026_10_21_120000_make_export_import_user_polymorphic
+        \Filament\Actions\Exports\Models\Export::polymorphicUserRelationship();
+        \Filament\Actions\Imports\Models\Import::polymorphicUserRelationship();
+
+        // Provider khusus untuk guard `admin`.
+        //
+        // Driver `active-admin` = EloquentUserProvider biasa + penolakan akun
+        // yang `active_status`-nya false. Daftarkan di sini (bukan memakai
+        // `driver => 'eloquent'`) supaya aturan "admin nonaktif tidak bisa
+        // login" ditegakkan di lapisan yang membaca database, bukan di tiap
+        // halaman login yang mungkin lupa memeriksanya.
+        //
+        // Hanya berlaku untuk guard `admin`. Provider `users` tetap driver
+        // 'eloquent' bawaan, jadi shopper tidak ikut terpengaruh.
+        //
+        // @see \App\Auth\ActiveAdminUserProvider
+        Auth::provider('active-admin', function ($app, array $config) {
+            return new \App\Auth\ActiveAdminUserProvider(
+                $app['hash'],
+                $config['model'],
+            );
+        });
+
         // Default aturan kata sandi untuk SELURUH aplikasi.
         //
         // Tanpa baris ini, `Password::default()` -- yang dipakai tiga
@@ -295,7 +375,7 @@ class AppServiceProvider extends ServiceProvider
             'App\Models\PaymentGateway' => PaymentGateway::class,
             'App\Models\PaymentMethod' => PaymentMethod::class,
             'App\Models\PrivacyPolicy' => PrivacyPolicy::class,
-            'App\Models\Product' => Product::class,
+            'App\Models\Catalog' => Catalog::class,
             'App\Models\ReferenceOption' => ReferenceOption::class,
             'App\Models\Report' => Report::class,
             'App\Models\Review' => Review::class,
@@ -310,7 +390,7 @@ class AppServiceProvider extends ServiceProvider
             'App\Models\UserFcmDevice' => UserFcmDevice::class,
             'App\Models\UserLanguage' => UserLanguage::class,
             'App\Models\UserSession' => UserSession::class,
-            'App\Models\Vendor' => Vendor::class,
+            
             'App\Models\Voucher' => Voucher::class,
             'App\Models\WeddingDecorationPolicy' => WeddingDecorationPolicy::class,
             'App\Models\WhatsappOtp' => WhatsappOtp::class,
@@ -390,10 +470,13 @@ class AppServiceProvider extends ServiceProvider
 
         $isMobile = PlatformContext::isAnyMobile();
 
-        // 🚀 Force HTTPS for Ngrok/Production Assets
-        if (str_contains(config('app.url'), 'https://')) {
-            URL::forceScheme('https');
-        }
+        // Force HTTPS hanya kalau diminta eksplisit lewat APP_FORCE_HTTPS_SCHEME.
+        //
+        // DULU: `if (str_contains(config('app.url'), 'https://')) URL::forceScheme('https');`
+        // Itu bug. forceScheme() hanya menimpa skema, host tetap dari request.
+        // Lokal: buka http://127.0.0.1:8000 -> asset jadi https://127.0.0.1:8000/...
+        // -> browser gagal TLS -> halaman tanpa CSS (Laravel, Filament, Livewire).
+        // Tunnel: skema https sudah benar dari X-Forwarded-Proto + trustProxies('*').
 
         // 🚀 Vercel Read-Only Filesystem Fix
         if (env('VERCEL')) {
@@ -448,27 +531,22 @@ class AppServiceProvider extends ServiceProvider
                         'login_country' => $location['country'] ?? null,
                     ]));
 
-                    $locationParts = array_filter([
-                        $location['city'] ?? null,
-                        $location['region'] ?? null,
-                        $location['country'] ?? null,
-                    ]);
-
-                    $locationText = $locationParts
-                        ? implode(', ', $locationParts)
-                        : __('Lokasi tidak diketahui');
-
-                    PlatformNotificationService::send(
-                        $user,
-                        __('Login Terdeteksi'),
-                        __('Akun Anda telah digunakan dari :ip (:location) pada :time.', [
-                            'ip' => $ip,
-                            'location' => $locationText,
-                            'time' => now()->format('d M Y H:i:s'),
-                        ]),
-                        SignInActivity::getUrl(panel: 'user'),
-                        __('Lihat aktivitas Sign In'),
-                    );
+                    /*
+                     * Notifikasi perangkat ala Google/Instagram:
+                     *
+                     * - perangkat BARU (fingerprint User-Agent belum pernah
+                     *   dipakai akun ini) -> "Perangkat Baru -- Apakah Ini
+                     *   Anda?" dengan tombol Tinjau Perangkat;
+                     * - perangkat dikenal + sudah dinyatakan terpercaya ->
+                     *   diam;
+                     * - perangkat dikenal + belum dikonfirmasi -> perilaku
+                     *   lama "Login Terdeteksi" tetap berjalan.
+                     *
+                     * Jalur API mobile (AuthController::login) tidak memicu
+                     * event ini, jadi DeviceTrustService::recognize() juga
+                     * dipanggil di sana.
+                     */
+                    DeviceTrustService::recognize($user);
                 }
             }
         );
@@ -486,6 +564,14 @@ class AppServiceProvider extends ServiceProvider
         Livewire::component('edit_password_form', EditPasswordComponent::class);
         Livewire::component('delete_account_form', DeleteAccountComponent::class);
         Livewire::component('browser_sessions_form', BrowserSessionsComponent::class);
+        // Tabel kategori + tabel paket, masing-masing di halamannya sendiri
+        // (/admin/categories dan /admin/packages). Didaftarkan sebagai
+        // komponen Livewire supaya halaman itu bisa merender tabelnya --
+        // lihat App\Filament\Admin\Resources\CategoryResource dan
+        // App\Filament\Admin\Resources\PackageResource.
+        Livewire::component('fm-admin-catalog-categories', AdminCatalogCategoryTable::class);
+        Livewire::component('fm-admin-catalog-packages', AdminCatalogPackageTable::class);
+
         Livewire::component('fm-admin-inbox', AdminMessagesInbox::class);
         Livewire::component('fm-admin-messages', AdminMessagesContent::class);
         Livewire::component('fm-admin-search', AdminMessagesSearch::class);
@@ -502,11 +588,10 @@ class AppServiceProvider extends ServiceProvider
         Livewire::component('app.filament.admin.auth.otp-email-verification-prompt', AdminOtpEmailVerificationPrompt::class);
         Livewire::component('app.filament.user.auth.auth', UserAuth::class);
         Livewire::component('app.filament.user.auth.sign-in', UserSignIn::class);
-        // Alias Sign Up dikomentari (kode aslinya, tidak dihapus): pendaftaran
-        // email/password dinonaktifkan di UserPanelProvider karena
-        // `->registration()` tidak dipanggil. Baris di bawah tetap utuh supaya
-        // hidupkan lagi cukup hapus tanda `//`-nya.
-        // Livewire::component('app.filament.user.auth.sign-up', UserSignUp::class);
+        // Alias Sign Up aktif lagi, menyambung ke `->registration(SignUp::class)`
+        // di UserPanelProvider. Tanpa alias ini halaman Sign Up me-render
+        // component Livewire yang tidak dikenal dan gagal saat hydration.
+        Livewire::component('app.filament.user.auth.sign-up', UserSignUp::class);
         Livewire::component('app.filament.user.auth.otp-request-password-reset', UserOtpRequestPasswordReset::class);
         Livewire::component('app.filament.user.auth.otp-reset-password', UserOtpResetPassword::class);
         Livewire::component('app.filament.user.auth.verify-otp', UserVerifyOtp::class);
@@ -526,9 +611,21 @@ class AppServiceProvider extends ServiceProvider
         if (! $isMobile) {
             TextColumn::configureUsing(function (TextColumn $column): void {
                 $column->formatStateUsing(function ($state, $record, TextColumn $column) {
+                    // JANGAN terjemahkan dua kali.
+                    //
+                    // Model yang field-nya ada di `$translatable`-nya sudah
+                    // mengembalikan versi sesuai locale lewat accessor-nya.
+                    // Terjemahkan lagi di kolom bikin yang tampil di layar
+                    // BERBEDA dari yang tersimpan di database -- jadi admin
+                    // mengedit teks yang tidak ada, dan cocokan nama paket
+                    // dengan tier resmi ikut berubah.
+                    if ($record instanceof Model && method_exists($record, 'hasTranslationFor') && $record->hasTranslationFor($column->getName())) {
+                        return $state;
+                    }
+
                     if (is_string($state) && ! filter_var($state, FILTER_VALIDATE_EMAIL) && ! str_contains($state, 'http')) {
                         if (! preg_match('/^[0-9.,\-+() ]+$/', $state)) {
-                            return __($state);
+                            return self::translateValue($state);
                         }
                     }
 
@@ -569,7 +666,7 @@ class AppServiceProvider extends ServiceProvider
                     }
                     if (is_string($state) && ! filter_var($state, FILTER_VALIDATE_EMAIL) && ! str_contains($state, 'http')) {
                         if (! preg_match('/^[0-9.,\-+() ]+$/', $state)) {
-                            $state = __($state);
+                            $state = self::translateValue($state);
                         }
                     }
                     if ($state instanceof \UnitEnum) {

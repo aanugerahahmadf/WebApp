@@ -12,7 +12,7 @@ class WishlistController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $query = Wishlist::with('user:id,full_name,email', 'package:id,name,price', 'product:id,name,price');
+            $query = Wishlist::with('user:id,full_name,email', 'package:id,name,price', 'catalog:id,name,price');
 
             if ($request->filled('user_id')) {
                 $query->where('user_id', $request->user_id);
@@ -29,8 +29,8 @@ class WishlistController extends Controller
                 'user_name' => $w->user?->full_name,
                 'package_id' => $w->package_id,
                 'package_name' => $w->package?->name,
-                'product_id' => $w->product_id,
-                'product_name' => $w->product?->name,
+                'catalog_id' => $w->catalog_id,
+                'catalog_name' => $w->catalog?->name,
                 'created_at' => $w->created_at?->toISOString(),
                 'updated_at' => $w->updated_at?->toISOString(),
             ]);

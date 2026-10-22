@@ -206,13 +206,13 @@
                     </h3>
                     <div class="flex items-center gap-1">
                         <button type="button" x-show="showCamera" x-on:click="flipCamera()" class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-white/5 dark:hover:text-gray-300" style="display:none">
-                            <x-filament::icon icon="heroicon-m-arrow-path" class="h-5 w-5" />
+                            <x-filament::icon icon="/images/icons/refresh.svg" class="h-5 w-5" />
                         </button>
                         <button type="button" x-show="showCamera" x-on:click="stopCamera(); showCamera = false; photoTaken = false; recordedVideoUrl = null;" class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-white/5 dark:hover:text-gray-300" style="display:none">
-                            <x-filament::icon icon="heroicon-m-arrow-left" class="h-5 w-5" />
+                            <x-filament::icon icon="/images/icons/arrow_left.svg" class="h-5 w-5" />
                         </button>
                         <button type="button" x-on:click="close()" class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-white/5 dark:hover:text-gray-300">
-                            <x-filament::icon icon="heroicon-m-x-mark" class="h-5 w-5" />
+                            <x-filament::icon icon="/images/icons/x.svg" class="h-5 w-5" />
                         </button>
                     </div>
                 </div>
@@ -222,37 +222,37 @@
                     {{-- Kamera --}}
                     <button type="button" x-on:click="isMobile() ? pickNativeCamera() : startCamera('photo')" class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 active:bg-gray-100 dark:active:bg-white/10">
                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600 ring-1 ring-primary-600/10 dark:bg-primary-400/10 dark:text-primary-400 dark:ring-primary-400/20">
-                            <x-filament::icon icon="heroicon-o-camera" class="h-5 w-5" />
+                            <x-filament::icon icon="/images/icons/camera.svg" class="h-5 w-5" />
                         </span>
                         <span class="flex-1 text-left text-gray-700 dark:text-gray-200">{{ __('Kamera') }}</span>
-                        <x-filament::icon icon="heroicon-m-chevron-right" class="h-4 w-4 text-gray-400" />
+                        <x-filament::icon icon="/images/icons/chevron_right.svg" class="h-4 w-4 text-gray-400" />
                     </button>
 
                     {{-- Video --}}
                     <button type="button" x-on:click="isMobile() ? pickNativeVideo() : startCamera('video')" class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 active:bg-gray-100 dark:active:bg-white/10">
                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600 ring-1 ring-primary-600/10 dark:bg-primary-400/10 dark:text-primary-400 dark:ring-primary-400/20">
-                            <x-filament::icon icon="heroicon-o-video-camera" class="h-5 w-5" />
+                            <x-filament::icon icon="/images/icons/video.svg" class="h-5 w-5" />
                         </span>
                         <span class="flex-1 text-left text-gray-700 dark:text-gray-200">{{ __('Video') }}</span>
-                        <x-filament::icon icon="heroicon-m-chevron-right" class="h-4 w-4 text-gray-400" />
+                        <x-filament::icon icon="/images/icons/chevron_right.svg" class="h-4 w-4 text-gray-400" />
                     </button>
 
                     {{-- Galeri --}}
                     <button type="button" x-on:click="pickGallery()" class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 active:bg-gray-100 dark:active:bg-white/10">
                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600 ring-1 ring-primary-600/10 dark:bg-primary-400/10 dark:text-primary-400 dark:ring-primary-400/20">
-                            <x-filament::icon icon="heroicon-o-photo" class="h-5 w-5" />
+                            <x-filament::icon icon="/images/icons/photo.svg" class="h-5 w-5" />
                         </span>
                         <span class="flex-1 text-left text-gray-700 dark:text-gray-200">{{ __('Galeri / Album') }}</span>
-                        <x-filament::icon icon="heroicon-m-chevron-right" class="h-4 w-4 text-gray-400" />
+                        <x-filament::icon icon="/images/icons/chevron_right.svg" class="h-4 w-4 text-gray-400" />
                     </button>
 
                     {{-- File --}}
                     <button type="button" x-on:click="pickFile()" class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5 active:bg-gray-100 dark:active:bg-white/10">
                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600 ring-1 ring-primary-600/10 dark:bg-primary-400/10 dark:text-primary-400 dark:ring-primary-400/20">
-                            <x-filament::icon icon="heroicon-o-folder" class="h-5 w-5" />
+                            <x-filament::icon icon="/images/icons/folder.svg" class="h-5 w-5" />
                         </span>
                         <span class="flex-1 text-left text-gray-700 dark:text-gray-200">{{ __('File / Folder') }}</span>
-                        <x-filament::icon icon="heroicon-m-chevron-right" class="h-4 w-4 text-gray-400" />
+                        <x-filament::icon icon="/images/icons/chevron_right.svg" class="h-4 w-4 text-gray-400" />
                     </button>
 
                     <div class="my-1 border-t border-gray-100 dark:border-white/10"></div>
@@ -269,16 +269,13 @@
                         <canvas x-ref="camCanvas" x-show="photoTaken" class="h-full w-full object-cover" :style="mirroredView ? 'transform: scaleX(-1);' : ''" style="display:none;"></canvas>
                         <video x-show="recordedVideoUrl && cameraMode === 'video' && !photoTaken" :src="recordedVideoUrl" class="h-full w-full object-cover" controls playsinline></video>
                         <div x-show="!photoTaken && !recordedVideoUrl && stream === null" class="absolute inset-0 flex items-center justify-center bg-gray-900/60" style="display:none;">
-                            <svg class="h-8 w-8 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                            </svg>
+                            <x-filament::icon icon="/images/icons/refresh.svg" class="h-8 w-8 animate-spin text-white" />
                         </div>
                     </div>
 
                     <div class="flex items-center justify-center gap-4 px-4 py-4">
                         <button type="button" x-show="!photoTaken && !recordedVideoUrl && cameraMode === 'photo'" x-on:click="capturePhoto()" class="flex h-14 w-14 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg">
-                            <x-filament::icon icon="heroicon-m-camera" class="h-7 w-7" />
+                            <x-filament::icon icon="/images/icons/camera.svg" class="h-7 w-7" />
                         </button>
                         <button type="button" x-show="!photoTaken && !recordedVideoUrl && cameraMode === 'video'" x-on:click="isRecording ? stopRecording() : startRecording()" :class="isRecording ? 'bg-danger-600' : 'bg-primary-600'" class="flex h-14 w-14 items-center justify-center rounded-full text-white shadow-lg">
                             <span x-show="!isRecording" class="block h-8 w-8 rounded-full bg-white"></span>

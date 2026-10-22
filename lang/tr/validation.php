@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'posta kodu',
         'preview'                  => 'Ön izleme',
         'price'                    => 'fiyat',
-        'product_id'               => 'ürün kimliği',
+        'catalog_id'               => 'ürün kimliği',
         'product_uid'              => 'ürün UID\'si',
         'product_uuid'             => 'ürün UUID\'si',
         'promo_code'               => 'promosyon kodu',

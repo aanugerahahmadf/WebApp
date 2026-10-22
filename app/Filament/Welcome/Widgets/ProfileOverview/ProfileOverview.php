@@ -4,11 +4,12 @@ namespace App\Filament\Welcome\Widgets\ProfileOverview;
 
 use App\Filament\Welcome\Pages\EditProfilePage\EditProfilePage;
 use App\Filament\Welcome\Resources\HistoryResource\HistoryResource;
-use App\Filament\Welcome\Resources\PackageResource\PackageResource;
-use App\Filament\Welcome\Resources\ProductResource\ProductResource;
+
+use App\Filament\Welcome\Resources\CatalogResource\CatalogResource;
 use App\Filament\Welcome\Resources\ReviewResource\ReviewResource;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use App\Support\AppIcon\AppIcon;
 
 class ProfileOverview extends BaseWidget
 {
@@ -37,7 +38,7 @@ class ProfileOverview extends BaseWidget
         return [
             // Row 1: Edit Profile — full width (span 2)
             Stat::make(__('Edit Profile'), '')
-                ->icon('heroicon-s-user-circle')
+                ->icon(AppIcon::PROFILE)
                 ->color('warning')
                 ->extraAttributes([
                     'class' => 'home-stat-card profile-stat-card cursor-pointer hover:scale-105 transition-transform h-full',
@@ -48,24 +49,24 @@ class ProfileOverview extends BaseWidget
             // Row 2: 2 kolom — Katalog Paket | Katalog Dekorasi Bunga
 
             Stat::make(__('Katalog Paket Bunga'), '')
-                ->icon('heroicon-s-gift')
+                ->icon(AppIcon::GIFT)
                 ->color('warning')
                 ->extraAttributes([
                     'class' => 'home-stat-card profile-stat-card cursor-pointer hover:scale-105 transition-transform h-full',
-                    'onclick' => "window.location.href='".PackageResource::getUrl()."'",
+                    'onclick' => "window.location.href='".CatalogResource::getUrl()."'",
                 ]),
 
             Stat::make(__('Katalog Dekorasi Bunga'), '')
-                ->icon('heroicon-s-shopping-bag')
+                ->icon('AppIcon::ORDER')
                 ->color('warning')
                 ->extraAttributes([
                     'class' => 'home-stat-card profile-stat-card cursor-pointer hover:scale-105 transition-transform h-full',
-                    'onclick' => "window.location.href='".ProductResource::getUrl()."'",
+                    'onclick' => "window.location.href='".CatalogResource::getUrl()."'",
                 ]),
 
             // Row 3: Riwayat — full width (span 2)
             Stat::make(__('Riwayat'), '')
-                ->icon('heroicon-s-clock')
+                ->icon(AppIcon::HISTORY)
                 ->color('warning')
                 ->extraAttributes([
                     'class' => 'home-stat-card profile-stat-card cursor-pointer hover:scale-105 transition-transform h-full',
@@ -75,7 +76,7 @@ class ProfileOverview extends BaseWidget
 
             // Row 4: Ulasan — full width (span 2)
             Stat::make(__('Ulasan'), '')
-                ->icon('heroicon-s-star')
+                ->icon(AppIcon::REVIEW)
                 ->color('warning')
                 ->extraAttributes([
                     'class' => 'home-stat-card profile-stat-card cursor-pointer hover:scale-105 transition-transform h-full',

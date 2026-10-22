@@ -11,9 +11,9 @@
         <div class="flex items-center gap-5 mb-5 p-2 bg-white dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
             <div class="p-4 bg-primary-100 dark:bg-primary-950/50 rounded-xl text-primary-600 dark:text-primary-400">
                 @if($method->type === 'bank_transfer')
-                    <x-filament::icon icon="heroicon-o-building-library" class="w-8 h-8" />
+                    <x-filament::icon icon="/images/icons/library.svg" class="w-8 h-8" />
                 @else
-                    <x-filament::icon icon="heroicon-o-device-phone-mobile" class="w-8 h-8" />
+                    <x-filament::icon icon="/images/icons/mobile.svg" class="w-8 h-8" />
                 @endif
             </div>
             <div>
@@ -48,7 +48,7 @@
                     
                     <div class="mt-4 flex flex-col items-center gap-1">
                         <span class="px-6 py-1.5 bg-gray-50 dark:bg-gray-900 rounded-full text-xs font-semibold text-gray-700 dark:text-gray-200 border border-gray-100 dark:border-gray-800 flex items-center gap-2">
-                             <x-filament::icon icon="heroicon-m-user-circle" class="w-4 h-4 text-gray-400" />
+                             <x-filament::icon icon="/images/icons/user_circle.svg" class="w-4 h-4 text-gray-400" />
                              {{ __('a/n') }} <strong>{{ $method->account_holder }}</strong>
                         </span>
                     </div>

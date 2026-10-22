@@ -1,12 +1,14 @@
 <?php
 
 namespace App\Filament\User\Resources\VoucherResource;
+use App\Filament\User\Resources\CatalogResource\CatalogResource;
 
 use App\Enums\DiscountType\DiscountType;
 use App\Filament\User\Pages\MessagesPage\MessagesPage;
-use App\Filament\User\Resources\PackageResource\PackageResource;
+
 use App\Filament\User\Resources\VoucherResource\Pages\ManageVouchers\ManageVouchers;
 use App\Models\Voucher\Voucher;
+use App\Support\AppIcon\AppIcon;
 use Carbon\Carbon;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
@@ -25,7 +27,7 @@ class VoucherResource extends Resource
 
     protected static ?int $navigationSort = 3;
 
-    protected static ?string $navigationIcon = 'heroicon-s-ticket';
+    protected static ?string $navigationIcon = AppIcon::VOUCHER;
 
     protected static bool $shouldRegisterNavigation = false;
 
@@ -112,7 +114,7 @@ class VoucherResource extends Resource
         return $table
             ->emptyStateHeading(__('Belum ada promo baru'))
             ->emptyStateDescription(__('Voucher spesial dari kami akan otomatis muncul di sini. Coba tanyakan admin untuk promo menarik!'))
-            ->emptyStateIcon('heroicon-s-ticket')
+            ->emptyStateIcon('/images/icons/ticket.svg')
             ->emptyStateActions([
                 Tables\Actions\Action::make('chat_admin')
                     ->label(__('Tanya Admin'))
@@ -120,7 +122,7 @@ class VoucherResource extends Resource
                     ->button()
                     ->color('primary')
                     ->size('lg')
-                    ->icon('heroicon-m-chat-bubble-bottom-center-text'),
+                    ->icon('/images/icons/chat_dots.svg'),
             ])
             ->contentGrid([
                 'default' => 2,
@@ -179,7 +181,7 @@ class VoucherResource extends Resource
                         ->formatStateUsing(fn ($state) => $state ? __('Berlaku s/d').' '.Carbon::parse($state)->translatedFormat('d M Y') : __('Berlaku Selamanya'))
                         ->size(Tables\Columns\TextColumn\TextColumnSize::ExtraSmall)
                         ->color(fn ($state) => $state && Carbon::parse($state)->diffInDays(now()) <= 3 ? 'danger' : 'gray')
-                        ->icon('heroicon-s-clock')
+                        ->icon('/images/icons/clock.svg')
                         ->alignCenter(),
 
                     // -- KODE VOUCHER (KOTAK BERWARNA DI TENGAH) --
@@ -189,11 +191,11 @@ class VoucherResource extends Resource
                         ->color('warning')
                         ->copyable()
                         ->copyMessage(__('Kode Disalin!'))
-                        ->icon('heroicon-m-clipboard-document')
+                        ->icon('/images/icons/clipboard.svg')
                         ->alignCenter()
                         ->searchable()
                         ->extraAttributes([
-                            'class' => 'mt-4 bg-warning-50 flex dark:bg-warning-950/40 text-warning-600 dark:text-warning-400 px-4 py-2 rounded-xl border border-warning-200 dark:border-warning-800/60 justify-center products-center w-full mx-auto transition hover:bg-warning-100 dark:hover:bg-warning-900/60 cursor-pointer',
+                            'class' => 'mt-4 bg-warning-50 flex dark:bg-warning-950/40 text-warning-600 dark:text-warning-400 px-4 py-2 rounded-xl border border-warning-200 dark:border-warning-800/60 justify-center items-center w-full mx-auto transition hover:bg-warning-100 dark:hover:bg-warning-900/60 cursor-pointer',
                         ]),
 
                 ])->space(0),
@@ -201,7 +203,7 @@ class VoucherResource extends Resource
             ->actions([
                 Tables\Actions\Action::make('klaim')
                     ->label(__('Klaim Voucher'))
-                    ->icon('heroicon-m-plus-circle')
+                    ->icon('/images/icons/plus_circle.svg')
                     ->color('primary')
                     ->button()
                     ->size('sm')
@@ -219,7 +221,7 @@ class VoucherResource extends Resource
                             Notification::make()
                                 ->title(__('Voucher Berhasil Diklaim!'))
                                 ->body(__('Kini Anda bisa menggunakan voucher ini pada saat Checkout.'))
-                                ->icon('heroicon-s-check-circle')
+                                ->icon('/images/icons/check_circle.svg')
                                 ->iconColor('success')
                                 ->success()
                                 ->send();
@@ -228,12 +230,12 @@ class VoucherResource extends Resource
 
                 Tables\Actions\Action::make('pakai')
                     ->label(__('Gunakan'))
-                    ->icon('heroicon-m-shopping-bag')
+                    ->icon('/images/icons/bag.svg')
                     ->color('warning')
                     ->button()
                     ->size('sm')
                     ->visible(fn ($record) => $record->users->contains(Filament::auth()->id()))
-                    ->url(fn () => PackageResource::getUrl('index'))
+                    ->url(fn () => CatalogResource::getUrl('index'))
                     ->extraAttributes([
                         'class' => 'flex-1 justify-center rounded-lg shadow-sm font-bold',
                     ]),

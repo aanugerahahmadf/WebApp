@@ -1,0 +1,68 @@
+# Order Query Definitions
+# Wedding Flower Decoration App - Order GraphQL Queries
+
+type Query {
+  # Get current user's orders
+  myOrders(
+    first: Int = 10
+    status: String @where(key: "status")
+  ): [Order!]! @paginate(defaultCount: 10) @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@myOrders")
+  
+  # Get single order by ID (with authorization)
+  order(id: ID @eq): Order @find
+  
+  # Get order by order number
+  orderByNumber(orderNumber: String!): Order @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@byNumber")
+  
+  # Admin: Get all orders with filters
+  orders(
+    first: Int = 20
+    status: String @where(key: "status")
+    paymentStatus: String @where(key: "payment_status")
+    userId: ID @where(key: "user_id")
+    dateFrom: String
+    dateTo: String
+  ): [Order!]! @paginate(defaultCount: 20) @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@all")
+  
+  # Get order statistics
+  orderStats: OrderStats @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@stats")
+  
+  # Get order timeline/history
+  orderTimeline(orderId: ID!): [OrderTimeline!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@timeline")
+}
+
+type OrderStats {
+  totalOrders: Int!
+  pendingOrders: Int!
+  confirmedOrders: Int!
+  processingOrders: Int!
+  shippedOrders: Int!
+  deliveredOrders: Int!
+  cancelledOrders: Int!
+  totalRevenue: Float!
+  pendingRevenue: Float!
+  thisMonthRevenue: Float!
+  averageOrderValue: Float!
+  byStatus: [OrderStatusCount!]!
+  byPaymentStatus: [OrderPaymentStatusCount!]!
+}
+
+type OrderStatusCount {
+  status: String!
+  count: Int!
+}
+
+type OrderPaymentStatusCount {
+  paymentStatus: String!
+  count: Int!
+}
+
+type OrderTimeline {
+  id: ID!
+  orderId: ID!
+  status: String!
+  description: String!
+  metadata: JSON
+  createdAt: String!
+  createdBy: User
+}

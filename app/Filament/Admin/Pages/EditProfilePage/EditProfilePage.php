@@ -2,22 +2,26 @@
 
 namespace App\Filament\Admin\Pages\EditProfilePage;
 
-use App\Filament\Admin\Pages\Home\Home;
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Livewire\Admin\PersonalInfoComponentSuperAdmin\PersonalInfoComponentSuperAdmin;
 use App\Livewire\Admin\UsernameComponent\UsernameComponent;
-use App\Livewire\Admin\BrowserSessionsComponent\BrowserSessionsComponent;
-use App\Livewire\Admin\DeleteAccountComponent\DeleteAccountComponent;
-use App\Livewire\Admin\EditPasswordComponent\EditPasswordComponent;
-use App\Livewire\Admin\MobileSettingsComponent\MobileSettingsComponent;
-use App\Filament\Concerns\HasDynamicBreadcrumbs;
+use App\Support\AppIcon\AppIcon;
 use Filament\Pages\Page;
 
+/**
+ * Halaman profil admin.
+ *
+ * Komponen profil (nama, username) dirangkai di sini lewat
+ * `getRegisteredCustomProfileComponents()`, lalu dirender oleh view
+ * `Admin.pages.edit-profile.edit-profile`.
+ */
 class EditProfilePage extends Page
 {
     use HasDynamicBreadcrumbs;
+
     protected static string $view = 'Admin.pages.edit-profile.edit-profile';
 
-    protected static ?string $navigationIcon = 'heroicon-s-user-circle';
+    protected static ?string $navigationIcon = AppIcon::PROFILE;
 
     protected static bool $shouldRegisterNavigation = false;
 
@@ -31,19 +35,19 @@ class EditProfilePage extends Page
         return __('Profil');
     }
 
+    /**
+     * @return array<int, class-string>
+     */
     public function getRegisteredCustomProfileComponents(): array
     {
         $components = [
             PersonalInfoComponentSuperAdmin::class,
             UsernameComponent::class,
-            MobileSettingsComponent::class,
-            EditPasswordComponent::class,
-            BrowserSessionsComponent::class,
-            DeleteAccountComponent::class,
         ];
 
         return collect($components)
-            ->sortBy(fn (string $component) => $component::getSort())
+            ->sortBy(fn (string $component): int => (int) ($component::getSort() ?? 0))
+            ->values()
             ->all();
     }
 

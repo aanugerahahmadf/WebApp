@@ -13,14 +13,14 @@ use Spatie\MediaLibrary\Support\PathGenerator\PathGenerator;
  *
  *     storage/app/public/721/package-31.png
  *
- * Untuk katalog produk dan paket yang berisi ratusan gambar, itu berarti
+ * Untuk katalog dekorasi dan paket yang berisi ratusan gambar, itu berarti
  * ratusan folder yang isinya cuma satu file. Boros entry direktori, lambat
  * disisir, dan bikin `storage` terasa cepat penuh padahal isinya kecil.
  *
  * Layout di sini: satu folder per jenis media, semua file di dalamnya:
  *
- *     storage/app/public/Products/1-product-1.png
- *     storage/app/public/Products/48-product-1.png
+ *     storage/app/public/Catalogs/1-catalog-1.png
+ *     storage/app/public/Catalogs/48-catalog-1.png
  *     storage/app/public/Packages/1-package-1.png
  *
  * Catatan kontrak Spatie: `getPath()` harus mengembalikan FOLDER dengan garis
@@ -44,8 +44,7 @@ class CollectionPathGenerator implements PathGenerator
      * @var array<string, string>
      */
     protected const FOLDER_BY_COLLECTION = [
-        'product_image' => 'Products',
-        'package_image' => 'Packages',
+        'catalog_image' => 'Catalogs',
     ];
 
     public function getPath(Media $media): string

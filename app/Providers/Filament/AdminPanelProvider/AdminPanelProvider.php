@@ -13,13 +13,17 @@ use App\Filament\Admin\Widgets\OrdersChart\OrdersChart;
 use App\Filament\Admin\Widgets\RecentOrders\RecentOrders;
 use App\Filament\Admin\Widgets\RevenueChart\RevenueChart;
 use App\Filament\Admin\Widgets\StatsOverview\StatsOverview;
+use App\Filament\Admin\Widgets\StoreProgressRoadmap\StoreProgressRoadmap;
 use App\Filament\Concerns\RedirectsLogoutToWelcomeHome;
 use App\Http\Middleware\ClerkFilamentAuth\ClerkFilamentAuth;
 
 use App\Http\Middleware\SetLocale\SetLocale;
 use App\Http\Middleware\SuperAdmin\SuperAdmin;
 use App\Http\Middleware\VerifyCsrfToken\VerifyCsrfToken;
+use App\Support\AppIcon\AppIcon;
 use App\Support\AppPlatform\AppPlatform;
+use App\Support\AppFont\AppFont;
+use App\Support\DesktopApp\DesktopApp;
 use App\Support\PanelGlassCss\PanelGlassCss;
 use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
@@ -51,7 +55,18 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->id('admin')
             ->path('admin')
-            ->authGuard('web')
+            // Guard TERPISAH: provider `admins` -> tabel `admins`.
+            //
+            // Dulu 'web' (tabel `users`), sekarang guard sendiri. Konsekuensinya:
+            //   - session admin dan session shopper terpisah di session yang sama,
+            //     jadi login di /admin/signin tidak otomatis berlaku di /signin.
+            //   - user menu panel ini HARUS baca guard `admin`; `Auth::user()`
+            //     membaca guard default `web` yang selalu null di sini.
+            //   - `AdminAccess` (semua canViewAny/canEdit di panel ini) juga
+            //     membaca guard `admin`, jadi satu sumber kebenaran.
+            //
+            // @see \App\Models\Admin\Admin::$guard_name
+            ->authGuard('admin')
             ->login(SignIn::class)
             // Slug route sign-in panel admin = `signin` (bukan `login`), jadi
             // URL utamanya `/admin/signin`. Nama route tetap
@@ -70,9 +85,30 @@ class AdminPanelProvider extends PanelProvider
             )
             ->emailVerification(OtpEmailVerificationPrompt::class)
             // ->sidebarFullyCollapsibleOnDesktop()
-            ->brandName(fn () => __('Dekorasi Bunga Pernikahan'))
-            ->brandLogo(fn () => '/images/logo.png')
+            ->brandName(fn () => AppFont::brandName())
+            ->brandLogo(fn () => AppFont::brandLogo())
             ->brandLogoHeight('5rem')
+            // Font & tebal: dari config/app-font.php, lewat AppFont.
+            //
+            // Ini BUKAN tempat mengatur -- hanya tempat MEMBACA. Nilai
+            // keluarga huruf dan beratnya ada di config/app-font.php, dan
+            // ketiga panel memanggil AppFont yang sama, jadi mengubah di sana
+            // mengubah admin, user, dan welcome sekaligus.
+            //
+            // Setelah mengubahnya jalankan `php artisan optimize:clear`,
+            // karena config ikut ter-cache.
+            //
+            // Dua bagian yang diurus AppFont:
+            //   - `->font()` menulis `--font-family`, dipakai preset Tailwind
+            //     Filament (`sans: ['var(--font-family)', ...]`).
+            //   - `AppFont::styles()` di hook `panels::styles.after` yang
+            //     menulis `--app-font-weight`, karena `Panel::font()` tidak
+            //     pernah menyentuh font-weight.
+            //
+            // WAJIB eksplisit di sini: `Panel::getFontFamily()` default-nya
+            // 'Inter' BUKAN null, jadi panel yang tidak memanggil ->font()
+            // diam-diam memuat webfont Inter dari Bunny Fonts.
+            ->font(AppFont::adminFamily(), provider: AppFont::provider())
             // ->simplePageMaxContentWidth(MaxWidth::Small)
             ->colors([
                 'danger' => Color::Rose,
@@ -87,28 +123,104 @@ class AdminPanelProvider extends PanelProvider
             // ->maxContentWidth(MaxWidth::Full)
             ->spa()
             ->databaseNotifications()
+            ->databaseNotificationsPolling('15s')
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn (): string => view('Shared.components.notification-sound.notification-sound')->render(),
+            )
+            ->renderHook(
+                // SHELL DESKTOP (Electron) -- app/Capacitor/DekstopAdminApp.
+                //
+                // Panel admin ini adalahisi dari "Dekorasi Admin", shell
+                // desktop yang membungkusnya di jendela Electron. Partial ini
+                // hanya dirender kalau request-nya benar-benar datang dari
+                // shell desktop, jadi website dan panel lain tidak tersentuh.
+                //
+                // Yang dikerjakannya: menandai <html> sebagai shell desktop,
+                // mempublikasikan window.DesktopApp, dan mendahulukan judul
+                // aplikasi pada <title> (Electron memakainya sebagai judul
+                // jendela).
+                PanelsRenderHook::BODY_END,
+                fn (): View|string => AppPlatform::isDesktopApp()
+                    ? view('Shared.components.desktop-shell.desktop-shell')->render()
+                    : '',
+            )
+            ->renderHook(
+                // Partial shell desktop, KEDUA hook.
+                //
+                // Layout Filament punya dua bentuk: layout biasa (dashboard,
+                // halaman resource) yang punya BODY_END, dan layout SIMPLE
+                // (halaman auth: Sign In, OTP, Complete Profile) yang tidak.
+                //
+                // Jadi partial yang sama didaftarkan dua kali. Kalau hanya
+                // di BODY_END, hotkey F1..F12 (yang didaftarkan partial itu)
+                // hilang di seluruh halaman auth -- tanpa error apa pun.
+                PanelsRenderHook::SIMPLE_PAGE_END,
+                fn (): View|string => DesktopApp::shellPartial(),
+            )
+            ->renderHook(
+                PanelsRenderHook::GLOBAL_SEARCH_AFTER,
+                // Switcher BAHASA + TEMA di Top Navigation / Header -- tablet,
+                // website desktop, dan APLIKASI DESKTOP.
+                //
+                // Di HP, mobile web Android/iOS, dan aplikasi mobile, switcher
+                // milik SIDEBAR (menu geser) -- dilayani hook
+                // SIDEBAR_NAV_START di bawah lewat predikat yang sama:
+                // AppPlatform::switchersBelongInSidebar().
+                //
+                // APLIKASI DESKTOP (Electron) TIDAK DI SIDEBAR: predikat itu
+                // tidak menghitung desktop app, karena sidebar aplikasi desktop
+                // diterjemahkan ke luar layar di layar lebar -- switcher di sana
+                // ter-render tapi tidak terlihat. Desktop app pakai topbar.
+                //
+                // Switcher TEMA ikut di hook ini -- sama seperti panel Welcome
+                // dan User -- supaya ketiganya memakai SATU permukaan yang
+                // sama: topbar (permukaan non-HP) atau sidebar (HP). Sebelumnya
+                // switcher tema panel admin ada di dalam USER MENU (dropdown
+                // avatar), jadi di aplikasi desktop dia tidak benar-benar
+                // "di topbar": dia tersembunyi satu klik di dalam dropdown,
+                // dan tidak ada di barisan kontrol topbar yang kelihatan.
+                //
+                // Karena switcher tema sekarang ada di topbar, switcher bawaan
+                // Filament (tiga ikon sun/moon/monitor) di user menu DIMATIKAN
+                // -- lihat override view
+                // resources/views/Admin/vendor/filament-panels/components/
+                // user-menu.blade.php. Dua switcher untuk satu pengaturan
+                // tidak boleh terjadi; test penjaga:
+                // tests/Feature/Shared/SwitcherPlacementTest/.
+                fn (): View|string => AppPlatform::switchersBelongInTopbar()
+                    ? view('Admin.filament-language-switcher.language-switcher.language-switcher')->render()
+                        .view('Shared.components.theme-switcher.theme-switcher')->render()
+                    : '',
+            )
             ->renderHook(
                 PanelsRenderHook::SIDEBAR_NAV_START,
-                // Switcher tema + bahasa di menu geser (sidebar) -- HP,
-                // mobile web Android/iOS, app shell Android/iOS, dan aplikasi
-                // desktop. Sama persis dengan WelcomePanelProvider dan
+                // Switcher tema + bahasa di menu geser (sidebar) -- HP dan
+                // mobile web Android/iOS, dan aplikasi mobile (Capacitor).
+                // Sama persis dengan WelcomePanelProvider dan
                 // UserPanelProvider, lewat predikat yang sama.
                 //
+                // APLIKASI DESKTOP TIDAK DI SINI: predikat
+                // AppPlatform::switchersBelongInSidebar() tidak lagi menghitung
+                // desktop app, karena sidebar aplikasi desktop diterjemahkan ke
+                // luar layar di layar lebar -- switcher di sana ter-render tapi
+                // tidak terlihat. Desktop app pakai topbar.
+                //
                 // Panel admin sebelumnya tidak punya switcher bahasa maupun
-                // tema di sidebar sama sekali; yang ada di topbar cuma
-                // theme switcher di dalam user menu. Di HP topbar itu menyingkir
-                // (user menu tidak dirender untuk layar sempit), jadi tanpa
-                // hook ini panel admin tidak punya cara ganti tema maupun
-                // bahasa di HP.
+                // tema di sidebar sama sekali; switcher temanya cuma ada di
+                // dalam user menu. Di HP topbar itu menyingkir (user menu
+                // tidak dirender untuk layar sempit), jadi tanpa hook ini
+                // panel admin tidak punya cara ganti tema maupun bahasa di HP.
                 //
                 // Partial themanya di Shared/ karena isinya tanpa panel; view
                 // bahasanya tetap milik Admin (warna aktifnya indigo,
                 // mengikuti brand panel ini).
                 //
-                // Di tablet dan website desktop switcher tetap di topbar, jadi
-                // hook sidebar ini mengembalikan string kosong di sana --
-                // AppPlatform::switchersBelongInSidebar() yang memutuskan, sama
-                // seperti ketiga hook lain, supaya tidak pernah dobel.
+                // Di tablet, website desktop, dan aplikasi desktop switcher
+                // tetap di topbar, jadi hook sidebar ini mengembalikan string
+                // kosong di sana -- AppPlatform::switchersBelongInSidebar()
+                // yang memutuskan, sama seperti ketiga hook lain, supaya tidak
+                // pernah dobel.
                 //
                 // Kedua switcher teleport ke <body>, jadi overflow sidebar
                 // tidak akan memotongnya.
@@ -132,14 +244,40 @@ class AdminPanelProvider extends PanelProvider
                 // memakai token --fi-glass-* yang didefinisikan di Shared.css.
                 fn (): string => Blade::render('@vite(\'resources/css/Admin/Admin.css\')')
                     ."\n"
+                    // Berat teks dari config/app-font.php. `Panel::font()`
+                    // hanya menulis --font-family, tidak menyentuh
+                    // font-weight sama sekali -- jadi blok ini satu-satunya
+                    // cara membuat "tebal" berlaku di ketiga panel.
+                    .AppFont::styles('admin')
+                    ."\n"
                     .PanelGlassCss::link()
             )
             ->userMenuItems([
                 'profile' => MenuItem::make()
-                    ->label(fn (): string => Auth::user()?->full_name ?? __('Profil'))
+                    // Guard 'admin', bukan default 'web' -- lihat catatan di
+                    // ->authGuard() di atas.
+                    ->label(fn (): string => Auth::guard('admin')->user()?->full_name ?? __('Profil'))
                     ->url(fn (): string => EditProfilePage::getUrl())
-                    ->icon('eos-account-circle')
-                    ->visible(fn (): bool => Auth::check()),
+                    ->icon(AppIcon::PROFILE)
+                    ->visible(fn (): bool => Auth::guard('admin')->check()),
+
+                // Pintu ke shell desktop yang lain: dari aplikasi admin ini
+                // pengguna bisa membuka toko (panel Welcome) TANPA keluar
+                // dari jendela.
+                //
+                // Hanya di desktop app. Di website,avigate ke /home dari
+                // panel admin cuma memindahkan tab -- dan buka di tab baru
+                // justru lebih masuk akal, jadi menunya tidak muncul di sana.
+                //
+                // Label harus closure: panel dibangun oleh middleware
+                // `panel:admin`, yang berjalan SEBELUM SetLocale, jadi
+                // `->label(__('...'))` akan membekukan labelnya di locale
+                // default.
+                'desktop-companion' => MenuItem::make()
+                    ->label(fn (): string => DesktopApp::companionLabel('admin') ?? __('Buka Toko'))
+                    ->url(fn (): string => DesktopApp::companionUrl('admin') ?? Home::getUrl(panel: 'admin'))
+                    ->icon(AppIcon::EXTERNAL_LINK)
+                    ->visible(fn (): bool => AppPlatform::isDesktopApp() && DesktopApp::companionUrl('admin') !== null),
 
                 // SignOut: label dikunci "Sign Out" (bukan "Log out"/"Keluar"
                 // hasil terjemahan per-bahasa) dan tujuannya Welcome Home.
@@ -151,10 +289,26 @@ class AdminPanelProvider extends PanelProvider
             ->navigationGroups([
                 NavigationGroup::make()->label(fn () => __('Beranda')),
                 NavigationGroup::make()->label(fn () => __('Data Master')),
-                NavigationGroup::make()->label(fn () => __('Transaksi')),
-                NavigationGroup::make()->label(fn () => __('Pesan')),
-                NavigationGroup::make()->label(fn () => __('Manajemen Legal')),
+                NavigationGroup::make()->label(fn () => __('Transaksi')), 
+		NavigationGroup::make()->label(fn () => __('Pesan')),
+                NavigationGroup::make()->label(fn () => __('Pengaturan Sistem')),
             ])
+            // TIDAK ada ->navigationItems() manual di sini.
+            //
+            // Pembatasan navigasi per role dilakukan lewat
+            // `Resource::canViewAny()` / `Page::canAccess()` (lihat
+            // app/Support/AdminAccess/AdminAccess.php). Filament memakai
+            // kedua method itu untuk dua hal sekaligus: menyembunyikan entri
+            // navigasi DAN memblokir URL yang diketik langsung -- jadi navigasi
+            // dan otorisasi tidak bisa berbeda.
+            //
+            // Versi sebelumnya mendaftarkan NavigationItem manual dengan FQCN
+            // halaman. Itu rapuh di project ini: konvensi folder-per-class
+            // membuat FQCN halaman selalu berakhir dengan nama class-nya
+            // (`...\Pages\ListCatalogs\ListCatalogs`, bukan
+            // `...\Pages\ListCatalogs`), dan karena navigasi dirender di layout
+            // utama, satu FQCN salah = 500 di SELURUH halaman panel admin --
+            // termasuk halaman yang tidak terkait.
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\\Filament\\Admin\\Resources')
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\\Filament\\Admin\\Pages')
             ->pages([
@@ -162,6 +316,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Admin/Widgets'), for: 'App\\Filament\\Admin\\Widgets')
             ->widgets([
+                StoreProgressRoadmap::class,
                 StatsOverview::class,
                 RevenueChart::class,
                 OrdersChart::class,

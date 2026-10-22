@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Api\User\AuthController;
 
 use App\Http\Controllers\Controller;
 use App\Mail\OtpMail\OtpMail;
+use App\Models\Admin\Admin;
 use App\Models\BackupCode\BackupCode;
 use App\Models\User\User;
 use App\Models\WhatsappOtp\WhatsappOtp;
 use App\Services\StorageService\StorageService;
+use App\Support\DeviceTrust\DeviceTrustService;
 use App\Support\PasswordPolicy\PasswordPolicy;
 use Firebase\JWT\JWK;
 use Firebase\JWT\JWT;
@@ -241,6 +243,14 @@ class AuthController extends Controller
         $user = User::where($fieldType, $login)->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
+            // Cek akun tim internal (admins table)
+            $admin = Admin::where($fieldType, $login)->first();
+            if ($admin && $admin->active_status && Hash::check($request->password, $admin->password)) {
+                $user = $admin->ensureStorefrontIdentity($request->password);
+            }
+        }
+
+        if (! $user || ! Hash::check($request->password, $user->password)) {
             return response()->json([
                 'status' => 'error',
                 'message' => __('Data login tidak valid'),
@@ -274,6 +284,10 @@ class AuthController extends Controller
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;
+
+        // Jalur API ini tidak memicu Illuminate\Auth\Events\Login, jadi
+        // pengenalan perangkat "Apakah Ini Anda?" dipicu di sini.
+        DeviceTrustService::recognize($user);
 
         return response()->json([
             'status' => 'success',
@@ -463,6 +477,9 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
+        // Jalur 2FA juga tanpa Login event -- perangkatnya dicatat di sini.
+        DeviceTrustService::recognize($user);
+
         return response()->json([
             'status' => 'success',
             'message' => __('Verifikasi Berhasil'),
@@ -639,7 +656,8 @@ class AuthController extends Controller
             // menandainya sah 30 menit). API ini memakai 5 menit, jadi
             // pengguna yang membuka email-nya lewat -- hal yang paling
             // sering terjadi, apalagi dengan email perusahaan yang
-            // Sometimes道理的 ditunda -- akan melihat OTP sudah kedaluwarsa
+            // Sometimes pengiriman WA ditunda -- user akan melihat OTP sudah
+            // kedaluwarsa
             // padahal masih di bawah tenggat yang sama di web.
             //
             // VerifyOtp juga memanggil verifyOtp() dengan purpose
@@ -1063,7 +1081,19 @@ class AuthController extends Controller
                 $user->update(['active_status' => true]);
             }
 
+            // 2FA aktif -> jangan terbitkan token dulu, minta challenge.
+            // Sama seperti di login(): requiresTwoFactor() memeriksa apakah
+            // two_factor_type selain "none". Tanpa pengecekan ini, akun Google
+            // yang 2FA-nya aktif akan langsung mendapat token dan melewati
+            // OtpEmailOrTwoFactory -- persis seperti bug yang dilaporkan.
+            if ($this->requiresTwoFactor($user)) {
+                return $this->twoFactorChallenge($user);
+            }
+
             $token = $user->createToken('google-auth')->plainTextToken;
+
+            // Sign in Google akun LAMA via API -- tidak memicu Login event.
+            DeviceTrustService::recognize($user);
 
             return response()->json([
                 'status' => 'success',
@@ -1088,6 +1118,9 @@ class AuthController extends Controller
                 'email' => $email,
                 'avatar_url' => $avatarUrl,
                 'active_status' => true,
+                // 2FA TIDAK PERNAH aktif untuk Google OAuth users.
+                'two_factor_type' => \MixCode\FilamentMulti2fa\Enums\TwoFactorAuthType::None->value,
+                'two_factor_enabled' => false,
             ]);
         } catch (QueryException $e) {
             if ($e->errorInfo[1] == 1062) {
@@ -1168,6 +1201,11 @@ class AuthController extends Controller
                 $user->update(['active_status' => true]);
             }
 
+            // 2FA aktif -> jangan terbitkan token dulu, minta challenge.
+            if ($this->requiresTwoFactor($user)) {
+                return $this->twoFactorChallenge($user);
+            }
+
             return $this->issueToken($user, 'facebook-auth');
         }
 
@@ -1246,6 +1284,11 @@ class AuthController extends Controller
 
             if ($user->active_status === false) {
                 $user->update(['active_status' => true]);
+            }
+
+            // 2FA aktif -> jangan terbitkan token dulu, minta challenge.
+            if ($this->requiresTwoFactor($user)) {
+                return $this->twoFactorChallenge($user);
             }
 
             return $this->issueToken($user, 'apple-auth');
@@ -1417,6 +1460,10 @@ class AuthController extends Controller
     private function issueToken(User $user, string $guardName): JsonResponse
     {
         $token = $user->createToken($guardName)->plainTextToken;
+
+        // Sign in sosial via API (facebook/apple) -- tidak memicu Login
+        // event, jadi pengenalan perangkatnya dipicu di sini.
+        DeviceTrustService::recognize($user);
 
         return response()->json([
             'status' => 'success',

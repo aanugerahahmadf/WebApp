@@ -5,6 +5,7 @@ namespace App\Livewire\Admin\Messages\Inbox;
 use App\Filament\Admin\Pages\MessagesPage\MessagesPage as AdminMessagesPage;
 use App\Livewire\Admin\Traits\CanMarkAsRead\CanMarkAsRead;
 use App\Livewire\Admin\Traits\CanValidateFiles\CanValidateFiles;
+use App\Livewire\Admin\Traits\ChatIdentity\ChatIdentity;
 use App\Livewire\Admin\Traits\HasPollInterval\HasPollInterval;
 use App\Models\Inbox\Inbox as InboxModel;
 use App\Models\User\User;
@@ -20,7 +21,6 @@ use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Application;
-use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
@@ -29,7 +29,7 @@ use Livewire\Component;
  */
 class Inbox extends Component implements HasActions, HasForms
 {
-    use CanMarkAsRead, CanValidateFiles, HasPollInterval, InteractsWithActions, InteractsWithForms;
+    use CanMarkAsRead, CanValidateFiles, ChatIdentity, HasPollInterval, InteractsWithActions, InteractsWithForms;
 
     public $conversations;
 
@@ -45,7 +45,11 @@ class Inbox extends Component implements HasActions, HasForms
 
     public function unreadCount(): int
     {
-        $userId = Auth::id();
+        $userId = $this->chatUserId();
+
+        if (! $userId) {
+            return 0;
+        }
 
         /** @var Builder $query */
         $query = InboxModel::whereJsonContains('user_ids', $userId, 'and', false);
@@ -58,7 +62,17 @@ class Inbox extends Component implements HasActions, HasForms
     #[On('refresh-inbox')]
     public function loadConversations(): void
     {
-        $query = Auth::user()->allConversations();
+        $user = $this->chatUser();
+
+        if (! $user) {
+            // Admin belum punya identitas belanja tertaut. Bukan 500: daftar
+            // kosong, dan view menampilkan cara menautkannya.
+            $this->conversations = collect();
+
+            return;
+        }
+
+        $query = $user->allConversations();
 
         $this->conversations = $query->get(['*']);
         $this->markAsRead();
@@ -67,7 +81,7 @@ class Inbox extends Component implements HasActions, HasForms
     public function createConversationAction(): Action
     {
         return Action::make('createConversation')
-            ->icon('heroicon-o-plus')
+            ->icon('/images/icons/plus.svg')
             ->label(__('Create'))
             ->form([
                 Forms\Components\Select::make('user_ids')
@@ -75,8 +89,10 @@ class Inbox extends Component implements HasActions, HasForms
                     ->options(function () {
                         $query = User::query();
 
-                        // Admin can talk to anyone except themselves
-                        return $query->where('id', '!=', Auth::id())->pluck('full_name', 'id')->toArray();
+                        // Staf bisa memulai percakapan dengan siapa pun kecuali
+                        // dirinya sendiri -- dibandingkan dengan identitas chat
+                        // (users.id), bukan id baris admins.
+                        return $query->where('id', '!=', $this->chatUserId() ?? 0)->pluck('full_name', 'id')->toArray();
                     })
                     ->multiple()
                     ->preload()
@@ -97,7 +113,19 @@ class Inbox extends Component implements HasActions, HasForms
             ->modalSubmitActionLabel(__('Send'))
             ->modalWidth(MaxWidth::Large)
             ->action(function (array $data) {
-                $userIds = collect($data['user_ids'])->push(Auth::id())->map(fn ($userId) => (int) $userId)->unique()->sort()->values();
+                $chatUserId = $this->chatUserId();
+
+                if (! $chatUserId) {
+                    Notification::make()
+                        ->title(__('Chat belum siap'))
+                        ->body(__('Akun chat belum tertaut ke staf. Jalankan php artisan admin:grant-storefront lalu muat ulang halaman ini.'))
+                        ->warning()
+                        ->send();
+
+                    return;
+                }
+
+                $userIds = collect($data['user_ids'])->push($chatUserId)->map(fn ($userId) => (int) $userId)->unique()->sort()->values();
                 $totalUserIds = $userIds->count();
 
                 /** @var InboxModel|null $inbox */
@@ -127,10 +155,10 @@ class Inbox extends Component implements HasActions, HasForms
                 }
                 $inbox->messages()->create([
                     'message' => $data['message'],
-                    'user_id' => Auth::id(),
-                    'read_by' => [Auth::id()],
+                    'user_id' => $chatUserId,
+                    'read_by' => [$chatUserId],
                     'read_at' => [now()],
-                    'notified' => [Auth::id()],
+                    'notified' => [$chatUserId],
                 ]);
 
                 $redirectUrl = AdminMessagesPage::getUrl().'/'.$inboxId;
@@ -144,7 +172,7 @@ class Inbox extends Component implements HasActions, HasForms
         /** @var InboxModel|null $inbox */
         $inbox = InboxModel::find($id, ['*']);
 
-        if ($inbox && in_array(Auth::id(), $inbox->user_ids)) {
+        if ($inbox && in_array($this->chatUserId(), $inbox->user_ids)) {
             $inbox->delete();
 
             Notification::make()

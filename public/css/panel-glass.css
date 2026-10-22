@@ -31,23 +31,31 @@
  *                 jadi kabur dan tidak sengaja menyatu dengan teks di
  *                 bawahnya.
  *
- *   .fi-ta-*      Tabel. Isinya padat angka dan teks kecil; transparansi
- *                 di sini menurunkan keterbacaan, bukan menambah
- *                 kesan kaca. Sama untuk badge, chip, dan dropdown
- *                 filter.
+ *   .fi-ta-*      Tabel di panel admin sekarang BERKACA (background SAMA
+ *                 dengan header/topnav -- lihat blok "Tabel & Form panel
+ *                 admin" di bawah). Sebelumnya pekat, jadi ada dua bahasa
+ *                 visual di panel admin: topbar kaca, tabel pekat. Badge,
+ *                 chip, dan dropdown filter tetap tidak berkaca (transparansi
+ *                 di sana menurunkan keterbacaan).
  * ===================================================================== */
 
-/* --- Token KACA: Blur 20% + tint 50% (Light pakai Light, Night pakai Dark)
-   Light: 20% putih (alpha 0.20) + blur 20px + light tint 50%
-   Dark:  20% hitam (alpha 0.20) + blur 20px + dark tint 50%
+/* --- Token KACA: Blur 15 + tint 50% (Light pakai Light, Night pakai Dark)
+   Light: 20% putih (alpha 0.20) + blur 15px + light tint 50%
+   Dark:  20% hitam (alpha 0.20) + blur 15px + dark tint 50%
    Tint searah dengan mode: di Light yang ditambahkan terang, di Night
-   yang ditambahkan gelap. Override di sini tanpa build. */
+   yang ditambahkan gelap. Override di sini tanpa build.
+
+   SEBELUMNYA blur 20px. Diturunkan ke 15px karena SELURUH permukaan
+   kaca -- topbar, sidebar, dropdown, modal, kartu, section, dan cookie
+   banner -- sekarang memakai angka yang sama. Sebelumnya cookie banner
+   sudah 15px sementara permukaannya 20px, jadi banner terlihat lebih
+   buram dari topnav padahal satu keluarga bahan. Sekarang semua sama. */
 .fi-panel-welcome,
 .fi-panel-user,
 .fi-panel-admin {
     --fi-glass-bg: rgb(255 255 255 / 0.20) !important;
     --fi-glass-ring: rgb(0 0 0 / 0.12) !important;
-    --fi-glass-blur: blur(20px) saturate(180%) !important;
+    --fi-glass-blur: blur(15px) saturate(180%) !important; /* Light: Blur 15 */
     --fi-glass-tint: rgb(255 255 255 / 0.50) !important; /* light tint 50% */
     /* Kotak pilihan dan kotak klik (lihat blok "Kotak pilihan dan kotak
        klik" di bawah). Indigo, bukan abu dan bukan amber.
@@ -71,7 +79,7 @@
 .dark .fi-panel-admin {
     --fi-glass-bg: rgb(12 12 15 / 0.20) !important;
     --fi-glass-ring: rgb(255 255 255 / 0.15) !important;
-    --fi-glass-blur: blur(20px) saturate(180%) !important;
+    --fi-glass-blur: blur(15px) saturate(180%) !important; /* Night: Blur 15 */
     --fi-glass-tint: rgb(0 0 0 / 0.50) !important; /* dark tint 50% */
     --fi-box-bg: rgb(129 140 248 / 0.16) !important; /* indigo-400 */
     --fi-box-tint: rgb(129 140 248 / 0.10) !important;
@@ -226,6 +234,62 @@ body.fi-panel-admin .fi-section {
     background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
     border: 1px solid var(--fi-glass-ring) !important;
     border-radius: 12px !important;
+    box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 0.35),
+        0 1px 2px rgb(0 0 0 / 0.05),
+        0 12px 28px -16px rgb(0 0 0 / 0.35) !important;
+}
+
+/* --- TABEL & FORM panel admin: latar SAMA dengan topbar (2026-10-22) ---
+ * Permintaan pemilik: "BACKGROUND TABEL DAN FORM HARUS SEPERTI
+ * HEADER/TOPNAVIGATION".
+ *
+ * Sebelum: `.fi-ta-ctn` memakai latar OPQUE bawaan Filament
+ * (bg-white / dark:bg-gray-900) -- jadi di panel admin ada dua bahasa
+ * visual: topbar kaca, tabel pekat. Dan form yang tidak memakai `Section`
+ * sama sekali (`form.fi-form` transparan) -- field-nya melayang langsung
+ * di latar halaman.
+ *
+ * Sekarang keduanya memakai BAHAN yang sama dengan topbar.
+ *
+ * TABEL: blur dipasang. `.fi-ta-ctn` tidak punya turunan position:fixed
+ * (dropdown/modal Filament di-teleport ke <body>), jadi backdrop-filter
+ * aman -- tidak membuat containing block yang menyusutkan overlay.
+ *
+ * FORM: blur TIDAK dipasang. `form.fi-form` mengandung overlay modal
+ * (position:fixed) -- kalau diberi backdrop-filter, overlay-nya menyusut
+ * jadi sebesar form, bukan sebesar layar (trap yang sama dengan .fi-section).
+ * Yang disamakan hanya background (+ tint + ring).
+ *
+ * Form YANG PUNYA Section tidak diberi latar sendiri: section-nya sudah
+ * berkaca. Yang tidak punya Section (mis. /admin/orders/create) jadi
+ * satu kartu kaca utuh -- itu sebabnya selektornya pakai :not(:has(.fi-section)). */
+body.fi-panel-admin .fi-ta-ctn,
+body.fi-panel-admin .fi-wi-table .fi-ta-ctn {
+    background-color: var(--fi-glass-bg) !important;
+    background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
+    border: 1px solid var(--fi-glass-ring) !important;
+    -webkit-backdrop-filter: var(--fi-glass-blur) !important;
+    backdrop-filter: var(--fi-glass-blur) !important;
+    --tw-ring-color: transparent !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+    --tw-ring-offset-shadow: 0 0 #0000 !important;
+}
+
+/* sel header tabel: Filament memberi bg-gray-50 / dark:bg-gray-900 pada
+   sel header. Biarkan transparan supaya kaca kontainer terlihat. */
+body.fi-panel-admin .fi-ta-header-cell {
+    background-color: transparent !important;
+    background-image: none !important;
+}
+
+/* Form tanpa Section -> satu kartu kaca. */
+body.fi-panel-admin .fi-page form.fi-form:not(:has(.fi-section)) {
+    background-color: var(--fi-glass-bg) !important;
+    background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
+    border: 1px solid var(--fi-glass-ring) !important;
+    border-radius: 12px !important;
+    padding: 1.25rem !important;
     box-shadow:
         inset 0 1px 0 rgb(255 255 255 / 0.35),
         0 1px 2px rgb(0 0 0 / 0.05),
@@ -390,19 +454,21 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
    dan teks item aktif, jadi dua lapis informasinya terpisah: kotak biru
    untuk penanda, amber untuk isi.
 
+   SCOPE: HANYA sidebar dan topbar — BUKAN seluruh panel.
+
+   Dropdown blade Admin TIDAK menggunakan x-teleport (hanya absolute z-10),
+   sehingga selector ancestor .fi-topbar / .fi-sidebar tetap valid dan bekerja
+   dengan benar. Rule ini SENGAJA tidak meliputi .fi-panel-* secara luas karena
+   dropdown action group di konten halaman (mis. action group di Database Studio,
+   tabel, dll.) menggunakan warna non-gray (success/danger) yang menghasilkan
+   class fi-color-custom — tanpa scope yang tepat, item-item itu mendapat
+   background indigo PERMANEN, dan kombinasinya dengan divide-y + rounded-md
+   menciptakan notch / cekungan visual di tepi dropdown.
+
    Berlaku untuk:
      - item sidebar (aktif dan hover)
-     - SEMUA item menu dropdown (aktif dan hover)
+     - item dropdown yang lahir dari topbar atau sidebar saja
      - tombol panel switcher tema, bahasa, dan CBIR (hover)
-
-   Item menu dropdown sengaja TIDAK dipersempit ke .fi-topbar. Panel
-   dropdown Filament di-teleport ke <body>, jadi saat terbuka markup-nya
-   berada di luar .fi-topbar. Selector yang diawali .fi-topbar hanya
-   kebetulan cocok pada panel yang belum sempat teleport -- yaitu menu
-   akun di panel Welcome, yang ikut rule sidebar di baris pertama. Menu
-   profil di panel User dan Admin, dan menu grup sidebar, semuanya
-   tidak pernah kena. Scopenya karena itu hanya .fi-panel-* -- yang
-   menempel di <body> -- sehingga panel di mana pun ikut berlaku.
 
    Nilai ditulis lewat token --fi-box-*, bukan --fi-glass-*: yang diatur
    hanya kotak item, bukan panel kapsul topbar dan sidebar. Dan bukan
@@ -412,33 +478,58 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
 .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-grouped-dropdown-trigger,
 .fi-sidebar .fi-sidebar-item-button:hover,
 .fi-sidebar .fi-sidebar-item-button:focus-visible,
-.fi-panel-welcome .fi-dropdown-list-item.fi-color-custom,
-.fi-panel-welcome .fi-dropdown-list-item:hover,
-.fi-panel-welcome .fi-dropdown-list-item:focus-visible,
-.fi-panel-user .fi-dropdown-list-item.fi-color-custom,
-.fi-panel-user .fi-dropdown-list-item:hover,
-.fi-panel-user .fi-dropdown-list-item:focus-visible,
-.fi-panel-admin .fi-dropdown-list-item.fi-color-custom,
-.fi-panel-admin .fi-dropdown-list-item:hover,
-.fi-panel-admin .fi-dropdown-list-item:focus-visible,
+
+/* Dropdown item di TOPBAR saja (navigasi grup / user menu) */
+.fi-panel-welcome .fi-topbar .fi-dropdown-list-item.fi-color-custom,
+.fi-panel-welcome .fi-topbar .fi-dropdown-list-item:hover,
+.fi-panel-welcome .fi-topbar .fi-dropdown-list-item:focus-visible,
+.fi-panel-user .fi-topbar .fi-dropdown-list-item.fi-color-custom,
+.fi-panel-user .fi-topbar .fi-dropdown-list-item:hover,
+.fi-panel-user .fi-topbar .fi-dropdown-list-item:focus-visible,
+.fi-panel-admin .fi-topbar .fi-dropdown-list-item.fi-color-custom,
+.fi-panel-admin .fi-topbar .fi-dropdown-list-item:hover,
+.fi-panel-admin .fi-topbar .fi-dropdown-list-item:focus-visible,
+
+/* Dropdown item di SIDEBAR saja (navigasi grup nested) */
+.fi-panel-welcome .fi-sidebar .fi-dropdown-list-item.fi-color-custom,
+.fi-panel-welcome .fi-sidebar .fi-dropdown-list-item:hover,
+.fi-panel-welcome .fi-sidebar .fi-dropdown-list-item:focus-visible,
+.fi-panel-user .fi-sidebar .fi-dropdown-list-item.fi-color-custom,
+.fi-panel-user .fi-sidebar .fi-dropdown-list-item:hover,
+.fi-panel-user .fi-sidebar .fi-dropdown-list-item:focus-visible,
+.fi-panel-admin .fi-sidebar .fi-dropdown-list-item.fi-color-custom,
+.fi-panel-admin .fi-sidebar .fi-dropdown-list-item:hover,
+.fi-panel-admin .fi-sidebar .fi-dropdown-list-item:focus-visible,
+
+/* Panel switcher tema, bahasa, CBIR (teleport / lang-dd / x-cam-menu) */
 .fi-panel-welcome .x-cam-menu button:hover,
 .fi-panel-welcome .x-cam-menu button:focus-visible,
 .fi-panel-welcome .lang-dd button:hover,
 .fi-panel-welcome .lang-dd button:focus-visible,
-.fi-panel-welcome .fi-dropdown-panel button:hover,
-.fi-panel-welcome .fi-dropdown-panel button:focus-visible,
 .fi-panel-user .x-cam-menu button:hover,
 .fi-panel-user .x-cam-menu button:focus-visible,
 .fi-panel-user .lang-dd button:hover,
 .fi-panel-user .lang-dd button:focus-visible,
-.fi-panel-user .fi-dropdown-panel button:hover,
-.fi-panel-user .fi-dropdown-panel button:focus-visible,
 .fi-panel-admin .x-cam-menu button:hover,
 .fi-panel-admin .x-cam-menu button:focus-visible,
 .fi-panel-admin .lang-dd button:hover,
 .fi-panel-admin .lang-dd button:focus-visible,
-.fi-panel-admin .fi-dropdown-panel button:hover,
-.fi-panel-admin .fi-dropdown-panel button:focus-visible {
+
+/* Tombol hover di dalam PANEL dropdown TOPBAR atau SIDEBAR saja.
+   Tidak meliputi fi-dropdown-panel di konten halaman (action groups, dll.)
+   agar tidak memicu notch bug pada item dengan warna non-gray. */
+.fi-panel-welcome .fi-topbar .fi-dropdown-panel button:hover,
+.fi-panel-welcome .fi-topbar .fi-dropdown-panel button:focus-visible,
+.fi-panel-welcome .fi-sidebar .fi-dropdown-panel button:hover,
+.fi-panel-welcome .fi-sidebar .fi-dropdown-panel button:focus-visible,
+.fi-panel-user .fi-topbar .fi-dropdown-panel button:hover,
+.fi-panel-user .fi-topbar .fi-dropdown-panel button:focus-visible,
+.fi-panel-user .fi-sidebar .fi-dropdown-panel button:hover,
+.fi-panel-user .fi-sidebar .fi-dropdown-panel button:focus-visible,
+.fi-panel-admin .fi-topbar .fi-dropdown-panel button:hover,
+.fi-panel-admin .fi-topbar .fi-dropdown-panel button:focus-visible,
+.fi-panel-admin .fi-sidebar .fi-dropdown-panel button:hover,
+.fi-panel-admin .fi-sidebar .fi-dropdown-panel button:focus-visible {
     background-color: var(--fi-box-bg) !important;
     background-image: linear-gradient(var(--fi-box-tint), var(--fi-box-tint)) !important;
     border: 0 !important;
@@ -624,6 +715,19 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
  * (camera aktif, foto terambil, video terekam, dan panel error) di
  * resources/views/{User,Welcome}/.../take-picture.blade.php.
  *
+ * JANGAN pernah memberi aspect-ratio pada .x-cam-stage sendiri. Wadah itu
+ * juga membawa max-height:38vh, dan `aspect-ratio` + `max-height` pada elemen
+ * block membuat Chrome MENGHITUNG ULANG LEBARNYA dari tinggi yang dibatasi.
+ * Hasilnya wadah menyusut jadi kolom setipis ~143px di kiri, sisa lebar modal
+ * menjadi bidang hitam kosong, dan tombol balik kamera (absolute terhadap
+ * wadah) melayang di atas bidang hitam itu. Itu bug yang pernah terjadi:
+ * pratinjau kamera tampak seperti strip tipis.
+ *
+ * Yang benar: wadah tetap selebar modal, dan yang dibentuk adalah VIDEO-nya.
+ * .x-cam-video (hanya pada stream kamera aktif) diberi bingkai 3/4 supaya
+ * lebih tinggi dari 16/9 di ponsel, dengan object-fit: cover agar stream
+ * mengisi bingkai tanpa kotak leter.
+ *
  * Dua jangkauan, satu angka:
  *
  *   1. @media (max-width: 640px)
@@ -631,23 +735,24 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
  *   2. [data-platform="mobile_app_android"|mobile_app_ios"]
  *      -- aplikasi Capacitor Android & iOS. WebView-nya melaporkan lebar
  *         perangkat, jadi selector ini juga berlaku saat ponsel diputar
- *         landscape (di mana media query berhenti bekerja).
- *
- * aspect-ratio 9/16 menukarbingkai potret layar ponsel natural:
- * bingkai jauh lebih TINGGI dari 16:9 (1.78) atau 3/4 (1.33).
- *
- * Tidak ditetesi !important pada video di dalamnya supaya max-h-[60vh]
- * yang sudah ada tetap membatasi di layar pendek, dan object-contain
- * tetap menyingkirkan kotak leter tanpa memaksa stream diregangkan. */
+ *         landscape (di mana media query berhenti bekerja). */
 @media (max-width: 640px) {
-    .x-cam-stage {
-        aspect-ratio: 9 / 16 !important;
+    .x-cam-stage .x-cam-video {
+        width: 100% !important;
+        height: auto !important;
+        max-height: 55vh !important;
+        aspect-ratio: 4 / 3 !important;
+        object-fit: cover !important;
     }
 }
 
-[data-platform="mobile_app_android"] .x-cam-stage,
-[data-platform="mobile_app_ios"] .x-cam-stage {
-    aspect-ratio: 9 / 16 !important;
+[data-platform="mobile_app_android"] .x-cam-stage .x-cam-video,
+[data-platform="mobile_app_ios"] .x-cam-stage .x-cam-video {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 55vh !important;
+    aspect-ratio: 4 / 3 !important;
+    object-fit: cover !important;
 }
 
 /* Modal kamera lain (messages, identity, face scan, avatar, document,
@@ -761,40 +866,383 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
 }
 
 /* =====================================================================
- * Cookie Consent Banner Styles
+ * Cookie Consent Banner
+ *
+ * OVERLAY mengambang di bawah layar, meniru kapsul Top Navigation:
+ * kaca buram, border tipis, sudut bulat, bayangan tipis.
+ *
+ * KACA (sesuai permintaan):
+ *     Night : blur 15px + tint Dark  50  -> rgb(0 0 0 / 0.50)
+ *     Light : blur 15px + tint Light 50  -> rgb(255 255 255 / 0.50)
+ *   Angka ini sekarang sama dengan token --fi-glass-* di blok atas,
+ *   jadi banner dan topbar benar-benar satu keluarga bahan -- bukan
+ *   banner lebih buram dari topnav seperti pada versi sebelumnya.
+ *   Tokennya ditulis ulang (--cc-blur, bukan memakai --fi-glass-blur)
+ *   supaya banner tetap berdiri sendiri kalau dipakai di luar ketiga
+ *   panel, dan supaya blok reduced-transparency di bawahnya tidak
+ *   ikut menyeret permukaan lain.
+ *   Latar dasar tetap 20% seperti permukaan kaca lain
+ *   (rgb(12 12 15 / 0.20) di Night, rgb(255 255 255 / 0.20) di Light)
+ *   dan tint 50% lewat background-image, persis seperti blok topbar di
+ *   atas.
+ *
+ * KENAPA CSS DI SINI, BUKAN UTILITAS TAILWIND DI BLADE:
+ * utilitas responsif (sm:*, lg:*) tidak ikut ter-build untuk
+ * resources/views/components/cookie-consent/banner.blade.php.
+ * Akibatnya `sm:w-auto` tidak berefek dan tombol tetap memakai
+ * `w-full`: tombol memakan seluruh lebar baris, kolom teks tersisa
+ * 0px, dan tiap kata teks turun satu baris. Utilitas non-responsif
+ * (flex, w-full) kebetulan masih ada karena dipakai Filament,
+ * sehingga tata letaknya rusak tanpa error -- hanya terlihat jelek.
+ * Semua tata letak dan warna banner karena itu ditulis di sini sebagai
+ * CSS biasa, bukan utility class. Tidak ada yang bergantung pada build.
+ *
+ * ZONA AMAN DI BAWAH BARIS INI: .fi-modal-window .fi-sticky.
+ * Modal Filament punya z-index di atas banner, jadi form login /
+ * preferences yang terbuka tetap bisa diklik. Banner sengaja tidak
+ * memakai utility Tailwind position/z-index apa pun karena itu yang
+ * tidak bisa diandalkan.
  * ===================================================================== */
+
+/* --- Token ----------------------------------------------------------- */
 #cookie-consent-banner {
-    animation: slideUp 0.3s ease-out;
+    --cc-bg: rgb(255 255 255 / 0.20);
+    --cc-ring: rgb(0 0 0 / 0.12);
+    --cc-tint: rgb(255 255 255 / 0.50);
+    --cc-blur: blur(15px) saturate(180%);
+
+    --cc-fg: rgb(3 7 18 / 0.92);
+    --cc-fg-soft: rgb(3 7 18 / 0.62);
+
+    --cc-btn-bg: rgb(255 255 255 / 0.55);
+    --cc-btn-fg: rgb(3 7 18 / 0.88);
+    --cc-btn-ring: rgb(0 0 0 / 0.14);
+    --cc-btn-hover: rgb(255 255 255 / 0.80);
+
+    /* Amber, sama seperti item aktif Top Navigation dan tombol grup
+       sidebar (lihat blok "Tombol buka/tutup sidebar"). */
+    --cc-primary: rgb(202 138 4); /* yellow-600 */
+    --cc-primary-fg: rgb(255 255 255);
+    --cc-primary-hover: rgb(161 98 7); /* yellow-700 */
 }
 
-@keyframes slideUp {
-    from {
-        transform: translateY(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
+.dark #cookie-consent-banner {
+    --cc-bg: rgb(12 12 15 / 0.20);
+    --cc-ring: rgb(255 255 255 / 0.15);
+    --cc-tint: rgb(0 0 0 / 0.50);
+    --cc-blur: blur(15px) saturate(180%);
+
+    --cc-fg: rgb(255 255 255 / 0.95);
+    --cc-fg-soft: rgb(255 255 255 / 0.62);
+
+    --cc-btn-bg: rgb(255 255 255 / 0.06);
+    --cc-btn-fg: rgb(255 255 255 / 0.88);
+    --cc-btn-ring: rgb(255 255 255 / 0.14);
+    --cc-btn-hover: rgb(255 255 255 / 0.12);
+
+    --cc-primary: rgb(250 204 21); /* yellow-400 */
+    --cc-primary-fg: rgb(12 12 15);
+    --cc-primary-hover: rgb(234 179 8); /* yellow-500 */
 }
 
+/* --- Wadah overlay --------------------------------------------------- */
+/* left/right 0 + padding, bukan inset kiri/kanan tetap: barisnya ikut
+   lebar jendela dan ikut terpusat sendiri oleh margin-inline:auto pada
+   .cc-bar, sehingga margin kiri dan kanannya selalu sama. */
+#cookie-consent-banner {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 9999;
+    padding: 0 28px 20px;
+
+    /* Banner tidak boleh menahan klik di area kosongnya -- hanya kapsul
+       kaca di dalam yang interaktif. Tanpa ini, lapisan transparan
+       setinggi 20px di bawah banner memblokir klik ke konten di
+       belakangnya. */
+    pointer-events: none;
+}
+
+#cookie-consent-banner[style*="display: none"],
 #cookie-consent-banner.x-cloak {
     display: none !important;
 }
 
-/* Responsive adjustments */
-@media (max-width: 640px) {
-    #cookie-consent-banner .flex {
-        flex-direction: column;
-        align-items: stretch;
+/* --- Kapsul kaca ----------------------------------------------------- */
+.cc-bar {
+    pointer-events: auto;
+
+    max-width: 1280px;
+    margin-inline: auto;
+
+    background-color: var(--cc-bg);
+    background-image: linear-gradient(var(--cc-tint), var(--cc-tint));
+    border: 1px solid var(--cc-ring);
+    border-radius: 24px;
+
+    /* -webkit- wajib: Android WebView dan iOS Safari tidak lagi mendukung
+       backdrop-filter tanpa prefiks itu. */
+    -webkit-backdrop-filter: var(--cc-blur);
+    backdrop-filter: var(--cc-blur);
+
+    box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 0.35),
+        0 12px 28px -16px rgb(0 0 0 / 0.35);
+
+    overflow: hidden;
+}
+
+/* --- Baris utama ----------------------------------------------------- */
+/* align-items: flex-start, bukan center: tombol setinggi 38px sedangkan
+   blok teks bisa setinggi dua baris. Center membuat blok teks turun ke
+   bawah tombol, jadi tidak rata atas. */
+.cc-main {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px 20px;
+}
+
+.cc-icon {
+    flex: 0 0 auto;
+    width: 24px;
+    height: 24px;
+    margin-top: 1px;
+    color: var(--cc-fg-soft);
+}
+
+/* Heroicon (blade-ui-kit/blade-heroicons) tidak menyertakan atribut
+   width/height -- hanya viewBox + fill="currentColor". Tanpa aturan ukuran
+   di sini, SVG inline fallback ke 300x150px (default replaced-element)
+   sehingga kolom ikon meledak dan menyisakan ruang kosong di sebelah
+   kirinya. Karena blade ini tidak memakai utilitas Tailwind (tidak ikut
+   ter-build), ukuran ditulis sebagai CSS biasa. */
+.cc-icon svg {
+    display: block;
+    width: 24px;
+    height: 24px;
+}
+
+/* min-width: 0 WAJIB. Tanpa itu, flex item memakai min-content width
+   dari teks panjang di dalamnya, sehingga kolom ini menolak menyusut
+   dan merebut ruang dari tombol. */
+.cc-copy {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.cc-title {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--cc-fg);
+}
+
+.cc-desc {
+    margin: 4px 0 0;
+    font-size: 0.875rem;
+    line-height: 1.55;
+    color: var(--cc-fg-soft);
+}
+
+/* --- Tombol ---------------------------------------------------------- */
+/* flex: 0 0 auto, bukan w-auto: tombol tidak boleh ikut menyusut atau
+   melebar mengikuti kolom teks. */
+.cc-actions {
+    flex: 0 0 auto;
+    display: flex;
+    gap: 8px;
+}
+
+.cc-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 16px;
+    border: 1px solid var(--cc-btn-ring);
+    border-radius: 10px;
+
+    background-color: var(--cc-btn-bg);
+    color: var(--cc-btn-fg);
+
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.25;
+    white-space: nowrap;
+
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.cc-btn:hover {
+    background-color: var(--cc-btn-hover);
+}
+
+.cc-btn:active {
+    transform: translateY(1px);
+}
+
+.cc-btn:focus-visible {
+    outline: 2px solid var(--cc-primary);
+    outline-offset: 2px;
+}
+
+.cc-btn--primary {
+    background-color: var(--cc-primary);
+    color: var(--cc-primary-fg);
+    border-color: transparent;
+}
+
+.cc-btn--primary:hover {
+    background-color: var(--cc-primary-hover);
+}
+
+/* --- Baris tautan ---------------------------------------------------- */
+.cc-links {
+    padding: 10px 20px;
+    border-top: 1px solid var(--cc-ring);
+    text-align: center;
+    font-size: 0.75rem;
+    line-height: 1.6;
+    color: var(--cc-fg-soft);
+}
+
+.cc-links a {
+    color: var(--cc-primary);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.cc-links a:hover {
+    text-decoration: underline;
+}
+
+/* --- Layar kecil ----------------------------------------------------- */
+/* Di bawah 768px tombol tidak muat satu baris bersama teks tanpa
+   membuat kolom teks terlalu sempit, jadi ditumpuk dan tombol berbagi
+   lebar penuh. */
+@media (max-width: 768px) {
+    #cookie-consent-banner {
+        padding: 0 12px 12px;
     }
-    
-    #cookie-consent-banner button {
+
+    .cc-bar {
+        border-radius: 20px;
+    }
+
+    .cc-main {
+        flex-direction: column;
+        gap: 12px;
+        padding: 14px 16px;
+    }
+
+    .cc-actions {
         width: 100%;
+    }
+
+    .cc-btn {
+        flex: 1 1 0;
+        min-width: 0;
+        padding-inline: 10px;
+    }
+
+    .cc-links {
+        padding: 10px 16px;
     }
 }
 
-/* Ensure banner is above other fixed elements */
-#cookie-consent-banner {
-    z-index: 9999;
+/* Di bawah 400px tiga tombol seri masih sempit; tombol yang pertama
+   turun ke baris sendiri -- dengan tombol tetap readable. */
+@media (max-width: 400px) {
+    .cc-actions {
+        flex-wrap: wrap;
+    }
+
+    .cc-btn {
+        flex: 1 1 100%;
+    }
+}
+
+/* --- Transisi Alpine ------------------------------------------------- */
+/* Sengaja pakai kelas CSS sendiri, bukan utilitas Tailwind
+   (opacity-0, translate-y-6) yang mungkin tidak ter-build. */
+#cookie-consent-banner.cc-fade-enter {
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+
+#cookie-consent-banner.cc-fade-enter-start {
+    opacity: 0;
+    transform: translateY(16px);
+}
+
+#cookie-consent-banner.cc-fade-enter-end {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+#cookie-consent-banner.cc-fade-leave {
+    transition: opacity 0.2s ease-in, transform 0.2s ease-in;
+}
+
+#cookie-consent-banner.cc-fade-leave-start {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+#cookie-consent-banner.cc-fade-leave-end {
+    opacity: 0;
+    transform: translateY(16px);
+}
+
+/* --- Hormati preferensi transparansi --------------------------------- */
+/* Lihat blok "Hormati preferensi transparansi" di atas: bentuk tetap,
+   isi dibuat pekat supaya teks tidak bergantung pada apa yang ada di
+   belakangnya. */
+/* --- Searchable Select: latar pencarian = kaca (sama dengan topnav/sidebar) --- */
+/*
+ * Permintaan: search input di Select yang searchable tidak boleh putih pekat,
+ * harus ikut kaca (blur 15 + tint 50%), sama dengan top navigation dan
+ * sidebar. Tanpa ini, kotak pencarian di modal (mis. "Jalankan Seeder" ->
+ * pilih seeder) terlihat seperti permukaan lain, tidak satu keluarga.
+ *
+ * Filament searchable Select memakai choices.js: search input-nya
+ * `.choices__input` dan dropdown-nya `.choices__list--dropdown`. Keduanya
+ * di-render di dalam panel (bukan di-teleport), jadi variabel `--fi-glass-*`
+ * yang diset di `.fi-panel-*` ikut terwaris.
+ *
+ * ATURAN: hanya `scrollbar-width`/`::-webkit-scrollbar` yang boleh diubah
+ * kalau ingin menyembunyikan scrollbar -- jangan pernah pakai
+ * `overflow: hidden` di sini (mematikan scroll sentuh di Android/iOS
+ * WebView). Blok ini tidak menyentuh overflow.
+ */
+.fi-panel-welcome .choices__input,
+.fi-panel-user .choices__input,
+.fi-panel-admin .choices__input,
+.fi-panel-welcome .choices__list--dropdown,
+.fi-panel-user .choices__list--dropdown,
+.fi-panel-admin .choices__list--dropdown {
+    background-color: var(--fi-glass-bg) !important;
+    background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
+    -webkit-backdrop-filter: var(--fi-glass-blur) !important;
+    backdrop-filter: var(--fi-glass-blur) !important;
+    border: 1px solid var(--fi-glass-ring) !important;
+}
+
+/* --- Hormati preferensi transparansi --------------------------------- */
+/* Lihat blok "Hormati preferensi transparansi" di atas: bentuk tetap,
+   isi dibuat pekat supaya teks tidak bergantung pada apa yang ada di
+   belakangnya. */
+@media (prefers-reduced-transparency: reduce) {
+    #cookie-consent-banner .cc-bar {
+        background-color: rgb(255 255 255 / 0.98) !important;
+        background-image: none !important;
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+    }
+
+    .dark #cookie-consent-banner .cc-bar {
+        background-color: rgb(9 9 11 / 0.98) !important;
+    }
 }

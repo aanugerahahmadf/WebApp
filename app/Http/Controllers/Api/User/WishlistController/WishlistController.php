@@ -14,23 +14,23 @@ class WishlistController extends Controller
         try {
             $locale = app()->getLocale();
             $query = Wishlist::query()
-                ->with(['package.vendor', 'package.category', 'package.reviews', 'product.category', 'product.reviews'])
+                ->with(['package.category', 'package.reviews', 'catalog.category', 'catalog.reviews'])
                 ->where('user_id', Auth::id());
 
             $wishlistItems = $query->latest()->paginate($request->get('per_page', 10));
 
             $items = $wishlistItems->getCollection()->map(function (Wishlist $item) use ($locale): array {
-                if ($item->product_id && $item->product) {
-                    $productData = $item->product->toArray();
-                    $productData['name'] = $item->product->trans('name', $locale);
-                    $productData['description'] = $item->product->trans('description', $locale);
+                if ($item->catalog_id && $item->catalog) {
+                    $catalogData = $item->catalog->toArray();
+                    $catalogData['name'] = $item->catalog->trans('name', $locale);
+                    $catalogData['description'] = $item->catalog->trans('description', $locale);
 
                     return [
                         'id' => $item->id,
-                        'resource_type' => 'product',
-                        'product_id' => $item->product_id,
+                        'resource_type' => 'catalog',
+                        'catalog_id' => $item->catalog_id,
                         'created_at' => $item->created_at?->toIso8601String(),
-                        ...$productData,
+                        ...$catalogData,
                     ];
                 }
 
@@ -80,26 +80,26 @@ class WishlistController extends Controller
         try {
             $request->validate([
                 'package_id' => 'nullable|exists:packages,id',
-                'product_id' => 'nullable|exists:products,id',
+                'catalog_id' => 'nullable|exists:catalogs,id',
             ]);
 
             $packageId = $request->input('package_id');
-            $productId = $request->input('product_id');
+            $catalogId = $request->input('catalog_id');
 
-            if (! $packageId && ! $productId) {
+            if (! $packageId && ! $catalogId) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => __('Pilih paket atau produk untuk wishlist'),
+                    'message' => __('Pilih paket atau katalog untuk wishlist'),
                 ], 422);
             }
 
             $existingWishlist = Wishlist::where('user_id', Auth::id())
-                ->where(function ($query) use ($packageId, $productId): void {
+                ->where(function ($query) use ($packageId, $catalogId): void {
                     if ($packageId) {
                         $query->where('package_id', $packageId);
                     }
-                    if ($productId) {
-                        $query->orWhere('product_id', $productId);
+                    if ($catalogId) {
+                        $query->orWhere('catalog_id', $catalogId);
                     }
                 })
                 ->first(['*']);
@@ -117,7 +117,7 @@ class WishlistController extends Controller
             $wishlist = Wishlist::create([
                 'user_id' => Auth::id(),
                 'package_id' => $packageId,
-                'product_id' => $productId,
+                'catalog_id' => $catalogId,
             ]);
 
             return response()->json([
@@ -138,13 +138,13 @@ class WishlistController extends Controller
     public function isInWishlist(Request $request, $packageId)
     {
         try {
-            $productId = $request->query('product_id');
+            $catalogId = $request->query('catalog_id');
 
             $exists = Wishlist::where('user_id', Auth::id())
-                ->where(function ($query) use ($packageId, $productId): void {
+                ->where(function ($query) use ($packageId, $catalogId): void {
                     $query->where('package_id', $packageId);
-                    if ($productId) {
-                        $query->orWhere('product_id', $productId);
+                    if ($catalogId) {
+                        $query->orWhere('catalog_id', $catalogId);
                     }
                 })
                 ->exists();
@@ -162,85 +162,24 @@ class WishlistController extends Controller
         }
     }
 
-    public function bulkAdd(Request $request)
-    {
-        try {
-            $request->validate([
-                'package_ids' => 'required_without:product_ids|array',
-                'package_ids.*' => 'exists:packages,id',
-                'product_ids' => 'required_without:package_ids|array',
-                'product_ids.*' => 'exists:products,id',
-            ]);
-
-            $addedCount = 0;
-            $skippedIds = [];
-
-            foreach ((array) $request->package_ids as $packageId) {
-                $existing = Wishlist::where('user_id', Auth::id())
-                    ->where('package_id', $packageId)
-                    ->first(['*']);
-
-                if (! $existing) {
-                    Wishlist::create([
-                        'user_id' => Auth::id(),
-                        'package_id' => $packageId,
-                    ]);
-                    $addedCount++;
-                } else {
-                    $skippedIds[] = $packageId;
-                }
-            }
-
-            foreach ((array) $request->product_ids as $productId) {
-                $existing = Wishlist::where('user_id', Auth::id())
-                    ->where('product_id', $productId)
-                    ->first(['*']);
-
-                if (! $existing) {
-                    Wishlist::create([
-                        'user_id' => Auth::id(),
-                        'product_id' => $productId,
-                    ]);
-                    $addedCount++;
-                } else {
-                    $skippedIds[] = $productId;
-                }
-            }
-
-            return response()->json([
-                'status' => 'success',
-                'message' => $addedCount.' '.__('item ditambahkan ke wishlist'),
-                'added_count' => $addedCount,
-                'skipped_count' => count($skippedIds),
-                'skipped_ids' => $skippedIds,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => __('Gagal menambahkan item ke wishlist'),
-                'error' => $e->getMessage(),
-            ], 500);
-        }
-    }
-
     public function removeFromWishlist(Request $request, $packageId)
     {
         try {
-            $productId = $request->query('product_id');
+            $catalogId = $request->query('catalog_id');
 
             $wishlist = Wishlist::where('user_id', Auth::id())
-                ->where(function ($query) use ($packageId, $productId): void {
+                ->where(function ($query) use ($packageId, $catalogId): void {
                     $query->where('package_id', $packageId);
-                    if ($productId) {
-                        $query->orWhere('product_id', $productId);
+                    if ($catalogId) {
+                        $query->orWhere('catalog_id', $catalogId);
                     }
                 })
-                ->first(['*']);
+                ->first();
 
             if (! $wishlist) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => __('Item tidak ditemukan dalam wishlist'),
+                    'message' => __('Item tidak ditemukan di wishlist'),
                 ], 404);
             }
 
@@ -254,6 +193,48 @@ class WishlistController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal menghapus dari wishlist'),
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function bulkAdd(Request $request)
+    {
+        try {
+            $request->validate([
+                'package_ids' => 'required_without:catalog_ids|array',
+                'catalog_ids' => 'required_without:package_ids|array',
+                'package_ids.*' => 'exists:packages,id',
+                'catalog_ids.*' => 'exists:catalogs,id',
+            ]);
+
+            $added = 0;
+
+            foreach ((array) $request->package_ids as $packageId) {
+                Wishlist::firstOrCreate([
+                    'user_id' => Auth::id(),
+                    'package_id' => $packageId,
+                ]);
+                $added++;
+            }
+
+            foreach ((array) $request->catalog_ids as $catalogId) {
+                Wishlist::firstOrCreate([
+                    'user_id' => Auth::id(),
+                    'catalog_id' => $catalogId,
+                ]);
+                $added++;
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => __('Berhasil menambahkan :count item ke wishlist', ['count' => $added]),
+                'added' => $added,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => __('Gagal menambahkan ke wishlist'),
                 'error' => $e->getMessage(),
             ], 500);
         }

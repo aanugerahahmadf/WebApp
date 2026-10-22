@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+package wedding.user.v1;
+
+option go_package = "github.com/wedding/user/v1;userv1";
+option php_namespace = "App\\Grpc\\User\\V1";
+option php_metadata_namespace = "App\\Grpc\\User\\V1\\GPBMetadata";
+
+import "wedding/user/v1/common.proto";
+import "wedding/user/v1/auth.proto";
+import "wedding/user/v1/catalog.proto";
+import "wedding/user/v1/package.proto";
+import "wedding/user/v1/category.proto";
+
+// Home Service
+service HomeService {
+  rpc GetHomeData(GetHomeDataRequest) returns (HomeData);
+  rpc GetHeroBanners(GetHeroBannersRequest) returns (HeroBannersResponse);
+  rpc GetPromotions(GetPromotionsRequest) returns (PromotionsResponse);
+}
+
+message GetHomeDataRequest {}
+
+message HomeData {
+  repeated Catalog featured_catalogs = 1;
+  repeated Package featured_packages = 2;
+  repeated Catalog on_sale_catalogs = 3;
+  repeated Package on_sale_packages = 4;
+  repeated Category categories = 5;
+  repeated HeroBanner hero_banners = 6;
+  repeated Promotion promotions = 7;
+  HomeStats stats = 8;
+}
+
+message GetHeroBannersRequest {}
+
+message HeroBannersResponse {
+  repeated HeroBanner banners = 1;
+}
+
+message GetPromotionsRequest {
+  int32 limit = 1;
+}
+
+message PromotionsResponse {
+  repeated Promotion promotions = 1;
+}
+
+message HeroBanner {
+  string id = 1;
+  string title = 2;
+  string subtitle = 3;
+  string image_url = 4;
+  string link_url = 5;
+  string link_type = 6;
+  string link_id = 7;
+  int32 position = 8;
+  bool is_active = 9;
+}
+
+message Promotion {
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  string image_url = 4;
+  int32 discount_percent = 5;
+  string code = 6;
+  string valid_from = 7;
+  string valid_until = 8;
+  bool is_active = 9;
+}
+
+message HomeStats {
+  int32 total_catalogs = 1;
+  int32 total_packages = 2;
+  int32 total_categories = 3;
+  int32 happy_customers = 4;
+}

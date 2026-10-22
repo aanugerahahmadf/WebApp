@@ -32,7 +32,7 @@ class HelpSeeder extends Seeder
         $enFaqs = [
             [
                 'question' => 'How do I order a decoration package?',
-                'answer' => 'You can select the desired product or package through the app, then proceed to the Down Payment (DP) process to secure the event date.',
+                'answer' => 'You can select the desired catalog or package through the app, then proceed to the Down Payment (DP) process to secure the event date.',
             ],
             [
                 'question' => 'Can I reschedule the event date?',

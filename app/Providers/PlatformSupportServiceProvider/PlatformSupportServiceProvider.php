@@ -48,6 +48,20 @@ class PlatformSupportServiceProvider extends ServiceProvider
             fn (): View => view('User.components.platform-runtime-script.platform-runtime-script'),
         );
 
+        // Pemulihan 419 untuk Livewire: dialog "This page has expired"
+        // bawaan livewire.js diganti diam-diam ambil token baru + ulangi
+        // request. Satu pendaftaran ini berlaku untuk ketiga panel, dan
+        // dipasang di SCRIPTS_AFTER (setelah @filamentScripts) supaya
+        // window.Livewire sudah ada ketika skrip dijalankan.
+        //
+        // Lapisan pertama tetap di server: `livewire/*` dikecualikan dari
+        // verifikasi CSRF di bootstrap/app.php. Skrip ini jaring pengaman
+        // untuk 419 yang penyebabnya bukan token (sesi benar-benar habis).
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::SCRIPTS_AFTER,
+            fn (): View => view('Shared.components.livewire-page-expired.livewire-page-expired'),
+        );
+
         // Phone-only table transformation (resources/css/Shared/Mobile.css).
         // Panel-agnostic: it rewrites whatever <table> the current page rendered,
         // so one registration covers every panel and emits nothing on desktop —

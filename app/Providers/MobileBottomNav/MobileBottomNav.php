@@ -3,6 +3,7 @@
 namespace App\Providers\MobileBottomNav;
 
 use App\Providers\MobileBottomNavItem\MobileBottomNavItem;
+use App\Support\AppIcon\AppIcon;
 
 use Filament\Navigation\NavigationItem;
 
@@ -28,14 +29,17 @@ class MobileBottomNav
     public function fromNavigationItems(array $navItems): static
     {
         $this->items = array_map(function (NavigationItem $navItem) {
+            // Ikon nav item bisa datang dari DATABASE (nama Heroicon lama).
+            // AppIcon::named() menerjemahkannya ke SVG berwarna; yang sudah
+            // path atau tidak dikenal dikembalikan apa adanya.
             $item = MobileBottomNavItem::make($navItem->getLabel())
-                ->icon($navItem->getIcon() ?? 'heroicon-o-ellipsis-horizontal')
+                ->icon(AppIcon::named($navItem->getIcon()) ?? '/images/icons/dots.svg')
                 ->url($navItem->getUrl() ?? '#')
                 ->sort($navItem->getSort())
                 ->isActive($navItem->isActive());
 
             if ($navItem->getActiveIcon()) {
-                $item->activeIcon($navItem->getActiveIcon());
+                $item->activeIcon(AppIcon::named($navItem->getActiveIcon()));
             }
 
             if ($navItem->getBadge() !== null) {

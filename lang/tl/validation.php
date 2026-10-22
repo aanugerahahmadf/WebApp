@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'postal code',
         'preview'                  => 'silipin',
         'price'                    => 'presyo',
-        'product_id'               => 'ID ng produkto',
+        'catalog_id'               => 'ID ng produkto',
         'product_uid'              => 'UID ng produkto',
         'product_uuid'             => 'produkto UUID',
         'promo_code'               => 'promo code',

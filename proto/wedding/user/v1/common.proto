@@ -1,0 +1,159 @@
+syntax = "proto3";
+
+package wedding.user.v1;
+
+option go_package = "github.com/wedding/user/v1;userv1";
+option php_namespace = "App\\Grpc\\User\\V1";
+option php_metadata_namespace = "App\\Grpc\\User\\V1\\GPBMetadata";
+
+// Common types used across all services
+
+message PaginationRequest {
+  int32 page = 1;
+  int32 per_page = 2;
+}
+
+message PaginationResponse {
+  int32 current_page = 1;
+  int32 last_page = 2;
+  int32 per_page = 3;
+  int32 total = 4;
+  bool has_more_pages = 5;
+}
+
+message DateRange {
+  string from = 1;
+  string to = 2;
+}
+
+message PriceRange {
+  double min = 1;
+  double max = 2;
+}
+
+message CapacityRange {
+  int32 min = 1;
+  int32 max = 2;
+}
+
+message ImageInfo {
+  string url = 1;
+  string alt = 2;
+  int32 sort_order = 3;
+}
+
+message MetaData {
+  map<string, string> data = 1;
+}
+
+enum SortDirection {
+  SORT_DIRECTION_UNSPECIFIED = 0;
+  SORT_DIRECTION_ASC = 1;
+  SORT_DIRECTION_DESC = 2;
+}
+
+enum Gender {
+  GENDER_UNSPECIFIED = 0;
+  GENDER_MALE = 1;
+  GENDER_FEMALE = 2;
+  GENDER_OTHER = 3;
+  GENDER_PREFER_NOT_TO_SAY = 4;
+}
+
+enum AddressType {
+  ADDRESS_TYPE_UNSPECIFIED = 0;
+  ADDRESS_TYPE_HOME = 1;
+  ADDRESS_TYPE_WORK = 2;
+  ADDRESS_TYPE_OTHER = 3;
+}
+
+enum PaymentMethod {
+  PAYMENT_METHOD_UNSPECIFIED = 0;
+  PAYMENT_METHOD_MIDTRANS = 1;
+  PAYMENT_METHOD_BANK_TRANSFER = 2;
+  PAYMENT_METHOD_CASH_ON_DELIVERY = 3;
+  PAYMENT_METHOD_E_WALLET = 4;
+  PAYMENT_METHOD_CREDIT_CARD = 5;
+}
+
+enum OrderStatus {
+  ORDER_STATUS_UNSPECIFIED = 0;
+  ORDER_STATUS_PENDING = 1;
+  ORDER_STATUS_CONFIRMED = 2;
+  ORDER_STATUS_PROCESSING = 3;
+  ORDER_STATUS_SHIPPED = 4;
+  ORDER_STATUS_DELIVERED = 5;
+  ORDER_STATUS_CANCELLED = 6;
+  ORDER_STATUS_REFUNDED = 7;
+}
+
+enum PaymentStatus {
+  PAYMENT_STATUS_UNSPECIFIED = 0;
+  PAYMENT_STATUS_PENDING = 1;
+  PAYMENT_STATUS_PAID = 2;
+  PAYMENT_STATUS_FAILED = 3;
+  PAYMENT_STATUS_REFUNDED = 4;
+  PAYMENT_STATUS_PARTIALLY_REFUNDED = 5;
+}
+
+enum ReviewStatus {
+  REVIEW_STATUS_UNSPECIFIED = 0;
+  REVIEW_STATUS_PENDING = 1;
+  REVIEW_STATUS_APPROVED = 2;
+  REVIEW_STATUS_REJECTED = 3;
+  REVIEW_STATUS_HIDDEN = 4;
+}
+
+enum DiscountType {
+  DISCOUNT_TYPE_UNSPECIFIED = 0;
+  DISCOUNT_TYPE_PERCENTAGE = 1;
+  DISCOUNT_TYPE_FIXED_AMOUNT = 2;
+  DISCOUNT_TYPE_FREE_SHIPPING = 3;
+}
+
+enum ReportReason {
+  REPORT_REASON_UNSPECIFIED = 0;
+  REPORT_REASON_SPAM = 1;
+  REPORT_REASON_INAPPROPRIATE = 2;
+  REPORT_REASON_FAKE = 3;
+  REPORT_REASON_OFFENSIVE = 4;
+  REPORT_REASON_IRRELEVANT = 5;
+  REPORT_REASON_OTHER = 6;
+}
+
+enum ReportStatus {
+  REPORT_STATUS_UNSPECIFIED = 0;
+  REPORT_STATUS_PENDING = 1;
+  REPORT_STATUS_REVIEWED = 2;
+  REPORT_STATUS_RESOLVED = 3;
+  REPORT_STATUS_DISMISSED = 4;
+}
+
+enum SearchType {
+  SEARCH_TYPE_UNSPECIFIED = 0;
+  SEARCH_TYPE_CATALOG = 1;
+  SEARCH_TYPE_PACKAGE = 2;
+  SEARCH_TYPE_BOTH = 3;
+}
+
+enum WishlistActionType {
+  WISHLIST_ACTION_TYPE_UNSPECIFIED = 0;
+  WISHLIST_ACTION_TYPE_ADDED = 1;
+  WISHLIST_ACTION_TYPE_REMOVED = 2;
+}
+
+enum SearchSuggestionType {
+  SEARCH_SUGGESTION_TYPE_UNSPECIFIED = 0;
+  SEARCH_SUGGESTION_TYPE_CATALOG = 1;
+  SEARCH_SUGGESTION_TYPE_PACKAGE = 2;
+  SEARCH_SUGGESTION_TYPE_CATEGORY = 3;
+  SEARCH_SUGGESTION_TYPE_KEYWORD = 4;
+}
+
+enum RefundStatus {
+  REFUND_STATUS_UNSPECIFIED = 0;
+  REFUND_STATUS_PENDING = 1;
+  REFUND_STATUS_APPROVED = 2;
+  REFUND_STATUS_REJECTED = 3;
+  REFUND_STATUS_PROCESSED = 4;
+}

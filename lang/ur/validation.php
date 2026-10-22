@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'ڈاک کامخصوص نمبر',
         'preview'                  => 'پیش نظارہ',
         'price'                    => 'قیمت',
-        'product_id'               => 'مصنوعات کی شناخت',
+        'catalog_id'               => 'مصنوعات کی شناخت',
         'product_uid'              => 'مصنوعات کی UID',
         'product_uuid'             => 'پروڈکٹ UUID',
         'promo_code'               => 'پرومو کوڈ',

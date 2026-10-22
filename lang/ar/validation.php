@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'الرمز البريدي',
         'preview'                  => 'معاينة',
         'price'                    => 'السعر',
-        'product_id'               => 'معرف المنتج',
+        'catalog_id'               => 'معرف المنتج',
         'product_uid'              => 'معرف المنتج',
         'product_uuid'             => 'معرف المنتج',
         'promo_code'               => 'الرمز الترويجي',

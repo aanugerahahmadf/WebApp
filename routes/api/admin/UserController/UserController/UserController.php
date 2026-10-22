@@ -5,7 +5,7 @@ use App\Http\Controllers\Api\Admin\UserController\UserController;
 
 
 Route::get('/users', [UserController::class, 'index']);
-Route::get('/vendors', [UserController::class, 'vendors']);
+
 Route::get('/users/roles', [UserController::class, 'roles']);
 Route::get('/users/{id}', [UserController::class, 'show']);
 Route::post('/users', [UserController::class, 'store']);

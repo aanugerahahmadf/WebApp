@@ -1,7 +1,7 @@
 # Proses Kompilasi Aset (Capacitor)
 
 Dokumen ini menjelaskan bagaimana pipeline build Vite dikonfigurasi untuk
-kompilasi aset multi-platform pada aplikasi Laravel Wedding Organizer CBIR.
+kompilasi aset multi-platform pada aplikasi Laravel Wedding Flower Decorations CBIR.
 
 > **Catatan:** Semua referensi ke `nativephp` dihapus. Mobile dan desktop sekarang
 > adalah shell Capacitor biasa — tidak ada `phpProtocolAdapter`, tidak ada

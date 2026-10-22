@@ -8,13 +8,16 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Dompdf\Dompdf;
+use App\Support\PdfLayout\PdfLayout;
+use App\Support\PdfLayout\PdfText;
+use App\Support\ReportCategory\ReportCategory;
 
 class ReportController extends Controller
 {
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'category' => ['required', 'string', Rule::in(['product', 'package', 'vendor', 'order', 'review', 'general', 'bug_report', 'account_issue', 'order_help', 'payment_issue', 'decor_consultation', 'general_question'])],
+            'category' => ['required', 'string', Rule::in(['catalog', 'package', 'order', 'review', 'general', 'bug_report', 'account_issue', 'order_help', 'payment_issue', 'decor_consultation', 'general_question'])],
             'reportable_type' => ['required_unless:category,general,bug_report,account_issue,order_help,payment_issue,decor_consultation,general_question', 'nullable', 'string'],
             'reportable_id' => ['required_unless:category,general,bug_report,account_issue,order_help,payment_issue,decor_consultation,general_question', 'nullable', 'integer'],
             'reason' => ['nullable', 'string', 'max:255'],
@@ -97,25 +100,26 @@ class ReportController extends Controller
     {
         abort_unless((int) $report->user_id === (int) $request->user()->id, 403);
 
-        $categoryLabels = [
-            'bug_report' => __('Lapor Bug'),
-            'account_issue' => __('Masalah Akun'),
-            'order_help' => __('Bantuan Pesanan'),
-            'payment_issue' => __('Masalah Pembayaran'),
-            'decor_consultation' => __('Konsultasi Dekorasi'),
-            'general_question' => __('Pertanyaan Umum'),
-        ];
         $userName = e($report->user?->full_name ?? '-');
-        $category = e($categoryLabels[$report->category] ?? $report->category);
+        // Kategori & tanggal TIDAK boleh tampil mentah: "general_question"
+        // dan "21/10/2026" itu nilai teknis, bukan isi dokumen.
+        $category = e(ReportCategory::label($report->category));
         $reason = e($report->reason ?? '-');
         $description = nl2br(e($report->description ?? '-'));
-        $createdAt = e($report->created_at?->format('d/m/Y H:i') ?? '-');
+        $createdAt = e(PdfText::date($report->created_at));
+        // Lampiran: cukup nama filenya -- URL penuh bring garis miring +
+        // garis bawah ke dokumen resmi.
         $attachments = collect($report->attachment_urls)
-            ->map(fn ($url) => '<p><a href="'.e($url).'">'.e($url).'</a></p>')
+            ->map(fn ($url) => '<p>'.e(PdfText::fileName($url)).'</p>')
             ->implode('');
-        $html = "<html><meta charset='utf-8'><style>body{font-family:DejaVu Sans,sans-serif;font-size:12px}h1{font-size:20px}</style><h1>Formulir Laporan #{$report->id}</h1><p><b>Pelapor:</b> {$userName}</p><p><b>Kategori:</b> {$category}</p><p><b>Judul:</b> {$reason}</p><p><b>Tanggal:</b> {$createdAt}</p><p><b>Detail:</b><br>{$description}</p><h3>Lampiran</h3>{$attachments}</html>";
+        $html = "<html><meta charset='utf-8'><style>"
+            .\App\Support\PdfLayout\PdfLayout::pageCss('portrait', 'body{font-size:12px}h1{font-size:20px}')
+            ."</style>"
+            .\App\Support\PdfLayout\PdfLayout::header("Formulir Laporan #{$report->id}")
+            .\App\Support\PdfLayout\PdfLayout::footer()
+            ."<h1>Formulir Laporan #{$report->id}</h1><p><b>Pelapor:</b> {$userName}</p><p><b>Kategori:</b> {$category}</p><p><b>Judul:</b> {$reason}</p><p><b>Tanggal:</b> {$createdAt}</p><p><b>Detail:</b><br>{$description}</p><h3>Lampiran</h3>{$attachments}</html>";
 
-        $pdf = new Dompdf;
+        $pdf = \App\Support\PdfLayout\PdfLayout::apply(new Dompdf);
         $pdf->loadHtml($html, 'UTF-8');
         $pdf->setPaper('A4', 'portrait');
         $pdf->render();

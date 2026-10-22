@@ -617,7 +617,7 @@
                             :aria-label="{{ json_encode(__('Balik Kamera')) }}"
                             style="display:none;"
                         >
-                            <x-filament::icon icon="heroicon-m-arrow-path" class="h-5 w-5" />
+                            <x-filament::icon icon="/images/icons/refresh.svg" class="h-5 w-5" />
                         </button>
                         <button
                             type="button"
@@ -627,7 +627,7 @@
                             :aria-label="{{ json_encode(__('Kembali')) }}"
                             style="display:none;"
                         >
-                            <x-filament::icon icon="heroicon-m-arrow-left" class="h-5 w-5" />
+                            <x-filament::icon icon="/images/icons/arrow_left.svg" class="h-5 w-5" />
                         </button>
                         <button
                             type="button"
@@ -635,7 +635,7 @@
                             class="relative -m-1.5 flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 outline-none transition duration-75 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-white/5 dark:hover:text-gray-300"
                             :aria-label="{{ json_encode(__('Tutup')) }}"
                         >
-                            <x-filament::icon icon="heroicon-m-x-mark" class="h-5 w-5" />
+                            <x-filament::icon icon="/images/icons/x.svg" class="h-5 w-5" />
                         </button>
                     </div>
                 </div>
@@ -648,10 +648,10 @@
                         class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium outline-none transition duration-75 hover:bg-gray-50 focus-visible:bg-gray-50 active:bg-gray-100 dark:hover:bg-white/5 dark:active:bg-white/10"
                     >
                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600 ring-1 ring-primary-600/10 dark:bg-primary-400/10 dark:text-primary-400 dark:ring-primary-400/20">
-                            <x-filament::icon icon="heroicon-o-camera" class="h-5 w-5" />
+                            <x-filament::icon icon="/images/icons/camera.svg" class="h-5 w-5" />
                         </span>
                         <span class="flex-1 text-left text-gray-700 dark:text-gray-200">{{ __('Buka Kamera') }}</span>
-                        <x-filament::icon icon="heroicon-m-chevron-right" class="h-4 w-4 shrink-0 text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300" />
+                        <x-filament::icon icon="/images/icons/chevron_right.svg" class="h-4 w-4 shrink-0 text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300" />
                     </button>
 
                     <button
@@ -660,10 +660,10 @@
                         class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium outline-none transition duration-75 hover:bg-gray-50 focus-visible:bg-gray-50 active:bg-gray-100 dark:hover:bg-white/5 dark:active:bg-white/10"
                     >
                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600 ring-1 ring-primary-600/10 dark:bg-primary-400/10 dark:text-primary-400 dark:ring-primary-400/20">
-                            <x-filament::icon icon="heroicon-o-arrow-up-tray" class="h-5 w-5" />
+                            <x-filament::icon icon="/images/icons/upload.svg" class="h-5 w-5" />
                         </span>
                         <span class="flex-1 text-left text-gray-700 dark:text-gray-200">{{ __('File') }}</span>
-                        <x-filament::icon icon="heroicon-m-chevron-right" class="h-4 w-4 shrink-0 text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300" />
+                        <x-filament::icon icon="/images/icons/chevron_right.svg" class="h-4 w-4 shrink-0 text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300" />
                     </button>
 
                     <button
@@ -672,10 +672,10 @@
                         class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium outline-none transition duration-75 hover:bg-gray-50 focus-visible:bg-gray-50 active:bg-gray-100 dark:hover:bg-white/5 dark:active:bg-white/10"
                     >
                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600 ring-1 ring-primary-600/10 dark:bg-primary-400/10 dark:text-primary-400 dark:ring-primary-400/20">
-                            <x-filament::icon icon="heroicon-o-photo" class="h-5 w-5" />
+                            <x-filament::icon icon="/images/icons/photo.svg" class="h-5 w-5" />
                         </span>
                         <span class="flex-1 text-left text-gray-700 dark:text-gray-200">{{ __('Galeri') }}</span>
-                        <x-filament::icon icon="heroicon-m-chevron-right" class="h-4 w-4 shrink-0 text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300" />
+                        <x-filament::icon icon="/images/icons/chevron_right.svg" class="h-4 w-4 shrink-0 text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300" />
                     </button>
 
                     <div class="my-1 border-t border-gray-100 dark:border-white/10"></div>
@@ -772,10 +772,7 @@
                             class="absolute inset-0 flex items-center justify-center bg-gray-900/60"
                             style="display:none;"
                         >
-                            <svg class="h-8 w-8 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                            </svg>
+                            <x-filament::icon icon="/images/icons/refresh.svg" class="h-8 w-8 animate-spin text-white" />
                         </div>
                     </div>
 
@@ -810,7 +807,7 @@
                             class="flex h-11 shrink-0 items-center gap-1.5 rounded-full px-4 text-xs font-semibold transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
                             :aria-label="cameras[0]?.label || 'Kamera Kiri'"
                         >
-                            <x-filament::icon icon="heroicon-m-arrow-left" class="h-4 w-4" />
+                            <x-filament::icon icon="/images/icons/arrow_left.svg" class="h-4 w-4" />
                             <span>{{ __('Kiri') }}</span>
                         </button>
 
@@ -822,7 +819,7 @@
                             class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg transition hover:bg-primary-500 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
                             :aria-label="{{ json_encode(__('Ambil Foto')) }}"
                         >
-                            <x-filament::icon icon="heroicon-m-camera" class="h-8 w-8" />
+                            <x-filament::icon icon="/images/icons/camera.svg" class="h-8 w-8" />
                         </button>
 
                         {{-- Kamera kanan --}}
@@ -837,7 +834,7 @@
                             :aria-label="cameras[cameras.length - 1]?.label || 'Kamera Kanan'"
                         >
                             <span>{{ __('Kanan') }}</span>
-                            <x-filament::icon icon="heroicon-m-arrow-right" class="h-4 w-4" />
+                            <x-filament::icon icon="/images/icons/arrow_right.svg" class="h-4 w-4" />
                         </button>
 
                         <template x-if="photoTaken">
@@ -892,10 +889,7 @@
                             class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-gray-950/70"
                             style="display:none;"
                         >
-                            <svg class="h-8 w-8 animate-spin text-primary-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                            </svg>
+                            <x-filament::icon icon="/images/icons/refresh.svg" class="h-8 w-8 animate-spin text-primary-400" />
                             <p class="px-6 text-center text-sm font-medium text-white" x-text="ocrStatus"></p>
                             <p class="px-6 text-center text-xs text-gray-300" x-text="ocrProgress + '%'"></p>
                         </div>
@@ -927,7 +921,7 @@
                     <div class="px-4 py-5">
                         <template x-if="ocrError">
                             <div class="flex items-start gap-3 rounded-lg bg-danger-50 p-3 text-sm text-danger-700 dark:bg-danger-400/10 dark:text-danger-400">
-                                <x-filament::icon icon="heroicon-o-exclamation-triangle" class="mt-0.5 h-5 w-5 shrink-0" />
+                                <x-filament::icon icon="/images/icons/warning.svg" class="mt-0.5 h-5 w-5 shrink-0" />
                                 <div>
                                     <p class="font-semibold">{{ __('Scan gagal') }}</p>
                                     <p x-text="ocrError"></p>
@@ -938,7 +932,7 @@
                         <template x-if="!ocrError">
                             <div class="flex flex-col items-center gap-2 text-center">
                                 <span class="flex h-12 w-12 items-center justify-center rounded-full bg-success-50 text-success-600 dark:bg-success-400/10 dark:text-success-400">
-                                    <x-filament::icon icon="heroicon-m-check" class="h-6 w-6" />
+                                    <x-filament::icon icon="/images/icons/check.svg" class="h-6 w-6" />
                                 </span>
                                 <p class="text-base font-semibold text-gray-950 dark:text-white">{{ __('Scan berhasil!') }}</p>
                                 <p class="text-sm text-gray-500 dark:text-gray-400" x-text="filledCount > 0 ? {{ json_encode(__('Form otomatis terisi :count kolom. Silakan periksa kembali.')) }}.replace(':count', filledCount) : {{ json_encode(__('Tidak ada kolom yang cocok. Silakan isi manual.')) }}"></p>

@@ -1,0 +1,37 @@
+# User Query Definitions
+# Wedding Flower Decoration App - User GraphQL Queries
+
+type Query {
+  # Get current authenticated user
+  me: User @field(resolver: "App\\Http\\GraphQL\\Resolvers\\UserResolver@me")
+  
+  # Get user by ID (admin)
+  user(id: ID @eq): User @find
+  
+  # Get paginated users (admin)
+  users(first: Int = 10, search: String): [User!]! @paginate(defaultCount: 10)
+  
+  # Get user profile with stats
+  userProfile(id: ID): UserProfile @field(resolver: "App\\Http\\GraphQL\\Resolvers\\UserResolver@profile")
+  
+  # Get user activity/history
+  userActivity(userId: ID!, first: Int = 20): [UserActivity!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\UserResolver@activity")
+}
+
+type UserProfile {
+  user: User!
+  orderCount: Int!
+  reviewCount: Int!
+  wishlistCount: Int!
+  totalSpent: Float!
+  favoriteCategory: Category
+  joinedAt: String!
+}
+
+type UserActivity {
+  id: ID!
+  type: String! # ORDER, REVIEW, WISHLIST, LOGIN
+  description: String!
+  metadata: JSON
+  createdAt: String!
+}

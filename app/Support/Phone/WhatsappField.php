@@ -48,7 +48,7 @@ final class WhatsappField
                 ->suffixActions([
                     Action::make('sendOtp')
                         ->label(__('Kirim Kode OTP'))
-                        ->icon('heroicon-o-paper-airplane')
+                        ->icon('/images/icons/send.svg')
                         ->action('sendOtp'),
                 ]);
         }

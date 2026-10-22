@@ -42,7 +42,12 @@ beforeEach(function (): void {
  */
 function userTotp(array $extra = []): User
 {
-    $user = User::factory()->create(array_merge([
+    // verified() wajib: panel memakai ->emailVerification() dan User
+    // implements MustVerifyEmail. Tanpa email_verified_at, middleware
+    // 'verified' melempar 302 ke /user/email-verification/prompt sebelum
+    // halaman ini punya kesempatan dirender -- padahal di alur nyata email
+    // sudah lewat VerifyOtp sebelum 2FA bisa dijangkau.
+    $user = User::factory()->verified()->create(array_merge([
         'two_factor_type' => TwoFactorAuthType::Totp,
         'two_factor_confirmed_at' => now(),
     ], $extra));
@@ -74,7 +79,7 @@ it('memakai route name yang sama dengan OTPVerify supaya middleware tidak loop',
 it('CheckTrustedDevice masih mengarahkan ke halaman ini', function (): void {
     $user = userTotp();
 
-    $r = $this->actingAs($user)->get('/user/home');
+    $r = $this->actingAs($user)->get('/home');
 
     $r->assertRedirect(OtpEmailOrTwoFactory::getUrl());
 });

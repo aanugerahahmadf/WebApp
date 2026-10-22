@@ -53,14 +53,14 @@
 .cbir-cat{display:inline-block;font-size:9px;font-weight:700;line-height:1;padding:2px 4px;border-left-width:2px;border-left-style:solid;background:transparent;color:#9ca3af;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .cbir-name{font-size:10px;font-weight:500;line-height:1.3;color:#e5e7eb;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;height: 2.6rem;}
 .cbir-price{font-size:11px;font-weight:700;color:#eab308;margin:1px 0;line-height:1.2;}
-.cbir-organizer{font-size:8px;color:#6b7280;margin-top:auto;display:flex;align-items:center;gap:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
 </style>
 
 @if(count($results) > 0)
     <div class="mt-4">
         <div class="flex items-center justify-between mb-3 px-1">
             <div class="flex items-center gap-2">
-                <x-filament::icon icon="heroicon-s-sparkles" class="w-4 h-4 text-amber-500" />
+                <x-filament::icon icon="/images/icons/sparkles.svg" class="w-4 h-4 text-amber-500" />
                 <span class="text-sm font-bold text-gray-300">{{ __('Hasil Pencarian') }}</span>
                 <x-filament::badge color="gray" size="xs">
                     {{ count($results) }}
@@ -80,7 +80,7 @@
         <div class="cbir-grid">
             @foreach($results as $res)
                 @php
-                    $type = $res['type'] ?? 'product';
+                    $type = $res['type'] ?? 'catalog';
                     $data = $res['data'] ?? [];
                     $score = $res['similarity'] ?? 0;
                     $pct_match = number_format($score, 1);
@@ -91,8 +91,8 @@
                     $pct = $discountPrice > 0 && $price > 0 ? round(($price - $discountPrice) / $price * 100) : null;
                     
                     $url = $type === 'package'
-                        ? \App\Filament\User\Resources\PackageResource\PackageResource::getUrl('view', ['record' => $data['id'] ?? 0])
-                        : \App\Filament\User\Resources\ProductResource\ProductResource::getUrl('view', ['record' => $data['id'] ?? 0]);
+                        ? \App\Filament\User\Resources\CatalogResource\CatalogResource::getUrl('view', ['record' => $data['id'] ?? 0])
+                        : \App\Filament\User\Resources\CatalogResource\CatalogResource::getUrl('view', ['record' => $data['id'] ?? 0]);
                         
                     $img = str_starts_with($data['image_url'] ?? '', 'http') 
                         ? $data['image_url'] 
@@ -136,7 +136,7 @@
                         </div>
                         <div class="cbir-footer" style="display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:3px;">
                             <span style="display:flex;align-items:center;gap:2px;font-size:9px;color:#9ca3af;">
-                                <svg width="9" height="9" viewBox="0 0 24 24" style="fill:#facc15;flex-shrink:0;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                                <x-filament::icon icon="/images/icons/star.svg" class="h-[9px] w-[9px] shrink-0 text-yellow-400" />
                                 {{ $data['rating'] ?? '0.0' }}
                             </span>
                             @php

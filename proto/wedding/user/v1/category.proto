@@ -1,0 +1,81 @@
+syntax = "proto3";
+
+package wedding.user.v1;
+
+option go_package = "github.com/wedding/user/v1;userv1";
+option php_namespace = "App\\Grpc\\User\\V1";
+option php_metadata_namespace = "App\\Grpc\\User\\V1\\GPBMetadata";
+
+import "wedding/user/v1/common.proto";
+
+// Category Service
+service CategoryService {
+  rpc GetCategory(GetCategoryRequest) returns (Category);
+  rpc GetCategoryBySlug(GetCategoryBySlugRequest) returns (Category);
+  rpc ListCategories(ListCategoriesRequest) returns (CategoryListResponse);
+  rpc GetAllCategories(GetAllCategoriesRequest) returns (CategoryListResponse);
+  rpc GetCategoryTree(GetCategoryTreeRequest) returns (CategoryTreeResponse);
+  rpc GetCategoriesWithCounts(GetCategoriesWithCountsRequest) returns (CategoryWithCountsResponse);
+}
+
+message GetCategoryRequest {
+  string id = 1;
+}
+
+message GetCategoryBySlugRequest {
+  string slug = 1;
+}
+
+message ListCategoriesRequest {
+  PaginationRequest pagination = 1;
+  bool active = 2;
+  string parent_id = 3;
+}
+
+message CategoryListResponse {
+  repeated Category categories = 1;
+  PaginationResponse pagination = 2;
+}
+
+message GetAllCategoriesRequest {
+  bool active = 1;
+}
+
+message GetCategoryTreeRequest {}
+
+message CategoryTreeResponse {
+  repeated CategoryTree categories = 1;
+}
+
+message GetCategoriesWithCountsRequest {
+  bool active = 1;
+}
+
+message CategoryWithCountsResponse {
+  repeated CategoryWithCounts categories = 1;
+}
+
+message Category {
+  string id = 1;
+  string name = 2;
+  string slug = 3;
+  string description = 4;
+  string image_url = 5;
+  bool is_active = 6;
+  Category parent = 7;
+  repeated Category children = 8;
+  string created_at = 9;
+  string updated_at = 10;
+}
+
+message CategoryTree {
+  Category category = 1;
+  repeated CategoryTree children = 2;
+}
+
+message CategoryWithCounts {
+  Category category = 1;
+  int32 catalog_count = 2;
+  int32 package_count = 3;
+  int32 total_items = 4;
+}

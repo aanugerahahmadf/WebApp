@@ -1,6 +1,6 @@
 # Arsitektur Dukungan Platform (Capacitor)
 
-Dokumen ini menjelaskan bagaimana aplikasi Laravel Wedding Organizer CBIR menangani
+Dokumen ini menjelaskan bagaimana aplikasi Laravel Wedding Flower Decorations CBIR menangani
 tiga lingkungan runtime: browser web, shell mobile Capacitor (Android/iOS), dan
 shell desktop Capacitor (Electron untuk Windows/macOS).
 

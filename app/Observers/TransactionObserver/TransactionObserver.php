@@ -40,7 +40,7 @@ class TransactionObserver
                             ->title($topupTitle)
                             ->body($topupBody)
                             ->success()
-                            ->icon('heroicon-o-banknotes')
+                            ->icon('/images/icons/banknotes.svg')
                             ->sendToDatabase($user);
 
                         PlatformNotificationService::send($user, $topupTitle, $topupBody);

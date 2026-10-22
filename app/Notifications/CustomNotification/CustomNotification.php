@@ -2,6 +2,7 @@
 
 namespace App\Notifications\CustomNotification;
 
+use App\Channels\FcmChannel\FcmChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 

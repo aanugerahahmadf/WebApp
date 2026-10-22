@@ -5,7 +5,7 @@ use App\Models\Traits\LegacyMorphClass\LegacyMorphClass;
 
 
 use App\Models\Package\Package;
-use App\Models\Product\Product;
+use App\Models\Catalog\Catalog;
 use App\Models\Transaction\Transaction;
 use App\Models\User\User;
 
@@ -79,7 +79,7 @@ class Order extends Model
     protected $fillable = [
         'user_id',
         'package_id',
-        'product_id',
+        'catalog_id',
         'order_number',
         'total_price',
         'status',
@@ -114,9 +114,14 @@ class Order extends Model
         return $this->belongsTo(Package::class);
     }
 
-    public function product()
+    /**
+     * The catalog this order was placed for.
+     *
+     * Both the relation and the column are now `catalog_id`.
+     */
+    public function catalog()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Catalog::class, 'catalog_id');
     }
 
     public function transactions()

@@ -1,0 +1,54 @@
+# Review Query Definitions
+# Wedding Flower Decoration App - Review GraphQL Queries
+
+type Query {
+  # Get reviews for a catalog
+  catalogReviews(
+    catalogId: ID!
+    first: Int = 10
+    rating: Int @where(key: "rating")
+  ): [Review!]! @paginate(defaultCount: 10)
+  
+  # Get reviews for a package
+  packageReviews(
+    packageId: ID!
+    first: Int = 10
+    rating: Int @where(key: "rating")
+  ): [Review!]! @paginate(defaultCount: 10)
+  
+  # Get current user's reviews
+  myReviews(first: Int = 10): [Review!]! @paginate(defaultCount: 10)
+  
+  # Get single review
+  review(id: ID @eq): Review @find
+  
+  # Get review statistics for a catalog/package
+  reviewStats(
+    catalogId: ID
+    packageId: ID
+  ): ReviewStats @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ReviewResolver@stats")
+  
+  # Get featured reviews (high rating with photos)
+  featuredReviews(first: Int = 5): [Review!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ReviewResolver@featured")
+  
+  # Admin: Get all reviews with moderation status
+  allReviews(
+    first: Int = 20
+    status: String @where(key: "status")
+    rating: Int @where(key: "rating")
+  ): [Review!]! @paginate(defaultCount: 20) @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ReviewResolver@all")
+}
+
+type ReviewStats {
+  totalReviews: Int!
+  averageRating: Float!
+  ratingDistribution: [RatingCount!]!
+  withPhotos: Int!
+  verifiedPurchases: Int!
+}
+
+type RatingCount {
+  rating: Int!
+  count: Int!
+  percentage: Float!
+}

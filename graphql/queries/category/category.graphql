@@ -1,0 +1,38 @@
+# Category Query Definitions
+# Wedding Flower Decoration App - Category GraphQL Queries
+
+type Query {
+  # Get single category by ID
+  category(id: ID @eq): Category @find
+  
+  # Get category by slug
+  categoryBySlug(slug: String!): Category @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CategoryResolver@bySlug")
+  
+  # Get all categories with pagination
+  categories(
+    first: Int = 20
+    active: Boolean @where(key: "is_active")
+    parentId: ID @where(key: "parent_id")
+  ): [Category!]! @paginate(defaultCount: 20)
+  
+  # Get all categories as flat list (for dropdowns)
+  allCategories(active: Boolean = true): [Category!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CategoryResolver@all")
+  
+  # Get category tree (hierarchical)
+  categoryTree: [CategoryTree!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CategoryResolver@tree")
+  
+  # Get categories with catalog/package counts
+  categoriesWithCounts(active: Boolean = true): [CategoryWithCounts!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CategoryResolver@withCounts")
+}
+
+type CategoryTree {
+  category: Category!
+  children: [CategoryTree!]!
+}
+
+type CategoryWithCounts {
+  category: Category!
+  catalogCount: Int!
+  packageCount: Int!
+  totalItems: Int!
+}

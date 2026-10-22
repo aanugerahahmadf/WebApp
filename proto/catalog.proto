@@ -1,0 +1,151 @@
+syntax = "proto3";
+
+package weddingapp.catalog;
+
+import "proto/auth.proto";
+
+option php_namespace = "App\\Grpc\\Catalog";
+option java_package = "com.weddingapp.catalog";
+option csharp_namespace = "WeddingApp.Catalog";
+option go_package = "github.com/weddingapp/grpc/catalog";
+
+service CatalogService {
+  rpc GetCatalog (GetCatalogRequest) returns (CatalogResponse);
+  rpc ListCatalogs (ListCatalogsRequest) returns (CatalogListResponse);
+  rpc GetCatalogBySlug (GetCatalogBySlugRequest) returns (CatalogResponse);
+  rpc GetCategories (GetCategoriesRequest) returns (CategoriesResponse);
+  rpc GetCategory (GetCategoryRequest) returns (CategoryResponse);
+  rpc GetCatalogsByCategory (GetCatalogsByCategoryRequest) returns (CatalogListResponse);
+  rpc SearchCatalogs (SearchCatalogsRequest) returns (CatalogListResponse);
+  rpc GetFeaturedCatalogs (GetFeaturedCatalogsRequest) returns (CatalogListResponse);
+  rpc GetOnSaleCatalogs (GetOnSaleCatalogsRequest) returns (CatalogListResponse);
+  rpc GetRelatedCatalogs (GetRelatedCatalogsRequest) returns (CatalogListResponse);
+}
+
+message GetCatalogRequest {
+  int64 id = 1;
+}
+
+message ListCatalogsRequest {
+  int32 page = 1;
+  int32 per_page = 2;
+  string sort_by = 3;
+  string sort_order = 4;
+  string search = 5;
+  int64 category_id = 6;
+  double min_price = 7;
+  double max_price = 8;
+  bool featured = 9;
+  bool on_sale = 10;
+  bool active = 11;
+  string theme = 12;
+  string color = 13;
+}
+
+message GetCatalogBySlugRequest {
+  string slug = 1;
+}
+
+message GetCategoriesRequest {
+  bool active_only = 1;
+  int64 parent_id = 2;
+}
+
+message CategoriesResponse {
+  repeated Category categories = 1;
+}
+
+message GetCategoryRequest {
+  int64 id = 1;
+  string slug = 2;
+}
+
+message CategoryResponse {
+  Category category = 1;
+}
+
+message GetCatalogsByCategoryRequest {
+  int64 category_id = 1;
+  int32 page = 2;
+  int32 per_page = 3;
+}
+
+message SearchCatalogsRequest {
+  string query = 1;
+  int32 page = 2;
+  int32 per_page = 3;
+  int64 category_id = 4;
+  double min_price = 5;
+  double max_price = 6;
+}
+
+message GetFeaturedCatalogsRequest {
+  int32 limit = 1;
+}
+
+message GetOnSaleCatalogsRequest {
+  int32 limit = 1;
+}
+
+message GetRelatedCatalogsRequest {
+  int64 catalog_id = 1;
+  int32 limit = 2;
+}
+
+message CatalogResponse {
+  Catalog catalog = 1;
+}
+
+message CatalogListResponse {
+  repeated Catalog catalogs = 1;
+  PaginationMeta pagination = 2;
+}
+
+message Catalog {
+  int64 id = 1;
+  string name = 2;
+  string slug = 3;
+  string description = 4;
+  double price = 5;
+  double discount_price = 6;
+  double final_price = 7;
+  int32 stock = 8;
+  bool is_active = 9;
+  bool is_featured = 10;
+  bool is_out_of_stock = 11;
+  string image_url = 12;
+  string video_url = 13;
+  repeated string features = 14;
+  string theme = 15;
+  string color = 16;
+  int32 min_capacity = 17;
+  int32 max_capacity = 18;
+  Category category = 19;
+  double average_rating = 20;
+  int32 review_count = 21;
+  string created_at = 22;
+  string updated_at = 23;
+}
+
+message Category {
+  int64 id = 1;
+  string name = 2;
+  string slug = 3;
+  string description = 4;
+  string image_url = 5;
+  bool is_active = 6;
+  int32 catalogs_count = 7;
+  int32 packages_count = 8;
+  string created_at = 9;
+}
+
+message PaginationMeta {
+  int32 current_page = 1;
+  int32 per_page = 2;
+  int32 total = 3;
+  int32 last_page = 4;
+  int32 from = 5;
+  int32 to = 6;
+  bool has_next_page = 7;
+  bool has_prev_page = 8;
+}

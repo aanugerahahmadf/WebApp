@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'የፖስታ መላኪያ ኮድ',
         'preview'                  => 'ቅድመ እይታ',
         'price'                    => 'ዋጋ',
-        'product_id'               => 'የምርት መታወቂያ',
+        'catalog_id'               => 'የምርት መታወቂያ',
         'product_uid'              => 'የምርት UID',
         'product_uuid'             => 'ምርት UUID',
         'promo_code'               => 'የማስተዋወቂያ ኮድ',

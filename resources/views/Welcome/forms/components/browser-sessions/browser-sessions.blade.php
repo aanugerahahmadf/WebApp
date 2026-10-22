@@ -39,7 +39,7 @@
                                             <x-filament::button
                                                 color="gray"
                                                 size="sm"
-                                                icon="heroicon-m-chevron-down"
+                                                icon="/images/icons/chevron_down.svg"
                                                 icon-position="after"
                                                 class="bg-white dark:bg-gray-800 shadow-sm ring-1 ring-gray-950/10 dark:ring-white/20"
                                             >
@@ -50,7 +50,7 @@
                                         <x-filament::dropdown.list>
                                             <x-filament::dropdown.list.item
                                                 color="danger"
-                                                icon="heroicon-m-trash"
+                                                icon="/images/icons/trash.svg"
                                                 wire:click="deleteSelectedSessions"
                                                 wire:confirm="{{ __('Apakah Anda yakin ingin keluar dari :count sesi yang terpilih?', ['count' => $selectedCount]) }}"
                                             >
@@ -100,7 +100,7 @@
                                         <div class="p-2 rounded-lg @if($session->is_current_device) bg-primary-100 dark:bg-primary-500/20 @else bg-gray-100 dark:bg-gray-800 @endif">
                                             @if ($session->device['desktop'])
                                                 <x-filament::icon
-                                                    icon="heroicon-o-computer-desktop"
+                                                    icon="/images/icons/computer_desktop.svg"
                                                     @class([
                                                         'w-5 h-5',
                                                         'text-primary-600 dark:text-primary-400' => $session->is_current_device,
@@ -109,7 +109,7 @@
                                                 />
                                             @else
                                                 <x-filament::icon
-                                                    icon="heroicon-o-device-phone-mobile"
+                                                    icon="/images/icons/mobile.svg"
                                                     @class([
                                                         'w-5 h-5',
                                                         'text-primary-600 dark:text-primary-400' => $session->is_current_device,
@@ -151,7 +151,7 @@
                                             color="danger"
                                             size="sm"
                                             outlined
-                                            icon="heroicon-m-arrow-left-on-rectangle"
+                                            icon="/images/icons/sign_out.svg"
                                             wire:click="deleteSession('{{ $session->id }}')"
                                             wire:confirm="{{ __('Apakah Anda yakin ingin keluar dari sesi ini?') }}"
                                             class="text-xs font-bold"

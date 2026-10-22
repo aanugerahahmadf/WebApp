@@ -4,6 +4,7 @@ namespace App\Filament\User\Auth\OtpEmailVerificationPrompt;
 
 use App\Filament\User\Auth\CompleteProfile\CompleteProfilePage;
 use App\Filament\User\Auth\Concerns\HasAuthBreadcrumbs;
+use App\Filament\User\Auth\SecurityQuestion\SecurityQuestion;
 use App\Models\User\User;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -39,12 +40,12 @@ class OtpEmailVerificationPrompt extends EmailVerificationPrompt
             // Hanya akun Google (social) yang belum lengkap -> Complete Profile.
             // Akun form (Sign Up) datanya sudah sama -> langsung home.
             if ($user && method_exists($user, 'shouldCompleteProfile') && $user->shouldCompleteProfile()) {
-                redirect()->to(CompleteProfilePage::getUrl());
+                $this->redirect(CompleteProfilePage::getUrl());
 
                 return;
             }
 
-            redirect()->intended(Filament::getUrl());
+            $this->redirect(Filament::getUrl());
 
             return;
         }
@@ -106,12 +107,13 @@ class OtpEmailVerificationPrompt extends EmailVerificationPrompt
 
             Notification::make()->title(__('Email berhasil diverifikasi!'))->success()->send();
 
-            // Setelah OTP valid: hanya akun Google yang belum lengkap -> Complete Profile.
-            // Akun form (Sign Up) langsung ke home karena datanya sudah sama.
+            // Setelah OTP valid:
+            // - Akun Google yang belum lengkap -> Complete Profile
+            // - Akun form (Sign Up) -> SecurityQuestion untuk memilih 2FA
             if (method_exists($user, 'shouldCompleteProfile') && $user->shouldCompleteProfile()) {
                 $this->redirect(CompleteProfilePage::getUrl());
             } else {
-                $this->redirect(Filament::getUrl());
+                $this->redirect(SecurityQuestion::getUrl());
             }
         } else {
             Notification::make()

@@ -234,7 +234,7 @@ return [
         'postal_code'              => '邮政编码',
         'preview'                  => '预览',
         'price'                    => '价格',
-        'product_id'               => '产品编号',
+        'catalog_id'               => '产品编号',
         'product_uid'              => '产品UID',
         'product_uuid'             => '产品UUID',
         'promo_code'               => '促销代码',

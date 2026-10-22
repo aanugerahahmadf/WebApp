@@ -3,20 +3,21 @@
     // Pakai path relatif untuk semua platform — WebView dan browser sama-sama handle ini.
     // normalizeUrl() tidak dipakai untuk navigasi halaman agar tidak buka Chrome di mobile.
     $googleRedirectUrl = '/auth/google/redirect';
-    // SIGN UP: link pendaftaran DIMATIKAN, kodenya tidak dihapus.
+    // SIGN UP: link pendaftaran HIDUP lagi.
     //
-    // `->registration()` tidak dipanggil di UserPanelProvider, jadi
-    // `filament()->getRegistrationUrl()` selalu null dan tidak ada route
-    // `filament.user.auth.register` untuk dijadikan fallback. Asli URL blok ini
-    // disimpan di bawah dalam bentuk komentar; yang aktif sekarang mengarah ke
-    // halaman auth -- satu-satunya pintu yang memuat tombol Google.
-    //
-    // $registerUrl       = filament()->getRegistrationUrl()
-    //     ?? \App\Filament\User\Auth\Auth\Auth::getUrl()
-    //     ?? filament()->getLoginUrl()
-    //     ?? route('filament.user.auth.login');
-    $registerUrl       = \App\Filament\User\Auth\Auth\Auth::getUrl();
-    $loginUrl          = filament()->getLoginUrl() ?? route('filament.user.auth.login');
+    // `->registration(SignUp::class)` dipanggil di UserPanelProvider dengan
+    // slug `signup`, jadi `filament()->getRegistrationUrl()` mengembalikan
+    // URL sungguhan. Rantai fallback di bawah tetap dipertahankan supaya
+    // partial ini tidak menjatuhkan halaman kalau panel ini nanti dipakai di
+    // panel tanpa pendaftaran (mis. admin): tanpa
+    // `filament()->getRegistrationUrl()` yang null, `route()` di bawahnya
+    // akan melempar RouteNotFoundException dan membuat seluruh halaman auth
+    // 500.
+    $registerUrl       = filament()->getRegistrationUrl()
+        ?? \App\Filament\User\Auth\Auth\Auth::getUrl()
+        ?? filament()->getLoginUrl()
+        ?? route('filament.welcome.auth.login');
+    $loginUrl          = filament()->getLoginUrl() ?? route('filament.welcome.auth.login');
     $hasParentData     = $hasParentData ?? false;
     $hideCheckboxes    = $hideCheckboxes ?? false;
     // Modal syarat (Perjanjian Pengguna / Kebijakan Privasi / Kebijakan
@@ -123,10 +124,7 @@
             x-bind:disabled="!(agreed && remembered) || loading"
             class="flex items-center justify-center gap-3 w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm font-semibold shadow-sm transition-all duration-100">
             {{-- x-show dipakai bukan x-if/template — template tag tidak render di Android WebView lama --}}
-            <svg x-show="loading" class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="display:none">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-            </svg>
+            <x-filament::icon icon="/images/icons/refresh.svg" x-show="loading" style="display:none" class="animate-spin h-5 w-5 text-gray-500" />
             <svg x-show="!loading" class="h-5 w-5" viewBox="0 0 48 48">
                 <path fill="#EA4335"
                     d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
@@ -147,25 +145,29 @@
     @endif
 
     {{--
-        SIGN UP / link "Belum memiliki akun?" — DIMATIKAN dengan sengaja.
+        SIGN UP / link "Belum memiliki akun?" -- TIDAK dirender di sini.
 
-        Blok markup di bawah dikomentari, bukan dihapus: pendaftaran
-        email/password dinonaktifkan, tapi
-        `App\Filament\User\Auth\SignUp\SignUp` masih ada di repo. Kalau
-        suatu saat dibutuhkan: (1) hapus dua pembungkus komentar Blade yang
-        memblok markup ini, lalu (2) set `$showAuthSwitchLink = true` di atas
-        -- satu-satunya flag yang menghidupkan blok ini.
+        Pendaftaran sudah hidup lagi (`->registration(SignUp::class)`), tapi
+        blok ini tetap tidak dipakai: satu-satunya partial yang memuat
+        social-buttons adalah /user/auth, dan halaman itu meneruskan
+        `showAuthSwitchLink => false` karena sudah punya dua tombol sendiri.
+
+        Pintu "Belum memiliki akun? Sign Up" (dan pasangannya, "Sudah
+        memiliki akun? Sign In") ditulis langsung di halaman form-nya:
+        resources/views/User/auth/sign-in/sign-in.blade.php dan
+        resources/views/User/auth/sign-up/sign-up.blade.php. Menempelnya di
+        dua tempat berarti dua copy yang harus dijaga sinkron; blok di bawah
+        tidak pernah hidup, jadi tinggal menjadi markup mati yang menyesatkan.
+
+        Kalau suatu saat social-buttons benar-benar dipakai dengan
+        `showAuthSwitchLink => true`, blok di bawah sudah siap: cukup hapus dua
+        pembungkus komentar Blade-nya.
 
         PERINGATAN: jangan pernah menulis literal pembuka/penutup komentar
         Blade di dalam teks komentar. Blade tidak mendukung komentar
         bersarang, jadi penutup yang tertulis di dalam komentar akan menutup
         komentar lebih awal dan seluruh sisa teksnya bocor ke halaman sebagai
         teks terlihat -- persis yang terjadi di sini sebelumnya.
-
-        Selama blok ini mati:
-          - tidak ada door pendaftaran di halaman mana pun di panel User,
-          - `$registerUrl` diarahkan ke halaman auth (tombol Google), bukan ke
-            halaman Sign Up yang tidak lagi punya route.
     --}}
     {{--
     @if ($showAuthSwitchLink)
@@ -258,7 +260,7 @@
                     <div class="flex items-center gap-2">
                         <template x-if="mode === 'wizard'">
                             <button @click="step = 1" class="text-gray-400 hover:text-primary-500 transition-colors">
-                                <x-heroicon-m-arrow-left class="w-6 h-6" />
+                                <img src="/images/icons/arrow_left.svg" class="w-6 h-6" />
                             </button>
                         </template>
                         <h2 class="text-xl font-bold text-primary-500">
@@ -305,7 +307,7 @@
                     <div class="flex items-center gap-2">
                         <template x-if="mode === 'wizard'">
                             <button @click="step = 2" class="text-gray-400 hover:text-primary-500 transition-colors">
-                                <x-heroicon-m-arrow-left class="w-6 h-6" />
+                                <img src="/images/icons/arrow_left.svg" class="w-6 h-6" />
                             </button>
                         </template>
                         <h2 class="text-xl font-bold text-primary-500">

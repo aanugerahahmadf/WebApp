@@ -6,7 +6,7 @@
 @props(['selectedConversation'])
 <div wire:poll.visible.{{ $pollInterval }}="loadConversations"
     style="height: 100%; display: flex; flex-direction: column;"
-    class="w-full h-full bg-white rounded-xl dark:divide-white/10 dark:bg-gray-900 p-6">
+    class="w-full h-full p-6">
     <div class="flex flex-col gap-4 mb-6">
         <div class="flex items-center justify-between">
             <div class="flex gap-4 items-center">
@@ -21,8 +21,15 @@
                 {{ $this->createConversation }}
             </div>
         </div>
+        @if (! $this->chatUserId())
+            {{-- Bukan 500: halaman tetap hidup, dan di sini dijelaskan cara
+                 menautkan identitas chat staf (ini penyebab daftar kosong). --}}
+            <div class="rounded-xl border border-warning-300 bg-warning-50 p-4 text-sm text-warning-700 dark:border-warning-700 dark:bg-warning-950 dark:text-warning-300">
+                {{ __('Akun chat belum tertaut ke baris pengguna. Jalankan php artisan admin:grant-storefront lalu muat ulang halaman ini.') }}
+            </div>
+        @endif
         <div class="w-full">
-            <x-filament::input.wrapper suffix-icon="heroicon-o-magnifying-glass" class="w-full">
+            <x-filament::input.wrapper suffix-icon="/images/icons/search.svg" class="w-full">
                 <x-filament::input type="text" placeholder="{{__('Search messages...')}}"
                     x-on:click="$dispatch('open-modal', { id: 'search-conversation' })"
                     class="w-full" />
@@ -33,18 +40,37 @@
     <livewire:fm-admin-search />
 
     <!-- Inbox : Start -->
+    {{--
+        `min-h-0` WAJIB di sini, bukan opsional.
+
+        Pembungkus ini flex item di dalam kolom flex (`w-full h-full p-6`
+        di atas). Default flex item punya `min-height: auto`, artinya ia TIDAK
+        boleh menyusut lebih kecil dari isinya -- jadi `overflow-y-auto` di
+        sini tidak pernah menggulir, melainkan membesar dan mendorong isi
+        keluar `#messages-container` yang `overflow: hidden`. Baris percakapan
+        jadi terpotong, dan inbox terlihat kosong.
+
+        `min-h-0` melepas batas itu: pembungkus boleh menyusut ke ruang yang
+        tersisa, lalu isinya menggulir di dalamnya.
+
+        Tinggi `calc(100% - 120px)` yang dulu ada di sini sengaja TIDAK
+        dikembalikan. Angka 120 itu menebak tinggi kepala kolom, sementara
+        `flex-1` sudah menyediakan sisa ruang secara otomatis; dua-duanya
+        bertabrakan begitu tinggi kepala berubah.
+    --}}
     <div @style([
-        'height: calc(100% - 120px)' => $this->conversations->count() > 0,
         'margin-top: 1.5rem;'
     ]) @class([
-    'flex-1 overflow-y-auto' => $this->conversations->count() > 0,
+    'flex-1 min-h-0 overflow-y-auto' => $this->conversations->count() > 0,
 ])>
         @if ($this->conversations->count() > 0)
             <div class="grid w-full">
                 @foreach ($this->conversations as $conversation)
                     @php
                         $latestMessage = $conversation->latestMessage();
-                        $isRead = $latestMessage ? in_array(auth()->id(), $latestMessage->read_by ?? []) : true;
+                        // Identitas chat panel admin = users.id staf (ChatStaff),
+                        // bukan admins.id dari auth()->id().
+                        $isRead = $latestMessage ? in_array($this->chatUserId(), $latestMessage->read_by ?? []) : true;
                     @endphp
                     <a wire:key="{{ $conversation->id }}" wire:navigate
                         href="{{ $messagesPage::getUrl(panel: 'admin', tenant: filament()->getTenant()) . '/' . $conversation->id }}" @class([
@@ -77,7 +103,7 @@
                                                 'text-gray-950 dark:text-gray-200 font-medium' => !$isRead
                                             ])>
                                                 <span class="font-bold">
-                                                    {{ $latestMessage->user_id == auth()->id() ? __('You:') : ($latestMessage->sender->name ?? __('User')) . ':' }}
+                                                    {{ $latestMessage->user_id == $this->chatUserId() ? __('You:') : ($latestMessage->sender->name ?? __('User')) . ':' }}
                                                 </span>
                                                 @php
                                                     $media = $latestMessage->getMedia(MediaCollectionType::FILAMENT_MESSAGES->value);
@@ -106,7 +132,7 @@
                                         {{ \Carbon\Carbon::parse($conversation->updated_at)->setTimezone(config('messages.timezone', 'app.timezone'))->shortAbsoluteDiffForHumans() }}
                                     </p>
 
-                                    <x-filament::icon-button icon="heroicon-o-trash" color="danger" size="xs"
+                                    <x-filament::icon-button icon="/images/icons/trash.svg" color="danger" size="xs"
                                         tooltip="{{ __('Delete') }}"
                                         wire:click.stop="deleteConversation({{ $conversation->id }})"
                                         wire:confirm="{{ __('Are you sure you want to delete this conversation?') }}" />
@@ -119,7 +145,7 @@
         @else
             <div class="flex flex-col items-center justify-center h-full p-3">
                 <div class="p-3 mb-4 bg-gray-100 rounded-full dark:bg-gray-500/20">
-                    <x-filament::icon icon="heroicon-o-x-mark" class="w-6 h-6 text-gray-500 dark:text-gray-400" />
+                    <x-filament::icon icon="/images/icons/x.svg" class="w-6 h-6 text-gray-500 dark:text-gray-400" />
                 </div>
                 <p class="text-base text-center text-gray-600 dark:text-gray-400">
                     {{__('No conversations yet')}}

@@ -2,48 +2,19 @@
 
 namespace App\Filament\Admin\Resources\UserResource\Pages\ManageUsers;
 
-use App\Filament\Admin\Concerns\HasMobilePagination\HasMobilePagination;
-use App\Filament\Admin\Exports\UserExporter\UserExporter;
-use App\Filament\Admin\Pages\Home\Home;
+use App\Filament\Shared\Concerns\HasStandardActions\HasStandardActions;
 use App\Filament\Admin\Resources\UserResource\UserResource;
 use App\Filament\Concerns\HasDynamicBreadcrumbs;
-use Filament\Actions;
-use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 
-/**
- * @property-read \App\Filament\Admin\Resources\UserResource\UserResource $resource
- */
-class ManageUsers extends ManageRecords
+class ManageUsers extends \Filament\Resources\Pages\ManageRecords
 {
-    use HasMobilePagination;
+    use HasStandardActions;
+
     use HasDynamicBreadcrumbs;
+
+
     protected static string $resource = UserResource::class;
-
-    public function getTitle(): string
-    {
-        return static::$title ?? static::getResource()::getTitleCasePluralModelLabel();
-    }
-
-    protected function getHeaderActions(): array
-    {
-        return [
-            Actions\ExportAction::make()
-                ->exporter(UserExporter::class)
-                ->label(__('Ekspor Data'))
-                ->icon('heroicon-s-arrow-down-tray')
-                ->color('success'),
-            Actions\CreateAction::make()
-                ->label(__('Tambah Pengguna'))
-                ->icon('heroicon-s-plus')
-                ->successNotification(
-                    Notification::make()
-                        ->success()
-                        ->title(__('Pengguna Ditambahkan'))
-                        ->body(__('Data pengguna baru telah berhasil ditambahkan.'))
-                ),
-        ];
-    }
 
     public function getBreadcrumbs(): array
     {

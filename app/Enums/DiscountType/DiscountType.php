@@ -30,8 +30,8 @@ enum DiscountType: string implements HasColor, HasIcon, HasLabel
     public function getIcon(): ?string
     {
         return match ($this) {
-            self::FIXED => 'heroicon-m-currency-dollar',
-            self::PERCENTAGE => 'heroicon-m-percent-badge',
+            self::FIXED => '/images/icons/dollar.svg',
+            self::PERCENTAGE => '/images/icons/tag_percent.svg',
         };
     }
 }

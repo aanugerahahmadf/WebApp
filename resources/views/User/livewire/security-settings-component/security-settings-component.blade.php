@@ -1,11 +1,11 @@
 <div>
-    <x-filament::section aside icon="heroicon-o-shield-check" :heading="__('Kata Sandi dan Keamanan')" :description="__('Kelola Sign In, pemulihan akun, perangkat, dan pemeriksaan keamanan.')">
+    <x-filament::section aside icon="/images/icons/shield_check.svg" :heading="__('Kata Sandi dan Keamanan')" :description="__('Kelola Sign In, pemulihan akun, perangkat, dan pemeriksaan keamanan.')">
         <div class="flex items-center justify-end">
             <x-filament::button
                 tag="a"
                 wire:navigate
                 :href="\App\Filament\User\Pages\SettingsPage\PasswordSecurityPage\PasswordSecurityPage::getUrl(panel: 'user')"
-                icon="heroicon-m-chevron-right"
+                icon="/images/icons/chevron_right.svg"
                 icon-position="after"
                 color="primary"
                 size="sm"

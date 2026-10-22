@@ -2,25 +2,23 @@
 
 namespace App\Filament\User\Auth\SignUp;
 
-use App\Filament\User\Auth\Auth\Auth;
 use App\Filament\User\Auth\Concerns\HasAuthBreadcrumbs;
+use App\Filament\Welcome\Pages\Home\Home as WelcomeHome;
 use App\Forms\Components\BirthPlaceDatePicker\BirthPlaceDatePicker;
-use App\Forms\Components\CalendarPicker\CalendarPicker;
 use App\Models\User\User;
 use App\Services\GeoLocationService\GeoLocationService;
 use App\Services\GeoNamesService\GeoNamesService;
 use App\Services\PlatformNotificationService\PlatformNotificationService;
 use App\Services\WorldRegionService\WorldRegionService;
+use App\Support\AppIcon\AppIcon;
+use App\Support\PasswordPolicy\PasswordPolicy;
 use App\Support\Phone\WhatsappField;
+use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Group;
 use Filament\Forms\Components\Hidden;
-use Filament\Forms\Components\Actions\Action as FormAction;
-use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Split;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -32,7 +30,6 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Auth\Register as BaseRegister;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Hash;
-use App\Support\PasswordPolicy\PasswordPolicy;
 use Illuminate\Validation\ValidationException;
 use Laravolt\Indonesia\Models\City as IndonesiaCity;
 use Laravolt\Indonesia\Models\District as IndonesiaDistrict;
@@ -66,25 +63,27 @@ class SignUp extends BaseRegister
     }
 
     /**
-     * Parent crumb Sign-Up adalah halaman auth (`/user/auth`), bukan Welcome
-     * Home -- sama seperti SignIn.
+     * Parent crumb Sign Up adalah Welcome Home (`/home`), bukan halaman
+     * auth (`/auth`) dan bukan "asal klik".
      *
-     * Yang di-override di sini adalah perilaku default trait
-     * HasAuthBreadcrumbs, yang menebak parent dari "asal klik"
-     * (`url()->previous()` / `url.intended`). Tebakan itu benar untuk halaman
-     * OTP (yangelying benar-benar datang dari Lupa Kata Sandi), tapi untuk Sign
-     * Up hasilnya selalu "Beranda" atau tidak ada sama sekali, sementara yang
-     * benar sudah pasti: cabangnya halaman auth.
+     * Kenapa tidak `Auth::getUrl()` seperti sebelumnya: `/auth` berheading
+     * "Welcome Back" dan isinya cuma dua tombol (Sign In + Google). Menunjuk
+     * crumb ke sana berarti rantai crumb-nya berbunyi "Welcome Back / Sign Up",
+     * dan "Welcome Back" bukan induk pendaftaran -- tidak ada apa pun di halaman
+     * itu yang membuat orang berniat MEMBUAT akun. Tamu yang datang di Sign Up
+     * datang dari storefront publik, jadi Beranda yang benar; ini persis yang
+     * sudah dilakukan halaman `Auth\Auth` (lihat getBreadcrumbs() di sana).
      *
-     * crumb parent memakai Auth::crumbLabel() ("Welcome Back"), bukan
-     * getHeading() halaman ini ("Sign Up"), supaya crumb di halaman ini tetap
-     * "Welcome Back / Sign Up" -- nama cabangnya sendiri, bukan nama halaman
-     * induknya.
+     * Perilaku default trait HasAuthBreadcrumbs (menebak parent dari
+     * `url()->previous()`) sengaja tidak dipakai di sini. Tebakan itu benar
+     * untuk halaman OTP, tapi untuk Sign Up hasilnya "Kembali" atau crumb
+     * kosong tergantung referer, sehingga rantai crumb-nya tidak konsisten --
+     * crumb yang berbeda untuk halaman yang sama.
      */
     public function getBreadcrumbs(): array
     {
         return [
-            Auth::getUrl() => Auth::crumbLabel(),
+            WelcomeHome::getUrl(panel: 'welcome') => __('Beranda'),
             $this->getAuthBreadcrumbsCurrentLabel(),
         ];
     }
@@ -99,9 +98,9 @@ class SignUp extends BaseRegister
     {
         return $form
             ->schema([
-                // â”€â”€ Foto Profil â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                // ── Foto Profil ─────────────────────────────────────────────
                 Section::make(__('Foto Profil'))
-                    ->icon('heroicon-s-camera')
+                    ->icon('/images/icons/camera.svg')
                     ->description(__('Foto profil Anda. Buka kamera atau pilih dari galeri.'))
                     ->schema([
                         FileUpload::make('avatar_url')
@@ -124,9 +123,9 @@ class SignUp extends BaseRegister
                     ])
                     ->columns(1),
 
-                // â”€â”€ Akun â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                // ── Akun ────────────────────────────────────────────────────
                 Section::make(__('Akun'))
-                    ->icon('heroicon-s-user-circle')
+                    ->icon('/images/icons/user_circle.svg')
                     ->description(__('Username, email, dan kata sandi untuk masuk.'))
                     ->schema([
                         TextInput::make('username')
@@ -151,7 +150,6 @@ class SignUp extends BaseRegister
                             ->required()
                             ->rule(PasswordPolicy::filamentRules())
                             ->same('password_confirmation')
-                            ->helperText(__('Minimal 12 karakter: huruf besar, huruf kecil, angka, dan simbol.'))
                             ->validationAttribute(__('Kata Sandi'))
                             ->live()
                             ->afterStateUpdated(fn ($state, Set $set) => $set('password_strength', $this->passwordStrength($state))),
@@ -160,13 +158,26 @@ class SignUp extends BaseRegister
                             ->password()
                             ->revealable()
                             ->required()
+                            // Aturan password ditaruh di field
+                            // KONFIRMASI, bukan di field password.
+                            //
+                            // Alasannya: `->helperText()` selalu tampil, bukan
+                            // hanya saat error atau saat difokus. Kalau ia di
+                            // field password, teksnya muncul DI ANTARA dua
+                            // input -- dan secara visual terbaca sebagai
+                            // keterangan field Konfirmasi, padahal yang
+                            // dijelaskan adalah aturan kata sandinya.
+                            // Di field konfirmasi, teksnya jatuh di bawah
+                            // form, jauh dari kedua input, jadi jelas milik
+                            // keduanya.
+                            ->helperText(__('Minimal 12 karakter: huruf besar, huruf kecil, angka, dan simbol.'))
                             ->dehydrated(false),
                     ])
                     ->columns(1),
 
-                // â”€â”€ Nama Lengkap â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                // ── Nama Lengkap ────────────────────────────────────────────
                 Section::make(__('Nama Lengkap'))
-                    ->icon('heroicon-s-identification')
+                    ->icon('/images/icons/id_card.svg')
                     ->description(__('Nama sesuai dokumen identitas Anda.'))
                     ->schema([
                         TextInput::make('first_name')
@@ -195,24 +206,24 @@ class SignUp extends BaseRegister
                             ->label(__('Nama Lengkap'))
                             ->disabled()
                             ->dehydrated(false)
-                            ->prefixIcon('heroicon-s-user')
+                            ->prefixIcon('/images/icons/user.svg')
                             ->helperText(__('Terisi otomatis dari Nama Depan, Tengah, dan Belakang.'))
                             ->columnSpanFull(),
                     ])
                     ->columns(1),
 
-                // â”€â”€ Nomor WhatsApp â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                // ── Nomor WhatsApp ──────────────────────────────────────────
                 Section::make(__('Nomor WhatsApp'))
-                    ->icon('heroicon-s-chat-bubble-left-ellipsis')
+                    ->icon('/images/icons/chat_dots.svg')
                     ->description(__('Untuk notifikasi pembayaran via WhatsApp.'))
                     ->schema([
                         WhatsappField::group(required: true),
                     ])
                     ->columns(1),
 
-                // â”€â”€ Tempat & Tanggal Lahir â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                // ── Tempat & Tanggal Lahir ──────────────────────────────────
                 Section::make(__('Tempat & Tanggal Lahir'))
-                    ->icon('heroicon-s-map-pin')
+                    ->icon('/images/icons/map_pin.svg')
                     ->schema([
                         BirthPlaceDatePicker::make('birth_place_date')
                             ->label(__('Tempat & Tanggal Lahir'))
@@ -221,9 +232,9 @@ class SignUp extends BaseRegister
                             ->columnSpanFull(),
                     ]),
 
-                // â”€â”€ Identitas & Dokumen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                // ── Identitas & Dokumen ─────────────────────────────────────
                 Section::make(__('Identitas & Dokumen'))
-                    ->icon('heroicon-s-shield-check')
+                    ->icon('/images/icons/shield_check.svg')
                     ->description(__('Pilih jenis identitas, lalu scan atau unggah foto dokumen dan selfie.'))
                     ->schema([
                         Select::make('identity_type')
@@ -295,9 +306,9 @@ class SignUp extends BaseRegister
                     ])
                     ->columns(1),
 
-                // â”€â”€ Alamat â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                // ── Alamat ──────────────────────────────────────────────────
                 Section::make(__('Alamat'))
-                    ->icon('heroicon-s-home')
+                    ->icon('/images/icons/home.svg')
                     ->schema([
                         Select::make('country')
                             ->label(__('Negara'))
@@ -336,6 +347,7 @@ class SignUp extends BaseRegister
                                     'code' => $code,
                                     'name' => strtoupper($data['name']),
                                 ]);
+
                                 return $province->id;
                             })
                             ->afterStateUpdated(function (Set $set) {
@@ -367,12 +379,13 @@ class SignUp extends BaseRegister
                                 $province = IndonesiaProvince::find($get('province_id'));
                                 $provinceCode = $province?->code ?? '99';
                                 $maxCode = (int) IndonesiaCity::where('province_code', $provinceCode)->max('code');
-                                $code = $maxCode > 0 ? (string) ($maxCode + 1) : $provinceCode . '99';
+                                $code = $maxCode > 0 ? (string) ($maxCode + 1) : $provinceCode.'99';
                                 $city = IndonesiaCity::create([
                                     'code' => $code,
                                     'province_code' => $provinceCode,
                                     'name' => strtoupper($data['name']),
                                 ]);
+
                                 return $city->id;
                             })
                             ->afterStateUpdated(function (Set $set) {
@@ -402,12 +415,13 @@ class SignUp extends BaseRegister
                                 $city = IndonesiaCity::find($get('city_id'));
                                 $cityCode = $city?->code ?? '9999';
                                 $maxCode = (int) IndonesiaDistrict::where('city_code', $cityCode)->max('code');
-                                $code = $maxCode > 0 ? (string) ($maxCode + 1) : $cityCode . '99';
+                                $code = $maxCode > 0 ? (string) ($maxCode + 1) : $cityCode.'99';
                                 $district = IndonesiaDistrict::create([
                                     'code' => $code,
                                     'city_code' => $cityCode,
                                     'name' => strtoupper($data['name']),
                                 ]);
+
                                 return $district->id;
                             })
                             ->afterStateUpdated(function (Set $set) {
@@ -434,12 +448,13 @@ class SignUp extends BaseRegister
                                 $district = IndonesiaDistrict::find($get('district_id'));
                                 $districtCode = $district?->code ?? '999999';
                                 $maxCode = (int) IndonesiaVillage::where('district_code', $districtCode)->max('code');
-                                $code = $maxCode > 0 ? (string) ($maxCode + 1) : $districtCode . '9999';
+                                $code = $maxCode > 0 ? (string) ($maxCode + 1) : $districtCode.'9999';
                                 $village = IndonesiaVillage::create([
                                     'code' => $code,
                                     'district_code' => $districtCode,
                                     'name' => strtoupper($data['name']),
                                 ]);
+
                                 return $village->id;
                             }),
                         // Non-Indonesia: real data from WorldRegionService
@@ -563,7 +578,7 @@ class SignUp extends BaseRegister
                                         $p['postal_code'],
                                         $search
                                     )))
-                                    ->mapWithKeys(fn ($p) => [$p['postal_code'] => $p['postal_code'].' â€” '.$p['place_name']])
+                                    ->mapWithKeys(fn ($p) => [$p['postal_code'] => $p['postal_code'].' — '.$p['place_name']])
                                     ->toArray();
                                 if (empty($results) && $search) {
                                     return [$search => $search];
@@ -582,9 +597,9 @@ class SignUp extends BaseRegister
                     ])
                     ->columns(1),
 
-                // â”€â”€ Data KYC â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                // ── Data KYC ────────────────────────────────────────────────
                 Section::make(__('Data KYC'))
-                    ->icon('heroicon-s-user-group')
+                    ->icon('/images/icons/users.svg')
                     ->description(__('Lengkapi data berikut sesuai dokumen. Dipakai verifikasi identitas.'))
                     ->schema([
                         Select::make('gender')
@@ -673,9 +688,9 @@ class SignUp extends BaseRegister
                     ])
                     ->columns(1),
 
-                // â”€â”€ Verifikasi Wajah â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                // ── Verifikasi Wajah ────────────────────────────────────────
                 Section::make(__('Verifikasi Wajah'))
-                    ->icon('heroicon-s-face-smile')
+                    ->icon('/images/icons/smile.svg')
                     ->description(__('Scan wajah Anda untuk verifikasi identitas.')
                         .' '.__('Minimal unggah foto KTP/dokumen agar wajah dapat dibandingkan.'))
                     ->schema([
@@ -748,16 +763,16 @@ class SignUp extends BaseRegister
             $data['last_name'] ?? null,
         );
 
-        // Parse "Kota, DD/MM/YYYY" â†’ birth_place + birth_date
+        // Parse "Kota, DD/MM/YYYY" → birth_place + birth_date
         if (! empty($data['birth_place_date'])) {
-            $parts               = array_map('trim', explode(',', $data['birth_place_date'], 2));
+            $parts = array_map('trim', explode(',', $data['birth_place_date'], 2));
             $data['birth_place'] = $parts[0] ?? null;
             if (! empty($parts[1])) {
                 try {
-                    $data['birth_date'] = \Carbon\Carbon::createFromFormat('d/m/Y', $parts[1])->format('Y-m-d');
+                    $data['birth_date'] = Carbon::createFromFormat('d/m/Y', $parts[1])->format('Y-m-d');
                 } catch (\Exception $e) {
                     try {
-                        $data['birth_date'] = \Carbon\Carbon::parse(str_replace('/', '-', $parts[1]))->format('Y-m-d');
+                        $data['birth_date'] = Carbon::parse(str_replace('/', '-', $parts[1]))->format('Y-m-d');
                     } catch (\Exception $e2) {
                         $data['birth_date'] = null;
                     }
@@ -886,6 +901,13 @@ class SignUp extends BaseRegister
             ->body(__('Account Anda Sudah Terdaftar Silahkan Ke Halaman Sign In.'))
             ->warning()
             ->send();
+
+        // Akun BARU wajib melewati SecurityQuestion sendiri (OTP ->
+        // SecurityQuestion -> TwoFactorAuth / SignIn -> Home). Flag sisa
+        // sesi lama akan membuat mount() SecurityQuestion langsung
+        // melempar ke Home tanpa ditanya -- lihat SocialiteController
+        // dan FirebaseAuthController untuk komentar padanannya.
+        session()->forget('security_question_answered');
 
         return $user;
     }

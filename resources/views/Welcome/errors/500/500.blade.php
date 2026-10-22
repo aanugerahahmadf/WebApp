@@ -1,5 +1,9 @@
-@extends('Welcome.errors.minimal.minimal')
+{{--
+    Halaman error 500 (storefront -- panel Welcome).
 
-@section('title', __('Server Error'))
-@section('code', '500')
-@section('message', __('Server Error'))
+    Seluruh tampilan berasal dari satu view bersama:
+    Shared.errors.glass.glass (kaca + animasi). File ini hanya meneruskan
+    kode status; isi, warna, dan tombolnya ada di
+    App\Support\ErrorPage\ErrorPage.
+--}}
+@include('Shared.errors.glass.glass', ['status' => 500])

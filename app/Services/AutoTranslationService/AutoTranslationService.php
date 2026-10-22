@@ -192,7 +192,7 @@ class AutoTranslationService
                 // Update local memory map
                 self::$activeMap[$text] = $translated;
 
-                // Update Cache Global per-product tanpa menghapus yang sudah ada
+                // Update Cache Global per-catalog tanpa menghapus yang sudah ada
                 $cacheKey = "active_trans_map_{$targetLocale}";
                 try {
                     $currentCache = Cache::get($cacheKey, []);

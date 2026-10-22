@@ -234,7 +234,7 @@ return [
         'postal_code'              => '우편 번호',
         'preview'                  => '미리보기',
         'price'                    => '가격',
-        'product_id'               => '제품 ID',
+        'catalog_id'               => '제품 ID',
         'product_uid'              => '제품 UID',
         'product_uuid'             => '제품 UUID',
         'promo_code'               => '프로모션 코드',

@@ -1,0 +1,96 @@
+syntax = "proto3";
+
+package wedding.user.v1;
+
+option go_package = "github.com/wedding/user/v1;userv1";
+option php_namespace = "App\\Grpc\\User\\V1";
+option php_metadata_namespace = "App\\Grpc\\User\\V1\\GPBMetadata";
+
+import "wedding/user/v1/common.proto";
+import "wedding/user/v1/auth.proto";
+import "wedding/user/v1/catalog.proto";
+import "wedding/user/v1/package.proto";
+import "wedding/user/v1/cart.proto";
+
+// Wishlist Service
+service WishlistService {
+  rpc GetMyWishlist(GetMyWishlistRequest) returns (WishlistListResponse);
+  rpc IsInWishlist(IsInWishlistRequest) returns (IsInWishlistResponse);
+  rpc ToggleWishlist(ToggleWishlistRequest) returns (WishlistActionResponse);
+  rpc AddToWishlist(AddToWishlistRequest) returns (Wishlist);
+  rpc RemoveFromWishlist(RemoveFromWishlistRequest) returns (RemoveFromWishlistResponse);
+  rpc ClearWishlist(ClearWishlistRequest) returns (ClearWishlistResponse);
+  rpc MoveToCart(MoveToCartRequest) returns (CartItem);
+  rpc ShareWishlist(ShareWishlistRequest) returns (WishlistShare);
+}
+
+message GetMyWishlistRequest {
+  PaginationRequest pagination = 1;
+}
+
+message IsInWishlistRequest {
+  string catalog_id = 1;
+  string package_id = 2;
+}
+
+message ToggleWishlistRequest {
+  string catalog_id = 1;
+  string package_id = 2;
+}
+
+message AddToWishlistRequest {
+  string catalog_id = 1;
+  string package_id = 2;
+}
+
+message RemoveFromWishlistRequest {
+  string wishlist_id = 1;
+}
+
+message ClearWishlistRequest {}
+
+message MoveToCartRequest {
+  string wishlist_id = 1;
+  int32 quantity = 2;
+}
+
+message ShareWishlistRequest {}
+
+message WishlistListResponse {
+  repeated Wishlist wishlist = 1;
+  PaginationResponse pagination = 2;
+}
+
+message Wishlist {
+  string id = 1;
+  User user = 2;
+  Catalog catalog = 3;
+  Package package = 4;
+  string created_at = 5;
+}
+
+message IsInWishlistResponse {
+  bool in_wishlist = 1;
+}
+
+message WishlistActionResponse {
+  Wishlist wishlist = 1;
+  WishlistActionType action = 2;
+  string message = 3;
+}
+
+message RemoveFromWishlistResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ClearWishlistResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message WishlistShare {
+  string share_token = 1;
+  string share_url = 2;
+  string expires_at = 3;
+}

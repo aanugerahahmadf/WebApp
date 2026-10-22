@@ -6,6 +6,7 @@ use App\Livewire\User\Messages\Inbox\Inbox;
 use App\Livewire\User\Messages\Messages\Messages;
 use App\Models\Inbox\Inbox as InboxModel;
 use App\Models\Message\Message;
+use App\Models\Admin\Admin;
 use App\Models\User\User;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -21,11 +22,29 @@ $admin = null;
 $customer = null;
 
 beforeEach(function () {
-    Role::firstOrCreate(['name' => 'super_admin']);
-    Role::firstOrCreate(['name' => 'customer']);
+    // Dua hal yang perlu_setup_ di sini, dan keduanya soal admin:
+    //
+    // 1. `$this->admin` adalah user BELANJA -- ini yang masuk ke
+    //    `inboxes.user_ids` dan `messages.user_id`.
+    //
+    // 2. `ChatStaff::adminUser()` mencari `Admin::query()->whereNotNull('user_id')`,
+    //    jadi ada baris `admins` yang tertaut ke user di atas. Tanpa itu,
+    //    `getOrCreateInboxWithAdmin()` mengembalikan null dan tidak ada inbox
+    //    yang dibuat -- persis yang assertion di test ini lihat, tanpa
+    //    penjelasan kenapa.
+    //
+    // `seedRoles()` dipanggil dengan kedua guard: `Admin::factory()->superAdmin()`
+    // mencari role di guard `admin`, dan `User::assignRole()` mencari di guard
+    // `web`. Hanya salah satu dari keduanya akan melempar `RoleDoesNotExist`.
+    seedRoles(adminRoles: ['super_admin'], webRoles: ['super_admin', 'customer']);
 
     $this->admin = User::factory()->create();
     $this->admin->assignRole('super_admin');
+
+    Admin::factory()->superAdmin()->create([
+        'active_status' => true,
+        'user_id'       => $this->admin->id,
+    ]);
 
     $this->customer = User::factory()->create();
     $this->customer->assignRole('customer');
@@ -35,6 +54,14 @@ beforeEach(function () {
     Queue::fake();
 });
 
+/**
+ * `user_ids` di `Inbox` berisi user BELANJA (tabel `users`), bukan baris admin.
+ *
+ * Admin ada di tabel `admins` dan hanya terhubung ke sisi belanja lewat
+ * `admins.user_id`; `ChatStaff::adminUser()` mengembalikan `User` itu, bukan
+ * model `Admin`. Karena itu parameter di sini bertipe `User`, dan yang
+ * dioper ke `makeInbox()` adalah identitas belanjanya.
+ */
 function makeInbox(User $customer, User $admin): InboxModel
 {
     return InboxModel::create([

@@ -7,11 +7,11 @@
         : $allResults;
 
     $packages = [];
-    $products = [];
+    $catalogs = [];
 
     if (!empty($results)) {
         $packages = collect($results)->where('type', 'package')->all();
-        $products = collect($results)->where('type', 'product')->all();
+        $catalogs = collect($results)->where('type', 'catalog')->all();
     } else {
         foreach (\App\Models\Package\Package::all() as $pkg) {
             $packages[] = [
@@ -27,9 +27,9 @@
                 ]
             ];
         }
-        foreach (\App\Models\Product\Product::where('is_active', true)->get() as $prd) {
-            $products[] = [
-                'type' => 'product',
+        foreach (\App\Models\Catalog\Catalog::where('is_active', true)->get() as $prd) {
+            $catalogs[] = [
+                'type' => 'catalog',
                 'similarity' => 0,
                 'data' => [
                     'id' => $prd->id,
@@ -50,7 +50,7 @@
         {{-- Packages Column --}}
         <div class="space-y-4">
             <div class="flex items-center gap-2 px-1">
-                <x-filament::icon icon="heroicon-s-gift" class="w-5 h-5 text-primary-500" />
+                <x-filament::icon icon="/images/icons/gift.svg" class="w-5 h-5 text-primary-500" />
                 <h3 class="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight">{{ __('Paket') }}</h3>
             </div>
             
@@ -68,15 +68,15 @@
             </div>
         </div>
 
-        {{-- Products Column --}}
+        {{-- Catalogs Column --}}
         <div class="space-y-4">
             <div class="flex items-center gap-2 px-1">
-                <x-filament::icon icon="heroicon-s-shopping-bag" class="w-5 h-5 text-amber-500" />
-                <h3 class="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight">{{ __('Produk') }}</h3>
+                <x-filament::icon icon="/images/icons/bag.svg" class="w-5 h-5 text-amber-500" />
+                <h3 class="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight">{{ __('Katalog') }}</h3>
             </div>
 
             <div class="space-y-3">
-                @forelse($products as $res)
+                @forelse($catalogs as $res)
                     @include('Welcome.components.cbir-item-card.cbir-item-card', [
                         'res' => $res,
                         'orderId' => $orderId ?? null
@@ -97,7 +97,7 @@
             wire:click="clearVisualSearch"
             color="gray"
             size="lg"
-            icon="heroicon-m-arrow-path"
+            icon="/images/icons/refresh.svg"
             class="w-full rounded-2xl font-bold"
         >
             {{ __('Bersihkan Filter') }}

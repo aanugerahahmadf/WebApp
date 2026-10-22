@@ -5,6 +5,9 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main, develop]
+  schedule:
+    # CI mingguan setiap hari Sabtu (00:00 UTC)
+    - cron: '0 0 * * 6'
 
 permissions:
   contents: read

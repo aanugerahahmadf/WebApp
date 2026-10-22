@@ -54,10 +54,21 @@
      rebuild aset hanya untuk satu breakpoint kosmetik. 2x2 juga tidak pernah
      menyisakan item menggantung -- yang terjadi kalau jumlah opsi ganjil
      misal pada tiga kolom. --}}
+{{-- Pada mobile (app & web) kamera native langsung dibuka tanpa modal pilihan.
+     Ekspresi di bawah WAJIB diawali `if`: Livewire hanya membungkus isi atribut
+     `x-on:` yang diawali `if`/`let`/`const` ke dalam (async()=>{ ... })().
+     Kalau baris pertama-nya komentar `//`, pembungkus tidak terpasang dan
+     `if` diperlakukan sebagai ekspresi -> "SyntaxError: Unexpected token 'if'". --}}
 <div
     x-data="{ open: false }"
     class="py-2"
-    x-on:cbir-open-camera.window="open = true"
+    x-on:cbir-open-camera.window="
+        if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            $wire.openCamera('photo-back');
+        } else {
+            open = true;
+        }
+    "
 >
     <template x-teleport="body">
         <div
@@ -77,7 +88,7 @@
                 <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4 dark:border-white/10">
                     <h3 class="text-base font-semibold text-gray-950 dark:text-white">{{ __('Pencarian Visual') }}</h3>
                     <button type="button" x-on:click="open = false" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
-                        <x-filament::icon icon="heroicon-m-x-mark" class="h-5 w-5" />
+                        <x-filament::icon icon="/images/icons/x.svg" class="h-5 w-5" />
                     </button>
                 </div>
 
@@ -95,27 +106,27 @@
                                 // (flipCamera), atau lewat <select> daftar
                                 // kamera di desktop. Dua entri untuk satu
                                 // kontrol yang sama tidak perlu.
-                                'label' => __('Kamera'),
-                                'icon' => 'heroicon-o-camera',
+                                'label' => __('Camera Photo'),
+                                'icon' => '/images/icons/camera.svg',
                                 'click' => $isNative
                                     ? "window.dispatchEvent(new CustomEvent('cbir-open-camera')); \$wire.openCamera('photo-back')"
                                     : "open = false; window.dispatchEvent(new CustomEvent('cbir-open-webrtc-camera'))",
                             ],
                             [
-                                'label' => __('Rekam Video'),
-                                'icon' => 'heroicon-o-video-camera',
+                                'label' => __('Camera Video'),
+                                'icon' => '/images/icons/video.svg',
                                 'click' => $isNative
                                     ? "window.dispatchEvent(new CustomEvent('cbir-open-camera')); \$wire.openCamera('video')"
                                     : "open = false; window.dispatchEvent(new CustomEvent('cbir-pick-video'))",
                             ],
                             [
                                 'label' => __('Pilih dari Galeri'),
-                                'icon' => 'heroicon-o-photo',
+                                'icon' => '/images/icons/photo.svg',
                                 'click' => "open = false; window.dispatchEvent(new CustomEvent('cbir-pick-gallery'))",
                             ],
                             [
                                 'label' => __('Pilih dari File'),
-                                'icon' => 'heroicon-o-folder',
+                                'icon' => '/images/icons/folder.svg',
                                 'click' => "open = false; window.dispatchEvent(new CustomEvent('cbir-pick-file'))",
                             ],
                         ];

@@ -69,9 +69,7 @@
                     aria-haspopup="dialog"
                     title="{{ __('Pilih Tanggal') }}"
                 >
-                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                    </svg>
+                    <x-filament::icon icon="/images/icons/calendar.svg" class="h-5 w-5" />
                 </button>
             </x-slot>
         </x-filament::input.wrapper>
@@ -95,7 +93,7 @@
                     @click="prevMonth()"
                     class="rounded p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                 >
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
+                    <x-filament::icon icon="/images/icons/chevron_left.svg" class="h-5 w-5" />
                 </button>
 
                 <div class="flex items-center gap-1 text-sm font-semibold text-primary-600 dark:text-primary-400">
@@ -118,7 +116,7 @@
                     @click="nextMonth()"
                     class="rounded p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                 >
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+                    <x-filament::icon icon="/images/icons/chevron_right.svg" class="h-5 w-5" />
                 </button>
             </div>
 
@@ -126,11 +124,11 @@
             <div x-show="showMonthPicker" x-cloak class="mt-2">
                 <div class="mb-1 flex items-center justify-between">
                     <button type="button" @click="viewYear--; renderDayGrid()" class="rounded p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
+                        <x-filament::icon icon="/images/icons/chevron_left.svg" class="h-4 w-4" />
                     </button>
                     <span class="text-xs font-medium text-gray-500 dark:text-gray-400" x-text="viewYear"></span>
                     <button type="button" @click="viewYear++; renderDayGrid()" class="rounded p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+                        <x-filament::icon icon="/images/icons/chevron_right.svg" class="h-4 w-4" />
                     </button>
                 </div>
                 <div class="grid grid-cols-3 gap-1">
@@ -157,11 +155,11 @@
             <div x-show="showYearPicker" x-cloak class="mt-2">
                 <div class="mb-1 flex items-center justify-center gap-4">
                     <button type="button" @click="yearRangeStart -= 12" class="rounded p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
+                        <x-filament::icon icon="/images/icons/chevron_left.svg" class="h-4 w-4" />
                     </button>
                     <span class="text-center text-xs font-semibold text-gray-500 dark:text-gray-400" x-text="(yearRangeStart + 6)"></span>
                     <button type="button" @click="yearRangeStart += 12" class="rounded p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+                        <x-filament::icon icon="/images/icons/chevron_right.svg" class="h-4 w-4" />
                     </button>
                 </div>
                 <div class="grid grid-cols-3 gap-1">

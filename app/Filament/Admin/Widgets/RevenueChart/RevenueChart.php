@@ -4,96 +4,73 @@ namespace App\Filament\Admin\Widgets\RevenueChart;
 
 use App\Models\Order\Order;
 use Filament\Widgets\ChartWidget;
-use Illuminate\Contracts\Support\Htmlable;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 
+/**
+ * Grafik pendapatan 7 hari terakhir.
+ */
 class RevenueChart extends ChartWidget
 {
-    protected static ?string $pollingInterval = null; // Disable mobile polling to avoid method-not-found crashes
+    protected static ?string $heading = null;
 
-    protected static ?int $sort = 2;
+    protected static ?int $sort = 3;
 
-    protected int|string|array $columnSpan = 1;
+    protected int|string|array $columnSpan = 'full';
+    /**
+     * Widget Filament LAZY secara bawaan: isinya diambil lewat request
+     * Livewire terpisah saat widget masuk viewport, dan HTML awal cuma
+     * berisi skeleton. Untuk dashboard admin, angkanya harus LANGSUNG
+     * terlihat -- jadi lazy dimatikan.
+     */
+    protected static bool $isLazy = false;
 
-    public function getHeading(): string|Htmlable
+    /**
+     * Tinggi maksimum grafik.
+     *
+     * Tanpa ini, canvas-nya ikut tinggi widget -- di dashboard yang widgetnya
+     * cuma separuh lebar, grafiknya jadi immense dan isinya cuma garis datar
+     * di tengah-tengah ruang kosong.
+     */
+    protected static ?string $maxHeight = '260px';
+
+    public function getHeading(): ?string
     {
-        return __('Tren Pendapatan');
+        return __('Pendapatan 7 Hari Terakhir');
     }
 
     protected function getData(): array
     {
-        return Cache::remember('revenue_chart_data', now()->addMinutes(10), function () {
-            // Deteksi cerdas: Gunakan sintaks spesifik database
-            $driver = DB::connection()->getDriverName();
-            $monthExpr = $driver === 'sqlite' ? 'strftime("%m", created_at)' : 'MONTH(created_at)';
+        $rows = Cache::remember('admin_widget_revenue_chart', 60, function (): array {
+            $data = [];
 
-            /** @var Builder $query */
-            $query = Order::query();
+            for ($day = 6; $day >= 0; $day--) {
+                $date = now()->subDays($day);
 
-            $data = $query->where('payment_status', 'paid')
-                ->selectRaw("{$monthExpr} as month, SUM(total_price) as sum")
-                ->where('created_at', '>=', now()->subMonths(6))
-                ->groupBy('month')
-                ->orderBy('month')
-                ->pluck('sum', 'month')
-                ->toArray();
-
-            $labels = [];
-            $revenue = [];
-
-            for ($i = 5; $i >= 0; $i--) {
-                $month = now()->subMonths($i)->format('m');
-                $labels[] = ucfirst(now()->subMonths($i)->translatedFormat('M'));
-
-                // Handle key mismatch (some DBs return '01', some return 1)
-                $val = $data[$month] ?? $data[(int) $month] ?? 0;
-                $revenue[] = (float) $val;
+                $data[] = [
+                    'tanggal' => $date->format('d M'),
+                    'pendapatan' => (float) Order::query()
+                        ->where('payment_status', 'paid')
+                        ->whereDate('created_at', $date->toDateString())
+                        ->sum('total_price'),
+                ];
             }
 
-            return [
-                'datasets' => [
-                    [
-                        'label' => __('Pendapatan (IDR)'),
-                        'data' => $revenue,
-                        'backgroundColor' => 'rgba(233, 30, 99, 0.1)',
-                        'borderColor' => '#E91E63',
-                        'fill' => 'start',
-                        'tension' => 0.4,
-                    ],
-                ],
-                'labels' => $labels,
-            ];
+            return $data;
         });
-    }
 
-    protected function getOptions(): array
-    {
         return [
-            'scales' => [
-                'y' => [
-                    'suggestedMin' => 0,
-                    'suggestedMax' => 10,
-                    'ticks' => [
-                        'precision' => 0,
-                    ],
+            'datasets' => [
+                [
+                    'label' => __('Pendapatan'),
+                    'data' => collect($rows)->pluck('pendapatan')->all(),
                 ],
             ],
+            'labels' => collect($rows)->pluck('tanggal')->all(),
         ];
     }
 
     protected function getType(): string
     {
         return 'line';
-    }
-
-    public function updateChartData(): void
-    {
-        // Explicitly defined to fix "MethodNotFoundException" on some mobile environments
-        $this->cachedData = null;
-        $this->dispatch('updateChartData', [
-            'data' => $this->getData(),
-        ]);
     }
 }

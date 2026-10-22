@@ -3,7 +3,7 @@
 namespace App\Filament\User\Auth\CompleteProfile;
 
 use App\Filament\User\Auth\Concerns\HasAuthBreadcrumbs;
-use App\Filament\User\Pages\Home\Home;
+use App\Filament\Welcome\Pages\Home\Home;
 use Filament\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
 

@@ -33,12 +33,12 @@
         @if(!$isMobile)
             <div class="hidden lg:flex items-center gap-2 lg:gap-3">
                 @auth
-                    <a href="{{ \App\Support\AppPlatform\AppPlatform::normalizeUrl(route('filament.user.pages.home')) }}"
+                    <a href="{{ \App\Support\AppPlatform\AppPlatform::normalizeUrl(route('filament.welcome.pages.home')) }}"
                         class="flex items-center justify-center px-5 h-10 text-sm min-w-10 dark:text-[#EDEDEC] text-[#1b1b18] ring-1 ring-gray-950/10 dark:ring-white/20 hover:bg-gray-50 dark:hover:bg-white/5 rounded-md font-medium transition-all active:scale-95 whitespace-nowrap">
                         {{ __('Beranda') }}
                     </a>
                 @else
-                    <a href="{{ \App\Support\AppPlatform\AppPlatform::normalizeUrl(route('filament.user.auth.login')) }}"
+                    <a href="{{ \App\Support\AppPlatform\AppPlatform::normalizeUrl(route('filament.welcome.auth.login')) }}"
                         class="flex items-center justify-center px-5 h-10 text-sm min-w-10 dark:text-[#EDEDEC] text-[#1b1b18] ring-1 ring-gray-950/10 dark:ring-white/20 hover:bg-gray-50 dark:hover:bg-white/5 rounded-md font-medium transition-all active:scale-95 whitespace-nowrap">
                         {{ __('Log in') }}
                     </a>
@@ -68,8 +68,8 @@
             aria-label="{{ __('Toggle Dark Mode') }}"
             x-on:click="theme = (theme === 'light' || theme === 'system' ? 'dark' : 'light')"
             class="flex items-center justify-center w-10 h-10 rounded-md ring-1 ring-gray-950/10 dark:ring-white/20 transition hover:bg-gray-50 focus:bg-gray-50 dark:hover:bg-white/5 dark:focus:bg-white/5">
-            <x-heroicon-o-sun x-show="theme !== 'dark'" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
-            <x-heroicon-o-moon x-show="theme === 'dark'" class="w-5 h-5 text-gray-500 dark:text-gray-400" x-cloak />
+            <img src="/images/icons/sun.svg" x-show="theme !== 'dark'" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            <img src="/images/icons/moon.svg" x-show="theme === 'dark'" class="w-5 h-5 text-gray-500 dark:text-gray-400" x-cloak />
         </button>
 
         {{-- Language Switcher: tampil di semua platform --}}

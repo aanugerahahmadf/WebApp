@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7DD3FC"/>
+      <stop offset="1" stop-color="#0EA5E9"/>
+    </linearGradient>
+    <filter id="sh" x="-40%" y="-40%" width="180%" height="190%">
+      <feDropShadow dx="0" dy="20" stdDeviation="18" flood-color="#0C4A6E" flood-opacity="0.42"/>
+    </filter>
+  </defs>
+  <style>
+    @keyframes ikon-terbang { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1.2%); } }
+    .ikon { animation: ikon-terbang 3.6s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { .ikon { animation: none; } }
+  </style>
+  <g class="ikon" fill="url(#g1)" filter="url(#sh)"><path d="m360-320-33 131q-3 13-13 21t-24 8q-19 0-31-15t-7-33l28-112H171q-20 0-32-15.5t-7-34.5q3-14 14-22t25-8h129l40-160H231q-20 0-32-15.5t-7-34.5q3-14 14-22t25-8h129l33-131q3-13 13-21t24-8q19 0 31 15t7 33l-28 112h160l33-131q3-13 13-21t24-8q19 0 31 15t7 33l-28 112h109q20 0 32 15.5t7 34.5q-3 14-14 22t-25 8H660l-40 160h109q20 0 32 15.5t7 34.5q-3 14-14 22t-25 8H600l-33 131q-3 13-13 21t-24 8q-19 0-31-15t-7-33l28-112H360Zm20-80h160l40-160H420l-40 160Z"/></g>
+</svg>

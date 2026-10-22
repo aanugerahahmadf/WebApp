@@ -1,0 +1,103 @@
+syntax = "proto3";
+
+package wedding.user.v1;
+
+option go_package = "github.com/wedding/user/v1;userv1";
+option php_namespace = "App\\Grpc\\User\\V1";
+option php_metadata_namespace = "App\\Grpc\\User\\V1\\GPBMetadata";
+
+import "wedding/user/v1/common.proto";
+import "wedding/user/v1/auth.proto";
+
+// Chat Service
+service ChatService {
+  rpc GetConversations(GetConversationsRequest) returns (ConversationListResponse);
+  rpc GetConversation(GetConversationRequest) returns (Conversation);
+  rpc GetMessages(GetMessagesRequest) returns (MessageListResponse);
+  rpc SendMessage(SendMessageRequest) returns (Message);
+  rpc MarkAsRead(MarkMessageAsReadRequest) returns (MarkMessageAsReadResponse);
+  rpc CreateConversation(CreateConversationRequest) returns (Conversation);
+  // Real-time messaging
+  rpc WatchMessages(WatchMessagesRequest) returns (stream Message);
+  rpc WatchConversations(WatchConversationsRequest) returns (stream Conversation);
+}
+
+message GetConversationsRequest {
+  PaginationRequest pagination = 1;
+}
+
+message ConversationListResponse {
+  repeated Conversation conversations = 1;
+  PaginationResponse pagination = 2;
+}
+
+message GetConversationRequest {
+  string conversation_id = 1;
+}
+
+message GetMessagesRequest {
+  string conversation_id = 1;
+  PaginationRequest pagination = 2;
+}
+
+message MessageListResponse {
+  repeated Message messages = 1;
+  PaginationResponse pagination = 2;
+}
+
+message SendMessageRequest {
+  string conversation_id = 1;
+  string content = 2;
+  MetaData metadata = 3;
+}
+
+message MarkMessageAsReadRequest {
+  string conversation_id = 1;
+  string message_id = 2;
+}
+
+message MarkMessageAsReadResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message CreateConversationRequest {
+  repeated string participant_ids = 1;
+  string initial_message = 2;
+}
+
+message WatchMessagesRequest {
+  string conversation_id = 1;
+}
+
+message WatchConversationsRequest {
+  string user_id = 1;
+}
+
+message Conversation {
+  string id = 1;
+  repeated ConversationParticipant participants = 2;
+  Message last_message = 3;
+  int32 unread_count = 4;
+  string created_at = 5;
+  string updated_at = 6;
+}
+
+message ConversationParticipant {
+  string user_id = 1;
+  User user = 2;
+  bool is_admin = 3;
+  string joined_at = 4;
+}
+
+message Message {
+  string id = 1;
+  string conversation_id = 2;
+  string sender_id = 3;
+  User sender = 4;
+  string content = 5;
+  MetaData metadata = 6;
+  bool is_read = 7;
+  string read_at = 8;
+  string created_at = 9;
+}

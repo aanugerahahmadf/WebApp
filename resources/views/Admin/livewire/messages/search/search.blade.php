@@ -6,7 +6,7 @@
         {{__('Search Messages')}}
     </x-slot>
 
-    <x-filament::input.wrapper suffix-icon="heroicon-o-magnifying-glass">
+    <x-filament::input.wrapper suffix-icon="/images/icons/search.svg">
         <x-filament::input type="search" placeholder="{{__('Search messages...')}}" wire:model.live.debounce.500ms="search"/>
     </x-filament::input.wrapper>
 
@@ -31,7 +31,7 @@
                                         <div class="overflow-hidden">
                                             <p class="text-sm font-semibold truncate">{{ $message->inbox->inbox_title }}</p>
                                             <p class="text-sm text-gray-600 truncate dark:text-gray-400">
-                                                @if ($message->user_id == auth()->id())
+                                                @if ($message->user_id == $this->chatUserId())
                                                     <span class="font-bold">{{ __('You:') }}</span>
                                                 @else
 

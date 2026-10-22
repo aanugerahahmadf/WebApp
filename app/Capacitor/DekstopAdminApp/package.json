@@ -1,0 +1,39 @@
+{
+  "name": "capacitor-dekstop-admin-app",
+  "version": "1.0.0",
+  "description": "Electron desktop shell for the Filament admin panel (also builds for Android and iOS)",
+  "type": "module",
+  "keywords": [
+    "capacitor",
+    "filament",
+    "admin",
+    "mobile",
+    "desktop",
+    "electron"
+  ],
+  "scripts": {
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "set:url": "node scripts/set-url.mjs",
+    "sync": "npm run build && cap sync @capawesome/capacitor-electron",
+    "desktop": "node scripts/run-desktop.mjs",
+    "desktop:pack": "npm run sync && npm --prefix electron run pack",
+    "android": "npm run build && cap run android",
+    "ios": "npm run build && cap run ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/camera": "latest",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/ios": "^8.5.2",
+    "@capacitor/splash-screen": "latest",
+    "@capawesome/capacitor-electron": "^0.1.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.2",
+    "vite": "^7.3.1"
+  },
+  "author": "",
+  "license": "ISC"
+}

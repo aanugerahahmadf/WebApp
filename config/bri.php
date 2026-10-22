@@ -103,7 +103,7 @@ return [
     // 18 digit Merchant ID / PAN yang diberikan BRI saat aktivasi QRIS.
     'qr_merchant_id' => env('BRI_QR_MERCHANT_ID', ''),
     'qr_terminal_label' => env('BRI_QR_TERMINAL_LABEL', 'WO01'),
-    'qr_merchant_name' => env('BRI_QR_MERCHANT_NAME', 'Wedding Organizer'),
+    'qr_merchant_name' => env('BRI_QR_MERCHANT_NAME', 'Dekorasi Bunga Pernikahan'),
     'qr_merchant_city' => env('BRI_QR_MERCHANT_CITY', 'JAKARTA'),
     'qr_merchant_postal_code' => env('BRI_QR_MERCHANT_POSTAL_CODE', '10560'),
     'qr_merchant_province' => env('BRI_QR_MERCHANT_PROVINCE', 'DKI JAKARTA'),

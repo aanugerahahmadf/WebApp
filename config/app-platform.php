@@ -1,5 +1,45 @@
 <?php
 
+/*
+ * Set item bottom-nav untuk storefront.
+ *
+ * Panel 'user' sudah dilebur ke panel 'welcome', tapi set itemnya tetap
+ * disimpan DUA nama: 'welcome' (panel yang benar-benar merender bar) dan
+ * 'user' (nama lama, masih ditanyakan beberapa pemanggil).
+ *
+ * Satu array untuk dua nama. Kalau ini ditulis dua kali, cepat atau lambat
+ * keduanya jadi berbeda -- dan bar hilang dari satu panel tanpa error.
+ */
+$storefrontNav = [
+    [
+        'label' => 'Beranda',
+        'icon' => '/images/icons/home.svg',
+        'url' => \App\Filament\Welcome\Pages\Home\Home::class,
+    ],
+    [
+        'label' => 'Cari',
+        'icon' => '/images/icons/search.svg',
+        'url' => \App\Filament\Welcome\Pages\CbirSearchPage\CbirSearchPage::class,
+    ],
+    [
+        'label' => 'Pesanan',
+        'icon' => '/images/icons/clipboard.svg',
+        'url' => \App\Filament\Welcome\Resources\HistoryResource\HistoryResource::class,
+        'match' => 'starts',
+    ],
+    [
+        'label' => 'Pesan',
+        'icon' => '/images/icons/chat.svg',
+        'url' => \App\Filament\Welcome\Pages\MessagesPage\MessagesPage::class,
+        'match' => 'starts',
+    ],
+    [
+        'label' => 'Profil',
+        'icon' => '/images/icons/user_circle.svg',
+        'url' => \App\Filament\Welcome\Pages\EditProfilePage\EditProfilePage::class,
+    ],
+];
+
 return [
 
     /*
@@ -85,63 +125,40 @@ return [
             'admin' => [
                 [
                     'label' => 'Beranda',
-                    'icon' => 'heroicon-s-home',
+                    'icon' => '/images/icons/home.svg',
                     'url' => \App\Filament\Admin\Pages\Dashboard\Dashboard::class,
                 ],
                 [
                     'label' => 'Pesanan',
-                    'icon' => 'heroicon-o-shopping-bag',
+                    'icon' => '/images/icons/bag.svg',
                     'url' => \App\Filament\Admin\Resources\OrderResource\OrderResource::class,
                     'match' => 'starts',
                 ],
                 [
                     'label' => 'Produk',
-                    'icon' => 'heroicon-o-swatch',
-                    'url' => \App\Filament\Admin\Resources\ProductResource\ProductResource::class,
+                    'icon' => '/images/icons/swatch.svg',
+                    'url' => \App\Filament\Admin\Resources\CatalogResource\CatalogResource::class,
                     'match' => 'starts',
                 ],
                 [
                     'label' => 'Pelanggan',
-                    'icon' => 'heroicon-o-users',
+                    'icon' => '/images/icons/users.svg',
                     'url' => \App\Filament\Admin\Resources\UserResource\UserResource::class,
                     'match' => 'starts',
                 ],
                 [
                     'label' => 'Profil',
-                    'icon' => 'heroicon-o-user-circle',
+                    'icon' => '/images/icons/user_circle.svg',
                     'url' => \App\Filament\Admin\Pages\EditProfilePage\EditProfilePage::class,
                 ],
             ],
 
-            'user' => [
-                [
-                    'label' => 'Beranda',
-                    'icon' => 'heroicon-s-home',
-                    'url' => \App\Filament\User\Pages\Dashboard\Dashboard::class,
-                ],
-                [
-                    'label' => 'Cari',
-                    'icon' => 'heroicon-o-magnifying-glass',
-                    'url' => \App\Filament\User\Pages\CbirSearchPage\CbirSearchPage::class,
-                ],
-                [
-                    'label' => 'Pesanan',
-                    'icon' => 'heroicon-o-clipboard-document-list',
-                    'url' => \App\Filament\User\Resources\HistoryResource\HistoryResource::class,
-                    'match' => 'starts',
-                ],
-                [
-                    'label' => 'Pesan',
-                    'icon' => 'heroicon-s-chat-bubble-left-right',
-                    'url' => \App\Filament\User\Pages\MessagesPage\MessagesPage::class,
-                    'match' => 'starts',
-                ],
-                [
-                    'label' => 'Profil',
-                    'icon' => 'heroicon-o-user-circle',
-                    'url' => \App\Filament\User\Pages\EditProfilePage\EditProfilePage::class,
-                ],
-            ],
+            // Storefront: panel 'welcome' (nama yang dipakai panel yang
+            // benar-benar merender) dan 'user' (nama lama) memakai set yang
+            // sama persis. Lihat $storefrontNav di atas file ini.
+            'welcome' => $storefrontNav,
+
+            'user' => $storefrontNav,
 
         ],
     ],

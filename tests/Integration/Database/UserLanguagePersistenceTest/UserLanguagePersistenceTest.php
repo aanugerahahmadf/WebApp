@@ -57,7 +57,7 @@ test('the accessor defaults to english when nothing is stored', function (): voi
 test('a locale query parameter is persisted for a signed in user', function (): void {
     actingAs($this->user);
 
-    get('/user/home?locale=id')->assertOk();
+    get('/home?locale=id')->assertOk();
 
     $row = languageRowFor($this->user);
 
@@ -72,7 +72,7 @@ test('a locale query parameter is persisted for a signed in user', function (): 
 test('the stored locale is matched through a string model id', function (): void {
     actingAs($this->user);
 
-    get('/user/home?locale=id')->assertOk();
+    get('/home?locale=id')->assertOk();
 
     $row = languageRowFor($this->user);
 
@@ -87,9 +87,9 @@ test('the stored locale is matched through a string model id', function (): void
 test('switching the locale updates the same row instead of adding one', function (): void {
     actingAs($this->user);
 
-    get('/user/home?locale=id')->assertOk();
-    get('/user/home?locale=en')->assertOk();
-    get('/user/home?locale=id')->assertOk();
+    get('/home?locale=id')->assertOk();
+    get('/home?locale=en')->assertOk();
+    get('/home?locale=id')->assertOk();
 
     // `updateOrCreate` pada kombinasi model_id + model_type. Kalau suatu saat
     // berubah jadi `create()`, baris akan menumpuk dan setiap kali halaman
@@ -107,7 +107,7 @@ test('a guest request never writes a language row', function (): void {
     // `SetLocale` butuh user yang sudah login untuk menulis. Kalau nanti
     // ditambahkan cabang yang menulis untuk tamu, baris dengan model_id kosong
     // akan menumpuk dan tidak pernah punya pemilik.
-    get('/user/signin?locale=id')->assertOk();
+    get('/signin?locale=id')->assertOk();
 
     expect(UserLanguage::query()->count())->toBe(0);
 });
@@ -115,14 +115,14 @@ test('a guest request never writes a language row', function (): void {
 test('a locale query parameter beats the stored preference', function (): void {
     actingAs($this->user);
 
-    get('/user/home?locale=id')->assertOk();
+    get('/home?locale=id')->assertOk();
 
     expect(languageRowFor($this->user)->lang)->toBe('id');
 
     // Urutan di `SetLocale`: query > session > header > DB. Meminta 'en' secara
     // eksplisit harus menimpa 'id' yang sudah tersimpan -- kalau tidak, pengguna
     // tidak akan pernah bisa mengubah pilihannya kembali.
-    get('/user/home?locale=en')->assertOk();
+    get('/home?locale=en')->assertOk();
 
     expect(languageRowFor($this->user)->lang)->toBe('en');
 });
@@ -130,7 +130,7 @@ test('a locale query parameter beats the stored preference', function (): void {
 test('an unsupported locale is never written to the database', function (): void {
     actingAs($this->user);
 
-    get('/user/home?locale=zz')->assertOk();
+    get('/home?locale=zz')->assertOk();
 
     // Tidak ada baris sama yang ditulis, dan inilah yang benar. `?locale=` adalah
     // query string dari pengguna, jadi nilainya wajib disaring terhadap daftar
@@ -152,7 +152,7 @@ test('a locale that differs only in casing is still rejected', function (): void
     // Case-sensitive dengan sengaja. 'ID' bukan 'id', dan melonggarkannya dengan
     // `strtolower()` akan membuat query string bisa menyamar sebagai locale yang
     // sah padahal tidak ada berkasnya dengan nama itu.
-    get('/user/home?locale=ID')->assertOk();
+    get('/home?locale=ID')->assertOk();
 
     expect(languageRowFor($this->user))->toBeNull();
 });
@@ -163,7 +163,7 @@ test('a valid locale is still written after the filtering change', function (): 
     // cara membuang semua input query akan tetap terlihat hijau.
     actingAs($this->user);
 
-    get('/user/home?locale=id')->assertOk();
+    get('/home?locale=id')->assertOk();
 
     expect(languageRowFor($this->user))->not->toBeNull()
         ->and(languageRowFor($this->user)->lang)->toBe('id');
@@ -175,7 +175,7 @@ test('the language row belongs to the requesting user only', function (): void {
 
     actingAs($this->user);
 
-    get('/user/home?locale=id')->assertOk();
+    get('/home?locale=id')->assertOk();
 
     expect(languageRowFor($other))->toBeNull()
         ->and(languageRowFor($this->user)->lang)->toBe('id');

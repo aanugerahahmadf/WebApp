@@ -21,7 +21,7 @@
             <h2 class="text-base font-semibold text-gray-950 dark:text-white">
                 {{ __('Ulasan dari :name', ['name' => $review->user?->full_name ?? __('Pengguna')]) }}
             </h2>
-            <x-filament::icon-button icon="heroicon-m-x-mark" color="gray" size="md" :label="__('Tutup')" x-on:click.stop="openReview = false" />
+            <x-filament::icon-button icon="/images/icons/x.svg" color="gray" size="md" :label="__('Tutup')" x-on:click.stop="openReview = false" />
         </div>
 
         <div class="p-5 sm:p-6">

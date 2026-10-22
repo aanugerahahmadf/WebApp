@@ -2,39 +2,15 @@
 
 namespace App\Filament\Admin\Exports\PrivacyPolicyExporter;
 
-use App\Models\PrivacyPolicy\PrivacyPolicy;
-use Filament\Actions\Exports\ExportColumn;
-use Filament\Actions\Exports\Exporter;
-use Filament\Actions\Exports\Models\Export;
+use App\Filament\Shared\Exports\BaseExporter\BaseExporter;
 
-class PrivacyPolicyExporter extends Exporter
+/**
+ * Exporter untuk tabel yang dipakai model `App\Models\PrivacyPolicy\PrivacyPolicy`.
+ *
+ * Kolom, notifikasi selesai, dan formatnya ikut dari
+ * {@see BaseExporter}; kelas ini cuma menunjuk modelnya.
+ */
+class PrivacyPolicyExporter extends BaseExporter
 {
-    protected static ?string $model = PrivacyPolicy::class;
-
-    public static function getColumns(): array
-    {
-        return [
-            ExportColumn::make('id')
-                ->label(__('ID')),
-            ExportColumn::make('title')
-                ->label(__('Judul')),
-            ExportColumn::make('content')
-                ->label(__('Isi')),
-            ExportColumn::make('created_at')
-                ->label(__('Dibuat Pada')),
-            ExportColumn::make('updated_at')
-                ->label(__('Diperbarui Pada')),
-        ];
-    }
-
-    public static function getCompletedNotificationBody(Export $export): string
-    {
-        $body = 'Your privacy policy export has completed and '.number_format($export->successful_rows).' '.str('row')->plural($export->successful_rows).' exported.';
-
-        if ($failedRowsCount = $export->getFailedRowsCount()) {
-            $body .= ' '.number_format($failedRowsCount).' '.str('row')->plural($failedRowsCount).' failed to export.';
-        }
-
-        return $body;
-    }
+    protected static ?string $model = \App\Models\PrivacyPolicy\PrivacyPolicy::class;
 }

@@ -1,12 +1,18 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Admin\PackageController\PackageController;
+use Illuminate\Support\Facades\Route;
 
+/*
+|--------------------------------------------------------------------------
+| Admin tier ("pilihan paket") routes
+|--------------------------------------------------------------------------
+| Tiers are always scoped to a catalog and only readable/writable through
+| `/admin/catalog/{catalogId}/tiers`. The standalone `/admin/packages` group
+| has been removed.
+*/
 
-Route::get('/packages', [PackageController::class, 'index']);
-Route::get('/packages/{id}', [PackageController::class, 'show']);
-Route::post('/packages', [PackageController::class, 'store']);
-Route::put('/packages/{id}', [PackageController::class, 'update']);
-Route::delete('/packages/{id}', [PackageController::class, 'destroy']);
-Route::post('/packages/{id}/upload-image', [PackageController::class, 'uploadImage']);
+Route::prefix('catalog/{catalogId}/tiers')->group(function (): void {
+    Route::get('/', [PackageController::class, 'tiers']);
+    Route::post('/', [PackageController::class, 'store']);
+});

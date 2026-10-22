@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'Pasta indekss',
         'preview'                  => 'priekšskatījums',
         'price'                    => 'cena',
-        'product_id'               => 'produkta ID',
+        'catalog_id'               => 'produkta ID',
         'product_uid'              => 'produkta UID',
         'product_uuid'             => 'produkta UUID',
         'promo_code'               => 'reklāmas kods',

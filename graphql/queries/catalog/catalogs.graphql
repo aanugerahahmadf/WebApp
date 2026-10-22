@@ -1,0 +1,63 @@
+# Catalog Queries
+# Wedding Flower Decoration App - Catalog GraphQL Queries
+
+# Single Catalog by ID or Slug
+type Query {
+  catalog(id: ID @eq, slug: String @eq): Catalog @find
+}
+
+# Catalogs with filtering, sorting, and pagination
+type Query {
+  catalogs(
+    first: Int
+    filter: CatalogFilter
+    sort: CatalogSort
+    after: String
+    before: String
+  ): CatalogConnection @paginate(defaultCount: 10, model: "App\\Models\\Catalog\\Catalog")
+}
+
+# Featured Catalogs
+type Query {
+  featuredCatalogs(first: Int = 10): [Catalog!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CatalogResolver@featuredCatalogs")
+}
+
+# On Sale Catalogs
+type Query {
+  onSaleCatalogs(first: Int = 10): [Catalog!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CatalogResolver@onSaleCatalogs")
+}
+
+# Catalogs by Category
+type Query {
+  catalogsByCategory(categoryId: ID!, first: Int = 10): [Catalog!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CatalogResolver@byCategory")
+}
+
+# Related Catalogs
+type Query {
+  relatedCatalogs(catalogId: ID!, first: Int = 5): [Catalog!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CatalogResolver@related")
+}
+
+# Search Catalogs
+type Query {
+  searchCatalogs(query: String!, first: Int = 10): [Catalog!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CatalogResolver@search")
+}
+
+# Catalog Stats (for admin)
+type Query {
+  catalogStats: CatalogStats @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CatalogResolver@stats")
+}
+
+type CatalogStats {
+  totalCatalogs: Int!
+  activeCatalogs: Int!
+  featuredCatalogs: Int!
+  outOfStockCatalogs: Int!
+  lowStockCatalogs: Int!
+  totalValue: Float!
+  byCategory: [CategoryCatalogCount!]!
+}
+
+type CategoryCatalogCount {
+  category: Category!
+  count: Int!
+}

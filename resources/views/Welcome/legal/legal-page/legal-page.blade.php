@@ -7,7 +7,7 @@
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+            font-family: 'Google Sans Flex', sans-serif;
             background: #f8fafc;
             color: #1e293b;
             line-height: 1.7;

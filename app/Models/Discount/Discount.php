@@ -4,6 +4,7 @@ namespace App\Models\Discount;
 use App\Models\Traits\LegacyMorphClass\LegacyMorphClass;
 
 use App\Enums\DiscountType\DiscountType;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
@@ -24,6 +25,7 @@ use Illuminate\Support\Carbon;
  */
 class Discount extends Model
 {
+    use HasFactory;
     use LegacyMorphClass;
     protected $fillable = [
         'description',

@@ -8,15 +8,14 @@ use App\Enums\OrderStatus\OrderStatus;
 use App\Filament\User\Resources\OrderResource\Pages\EditOrder\EditOrder;
 use App\Filament\User\Resources\OrderResource\Pages\ManageOrders\ManageOrders;
 use App\Filament\User\Resources\OrderResource\Pages\ViewOrder\ViewOrder;
-use App\Filament\User\Resources\PackageResource\PackageResource;
-use App\Filament\User\Resources\ProductResource\ProductResource;
-use App\Filament\User\Resources\ReviewResource\ReviewResource;
+
+use App\Filament\User\Resources\CatalogResource\CatalogResource;
 use App\Helpers\NativeNotificationHelper\NativeNotificationHelper;
 use App\Models\Order\Order;
 use App\Models\PaymentMethod\PaymentMethod;
-use App\Models\Review\Review;
 use App\Models\Transaction\Transaction;
 use App\Models\Voucher\Voucher;
+use App\Support\AppIcon\AppIcon;
 use App\Support\AppPlatform\AppPlatform;
 use Carbon\Carbon;
 use Filament\Actions\Action;
@@ -43,7 +42,7 @@ class OrderResource extends Resource
 
     protected static ?string $slug = 'orders';
 
-    protected static ?string $navigationIcon = 'heroicon-s-shopping-bag';
+    protected static ?string $navigationIcon = AppIcon::ORDER;
 
     protected static bool $shouldRegisterNavigation = false;
 
@@ -51,12 +50,12 @@ class OrderResource extends Resource
 
     public static function getGloballySearchableAttributes(): array
     {
-        return ['order_number', 'package.name', 'product.name', 'user.full_name', 'user.phone', 'notes', 'status', 'payment_status'];
+        return ['order_number', 'package.name', 'catalog.name', 'user.full_name', 'user.phone', 'notes', 'status', 'payment_status'];
     }
 
     public static function getGlobalSearchResultTitle(Model $record): string
     {
-        return '#'.$record->order_number.' - '.(__($record->package?->name) ?? __($record->product?->name) ?? __('Pesanan'));
+        return '#'.$record->order_number.' - '.(__($record->package?->name) ?? __($record->catalog?->name) ?? __('Pesanan'));
     }
 
     public static function getGlobalSearchResultDetails(Model $record): array
@@ -110,7 +109,7 @@ class OrderResource extends Resource
             ->schema([
                 Forms\Components\Wizard::make([
                     Forms\Components\Wizard\Step::make(__('Detail Acara'))
-                        ->icon('heroicon-s-calendar-days')
+                        ->icon('/images/icons/calendar_days.svg')
                         ->schema([
                             Forms\Components\Section::make(__('Pilih Waktu & Kebutuhan'))
                                 ->schema([
@@ -119,13 +118,13 @@ class OrderResource extends Resource
                                         ->required()
                                         ->native(false)
                                         ->minDate(now()->startOfDay())
-                                        ->prefixIcon('heroicon-s-calendar-days')
+                                        ->prefixIcon('/images/icons/calendar_days.svg')
                                         ->columnSpanFull(),
                                     Forms\Components\TimePicker::make('booking_time')
                                         ->label(__('Waktu Pelaksanaan'))
                                         ->required()
                                         ->native(false)
-                                        ->prefixIcon('heroicon-s-clock')
+                                        ->prefixIcon('/images/icons/clock.svg')
                                         ->columnSpanFull(),
                                     Forms\Components\TextInput::make('quantity')
                                         ->label(__('Jumlah yang ingin dibeli'))
@@ -143,7 +142,7 @@ class OrderResource extends Resource
                         ]),
 
                     Forms\Components\Wizard\Step::make(__('Info Kontak'))
-                        ->icon('heroicon-s-user-circle')
+                        ->icon('/images/icons/user_circle.svg')
                         ->schema([
                             Forms\Components\Section::make(__('Verifikasi Data Anda'))
                                 ->schema([
@@ -163,16 +162,16 @@ class OrderResource extends Resource
                         ]),
 
                     Forms\Components\Wizard\Step::make(__('Voucher & Diskon'))
-                        ->icon('heroicon-s-ticket')
+                        ->icon('/images/icons/ticket.svg')
                         ->schema([
                             Forms\Components\Section::make(__('Pilih Voucher Anda'))
                                 ->description(__('Gunakan voucher yang telah Anda klaim di menu Voucher.'))
-                                ->icon('heroicon-s-ticket')
+                                ->icon('/images/icons/ticket.svg')
                                 ->schema([
                                     Forms\Components\Select::make('voucher_id')
                                         ->searchable()
                                         ->label(__('Voucher Tersedia'))
-                                        ->prefixIcon('heroicon-s-ticket')
+                                        ->prefixIcon('/images/icons/ticket.svg')
                                         ->options(function ($record) {
                                             $user = auth()->user();
                                             if (! $user || ! $record) {
@@ -221,8 +220,8 @@ class OrderResource extends Resource
                                             default => null,
                                         })
                                         ->hintIcon(fn (Forms\Get $get) => match (true) {
-                                            str_starts_with((string) $get('_voucher_info'), 'valid:') => 'heroicon-m-check-circle',
-                                            $get('_voucher_info') === 'invalid' => 'heroicon-m-x-circle',
+                                            str_starts_with((string) $get('_voucher_info'), 'valid:') => '/images/icons/check_circle.svg',
+                                            $get('_voucher_info') === 'invalid' => '/images/icons/x_circle.svg',
                                             default => null,
                                         })
                                         ->hintColor(fn (Forms\Get $get) => str_starts_with((string) $get('_voucher_info'), 'valid:') ? 'success' : 'danger')
@@ -246,7 +245,7 @@ class OrderResource extends Resource
                                                         '<span class="font-semibold">Rp '.number_format($finalPrice, 2, ',', '.').'</span>'.
                                                     '</div>'.
                                                     '<div class="flex justify-between text-sm text-success-600 dark:text-success-400">'.
-                                                        '<span class="flex products-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" /></svg> '.__('Diskon Voucher').'</span>'.
+                                                        '<span class="flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" /></svg> '.__('Diskon Voucher').'</span>'.
                                                         '<span class="font-bold">- Rp '.number_format($discount, 2, ',', '.').'</span>'.
                                                     '</div>'.
                                                     '<div class="flex justify-between text-base font-bold border-t border-success-300 dark:border-success-700 pt-2">'.
@@ -260,13 +259,13 @@ class OrderResource extends Resource
                         ]),
 
                     Forms\Components\Wizard\Step::make(__('Konfirmasi'))
-                        ->icon('heroicon-s-check-badge')
+                        ->icon('/images/icons/check_badge.svg')
                         ->schema([
                             Forms\Components\Section::make(__('Ringkasan Pembayaran'))
                                 ->schema([
                                     Forms\Components\Placeholder::make('pkg_summary')
-                                        ->label(__('Paket / Produk'))
-                                        ->content(fn ($record) => $record?->package?->name ?? $record?->product?->name ?? '-'),
+                                        ->label(__('Paket / Katalog'))
+                                        ->content(fn ($record) => $record?->package?->name ?? $record?->catalog?->name ?? '-'),
                                     Forms\Components\Placeholder::make('price_summary')
                                         ->label(__('Total Harga'))
                                         ->content(fn ($record) => 'Rp '.number_format($record?->total_price ?? 0, 0, ',', '.'))
@@ -298,22 +297,22 @@ class OrderResource extends Resource
             ->poll(AppPlatform::isNativeMobile() ? null : '30s')
             ->emptyStateHeading(__('Belum ada pesanan'))
             ->emptyStateDescription(__('Wujudkan acara impianmu dengan paket terbaik dari kami. Mulai pesan sekarang!'))
-            ->emptyStateIcon('heroicon-s-shopping-bag')
+            ->emptyStateIcon('/images/icons/bag.svg')
             ->emptyStateActions([
-                Tables\Actions\Action::make('shop_products')
+                Tables\Actions\Action::make('shop_catalogs')
                     ->label(__('Belanja Bunga'))
-                    ->url(ProductResource::getUrl())
+                    ->url(CatalogResource::getUrl())
                     ->button()
                     ->color('info')
                     ->size('lg')
-                    ->icon('ri-flower-line'),
+                    ->icon('/images/icons/flower.svg'),
                 Tables\Actions\Action::make('book_package')
                     ->label(__('Pesan Paket Dekorasi'))
-                    ->url(PackageResource::getUrl())
+                    ->url(CatalogResource::getUrl())
                     ->button()
                     ->color('primary')
                     ->size('lg')
-                    ->icon('ri-gift-line'),
+                    ->icon('/images/icons/gift.svg'),
             ])
             ->contentGrid([
                 'default' => 1,
@@ -327,11 +326,11 @@ class OrderResource extends Resource
                     // Image Section with Status Overlay
                     Tables\Columns\Layout\Stack::make([
                         Tables\Columns\ImageColumn::make('item_image')
-                            ->state(fn ($record) => $record->package?->image_url ?? $record->product?->image_url)
+                            ->state(fn ($record) => $record->package?->image_url ?? $record->catalog?->image_url)
                             ->label('')
                             ->height('140px')
                             ->width('100%')
-                            ->extraAttributes(['class' => 'w-full flex justify-center products-center bg-gray-50 dark:bg-gray-800 rounded-t-2xl overflow-hidden'])
+                            ->extraAttributes(['class' => 'w-full flex justify-center items-center bg-gray-50 dark:bg-gray-800 rounded-t-2xl overflow-hidden'])
                             ->extraImgAttributes([
                                 'class' => 'aspect-video object-cover transition-all duration-500 group-hover:scale-110 !mx-auto',
                                 'style' => 'height: 140px; width: 100%;',
@@ -342,7 +341,7 @@ class OrderResource extends Resource
                     Tables\Columns\Layout\Stack::make([
                         // Category Badge
                         Tables\Columns\TextColumn::make('item_category')
-                            ->state(fn ($record) => $record->package?->category?->name ?? $record->product?->category?->name)
+                            ->state(fn ($record) => $record->package?->category?->name ?? $record->catalog?->category?->name)
                             ->formatStateUsing(fn ($state) => __($state))
                             ->badge()
                             ->color('warning')
@@ -352,7 +351,7 @@ class OrderResource extends Resource
 
                         // Package Name
                         Tables\Columns\TextColumn::make('item_name')
-                            ->state(fn ($record) => $record->package?->name ?? $record->product?->name)
+                            ->state(fn ($record) => $record->package?->name ?? $record->catalog?->name)
                             ->formatStateUsing(fn ($state) => __($state))
                             ->weight('bold')
                             ->size('xs')
@@ -370,13 +369,13 @@ class OrderResource extends Resource
                             Tables\Columns\TextColumn::make('booking_date')
                                 ->label(__('Tanggal:'))
                                 ->date('d M Y')
-                                ->icon('heroicon-m-calendar-days')
+                                ->icon('/images/icons/calendar_days.svg')
                                 ->size('xs')
                                 ->color('primary')
                                 ->alignCenter(),
                             Tables\Columns\TextColumn::make('booking_time')
                                 ->time('H:i')
-                                ->icon('heroicon-m-clock')
+                                ->icon('/images/icons/clock.svg')
                                 ->size('xs')
                                 ->color('info')
                                 ->alignCenter(),
@@ -392,8 +391,8 @@ class OrderResource extends Resource
                                 ->alignCenter(),
                         ])->space(2)->extraAttributes(['class' => 'mt-3']),
                         Tables\Columns\TextColumn::make('avg_rating')
-                            ->state(fn ($record) => $record?->package ? number_format($record->package->reviews()->avg('rating') ?: 0, 1) : ($record?->product ? number_format($record->product->reviews()->avg('rating') ?: 0, 1) : '5.0'))
-                            ->icon('heroicon-m-star')
+                            ->state(fn ($record) => $record?->package ? number_format($record->package->reviews()->avg('rating') ?: 0, 1) : ($record?->catalog ? number_format($record->catalog->reviews()->avg('rating') ?: 0, 1) : '5.0'))
+                            ->icon('/images/icons/star.svg')
                             ->iconColor('warning')
                             ->size('xs')
                             ->color('gray')
@@ -421,7 +420,7 @@ class OrderResource extends Resource
             ], layout: FiltersLayout::AboveContentCollapsible)
             ->filtersTriggerAction(
                 fn (Tables\Actions\Action $action) => $action
-                    ->icon('heroicon-m-funnel')
+                    ->icon('/images/icons/filter.svg')
                     ->label(__('Filter'))
                     ->color(fn ($livewire) => count($livewire->getTable()->getFilterIndicators()) > 0 ? 'primary' : 'gray')
                     ->badge(fn ($livewire) => count($livewire->getTable()->getFilterIndicators()) > 0 ? count($livewire->getTable()->getFilterIndicators()) : null)
@@ -432,7 +431,7 @@ class OrderResource extends Resource
                     // Bayar (auto-confirm, no third-party gateway)
                     Tables\Actions\Action::make('pay_now')
                         ->label(__('Bayar Sekarang'))
-                        ->icon('heroicon-m-credit-card')
+                        ->icon('/images/icons/card.svg')
                         ->color('success')
                         ->visible(fn ($record) => in_array($record?->payment_status, [
                             OrderPaymentStatus::UNPAID,
@@ -475,7 +474,7 @@ class OrderResource extends Resource
                     // Batalkan
                     Tables\Actions\Action::make('cancel_order')
                         ->label(__('Batalkan Pesanan'))
-                        ->icon('heroicon-m-x-circle')
+                        ->icon('/images/icons/x_circle.svg')
                         ->color('danger')
                         ->modalHeading(__('Batalkan Pesanan?'))
                         ->modalDescription(__('Pesanan yang dibatalkan tidak dapat dikembalikan.'))
@@ -486,7 +485,7 @@ class OrderResource extends Resource
                             OrderStatus::COMPLETED,
                         ]))
                         ->action(function ($record) {
-                            // Update status ke cancelled (trigger observer â†’ notifikasi + payment_status)
+                            // Update status ke cancelled (trigger observer → notifikasi + payment_status)
                             $record->update(['status' => OrderStatus::CANCELLED]);
 
                             // 3. Hapus order dari tabel
@@ -496,7 +495,7 @@ class OrderResource extends Resource
                     // Preview & Download Invoice PDF
                     Tables\Actions\Action::make('preview_invoice')
                         ->label(__('Lihat Invoice'))
-                        ->icon('heroicon-s-document-text')
+                        ->icon('/images/icons/document.svg')
                         ->color('gray')
                         ->modalHeading(fn (Order $record) => 'Invoice #'.$record->order_number)
                         ->modalContent(fn (Order $record) => new HtmlString(
@@ -510,7 +509,7 @@ class OrderResource extends Resource
                         ->modalFooterActions(fn (Order $record) => [
                             Action::make('download_pdf')
                                 ->label(__('Download PDF'))
-                                ->icon('heroicon-s-arrow-down-tray')
+                                ->icon('/images/icons/download.svg')
                                 ->color('primary')
                                 ->url(route('invoice.pdf', ['order' => $record, 'download' => 1]))
                                 ->openUrlInNewTab(),
@@ -519,41 +518,22 @@ class OrderResource extends Resource
                         ->slideOver(false),
 
                     // Tulis Ulasan (hanya order selesai)
+                    //
+                    // Ulasan SELALU dibuat di halaman `CreateReviews`. Dulu
+                    // action ini membuka MODAL dan membuat baris reviewnya
+                    // sendiri di sini -- sekarang jadi tautan ke halaman
+                    // CreateReviews milik katalog yang dipesan itu, sama
+                    // seperti tombol "Tulis Ulasan" di detail katalog.
                     Tables\Actions\Action::make('write_review')
                         ->label(__('Tulis Ulasan'))
-                        ->icon('heroicon-m-star')
+                        ->icon('/images/icons/star.svg')
                         ->color('warning')
-                        ->visible(fn ($record) => $record->status === OrderStatus::COMPLETED)
-                        ->modalHeading(__('Tulis Ulasan'))
-                        ->form(fn (Order $record) => ReviewResource::orderReviewFields($record))
-                        ->action(function (Order $record, array $data) {
-                            if ($record->package_id && Review::where('user_id', $record->user_id)->where('package_id', $record->package_id)->exists()) {
-                                Notification::make()->title(__('Anda sudah menulis ulasan untuk layanan ini.'))->warning()->send();
-
-                                return;
-                            }
-                            if ($record->product_id && Review::where('user_id', $record->user_id)->where('product_id', $record->product_id)->exists()) {
-                                Notification::make()->title(__('Anda sudah menulis ulasan untuk layanan ini.'))->warning()->send();
-
-                                return;
-                            }
-
-                            Review::create([
-                                'user_id' => $record->user_id,
-                                'package_id' => $record->package_id,
-                                'product_id' => $record->product_id,
-                                'rating' => $data['rating'],
-                                'title' => $data['title'] ?? null,
-                                'comment' => $data['comment'] ?? null,
-                                'photo' => $data['photo'] ?? null,
-                            ]);
-
-                            NativeNotificationHelper::success(__('Terima kasih atas ulasan Anda!'));
-                        }),
+                        ->visible(fn ($record) => $record->status === OrderStatus::COMPLETED && filled($record->catalog_id))
+                        ->url(fn ($record) => CatalogResource::getUrl('create-reviews', ['record' => $record->catalog_id])),
 
                 ])
                     ->label(__('Klik Tombol Grup'))
-                    ->icon('heroicon-m-ellipsis-vertical')
+                    ->icon('/images/icons/more.svg')
                     ->button()
                     ->size('sm')
                     ->color('gray'),
@@ -562,7 +542,7 @@ class OrderResource extends Resource
             ->headerActions([
                 Tables\Actions\Action::make('clear_history')
                     ->label(__('Bersihkan Riwayat'))
-                    ->icon('heroicon-s-trash')
+                    ->icon('/images/icons/trash.svg')
                     ->color('danger')
                     ->button()
                     ->size('sm')
@@ -573,7 +553,7 @@ class OrderResource extends Resource
                         Forms\Components\Tabs::make('Delete Options')
                             ->tabs([
                                 Forms\Components\Tabs\Tab::make(__('Berdasarkan Status'))
-                                    ->icon('heroicon-s-tag')
+                                    ->icon('/images/icons/tag.svg')
                                     ->schema([
                                         Forms\Components\Select::make('type')
                                             ->label(__('Hapus Pesanan Berdasarkan Status'))
@@ -586,7 +566,7 @@ class OrderResource extends Resource
                                             ->native(false),
                                     ]),
                                 Forms\Components\Tabs\Tab::make(__('Pilih Pesanan Spesifik'))
-                                    ->icon('heroicon-s-list-bullet')
+                                    ->icon('/images/icons/list.svg')
                                     ->schema([
                                         Forms\Components\CheckboxList::make('order_ids')
                                             ->label(__('Pilih Nomor Pesanan'))
@@ -651,15 +631,15 @@ class OrderResource extends Resource
                     ])
                     ->extraAttributes(['class' => 'bg-gray-50 dark:bg-white/5 border-0 shadow-none rounded-2xl mb-4']),
 
-                // Ordered Product
+                // Ordered Catalog
                 Infolists\Components\Section::make(__('Paket Dipesan'))
-                    ->icon('heroicon-s-shopping-bag')
+                    ->icon('/images/icons/bag.svg')
                     ->iconColor('primary')
                     ->compact()
                     ->schema([
                         Infolists\Components\Grid::make()->schema([
                             Infolists\Components\ImageEntry::make('item_image')
-                                ->state(fn ($record) => $record->package?->image_url ?? $record->product?->image_url)
+                                ->state(fn ($record) => $record->package?->image_url ?? $record->catalog?->image_url)
                                 ->hiddenLabel()
                                 ->height('6rem')
                                 ->width('6rem')
@@ -667,7 +647,7 @@ class OrderResource extends Resource
                                 ->grow(false),
                             Infolists\Components\Group::make([
                                 Infolists\Components\TextEntry::make('item_name')
-                                    ->state(fn ($record) => $record->package?->name ?? $record->product?->name)
+                                    ->state(fn ($record) => $record->package?->name ?? $record->catalog?->name)
                                     ->formatStateUsing(fn ($state) => __($state))
                                     ->hiddenLabel()
                                     ->weight(FontWeight::Bold)
@@ -696,7 +676,7 @@ class OrderResource extends Resource
 
                 // Pricing
                 Infolists\Components\Section::make(__('Rincian Harga'))
-                    ->icon('heroicon-s-currency-dollar')
+                    ->icon('/images/icons/dollar.svg')
                     ->iconColor('success')
                     ->compact()
                     ->schema([
@@ -711,7 +691,7 @@ class OrderResource extends Resource
 
                 // Notes
                 Infolists\Components\Section::make(__('Catatan Pemesan'))
-                    ->icon('heroicon-s-document-text')
+                    ->icon('/images/icons/document.svg')
                     ->iconColor('gray')
                     ->compact()
                     ->schema([
@@ -724,7 +704,7 @@ class OrderResource extends Resource
 
                 // Metode Pembayaran & Countdown
                 Infolists\Components\Section::make(__('Metode Pembayaran & Batas Waktu'))
-                    ->icon('heroicon-s-credit-card')
+                    ->icon('/images/icons/card.svg')
                     ->iconColor('success')
                     ->compact()
                     ->schema([
@@ -734,7 +714,7 @@ class OrderResource extends Resource
                         Infolists\Components\Actions::make([
                             Infolists\Components\Actions\Action::make('upload_proof')
                                 ->label(__('Upload Bukti Pembayaran'))
-                                ->icon('heroicon-s-photo')
+                                ->icon('/images/icons/photo.svg')
                                 ->button()
                                 ->color('success')
                                 ->visible(fn (Order $record) => in_array($record->payment_status, [

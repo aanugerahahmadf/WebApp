@@ -9,9 +9,9 @@
       sudah login -> ikon itu sendiri link LANGSUNG ke /user/home (home panel
                      user). Tidak ada lagi tombol "Beranda" terpisah: user yang
                      sudah login tidak butuh dua kontrol untuk satu tujuan, dan
-                     /welcome + /welcome/home sudah otomatis dialihkan ke
-                     /user/home -- jadi label "Beranda" di sini cuma mengulang
-                     halaman yang sudah ditinggalkan.
+                     / + /home (storefront di root, shopee-style) sudah
+                     otomatis dialihkan ke /user/home -- jadi label "Beranda"
+                     di sini cuma mengulang halaman yang sudah ditinggalkan.
 
     Keduanya menunjuk ke panel user, tempat semua halaman auth dan profil hidup
     -- panel ini tidak mendaftarkan satu pun, jadi tidak punya URL login atau
@@ -39,14 +39,23 @@
     any hook inside it) once `filament()->auth()->check()` passes. Guests are
     the whole reason this control exists.
 
-    The theme switcher comes along because Filament keeps it inside the user
-    menu, which this panel does not render. It is a dropdown rather than
-    Filament's stock three-button strip: next to the account control the strip
-    crowded the topbar, and on a phone it wrapped onto a second row. The stock
-    <x-filament-panels::theme-switcher /> has no dropdown variant to reuse, so
-    this is hand-rolled from Filament's own dropdown parts, which is what keeps
+    The theme switcher lives here because Filament keeps it inside the user
+    menu, which this panel does not render for guests. It is a dropdown rather
+    than Filament's stock three-button strip: next to the account control the
+    strip crowded the topbar, and on a phone it wrapped onto a second row. The
+    stock <x-filament-panels::theme-switcher /> has no dropdown variant to reuse,
+    so this is hand-rolled from Filament's own dropdown parts, which is what keeps
     the panel, rows and transitions looking native. Dropdown tamu di atas juga memakai
     parts yang sama, dengan `teleport` supaya tidak terpotong topbar.
+
+    It renders for guests AND for signed-in visitors -- that is deliberate.
+    What makes the theme appear twice is NOT this, but Filament's stock
+    switcher sitting inside the user menu: the user menu only renders for
+    signed-in visitors, so a guest saw one switcher and a signed-in visitor
+    saw two. The stock switcher has been switched off in the user-menu
+    override (resources/views/Welcome/vendor/filament-panels/components/
+    user-menu.blade.php), so this one is now the only theme switcher in the
+    panel.
 
     Picking a row assigns `theme`. The wrapper's $watch turns that into the
     'theme-changed' event, and that event is the whole contract with the rest of
@@ -75,12 +84,17 @@
     possible values are the three keys of $themeOptions above.
 --}}
 @php
+    use App\Support\AppIcon\AppIcon;
     use App\Support\AppPlatform\AppPlatform;
 
-    // Ikon user/profile milik Filament, diambil dari registry-nya (ikon yang
-    // sama dengan yang dipakai user menu bawaan) dengan fallback kalau paket
-    // tidak mendaftarkan.
-    $accountIcon = \Filament\Support\Facades\FilamentIcon::resolve('panels::user-menu.profile-item') ?? 'heroicon-m-user-circle';
+    // Ikon di dalam DROPDOWN memakai aset berwarna (AppIcon), bukan Heroicon:
+    // Heroicon monokrom, jadi di dropdown yang isinya sudah berwarna (ikon
+    // akun + ikon daftar) satu-satunya yang berwarna harus ikon yang
+    // ditemukan lebih dulu -- dan itu yang bikin dropdown terlihat setengah
+    // jadi.
+    //
+    // `$accountIcon` (ikon dari registry Filament) sudah tidak dipakai lagi:
+    // pemicunya sekarang juga memakai aset berwarna.
 
     // Kelas tombolnya satu blok, dipakai kedua status (link dan trigger
     // dropdown), supaya ikon di topbar ini tidak melompat ukurannya kalau status
@@ -108,7 +122,8 @@
     // berganti.
     $accountIconClass = 'h-7 w-7';
 
-    // Switcher tema di topbar: hanya untuk tablet dan website desktop.
+    // Switcher tema di topbar: hanya untuk tablet, website desktop, dan
+    // APLIKASI DESKTOP.
     //
     // Syaratnya AppPlatform::switchersBelongInTopbar() -- kebalikan persis
     // dari hook SIDEBAR_NAV_START di WelcomePanelProvider, yang menaruh
@@ -116,15 +131,27 @@
     // sama, jadi switcher tema tidak mungkin muncul di topbar DAN sidebar
     // pada satu permukaan.
     //
-    // Sebelumnya syaratnya hanya mengecek desktop app, sehingga di HP
-    // markup-nya tetap dirender lalu disembunyikan `hidden sm:block` --
-    // satu kontrol ada dua kali di DOM. Sekarang di sana tidak dirender
-    // sama sekali.
+    // Aplikasi desktop ikut ke topbar (bukan sidebar) karena sidebar-nya
+    // diterjemahkan ke luar layar di layar lebar -- switcher di sana
+    // ter-render tapi tidak terlihat. Lihat AppPlatform::switchersBelongInSidebar().
     //
     // Diperiksa di PHP, bukan lewat CSS, supaya markup-nya benar-benar tidak
     // ada -- bukan "tersembunyi tapi tetap ada di DOM".
     //
+    // JEBakan: JANGAN bungkus switcher ini dengan `hidden sm:block`.
+    //
+    // Wrapper itu menyembunyikannya di bawah 640px, dan satu-satunya tempat
+    // switcher tema berada di topbar adalah permukaan NON-HP -- termasuk
+    // APLIKASI DESKTOP, yang jendelannya tidak punya minWidth dan bisa
+    // dikecilkan ke bawah 640px persis seperti pada tangkapan layar (jendela
+    // 400px). Di sana switcher-nya hilang total: bukan "di sidebar", bukan
+    // "di topbar" -- tidak ada di mana pun. Aturan lebar layar tidak boleh
+    // ikut menentukan surface; yang menentukan cuma platform
+    // (AppPlatform::switchersBelongInTopbar()).
+    //
     // PANEL LAIN (user, admin) TIDAK ikut: mereka tidak memakai partial ini.
+    // Panel User punya switcher temanya sendiri di hook topbar-nya, dan panel
+    // Admin memakai partial yang sama dari hook topbar-nya.
     $showThemeSwitcher = AppPlatform::switchersBelongInTopbar();
 @endphp
 {{--
@@ -133,9 +160,7 @@
 
     Ikon akun adalah kontrol paling personal di panel ini -- dia yang
     melanjutkan ke sesi orang itu -- jadi posisinya di pojok kanan paling
-    ujung, seperti di panel Filament pada umumnya. themedahulu karena begitu
-    urutannya, switcher tema justru mengambil tempat terakhir dan ikon akun
-    berhenti di tengah baris, padahal itu bukan tempatnya.
+    ujung, seperti di panel Filament pada umumnya.
 
     Perhatikan juga bahwa hook bahasa (GLOBAL_SEARCH_AFTER di
     WelcomePanelProvider) dirender sebelum wrapper ini, jadi urutan penuh di
@@ -143,29 +168,23 @@
 --}}
 <div class="fi-welcome-auth-actions flex items-center gap-2 lg:gap-3">
     @if ($showThemeSwitcher)
-        <div class="hidden sm:block">
-            @include('Shared.components.theme-switcher.theme-switcher')
-        </div>
+        {{--
+            TANPA wrapper `hidden sm:block`.
+
+            Wrapper itu menyembunyikan switcher di bawah 640px, dan switcher
+            tema di topbar hanya ada di permukaan NON-HP. Di APLIKASI DESKTOP
+            (jendela tanpa minWidth) itu berarti switcher hilang total saat
+            jendela dikecilkan -- persis tangkapan layar 400px, di mana topbar
+            hanya punya language switcher dan theme switcher tidak ada di mana pun.
+
+            Visibilitas ikut aturan yang sama dengan switcher bahasa: di HP
+            switcher ini tidak dirender sama sekali (karena milik sidebar),
+            di tablet / website desktop / aplikasi desktop dia selalu terlihat.
+        --}}
+        @include('Shared.components.theme-switcher.theme-switcher')
     @endif
 
-    @auth
-        {{--
-            Sudah login: ikon itu sendiri yang jadi link ke /user/home. Tidak ada
-            dropdown dan tidak ada tombol "Beranda" -- satu tujuan, satu kontrol.
-            Label "Beranda" tetap dipakai untuk aria-label + tooltip supaya
-            maksud ikon terbaca screen reader dan saat hover.
-        --}}
-        <a href="{{ $homeUrl }}"
-            aria-label="{{ __('Beranda') }}"
-            x-tooltip="{
-                content: @js(__('Beranda')),
-                theme: $store.theme,
-            }"
-            class="{{ $accountButtonClass }}"
-        >
-            <x-filament::icon :icon="$accountIcon" :class="$accountIconClass" />
-        </a>
-    @else
+    @guest
         {{--
             Tamu: ikon user (bawaan Filament) + dropdown berisi satu aksi,
             "Sign In To Account" / "Masuk ke Akun". Dropdown-nya disusun dari
@@ -183,7 +202,7 @@
                     }"
                     class="{{ $accountButtonClass }}"
                 >
-                    <x-filament::icon :icon="$accountIcon" :class="$accountIconClass" />
+                    <x-filament::icon :icon="AppIcon::PROFILE" :class="$accountIconClass" />
                 </button>
             </x-slot>
 
@@ -191,11 +210,36 @@
                 <x-filament::dropdown.list.item
                     tag="a"
                     :href="$loginUrl"
-                    :icon="$accountIcon"
+                    :icon="AppIcon::PROFILE"
                 >
                     {{ __('Sign In To Account') }}
                 </x-filament::dropdown.list.item>
+
+                {{--
+                    Pendaftaran punya door sendiri di dropdown ini. Ditambahkan
+                    sebagai item menu, bukan tombol terpisah di topbar: topbar
+                    sudah penuh (pencarian, bahasa, tema, ikon akun) dan dua
+                    tombol teks auth akan merebut lebar dari kotak pencarian.
+
+                    Dijaga `if` karena `$signUpUrl` bisa null kalau panel user
+                    suatu saat mematikan lagi `->registration()`. Tanpa penjaga
+                    itu itemnya tetap dirender dengan href kosong -- satu item
+                    dropdown yang tidak melakukan apa pun, dan itu lebih buruk
+                    daripada tidak ada.
+
+                    "Sign Up Sekarang" ditulis lewat `__()` supaya ikut ganti
+                    bersama bahasa switcher.
+                --}}
+                @if ($signUpUrl ?? null)
+                    <x-filament::dropdown.list.item
+                        tag="a"
+                        :href="$signUpUrl"
+                        :icon="AppIcon::ARROW_RIGHT"
+                    >
+                        {{ __('Sign Up Sekarang') }}
+                    </x-filament::dropdown.list.item>
+                @endif
             </x-filament::dropdown.list>
         </x-filament::dropdown>
-    @endauth
+    @endguest
 </div>

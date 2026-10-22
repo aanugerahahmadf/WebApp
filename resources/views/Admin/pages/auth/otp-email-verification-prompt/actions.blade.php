@@ -60,7 +60,7 @@
                 wire:click="logoutAndReturnToLogin"
                 wire:confirm="{{ __('Keluar dan kembali ke halaman login?') }}"
                 color="gray"
-                icon="heroicon-m-arrow-left-on-rectangle"
+                icon="/images/icons/sign_out.svg"
             >
                 {{ __('Keluar dan Kembali ke Login') }}
             </x-filament::button>

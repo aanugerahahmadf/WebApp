@@ -8,6 +8,7 @@ use App\Models\BackupCode\BackupCode;
 use App\Models\SecurityEmail\SecurityEmail;
 use App\Models\TrustedDevice\TrustedDevice;
 use App\Models\User\User;
+use App\Support\DeviceTrust\DeviceTrustService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -535,6 +536,74 @@ class SecurityController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Device removed',
+        ]);
+    }
+
+    /**
+     * Jawaban "Ya, Ini Saya" dari HP atas notifikasi "Perangkat Baru --
+     * Apakah Ini Anda?". Padanan tombol confirmItIsMe() di halaman web
+     * DeviceTrustPrompt -- logikanya satu pintu di DeviceTrustService.
+     */
+    public function verifyTrustedDevice(int $deviceId): JsonResponse
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        if (! $user) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthenticated'], 401);
+        }
+
+        $device = TrustedDevice::query()
+            ->where('user_id', $user->id)
+            ->where('id', $deviceId)
+            ->first();
+
+        if (! $device) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Device not found',
+            ], 404);
+        }
+
+        DeviceTrustService::trust($device, $user);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => __('Perangkat Dipercaya'),
+        ]);
+    }
+
+    /**
+     * Jawaban "Bukan saya": semua sesi web lain + SEMUA token Sanctum
+     * dicabut -- termasuk token HP yang memanggil endpoint ini. Karena itu
+     * responsnya ditandai logged_out: true sebagai sinyal ke aplikasi HP
+     * supaya keluar dengan rapi (bukan menunggu 401 di request berikutnya).
+     */
+    public function rejectTrustedDevice(int $deviceId): JsonResponse
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        if (! $user) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthenticated'], 401);
+        }
+
+        $device = TrustedDevice::query()
+            ->where('user_id', $user->id)
+            ->where('id', $deviceId)
+            ->first();
+
+        if (! $device) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Device not found',
+            ], 404);
+        }
+
+        DeviceTrustService::deny($device, $user);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => __('Semua Sesi Dikeluarkan'),
+            'logged_out' => true,
         ]);
     }
 

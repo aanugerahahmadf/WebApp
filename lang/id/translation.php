@@ -52,9 +52,9 @@ return [
     'Belum ada paket tersedia' => 'Belum ada paket tersedia',
     'Tidak ada paket yang cocok dengan foto Anda. Silakan coba foto lain.' => 'Tidak ada paket yang cocok dengan foto Anda. Silakan coba foto lain.',
     'Temukan paket impianmu di sini!' => 'Temukan paket impianmu di sini!',
-    'Belum ada product tersedia' => 'Belum ada product tersedia',
-    'Tidak ada product yang cocok dengan foto Anda. Silakan coba foto lain.' => 'Tidak ada product yang cocok dengan foto Anda. Silakan coba foto lain.',
-    'Temukan product impianmu di sini!' => 'Temukan product impianmu di sini!',
+    'Belum ada catalog tersedia' => 'Belum ada catalog tersedia',
+    'Tidak ada catalog yang cocok dengan foto Anda. Silakan coba foto lain.' => 'Tidak ada catalog yang cocok dengan foto Anda. Silakan coba foto lain.',
+    'Temukan catalog impianmu di sini!' => 'Temukan catalog impianmu di sini!',
 
     // Actions
     'Tampilkan Semua' => 'Tampilkan Semua',
@@ -91,7 +91,7 @@ return [
 
     // Sections
     'Tentang Layanan Ini' => 'Tentang Layanan Ini',
-    'Tentang Product Ini' => 'Tentang Product Ini',
+    'Tentang Catalog Ini' => 'Tentang Catalog Ini',
     'Fitur' => 'Fitur',
 
     // Buttons
@@ -226,13 +226,14 @@ return [
     'Favorit Saya' => 'Favorit Saya',
     'Favorit Baru' => 'Favorit Baru',
     'Pilih Paket' => 'Pilih Paket',
+    'Pilih Paket Dekorasi' => 'Pilih Paket Dekorasi',
     'Tambah Favorit' => 'Tambah Favorit',
 
     // Review
     'Ulasan Saya' => 'Ulasan Saya',
     'Pilih Layanan' => 'Pilih Layanan',
     'Layanan Paket' => 'Layanan Paket',
-    'Informasi Studio' => 'Informasi Studio',
+    'Informasi Toko' => 'Informasi Toko',
     'Judul Ulasan' => 'Judul Ulasan',
     'Komentar Anda' => 'Komentar Anda',
     'Foto Ulasan' => 'Foto Ulasan',

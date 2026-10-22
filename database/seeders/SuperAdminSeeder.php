@@ -2,106 +2,98 @@
 
 namespace Database\Seeders;
 
-use App\Models\User\User;
+use App\Models\Admin\Admin;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
-use Laravolt\Indonesia\Models\City as IndonesiaCity;
-use Laravolt\Indonesia\Models\District as IndonesiaDistrict;
-use Laravolt\Indonesia\Models\Province as IndonesiaProvince;
-use Laravolt\Indonesia\Models\Village as IndonesiaVillage;
 
+/**
+ * Seed akun super admin di tabel `admins`.
+ *
+ * Dulu seeder ini menulis ke tabel `users`, sekarang ke `admins`. Itu pemisahan
+ * yang sama sekali bukan kosmetik: `admins` dibaca guard `admin`, tidak punya
+ * token Sanctum, dan tidak punya kolom KYC/KTP/budget/wishlist/cart. Akun
+ * belanja tidak akan pernah bisa membuka panel admin karena tidak ada baris
+ * di `users` yang punya role ber-guard 'admin'.
+ *
+ * Idempoten: aman dijalankan berulang kali. Kalau baris sudah ada, yang di-update
+ * hanya field yang memang milik seed (nama, username, email, kata sandi,
+ * verifikasi email, status aktif) -- kolom jejak login dan `user_id` tidak
+ * disentuh supaya tidak menghapus data operasional.
+ *
+ * Kolom `user_id` SENGAJA tidak diisi di sini. Hubungan ke identitas belanja
+ * bersifat opsional dan harus diminta secara eksplisit lewat
+ * `php artisan admin:grant-storefront`, supaya tabel `users` tetap khusus
+ * shopper dan tamu secara default.
+ */
 class SuperAdminSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $this->command->info('--- Seeding Super Admin ---');
 
-        $province = IndonesiaProvince::where('name', 'DKI JAKARTA')->first();
-        $city = $province ? IndonesiaCity::where('province_code', $province->code)->where('name', 'JAKARTA SELATAN')->first() : null;
-        $district = $city ? IndonesiaDistrict::where('city_code', $city->code)->first() : null;
-        $village = $district ? IndonesiaVillage::where('district_code', $district->code)->first() : null;
+        $email = env('SUPER_ADMIN_EMAIL', 'devimakeup.wo@gmail.com');
+        $username = env('SUPER_ADMIN_USERNAME', 'superadmin');
+        $password = env('SUPER_ADMIN_PASSWORD', '@Superadmin123');
 
-        $user = User::where('email', 'devimakeup.wo@gmail.com')->first();
-        if (! $user) {
-            $user = User::where('username', 'superadmin')->first();
-        }
-        if ($user) {
-            $user->update([
-                'identity_type' => 'ktp',
-                'full_name' => 'Super Admin',
-                'first_name' => 'Super',
-                'last_name' => 'Admin',
-                'username' => 'superadmin',
-                'password' => Hash::make('@Superadmin123'),
-                'email_verified_at' => now(),
-                'avatar_url' => 'https://i.pravatar.cc/300?u=superadmin',
-                'whatsapp' => '6281234567890',
-                'ktp_number' => '1234567890123456',
-                'birth_place' => 'Jakarta',
-                'birth_date' => '1990-01-01',
-                'gender' => 'male',
-                'religion' => 'Islam',
-                'marital_status' => 'Menikah',
-                'mother_name' => 'Ibu Super Admin',
-                'occupation' => 'Profesional',
-                'income_range' => '> Rp 50 Juta',
-                'source_of_funds' => 'Gaji',
-                'country' => 'Indonesia',
-                'province_id' => $province?->id,
-                'city_id' => $city?->id,
-                'district_id' => $district?->id,
-                'village_id' => $village?->id,
-                'province_name' => $province?->name ?? 'DKI Jakarta',
-                'city_name' => $city?->name ?? 'Jakarta Selatan',
-                'district_name' => $district?->name ?? 'Kebayoran Baru',
-                'village_name' => $village?->name ?? 'Gandaria Utara',
-                'postal_code' => '12140',
-                'address' => 'Jl. M.H. Thamrin No. 1, Gandaria Utara',
-            ]);
+        $attributes = [
+            'full_name' => 'Super Admin',
+            'first_name' => 'Super',
+            'last_name' => 'Admin',
+            'username' => $username,
+            'email' => $email,
+            // Password DISINI mentah (bukan Hash::make) karena model Admin
+            // punya cast 'password' => 'hashed' yang akan hash otomatis.
+            // JANGAN Hash::make di sini — akan jadi double-hash dan login gagal.
+            'password' => $password,
+            'email_verified_at' => now(),
+            'avatar_url' => 'https://i.pravatar.cc/300?u=superadmin',
+            'phone' => '6281234567890',
+            'whatsapp' => '6281234567890',
+            'position' => 'Super Administrator',
+            'department' => 'Engineering',
+            'active_status' => true,
+        ];
+
+        // Dicari per-username DAN per-email, karena keduanya unique di tabel
+        // `admins`. Kalau seed lama pernah menulis email berbeda, akun itu
+        // ditemukan lewat username lalu email-nya dikoreksi di sini -- bukan
+        // membuat baris kedua yang bentrok dengan unique index.
+        $admin = Admin::withTrashed()
+            ->where('username', $username)
+            ->orWhere('email', $email)
+            ->first();
+
+        if ($admin) {
+            // Restore dulu: kalau pernah di-soft-delete, akunnya harus hidup
+            // lagi, bukan sekadar di-update (update tidak menghidupkan row).
+            if ($admin->trashed()) {
+                $admin->restore();
+            }
+
+            $admin->update($attributes);
+
+            $this->command->line("  <info>✓</info> Super Admin diperbarui: {$admin->email}");
         } else {
-            $user = User::create([
-                'identity_type' => 'ktp',
-                'full_name' => 'Super Admin',
-                'first_name' => 'Super',
-                'last_name' => 'Admin',
-                'username' => 'superadmin',
-                'email' => 'devimakeup.wo@gmail.com',
-                'password' => Hash::make('@Superadmin123'),
-                'email_verified_at' => now(),
-                'avatar_url' => 'https://i.pravatar.cc/300?u=superadmin',
-                'whatsapp' => '6281234567890',
-                'ktp_number' => '1234567890123456',
-                'birth_place' => 'Jakarta',
-                'birth_date' => '1990-01-01',
-                'gender' => 'male',
-                'religion' => 'Islam',
-                'marital_status' => 'Menikah',
-                'mother_name' => 'Ibu Super Admin',
-                'occupation' => 'Profesional',
-                'income_range' => '> Rp 50 Juta',
-                'source_of_funds' => 'Gaji',
-                'country' => 'Indonesia',
-                'province_id' => $province?->id,
-                'city_id' => $city?->id,
-                'district_id' => $district?->id,
-                'village_id' => $village?->id,
-                'province_name' => $province?->name ?? 'DKI Jakarta',
-                'city_name' => $city?->name ?? 'Jakarta Selatan',
-                'district_name' => $district?->name ?? 'Kebayoran Baru',
-                'village_name' => $village?->name ?? 'Gandaria Utara',
-                'postal_code' => '12140',
-                'address' => 'Jl. M.H. Thamrin No. 1, Gandaria Utara',
-            ]);
+            $admin = Admin::create($attributes);
+
+            $this->command->line("  <info>✓</info> Super Admin dibuat: {$admin->email}");
         }
 
-        if (! $user->hasRole('super_admin')) {
-            $user->assignRole('super_admin');
+        // Role harus sudah ada. RolesAndPermissionsSeeder dipanggil lebih dulu
+        // oleh DatabaseSeeder; kalau dijalankan sendiri (`db:seed --class`),
+        // buatkan di sini supaya tidak gagal diam-diam.
+        if (! \Spatie\Permission\Models\Role::findByName('super_admin', 'admin')) {
+            $this->command->warn('  <comment>!</comment> Role super_admin belum ada -- jalankan RolesAndPermissionsSeeder lebih dulu.');
+        } elseif (! $admin->hasRole('super_admin')) {
+            // Guard eksplisit: role super_admin hidup di guard 'admin'.
+            $admin->assignRole('super_admin');
+            $this->command->line('  <info>✓</info> Role: super_admin');
         }
 
-        $this->command->line("  <info>✓</info> Super Admin Created: {$user->email}");
+        $this->command->line('  <info>→</info> Login: /admin/signin');
+        $this->command->line('  <info>→</info> Email/username: ' . $username . ' / ' . $email);
+        $this->command->line('  <info>→</info> Kata sandi: ' . $password);
+        $this->command->line('  <info>→</info> Ganti kata sandi ini sebelum dipakai di lingkungan nyata.');
+
         $this->command->info('--- Super Admin Seeding Complete ---');
     }
 }

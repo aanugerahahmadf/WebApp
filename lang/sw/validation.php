@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'msimbo wa posta',
         'preview'                  => 'hakikisho',
         'price'                    => 'bei',
-        'product_id'               => 'kitambulisho cha bidhaa',
+        'catalog_id'               => 'kitambulisho cha bidhaa',
         'product_uid'              => 'bidhaa UID',
         'product_uuid'             => 'bidhaa UUID',
         'promo_code'               => 'msimbo wa matangazo',

@@ -3,10 +3,11 @@
 namespace App\Filament\User\Resources\CartResource;
 
 use App\Filament\User\Resources\CartResource\Pages;
-use App\Filament\User\Resources\PackageResource\PackageResource;
-use App\Filament\User\Resources\ProductResource\ProductResource;
+
+use App\Filament\User\Resources\CatalogResource\CatalogResource;
 use App\Helpers\NativeNotificationHelper\NativeNotificationHelper;
 use App\Models\Cart\Cart;
+use App\Support\AppIcon\AppIcon;
 use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -24,7 +25,7 @@ class CartResource extends Resource
 
     protected static ?string $slug = 'carts';
 
-    protected static ?string $navigationIcon = 'heroicon-s-shopping-cart';
+    protected static ?string $navigationIcon = AppIcon::CART;
 
     protected static bool $shouldRegisterNavigation = false;
 
@@ -47,18 +48,18 @@ class CartResource extends Resource
 
     public static function getGloballySearchableAttributes(): array
     {
-        return ['product.name', 'package.name', 'product.category.name', 'package.category.name'];
+        return ['catalog.name', 'package.name', 'catalog.category.name', 'package.category.name'];
     }
 
     public static function getGlobalSearchResultTitle(Model $record): string
     {
-        return $record->package?->name ?? $record->product?->name ?? __('Item Keranjang');
+        return $record->package?->name ?? $record->catalog?->name ?? __('Item Keranjang');
     }
 
     public static function getGlobalSearchResultDetails(Model $record): array
     {
         return [
-            __('Jenis') => $record->package_id ? __('Paket') : __('Produk'),
+            __('Jenis') => $record->package_id ? __('Paket') : __('Katalog'),
             __('Jumlah') => $record->quantity ?? 1,
         ];
     }
@@ -100,22 +101,22 @@ class CartResource extends Resource
             ->paginated(false)
             ->emptyStateHeading(__('Keranjang Kosong'))
             ->emptyStateDescription(__('Mulai belanja dan temukan dekorasi impian Anda sekarang!'))
-            ->emptyStateIcon('heroicon-s-shopping-cart')
+            ->emptyStateIcon('/images/icons/cart.svg')
             ->emptyStateActions([
-                Tables\Actions\Action::make('shop_products')
+                Tables\Actions\Action::make('shop_catalogs')
                     ->label(__('Belanja Bunga'))
-                    ->url(ProductResource::getUrl())
+                    ->url(CatalogResource::getUrl())
                     ->button()
                     ->color('info')
                     ->size('lg')
-                    ->icon('ri-flower-line'),
+                    ->icon('/images/icons/flower.svg'),
                 Tables\Actions\Action::make('book_package')
                     ->label(__('Pesan Paket Dekorasi'))
-                    ->url(PackageResource::getUrl())
+                    ->url(CatalogResource::getUrl())
                     ->button()
                     ->color('primary')
                     ->size('lg')
-                    ->icon('ri-gift-line'),
+                    ->icon('/images/icons/gift.svg'),
             ])
             ->contentGrid([
                 'default' => 1,
@@ -140,9 +141,9 @@ class CartResource extends Resource
                     Tables\Columns\Layout\Stack::make([
                         // Item Type Badge
                         Tables\Columns\TextColumn::make('type_badge')
-                            ->state(fn (?Cart $record) => $record?->product_id ? __('Produk') : __('Paket'))
+                            ->state(fn (?Cart $record) => $record?->catalog_id ? __('Katalog') : __('Paket'))
                             ->badge()
-                            ->color(fn (?Cart $record) => $record?->product_id ? 'info' : 'warning')
+                            ->color(fn (?Cart $record) => $record?->catalog_id ? 'info' : 'warning')
                             ->size('xs')
                             ->extraAttributes(['class' => 'mb-2 self-start']),
 
@@ -162,13 +163,13 @@ class CartResource extends Resource
                                     ->prefix(__('Jumlah').': ')
                                     ->weight('medium')
                                     ->size('sm')
-                                    ->icon('heroicon-s-shopping-bag')
+                                    ->icon('/images/icons/bag.svg')
                                     ->extraAttributes(['class' => 'text-gray-500']),
 
-                                Tables\Columns\TextColumn::make('product.stock')
+                                Tables\Columns\TextColumn::make('catalog.stock')
                                     ->prefix(__('Stok: '))
-                                    ->visible(fn (?Cart $record) => (bool) ($record?->product_id ?? false))
-                                    ->color(fn (?Cart $record) => ($record?->product?->stock ?? 0) > 0 ? 'success' : 'danger')
+                                    ->visible(fn (?Cart $record) => (bool) ($record?->catalog_id ?? false))
+                                    ->color(fn (?Cart $record) => ($record?->catalog?->stock ?? 0) > 0 ? 'success' : 'danger')
                                     ->weight('bold')
                                     ->size('xs')
                                     ->alignEnd(),
@@ -193,19 +194,19 @@ class CartResource extends Resource
                         ->button()
                         ->color('success')
                         ->size('md')
-                        ->icon('heroicon-m-shopping-cart')
+                        ->icon('/images/icons/cart.svg')
                         ->extraAttributes(['class' => 'flex-1 !rounded-xl shadow-lg shadow-success-500/20 font-bold'])
                         ->slideOver()
-                        ->modalHeading(fn (Cart $record) => $record->product_id ? __('Checkout Produk') : __('Checkout Layanan'))
-                        ->steps(fn (Cart $record) => $record->product_id
-                            ? ProductResource::getCheckoutWizardSteps($record->product)
-                            : PackageResource::getCheckoutWizardSteps($record->package)
+                        ->modalHeading(fn (Cart $record) => $record->catalog_id ? __('Checkout Katalog') : __('Checkout Layanan'))
+                        ->steps(fn (Cart $record) => $record->catalog_id
+                            ? CatalogResource::getCheckoutWizardSteps($record->catalog)
+                            : CatalogResource::getCheckoutWizardSteps($record->package)
                         )
                         ->action(function (Cart $record, array $data, Component $livewire) {
-                            if ($record->product_id) {
-                                $response = ProductResource::handleCheckout($record->product, $data, $livewire);
+                            if ($record->catalog_id) {
+                                $response = CatalogResource::handleCheckout($record->catalog, $data, $livewire);
                             } else {
-                                $response = PackageResource::handleCheckout($record->package, $data, $livewire);
+                                $response = CatalogResource::handleCheckout($record->package, $data, $livewire);
                             }
                             $record->delete();
                             NativeNotificationHelper::success(__('Pesanan Anda sedang diproses!'));
@@ -215,13 +216,13 @@ class CartResource extends Resource
 
                     Tables\Actions\DeleteAction::make()
                         ->label(__('Hapus Item'))
-                        ->icon('heroicon-s-trash')
+                        ->icon('/images/icons/trash.svg')
                         ->button()
                         ->color('danger')
                         ->outlined()
                         ->size('md')
                         ->extraAttributes(['class' => 'flex-1 !rounded-xl font-bold'])
-                        ->after(fn () => NativeNotificationHelper::info(__('Dihapus'), __('Produk berhasil dihapus dari keranjang.'))),
+                        ->after(fn () => NativeNotificationHelper::info(__('Dihapus'), __('Katalog berhasil dihapus dari keranjang.'))),
                 ])
                     ->dropdown(false)
                     ->extraAttributes([
@@ -232,7 +233,7 @@ class CartResource extends Resource
                 Tables\Actions\Action::make('checkout_all')
                     ->label(__('Checkout Semua'))
                     ->color('primary')
-                    ->icon('heroicon-m-credit-card')
+                    ->icon('/images/icons/card.svg')
                     ->button()
                     ->size('lg')
                     ->extraAttributes(['class' => 'shadow-xl shadow-primary-500/20 font-black'])

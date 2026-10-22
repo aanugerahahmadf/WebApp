@@ -7,6 +7,7 @@
     x-init="
         window.addEventListener('EchoLoaded', () => {
             window.Echo.private(@js($channel)).listen('.database-notifications.sent', () => {
+                window.playNotificationSound?.();
                 setTimeout(() => $wire.call('$refresh'), 500)
             })
         })

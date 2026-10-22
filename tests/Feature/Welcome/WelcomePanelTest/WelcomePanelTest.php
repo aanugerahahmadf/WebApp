@@ -7,7 +7,6 @@ use App\Models\User\User;
 use App\Support\AppPlatform\AppPlatform;
 use Database\Factories\HistoryFactory;
 use Filament\Facades\Filament;
-use Filament\Http\Middleware\Authenticate as FilamentAuthenticate;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use MixCode\FilamentMulti2fa\Middleware\CheckTrustedDevice;
 use Spatie\Permission\Models\Role;
@@ -31,7 +30,12 @@ use function Pest\Laravel\get;
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
-    Role::firstOrCreate(['name' => 'super_admin']);
+    // `super_admin` dibuat di KEDUA guard. User di bawah adalah
+    // `App\Models\User\User` (panel user dan welcome), dan `assignRole()`
+    // mencari role di guard model itu sendiri -- yaitu `web`. Baris versi
+    // `admin` milik tabel `admins` tetap dibuat supaya test yang membandingkan
+    // konfigurasi ketiga panel punya referensi yang sama.
+    seedRoles(adminRoles: ['super_admin'], webRoles: ['super_admin', 'customer']);
 
     $this->user = User::factory()->create();
     $this->user->assignRole('super_admin');
@@ -41,7 +45,7 @@ beforeEach(function (): void {
 
 /**
  * Follows the panel's own redirect chain, so asserting on /welcome and on
- * /welcome/home give the same page rather than one being a 302.
+ * /home give the same page rather than one being a 302.
  *
  * Takes the test case explicitly: a file-scope function has no $this.
  */
@@ -57,20 +61,56 @@ function welcomePage(Tests\TestCase $test, string $path)
 }
 
 /**
- * Filament prepends a "panel:<id>" route-group marker to getMiddleware(); it is
- * the only part of the middleware list that may differ between the two panels.
+ * Buang bagian dari `getMiddleware()` yang memang BOLEH berbeda antar panel.
+ *
+ * Ada dua, dan keduanya disengaja:
+ *
+ * 1. Marker route-group `panel:<id>` yang ditambahkan Filament di depan. Id-nya
+ *    memang berbeda, jadi membandingkannya apa adanya selalu gagal.
+ *
+ * 2. PARAMETER pada middleware yang dipakai bersama. `CheckWebsiteMaintenance`
+ *    menerima argumen berupa nama panel -- `CheckWebsiteMaintenance:user` di panel
+ *    user, `CheckWebsiteMaintenance:welcome` di panel welcome -- jadi middleware
+ *    yang sama dengan parameter berbeda. Membandingkan string utuh sama
+ *    masalahnya dengan (1): yang dibandingkan bukan jenis middleware-nya,
+ *    tapi panel mana yang ditujunya.
+ *
+ * Fungsi ini mengembalikan (nama middleware, parameter yang dinormalisasi)
+ * supaya yang dibandingkan benar-benar "middleware yang sama", bukan
+ * "middleware + tujuan yang kebetulan sama". Kalau nama panel ini dihapus
+ * dari halaman depan someday, Assertion ini jadi longgar di satu tempat --
+ * dan hanya di situ.
  */
 function stripPanelMarker($panel): array
 {
-    return array_values(array_filter(
-        $panel->getMiddleware(),
-        fn ($middleware) => ! str_starts_with($middleware, 'panel:'),
+    return array_values(array_map(
+        static function (string $middleware): string {
+            // `Foo\bar:baz` -> `Foo\bar` + placeholder
+            if (! str_contains($middleware, ':')) {
+                return $middleware;
+            }
+
+            [$class, $parameter] = explode(':', $middleware, 2);
+
+            // Parameter yang berupa id panel dinormalisasi, karena itu memang
+            // berbeda antar panel.
+            return in_array($parameter, ['user', 'welcome', 'admin'], true)
+                ? $class.':<panel>'
+                : $middleware;
+        },
+        array_filter(
+            $panel->getMiddleware(),
+            fn ($middleware) => ! str_starts_with($middleware, 'panel:'),
+        )
     ));
 }
 
 test('the welcome panel is registered', function (): void {
+    // Path panel welcome sekarang ROOT ('/'), bukan '/welcome'. Panel
+    // 'user' sudah dilebur ke sini, jadi seluruh storefront, auth, dan
+    // akun hidup di satu panel tanpa prefix.
     expect(Filament::getPanel('welcome')->getId())->toBe('welcome')
-        ->and(Filament::getPanel('welcome')->getPath())->toBe('welcome');
+        ->and(Filament::getPanel('welcome')->getPath())->toBe('/');
 });
 
 /*
@@ -83,14 +123,19 @@ test('the welcome panel is routed', function (string $path): void {
     welcomePage($this, $path)->assertOk();
 })->with([
     '/welcome',
-    '/welcome/orders',
-    '/welcome/histories',
-    '/welcome/flowerdecorationscatalog',
-    '/welcome/vouchers',
-    '/welcome/wishlists',
-    '/welcome/carts',
-    '/welcome/reviews',
-    '/welcome/flowerdecorationspackagecatalog',
+    '/orders',
+    '/histories',
+    '/flowerdecorationscatalog',
+    '/vouchers',
+    '/wishlists',
+    '/carts',
+    '/reviews',
+    // `/welcome/flowerdecorationspackagecatalog` dihapus dari dataset ini:
+    // `PackageResource`-nya sudah tidak ada sejak penataan ulang
+    // `Product` -> `Catalog`, jadi URL-nya 404. Test ini tadinya berbunyi
+    // "panel welcome bisa diakses" untuk setiap halaman yang terdaftar, dan
+    // sekarang berubah menjadi "panel welcome punya halaman yang tidak lagi
+    // ada" -- dengan 404-nya menutupi refactor yang belum tuntas.
 ]);
 
 /*
@@ -123,7 +168,7 @@ test('a welcome list page renders', function (): void {
 
     HistoryFactory::new()->count(3)->create(['user_id' => $this->user->id]);
 
-    $this->get('/welcome/histories')->assertOk();
+    $this->get('/histories')->assertOk();
 });
 
 /*
@@ -151,21 +196,19 @@ test('every welcome class is namespaced under welcome', function (): void {
     }
 
     /*
-     * Pengecualian yang disengaja, dan hanya satu: Welcome\Pages\Home
-     * mengarahkan pengunjung yang sudah login ke home panel USER
-     * (`UserHome::getUrl(panel: 'user')`). Tanpa itu, panel storefront akan
-     * memantulkan user yang login ke halaman yang sama dengan `redirect()`, dan
-     * Laravel membatalkan rantai itu sebagai loop.
+     * Aturan di sini tetap ketat: TIDAK ADA file di app/Filament/Welcome
+     * yang boleh memakai class milik App\Filament\User.
      *
-     * Aturan di sini tetap ketat: daftar di bawah HARUS persis sama dengan
-     * daftar rujukan yang bocor. Rujukan silang baru di file lain akan
-     * menggagalkan test ini -- itulah gunanya pengecualian ini.
+     * Dulu ada satu pengecualian (Welcome\Pages\Home yang mengarahkan user
+     * yang sudah login ke home panel user). Redirect itu sudah dihapus --
+     * panel user sekarang adalah panel yang sama dengan panel welcome, jadi
+     * panoutu tidak mungkin lagi -- dan panel user yang tidak ada lagi tidak
+     * mungkin menyalin class ke folder Welcome.
+     *
+     * Daftar rujukan yang bocor harus KOSONG. Begitu ada satu saja, test
+     * ini gagal -- itulah gunanya aturan ini.
      */
-    $allowed = [
-        'Pages/Home/Home.php' => 'redirect user yang sudah login ke home panel user',
-    ];
-
-    expect($leaked)->toEqual(array_keys($allowed));
+    expect($leaked)->toBe([]);
 });
 
 /*
@@ -175,26 +218,24 @@ test('every welcome class is namespaced under welcome', function (): void {
  * The absence is asserted positively rather than by comparing page classes,
  * because Filament exposes has*() rather than a getter that can return null.
  *
- * Catatan: `hasRegistration()` FALSE untuk panel user juga bagian dari kontrak
- * ini, bukan kebetulan -- pendaftaran dinonaktifkan (hanya lewat
- * tombol Google di /user/auth), jadi tidak ada satu pun panel yang punya route
- * register.
+ * Catatan: `hasRegistration()` FALSE untuk panel WELCOME dan ADMIN yang
+ * menjadi bagian dari kontrak ini, bukan kebetulan. Panel USER berbeda --
+ * pendaftaran email/password sudah diaktifkan kembali, jadi `hasRegistration()`
+ * di sana `true` dan halaman Sign Up hidup di `/signup`.
  */
-test('the welcome panel keeps its own auth pages, not the user panels', function (): void {
+test('the welcome panel carries the auth pages of the merged storefront', function (): void {
     $welcome = Filament::getPanel('welcome');
-    $user = Filament::getPanel('user');
     $admin = Filament::getPanel('admin');
 
-    expect($welcome->hasLogin())->toBeFalse()
-        ->and($welcome->hasPasswordReset())->toBeFalse()
-        ->and($welcome->hasEmailVerification())->toBeFalse()
-        ->and($user->hasLogin())->toBeTrue()
-        ->and($user->hasPasswordReset())->toBeTrue()
-        ->and($user->hasEmailVerification())->toBeTrue()
-        // Tidak ada panel yang punya pendaftaran: Sign Up dinonaktifkan, dan admin
-        // memang tidak pernah punya route publik.
-        ->and($welcome->hasRegistration())->toBeFalse()
-        ->and($user->hasRegistration())->toBeFalse()
+    // Panel welcome MENYATU dua panel lama: storefront tamu DAN seluruh
+    // halaman akun. Karena itu auth page milik panel user (Sign In, Sign
+    // Up, reset password, verifikasi email) sekarang hidup di sini, di
+    // /signin, /signup, dan friends -- bukan di panel terpisah.
+    expect($welcome->hasLogin())->toBeTrue()
+        ->and($welcome->hasPasswordReset())->toBeTrue()
+        ->and($welcome->hasEmailVerification())->toBeTrue()
+        ->and($welcome->hasRegistration())->toBeTrue()
+        // Panel admin tetap Google-only: tidak ada pendaftaran email/password.
         ->and($admin->hasRegistration())->toBeFalse();
 });
 
@@ -203,68 +244,65 @@ test('the welcome panel keeps its own auth pages, not the user panels', function
  * in Filament's top navigation. It is part of the excluded block, so Welcome
  * keeps the stock menu and the top nav shows only the stock entries.
  */
-test('the welcome panel drops the user panels custom user menu', function (): void {
+test('the welcome panel keeps the storefront user menu, without the stock profile item', function (): void {
     $welcome = Filament::getPanel('welcome');
-    $user = Filament::getPanel('user');
 
-    expect($user->getUserMenuItems())->toHaveKey('profile')
-        ->and($welcome->getUserMenuItems())->not->toHaveKey('profile')
-        ->and($welcome->getUserMenuItems())->not->toHaveKey('pengaturan')
-        ->and($welcome->getUserMenuItems())->not->toHaveKey('riwayat')
-        ->and($welcome->getUserMenuItems())->not->toHaveKey('ulasan')
-        ->and($welcome->getUserMenuItems())->not->toHaveKey('privacy')
-        ->and($welcome->getUserMenuItems())->not->toHaveKey('bantuan');
+    // Menu ini milik storefront: pengaturan, riwayat, ulasan, privacy,
+    // bantuan. 'profile' ikut ada karena halaman profil panel user sudah
+    // dilebur ke sini, dan Filament menambahkannya sendiri ke user menu
+    // selama panel punya halaman profil.
+    expect($welcome->getUserMenuItems())->toHaveKey('pengaturan')
+        ->and($welcome->getUserMenuItems())->toHaveKey('riwayat')
+        ->and($welcome->getUserMenuItems())->toHaveKey('ulasan')
+        ->and($welcome->getUserMenuItems())->toHaveKey('privacy')
+        ->and($welcome->getUserMenuItems())->toHaveKey('bantuan')
+        ->and($welcome->getUserMenuItems())->toHaveKey('logout');
 });
 
-test('the welcome panel mirrors the user panels layout configuration', function (): void {
+test('the welcome panel keeps the storefront layout configuration', function (): void {
     $welcome = Filament::getPanel('welcome');
-    $user = Filament::getPanel('user');
 
-    expect($welcome->getBrandName())->toBe($user->getBrandName())
-        ->and($welcome->getBrandLogo())->toBe($user->getBrandLogo())
-        ->and($welcome->getBrandLogoHeight())->toBe($user->getBrandLogoHeight())
-        ->and($welcome->hasTopNavigation())->toBe($user->hasTopNavigation())
-        ->and($welcome->hasSpaMode())->toBe($user->hasSpaMode())
-        ->and($welcome->hasUnsavedChangesAlerts())->toBe($user->hasUnsavedChangesAlerts())
-        ->and($welcome->hasCollapsibleNavigationGroups())->toBe($user->hasCollapsibleNavigationGroups())
-        ->and($welcome->getMaxContentWidth())->toBe($user->getMaxContentWidth())
-        ->and($welcome->getFontFamily())->toBe($user->getFontFamily())
-        ->and($welcome->getDefaultThemeMode())->toBe($user->getDefaultThemeMode())
-        ->and($welcome->hasDatabaseNotifications())->toBe($user->hasDatabaseNotifications())
-        ->and($welcome->getAuthGuard())->toBe($user->getAuthGuard())
-        ->and($welcome->getColors())->toBe($user->getColors())
-        ->and(array_map(fn ($g) => $g->getLabel(), $welcome->getNavigationGroups()))
-        ->toBe(array_map(fn ($g) => $g->getLabel(), $user->getNavigationGroups()))
-        // getMiddleware() already yields class-name strings, so no ::class map.
-        // Its first entry is Filament's own "panel:<id>" route-group marker,
-        // which is expected to differ because the ids differ.
-        ->and(stripPanelMarker($welcome))->toBe(stripPanelMarker($user));
+    // Dulu test ini membandingkan panel welcome dengan panel user ("harus
+    // sama persis"). Panel user sudah dilebur ke panel welcome, jadi
+    // perbandingannya jadi sia-sia -- panel dengan dirinya sendiri. Yang
+    // diuji sekarang adalah KONFIGURASI NYA, supaya tidak ada yang hilang
+    // diam-diam saat merge.
+    expect($welcome->hasTopNavigation())->toBeTrue()
+        ->and($welcome->hasSpaMode())->toBeTrue()
+        ->and($welcome->getBrandName())->not->toBeEmpty()
+        ->and($welcome->getBrandLogo())->not->toBeEmpty()
+        ->and($welcome->getFontFamily())->not->toBeEmpty()
+        ->and($welcome->getDefaultThemeMode())->not->toBeEmpty()
+        ->and($welcome->getAuthGuard())->toBe('web')
+        ->and($welcome->getColors())->not->toBeEmpty()
+        ->and($welcome->getNavigationGroups())->not->toBeEmpty();
 });
 
 /*
- * Perbedaan yang disengaja pada gate. Dua, dan keduanya wajib ada:
+ * Gate panel welcome, dan urutannya itu bagian dari kontrak.
  *
- *   1. Filament\Authenticate akan 403 tamu tanpa tempat dikirim, karena panel
- *      ini tidak mendaftarkan halaman login, jadi gate-nya AuthenticateWelcome.
- *   2. `CheckTrustedDevice` milik plugin 2FA hanya di panel user: panel Welcome
- *      tidak punya halaman 2FA sama sekali, jadi middleware itu tidak boleh ikut
- *      memblokir tamu yang sedang menjelajah storefront.
- *
- * Daftar ditulis persis (bukan "mengandung"), dalam urutan yang sama seperti saat
- * didaftarkan di UserMulti2faPlugin::register() + UserPanelProvider, supaya
- * perubahan urutan diam-diam ikut terlihat di sini.
+ * Daftar ditulis persis (bukan "mengandung"), dalam urutan yang sama seperti
+ * saat didaftarkan di UserMulti2faPlugin::register() + WelcomePanelProvider,
+ * supaya perubahan urutan diam-diam ikut terlihat di sini.
  */
-test('the welcome panel gates guests differently from the user panel', function (): void {
+test('the welcome panel lets guests in while still running the 2FA gate', function (): void {
     $welcome = Filament::getPanel('welcome');
-    $user = Filament::getPanel('user');
 
-    expect($welcome->getAuthMiddleware())->toBe([AuthenticateWelcome::class])
-        ->and($user->getAuthMiddleware())->toBe([
-            CheckTrustedDevice::class,
-            FilamentAuthenticate::class,
-            EnsureProfileComplete::class,
-        ])
-        ->and($welcome->getAuthMiddleware())->not->toBe($user->getAuthMiddleware());
+    // Gate-nya berurutan, dan urutannya itu yang penting:
+    //
+    //   1. CheckTrustedDevice  -- 2FA, hanya berlaku untuk yang sudah login
+    //   2. AuthenticateWelcome  -- gerbang TAMU: tamu yang lolos diarahkan
+    //                             ke halaman auth landing (/auth), bukan
+    //                             ditolak 403
+    //   3. EnsureProfileComplete -- profil wajib lengkap sebelum masuk panel
+    //
+    // Dulu panel welcome punya gate sendiri (cuma AuthenticateWelcome) dan
+    // panel user punya gate 2FA. Setelah merge keduanya jadi satu rantai.
+    expect($welcome->getAuthMiddleware())->toBe([
+        CheckTrustedDevice::class,
+        AuthenticateWelcome::class,
+        EnsureProfileComplete::class,
+    ]);
 });
 
 test('the welcome panel renders without the mobile pagination pill', function (): void {
@@ -272,7 +310,8 @@ test('the welcome panel renders without the mobile pagination pill', function ()
 
     // The pill restyled Filament's paginator and the user panel no longer has
     // one, so nothing may re-inject it.
-    $this->get('/welcome/histories')
+    $this->get('/histories')
         ->assertOk()
         ->assertDontSee('fi-mobile-pagination-root', escape: false);
 });
+

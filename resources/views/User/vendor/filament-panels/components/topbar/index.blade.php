@@ -16,16 +16,24 @@
         {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::TOPBAR_START) }}
 
         @php
+            use App\Support\AppPlatform\AppPlatform;
+
             // Tombol sidebar: selalu tampilkan. Di mobile membuka drawer navigasi
             // bawaan Filament; di desktop (top navigation) otomatis disembunyikan
             // oleh class 'lg:hidden' di bawah.
+            //
+            // APLIKASI DESKTOP: tombol tutup (X) di-sembunyikan -- lihat catatan
+            // lengkap di resources/views/Welcome/vendor/filament-panels/components/
+            // topbar/index.blade.php. Ringkasnya: sidebar adalah satu-satunya jalan
+            // ke navigasi di desktop app, jadi menutupnya dari topbar=buntu.
+            $isDesktopApp = AppPlatform::isDesktopApp();
             $showSidebarToggle = filament()->hasNavigation();
         @endphp
 
         @if ($showSidebarToggle)
             <x-filament::icon-button
                 color="gray"
-                icon="heroicon-o-bars-3"
+                icon="/images/icons/menu.svg"
                 icon-alias="panels::topbar.open-sidebar-button"
                 icon-size="lg"
                 :label="__('filament-panels::layout.actions.sidebar.expand.label')"
@@ -39,18 +47,20 @@
                 ])
             />
 
-            <x-filament::icon-button
-                color="gray"
-                icon="heroicon-o-x-mark"
-                icon-alias="panels::topbar.close-sidebar-button"
-                icon-size="lg"
-                :label="__('filament-panels::layout.actions.sidebar.collapse.label')"
-                x-cloak
-                x-data="{}"
-                x-on:click="$store.sidebar.close()"
-                x-show="$store.sidebar.isOpen"
-                class="fi-topbar-close-sidebar-btn lg:hidden"
-            />
+            @unless ($isDesktopApp)
+                <x-filament::icon-button
+                    color="gray"
+                    icon="/images/icons/x.svg"
+                    icon-alias="panels::topbar.close-sidebar-button"
+                    icon-size="lg"
+                    :label="__('filament-panels::layout.actions.sidebar.collapse.label')"
+                    x-cloak
+                    x-data="{}"
+                    x-on:click="$store.sidebar.close()"
+                    x-show="$store.sidebar.isOpen"
+                    class="fi-topbar-close-sidebar-btn lg:hidden"
+                />
+            @endunless
         @endif
 
         @if (filament()->hasTopNavigation() || (! filament()->hasNavigation()))
@@ -207,7 +217,7 @@
                             x-on:click="window.dispatchEvent(new CustomEvent('open-modal', { detail: { id: 'database-notifications' }, bubbles: true }))"
                             aria-label="{{ __('filament-panels::layout.actions.open_database_notifications.label') }}"
                         >
-                            <x-filament::icon icon="heroicon-o-bell" class="fi-icon-btn-icon h-6 w-6" />
+                            <x-filament::icon icon="/images/icons/bell.svg" class="fi-icon-btn-icon h-6 w-6" />
 
                             <span
                                 x-show="unreadCount > 0"

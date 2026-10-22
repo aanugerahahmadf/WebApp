@@ -15,6 +15,7 @@ use App\Models\Voucher\Voucher;
 use App\Models\Wishlist\Wishlist;
 
 use App\Models\Traits\HasFilamentMessages\HasFilamentMessages;
+use App\Support\AvatarUrl\AvatarUrl;
 use App\Traits\InteractsWithLanguages\InteractsWithLanguages;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
@@ -71,6 +72,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon|null $wedding_date
  * @property string|null $theme_preference
  * @property string|null $color_preference
+ * @property string|null $font_preference
  * @property string|null $event_concept
  * @property string|null $dream_venue
  * @property string|null $custom_fields
@@ -200,13 +202,38 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName, 
 
     public function getFilamentAvatarUrl(): ?string
     {
+        // Sudah diterjemahkan oleh accessor di bawah.
         return $this->avatar_url;
     }
 
+    /**
+     * Akun ini HANYA identitas belanja dan tamu. Tidak pernah admin.
+     *
+     * `$adminRoles` DIHAPUS dari sini dengan sengaja.
+     *
+     * Dulu daftar role admin ikut menempel di model ini, jadi satu tabel
+     * `users` melayani dua audience sekaligus: shopper di guard `web`, dan
+     * admin di guard yang sama. Sekarang admin pindah ke tabel `admins` +
+     * guard `admin` (lihat App\Models\Admin\Admin), sehingga baris `users`
+     * sudah tidak mungkin memegang role admin: role `super_admin` dibuat
+     * dengan `guard_name = 'admin'`, sedangkan `hasRole()` Spatie selalu
+     * memfilter dengan guard model ini ('web').
+     *
+     * Kunci mati dari dua sisi, bukan satu:
+     *   - tabelnya dipisah, dan
+     *   - role-nya di-scope per guard.
+     *
+     * Kalau perlu satu sumber daftar role admin, ambil dari
+     * `AdminAccess::ADMIN_ROLES` -- jangan menuliskannya ulang di sini.
+     */
     public function canAccessPanel(Panel $panel): bool
     {
+        // Panel admin MUSTAHIL untuk user biasa, dan ditolak secara mutlak --
+        // bukan dengan "cek role" -- supaya tidak pernah ada jalur dari akun
+        // belanja ke panel admin, termasuk lewat filter atau relasi yang
+        // lupa diperiksa.
         if ($panel->getId() === 'admin') {
-            return $this->hasRole('super_admin') || $this->hasRole('vendor');
+            return false;
         }
 
         // 'user' is the account panel, 'welcome' the storefront that leads to it.
@@ -269,6 +296,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName, 
         'wedding_date',
         'theme_preference',
         'color_preference',
+        'font_preference',
         'event_concept',
         'dream_venue',
         'active_status',
@@ -410,25 +438,21 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName, 
         );
     }
 
+    /**
+     * URL avatar untuk ditampilkan.
+     *
+     * Aturan penerjemahannya (path relatif, URL absolut ke host ini, URL
+     * pihak ketiga) ada di App\Support\AvatarUrl\AvatarUrl -- satu tempat
+     * supaya User dan Admin tidak bisa berbeda pendapat.
+     *
+     * PENTING: yang MENULIS ke kolom ini harus memakai
+     * `getRawOriginal('avatar_url')`. Kalau memakai `$user->avatar_url`,
+     * nilai yang tersimpan jadi URL yang sudah diterjemahkan -- benar di
+     * mesin ini, rusak di server lain.
+     */
     public function getAvatarUrlAttribute($value): ?string
     {
-        $path = $value ?: $this->attributes['avatar'] ?? null;
-
-        if (! $path) {
-            return null;
-        }
-
-        if (filter_var($path, FILTER_VALIDATE_URL)) {
-            return $path;
-        }
-
-        $cleanPath = ltrim(str_replace('storage/', '', $path), '/');
-
-        if ($cleanPath === 'avatar.png' && ! file_exists(storage_path('app/public/avatar.png'))) {
-            return null;
-        }
-
-        return url('media/'.$cleanPath);
+        return AvatarUrl::for($value, $this->attributes['avatar'] ?? null);
     }
 
     public function getKtpPhotoUrlAttribute($value): ?string
@@ -598,9 +622,23 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName, 
         return $revokedTokens + $revokedSessions;
     }
 
-    public function getIsAdminAttribute(): bool
+    /**
+ * Selalu `false` -- dipertahankan hanya supaya view/serialisasi lama
+     * tidak kacau.
+ *
+ * Semula `return $this->roles->contains('name', 'super_admin')`. Sekarang
+ * selalu false, karena role admin hidup di guard 'admin' (tabel `admins`) dan
+ * `roles` di sini hanya memuat role ber-guard 'web'. Yang benar untuk
+ * "apakah akun ini punya wewenang admin" adalah `App\Models\Admin\Admin`.
+ *
+ * Sengaja dibiarkan sebagai method, bukan dihapus: accessor ini pernah ikut
+ * serialisasi API dan dipakai beberapa view blade, jadi menghapusnya akan
+ * membuatnya hilang dari payload tanpa error -- masalah yang jauh lebih
+ * sulit dicari daripada nilai yang sekarang selalu false.
+ */
+public function getIsAdminAttribute(): bool
     {
-        return $this->roles->contains('name', 'super_admin');
+        return false;
     }
 
     public function getRoleNamesAttribute(): array
@@ -637,5 +675,54 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName, 
     public function shouldCompleteProfile(): bool
     {
         return filled($this->social_type) && ! $this->isProfileComplete();
+    }
+
+    /**
+     * Check if any app lock method is enabled for this user.
+     * Used by the mobile app to determine whether to show the lock screen.
+     */
+    public function isAppLockEnabled(): bool
+    {
+        return ! empty($this->app_lock_fingerprint_enabled)
+            || ! empty($this->app_lock_face_enabled)
+            || ! empty($this->app_lock_pin_enabled);
+    }
+
+    /**
+     * Check if the app lock has expired and needs to be re-locked.
+     * Returns false if no lock is enabled or if unlocked recently (within 5 minutes).
+     *
+     * @param int $timeoutMinutes Timeout in minutes before re-lock is required
+     */
+    public function isAppLockExpired(int $timeoutMinutes = 5): bool
+    {
+        if (! $this->isAppLockEnabled()) {
+            return false;
+        }
+
+        $lastUnlock = $this->app_lock_last_unlock_at;
+        if (! $lastUnlock) {
+            return true;
+        }
+
+        return $lastUnlock->lt(now()->subMinutes($timeoutMinutes));
+    }
+
+    /**
+     * Get a summary of which app lock methods are active.
+     *
+     * @return array<string, bool>
+     */
+    public function getAppLockStatus(): array
+    {
+        return [
+            'enabled' => $this->isAppLockEnabled(),
+            'fingerprint' => (bool) $this->app_lock_fingerprint_enabled,
+            'face' => (bool) $this->app_lock_face_enabled,
+            'face_enrolled' => (bool) $this->app_lock_face_enrolled,
+            'pin' => (bool) $this->app_lock_pin_enabled,
+            'last_unlock_at' => $this->app_lock_last_unlock_at?->toIso8601String(),
+            'expired' => $this->isAppLockExpired(),
+        ];
     }
 }

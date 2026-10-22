@@ -33,7 +33,7 @@
                 <x-filament::link
                     color="gray"
                     href="https://filamentphp.com/docs"
-                    icon="heroicon-m-book-open"
+                    icon="/images/icons/book.svg"
                     icon-alias="panels::widgets.filament-info.open-documentation-button"
                     rel="noopener noreferrer"
                     target="_blank"

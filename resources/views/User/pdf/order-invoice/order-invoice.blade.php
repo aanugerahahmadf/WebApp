@@ -3,14 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
+{!! App\Support\PdfLayout\PdfLayout::pageCss('portrait') !!}
+/*
+ * PENTING: pakai `body *`, BUKAN `*`.
+ *
+ * Di Dompdf, style dasar halaman (@page) MEWARIISI style elemen root,
+ * dan `*` ikut cocok dengan elemen root itu. Jadi `* { margin: 0 }`
+ * menimpa margin @page juga -- header keluar dari atas kertas dan
+ * footer keluar dari bawah kertas, tanpa error.
+ *
+ * `body *` tidak cocok dengan root, jadi margin @page tetap utuh.
+ */
+body * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-    font-family: DejaVu Sans, Arial, sans-serif;
+    font-family: 'Google Sans Flex', sans-serif;
     font-size: 12px;
     color: #333;
     background: #fff;
 }
-.page { padding: 40px 48px; }
+/* Padding halaman sekarang berasal dari margin @page (3/3/4/3 cm). */
+.page { padding: 0; }
 
 /* ── Header ── */
 .header-table { width: 100%; margin-bottom: 28px; }
@@ -100,10 +112,10 @@ $os = $order->status instanceof OrderStatus
 $osLabel = $os?->getLabel() ?? (string) $order->status;
 
 // Item
-$item     = $order->package ?? $order->product;
+$item     = $order->package ?? $order->catalog;
 $itemType = $order->package_id
-    ? \App\Filament\User\Resources\PackageResource\PackageResource::getModelLabel()
-    : \App\Filament\User\Resources\ProductResource\ProductResource::getModelLabel();
+    ? __('Paket')
+    : \App\Filament\User\Resources\CatalogResource\CatalogResource::getModelLabel();
 $itemName = $item?->name ?? '-';
 $itemCat  = $item?->category?->name ?? '-';
 $weddingFlowersDecorasi = '-';
@@ -133,8 +145,7 @@ if (file_exists($logoPath)) {
 // Gambar item — resize 70x70 dengan GD, deteksi MIME dari konten file
 $imgSrc = null;
 if ($item) {
-    $col   = $order->package_id ? 'package_image' : 'product_image';
-    $media = $item->getFirstMedia($col);
+    $media = $item->getFirstMedia($order->package_id ? 'package_image' : 'catalog_image');
     if ($media && file_exists($media->getPath())) {
         try {
             $path  = $media->getPath();
@@ -303,5 +314,6 @@ $now     = now()->format('d M Y, H:i');
 </div>
 
 </div>
+{!! App\Support\PdfLayout\PdfLayout::footer() !!}
 </body>
 </html>

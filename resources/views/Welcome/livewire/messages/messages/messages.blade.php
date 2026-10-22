@@ -1,8 +1,17 @@
 @php
     use App\Enums\Messages\MediaCollectionType\MediaCollectionType;
+    use App\Support\Chat\MessageBubble\MessageBubble;
 @endphp
 <!-- Right Section (Chat Box) -->
-<div class="w-full h-full bg-white rounded-xl dark:divide-white/10 dark:bg-gray-900 overflow-hidden flex flex-col min-h-0">
+{{--
+    x-data="messageBubble" di elemen paling luar: gelembung aksi pesan milik
+    satu panel chat, bukan satu per pesan, dan ia menerima event dari seluruh
+    baris pesan di bawahnya. Registrasi Alpine-nya ada di blade halaman
+    (Shared/components/message-bubble/message-bubble-script) supaya tidak ikut
+    di-render ulang oleh `wire:poll`.
+--}}
+<div x-data="messageBubble"
+    class="w-full h-full overflow-hidden flex flex-col min-h-0">
     @if ($selectedConversation)
         <!-- Chat Header : Start -->
         <div class="grid grid-cols-[var(--cols-default)] lg:grid-cols-[var(--cols-lg)] p-6"
@@ -14,7 +23,7 @@
                         href="{{ \App\Filament\Welcome\Pages\MessagesPage\MessagesPage::getUrl(panel: 'welcome', tenant: filament()->getTenant()) }}"
                         class="p-2 -ml-1 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-white/10 transition"
                         title="{{ __('Kembali') }}">
-                        <x-filament::icon icon="heroicon-o-arrow-left" class="w-5 h-5" />
+                        <x-filament::icon icon="/images/icons/arrow_left.svg" class="w-5 h-5" />
                     </a>
 
                     @php
@@ -51,23 +60,9 @@
                         <button type="button" wire:click="toggleSearch()"
                             class="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-white/10 transition"
                             title="{{ __('Cari') }}">
-                            <x-filament::icon icon="heroicon-o-magnifying-glass" class="w-5 h-5" />
+                            <x-filament::icon icon="/images/icons/search.svg" class="w-5 h-5" />
                         </button>
-                        <button type="button" wire:click="mountAction('shareCatalog')"
-                            class="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-white/10 transition"
-                            title="{{ __('Bagikan Katalog') }}">
-                            <x-filament::icon icon="heroicon-o-shopping-bag" class="w-5 h-5" />
-                        </button>
-                        <button type="button" wire:click="mountAction('shareOrder')"
-                            class="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-white/10 transition"
-                            title="{{ __('Bagikan Pesanan') }}">
-                            <x-filament::icon icon="heroicon-o-document-text" class="w-5 h-5" />
-                        </button>
-                        <button type="button" wire:click="mountAction('rateExperience')"
-                            class="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-white/10 transition"
-                            title="{{ __('Nilai Pengalaman') }}">
-                            <x-filament::icon icon="heroicon-o-star" class="w-5 h-5" />
-                        </button>
+
                     </div>
                 </div>
             </div>
@@ -91,7 +86,7 @@
                     $displayMessage = str_replace(['\\r\\n', '\\n', '\\r'], ["\r\n", "\n", "\r"], $displayMessage);
                     if ($hasText && is_array($meta) && isset($meta['type'], $meta['name']) && !isset($meta['is_order']) && !isset($meta['is_report'])) {
                         $displayMessage = __('Saya menanyakan tentang :itemType ini: :name', [
-                            'itemType' => __($meta['type'] === 'product' ? 'Produk' : 'Paket'),
+                            'itemType' => __($meta['type'] === 'catalog' ? 'Katalog' : 'Paket'),
                             'name' => $meta['name'],
                         ]);
                     }
@@ -110,13 +105,127 @@
                     $myReactionEmojis = collect($reactions)->where('user_id', (string) $this->chatUserId())->pluck('emoji')->all();
                     $isStarred = in_array((string) $this->chatUserId(), array_map('strval', $meta['starred_by'] ?? []));
                     $canDeleteEveryone = $isMine || $this->chatUser()?->hasRole('super_admin');
-                    $quickEmojis = ['👍', '❤️', '😂', '😮', '😢', '😡'];
+
+                    /*
+                     * Payload gelembung aksi pesan.
+                     *
+                     * Daftar aksinya sama persis dengan panel User -- tamu dan
+                     * user yang sudah login bicara dengan orang yang sama lewat
+                     * thread yang sama, jadi gelembung yang berbeda akan terasa
+                     * seperti dua produk. Perbedaannya hanya di siapa yang bisa
+                     * menghapus untuk semua, yang di sini tetap membaca peran
+                     * lewat chatUser() (Auth kosong di panel Welcome).
+                     *
+                     * Urutannya mengikuti sheet aksi di aplikasi mobile (balas,
+                     * salin, terjemahkan, teruskan, tandai, info, hapus) supaya
+                     * web dan mobile terasa sebagai satu produk yang sama.
+                     */
+                    $bubbleActions = [];
+
+                    if ($deletedForMe) {
+                        // Pesan yang dihapus untuk pengguna ini: sisa satu aksi
+                        // saja, dan gelembungnya tidak boleh menampilkan deretan
+                        // emoji karena tidak ada yang bisa diklik di sana.
+                        $bubbleActions[] = MessageBubble::wireAction(
+                            'info',
+                            __('Info'),
+                            '/images/icons/info.svg',
+                            'mountAction',
+                            ['messageInfo', ['messageId' => (int) $message->id]],
+                        );
+
+                        $bubblePayload = MessageBubble::payload((int) $message->id, $bubbleActions, []);
+                    } else {
+                        if ($hasText) {
+                            $bubbleActions[] = MessageBubble::wireAction(
+                                'reply',
+                                __('Balas'),
+                                '/images/icons/uturn_left.svg',
+                                'setReplyTo',
+                                [(int) $message->id],
+                            );
+
+                            // Disalin apa yang tampil, bukan isi mentah kolom
+                            // `message`: bot dan kartu pesanan menampilkan
+                            // kalimat hasil normalisasi yang berbeda dengan yang
+                            // disimpan, dan itu yang dilihat pengguna.
+                            $bubbleActions[] = MessageBubble::copyAction(
+                                'copy',
+                                __('Salin'),
+                                '/images/icons/clipboard.svg',
+                                $displayMessage,
+                            );
+
+                            $bubbleActions[] = MessageBubble::wireAction(
+                                'translate',
+                                __('Terjemahkan'),
+                                '/images/icons/language.svg',
+                                'mountAction',
+                                ['translateMessage', ['messageId' => (int) $message->id]],
+                            );
+                        }
+
+                        $bubbleActions[] = MessageBubble::wireAction(
+                            'forward',
+                            __('Teruskan'),
+                            '/images/icons/arrow_right_start.svg',
+                            'mountAction',
+                            ['forwardMessage', ['messageId' => (int) $message->id]],
+                        );
+
+                        $bubbleActions[] = MessageBubble::wireAction(
+                            'star',
+                            $isStarred ? __('Batal Tandai') : __('Tandai'),
+                            $isStarred ? '/images/icons/star.svg' : '/images/icons/star.svg',
+                            'toggleStar',
+                            [(int) $message->id],
+                        );
+
+                        $bubbleActions[] = MessageBubble::wireAction(
+                            'info',
+                            __('Info'),
+                            '/images/icons/info.svg',
+                            'mountAction',
+                            ['messageInfo', ['messageId' => (int) $message->id]],
+                        );
+
+                        $bubbleActions[] = MessageBubble::wireAction(
+                            'delete_me',
+                            __('Hapus untuk Saya'),
+                            '/images/icons/trash.svg',
+                            'deleteMessage',
+                            [(int) $message->id, 'me'],
+                            'danger',
+                        );
+
+                        if ($canDeleteEveryone) {
+                            $bubbleActions[] = MessageBubble::wireAction(
+                                'delete_everyone',
+                                __('Hapus untuk Semua'),
+                                '/images/icons/trash.svg',
+                                'deleteMessage',
+                                [(int) $message->id, 'everyone'],
+                                'danger',
+                            );
+                        }
+
+                        $bubblePayload = MessageBubble::payload((int) $message->id, $bubbleActions);
+                    }
                 @endphp
 
                 {{-- Message Row --}}
+                {{--
+                    data-msg-bubble menandai baris ini sebagai jangkar gelembung.
+                    data-msg-payload dibaca Alpine lewat JSON.parse, jadi atributnya
+                    dibungkus tanda kutip tunggal: isi JSON memakai tanda kutip
+                    ganda, dan @json sudah mengganti kutip tunggal di dalamnya jadi
+                    \u0027 sehingga aman di dalam atribut ini.
+                --}}
                 <div @class(['flex mb-3', 'justify-end' => $isMine, 'justify-start' => !$isMine])
                      id="msg-{{ $message->id }}"
-                     wire:key="{{ $message->id }}">
+                     wire:key="{{ $message->id }}"
+                     data-msg-bubble
+                     data-msg-payload='@json($bubblePayload)'>
 
                     {{-- Avatar (only for received messages) --}}
                     @if (!$isMine)
@@ -144,18 +253,22 @@
                                 'rounded-br-sm' => $isMine,
                                 'rounded-bl-sm' => !$isMine,
                             ])>
-                                <x-filament::icon icon="heroicon-o-trash" class="w-3.5 h-3.5" />
+                                <x-filament::icon icon="/images/icons/trash.svg" class="w-3.5 h-3.5" />
                                 <span>{{ __('Anda menghapus pesan ini') }}</span>
                             </div>
                         @else
-                        @if ($hasMeta)
+                        {{-- `isset($meta['id'])`: pesan dengan meta[type] tapi tanpa
+                             id (mis. meta poll/stiker) tidak merujuk katalog atau
+                             paket, jadi blok gambar ini harus dilewati -- kalau
+                             tidak, halaman 500 karena $meta['id'] tidak ada. --}}
+                        @if ($hasMeta && isset($meta['id']))
                             @php
                                 $itemImage = $meta['image'] ?? null;
                                 if ($itemImage) {
                                     $itemImage = \App\Support\AppPlatform\AppPlatform::normalizeUrl($itemImage);
                                 }
                                 if (!$itemImage || str_contains($itemImage, 'placeholder') || str_contains((string) $itemImage, 'placeholders')) {
-                                    $modelClass = $meta['type'] === 'product' ? \App\Models\Product\Product::class : \App\Models\Package\Package::class;
+                                    $modelClass = $meta['type'] === 'catalog' ? \App\Models\Catalog\Catalog::class : \App\Models\Package\Package::class;
                                     $item = $modelClass::find($meta['id']);
                                     if ($item) {
                                         $freshImage = $item->image_url;
@@ -349,7 +462,43 @@
                                             <p class="text-[11px] truncate opacity-90">{{ $replyToMeta['message'] ?? '' }}</p>
                                         </button>
                                     @endif
-                                    <p class="text-sm leading-relaxed">{!! nl2br(e($displayMessage)) !!}</p>
+                                    @if (isset($meta['sticker']))
+                                        <span class="block text-4xl leading-none">{{ $displayMessage }}</span>
+                                    @else
+                                        <p class="text-sm leading-relaxed">{!! nl2br(e($displayMessage)) !!}</p>
+                                    @endif
+                                @endif
+
+                                {{-- Kartu poll: pertanyaannya sudah jadi teks pesan,
+                                     jadi di sini cukup pilihan + jumlah suara. --}}
+                                @if (isset($meta['poll']) && !empty($meta['poll']['options']))
+                                    @php
+                                        $pollOptions = $meta['poll']['options'];
+                                        $myParticipantId = $this->chatParticipantId();
+                                        $pollTotalVotes = collect($pollOptions)->sum(fn ($option) => count($option['votes'] ?? []));
+                                    @endphp
+                                    <div class="mt-2 space-y-1.5">
+                                        @foreach ($pollOptions as $optionIndex => $option)
+                                            @php
+                                                $optionVotes = is_array($option['votes'] ?? null) ? $option['votes'] : [];
+                                                $optionVotesCount = count($optionVotes);
+                                                $isMyVote = $myParticipantId !== null && in_array((int) $myParticipantId, array_map('intval', $optionVotes), true);
+                                                $optionPercent = $pollTotalVotes > 0 ? (int) round($optionVotesCount / $pollTotalVotes * 100) : 0;
+                                            @endphp
+                                            <button type="button" wire:click="votePoll({{ $message->id }}, {{ $optionIndex }})"
+                                                @class([
+                                                    'relative w-full overflow-hidden rounded-lg border px-3 py-2 text-left text-sm transition-colors',
+                                                    'border-primary-500 bg-primary-50 dark:border-primary-400 dark:bg-danger-500/10' => $isMyVote,
+                                                    'border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-white/5' => ! $isMyVote,
+                                                ])>
+                                                <span class="absolute inset-y-0 left-0 bg-danger-500/10 dark:bg-primary-400/10" style="width: {{ $optionPercent }}%"></span>
+                                                <span class="relative flex items-center justify-between gap-2">
+                                                    <span class="truncate text-gray-900 dark:text-white">{{ $option['text'] }}</span>
+                                                    <span class="shrink-0 text-xs text-gray-500 dark:text-gray-400">{{ $optionVotesCount }}</span>
+                                                </span>
+                                            </button>
+                                        @endforeach
+                                    </div>
                                 @endif
 
                                 @if (!empty($meta['is_bot']))
@@ -367,17 +516,30 @@
                                         $mySubmittedReport = $submittedReports[(string) $this->chatUserId()] ?? null;
                                         $hasSubmittedReport = !empty($mySubmittedReport['id']);
                                     @endphp
+                                    {{-- TTS Voice Button for Bot Messages --}}
+                                    <div class="mt-2 flex items-center gap-2">
+                                        <button 
+                                            type="button" 
+                                            id="tts-btn-{{ $message->id }}"
+                                            onclick="speakBotMessage({{ $message->id }}, {!! \Illuminate\Support\Js::from($displayMessage) !!})"
+                                            class="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 dark:border-gray-600 px-2.5 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 transition hover:bg-gray-200 dark:hover:bg-gray-700"
+                                            title="{{ __('Dengarkan pesan ini') }}"
+                                        >
+                                            <x-filament::icon id="tts-icon-{{ $message->id }}" icon="/images/icons/speaker.svg" class="w-4 h-4" />
+                                            <span id="tts-text-{{ $message->id }}">{{ __('Dengarkan') }}</span>
+                                        </button>
+                                    </div>
                                     @if ($csCategory === 'decor_consultation' && !empty($meta['consultation_form']))
                                         <div class="mt-3 flex flex-wrap gap-2">
                                             <button type="button" wire:click="mountAction('weddingConsultationForm')"
-                                                class="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-primary-500">
-                                                <x-filament::icon icon="heroicon-o-clipboard-document-list" class="h-4 w-4" />
+                                                class="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-danger-500">
+                                                <x-filament::icon icon="/images/icons/clipboard.svg" class="h-4 w-4" />
                                                 {{ $hasConsultationForm ? __('Ubah Formulir') : __('Isi Formulir Kebutuhan Acara') }}
                                             </button>
                                             @if ($hasConsultationForm)
                                                 <a href="{{ route('messages.consultation-form.pdf', $selectedConversation) }}"
-                                                    class="inline-flex items-center gap-1.5 rounded-lg border border-primary-500 px-3 py-2 text-xs font-semibold text-primary-700 transition hover:bg-primary-50 dark:text-primary-300 dark:hover:bg-primary-900/30">
-                                                    <x-filament::icon icon="heroicon-o-arrow-down-tray" class="h-4 w-4" />
+                                                    class="inline-flex items-center gap-1.5 rounded-lg border border-primary-500 px-3 py-2 text-xs font-semibold text-danger-700 transition hover:bg-danger-50 dark:text-danger-300 dark:hover:bg-primary-900/30">
+                                                    <x-filament::icon icon="/images/icons/download.svg" class="h-4 w-4" />
                                                     {{ __('Unduh PDF') }}
                                                 </a>
                                             @endif
@@ -385,8 +547,8 @@
                                     @elseif (in_array($csCategory, ['bug_report', 'account_issue', 'order_help', 'payment_issue', 'general_question'], true))
                                         <div class="mt-3 flex flex-wrap gap-2">
                                             <button type="button" wire:click="mountAction('csReportForm')"
-                                                class="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-primary-500">
-                                                <x-filament::icon icon="heroicon-o-clipboard-document-list" class="h-4 w-4" />
+                                                class="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-danger-500">
+                                                <x-filament::icon icon="/images/icons/clipboard.svg" class="h-4 w-4" />
                                                 {{ $hasSubmittedReport ? __('Kirim ulang Laporan') : __('Isi Formulir Laporan') }}
                                             </button>
                                             @if ($hasSubmittedReport)
@@ -395,8 +557,8 @@
                                                      user gesture. Pola yang sama dipakai tombol Unduh PDF
                                                      formulir dekorasi di atas. --}}
                                                 <a href="{{ route('welcome.reports.pdf', $mySubmittedReport['id']) }}"
-                                                    class="inline-flex items-center gap-1.5 rounded-lg border border-primary-500 px-3 py-2 text-xs font-semibold text-primary-700 transition hover:bg-primary-50 dark:text-primary-300 dark:hover:bg-primary-900/30">
-                                                    <x-filament::icon icon="heroicon-o-arrow-down-tray" class="h-4 w-4" />
+                                                    class="inline-flex items-center gap-1.5 rounded-lg border border-primary-500 px-3 py-2 text-xs font-semibold text-danger-700 transition hover:bg-danger-50 dark:text-danger-300 dark:hover:bg-primary-900/30">
+                                                    <x-filament::icon icon="/images/icons/download.svg" class="h-4 w-4" />
                                                     {{ __('Unduh PDF') }}
                                                 </a>
                                             @endif
@@ -406,16 +568,25 @@
 
                                 @if ($hasMedia)
                                     @foreach ($message->getMedia(MediaCollectionType::FILAMENT_MESSAGES->value) as $media)
-                                        @php $isImage = $this->validateImage($media->file_name); @endphp
+                                        @php
+                                            $mediaMime = $media->mime_type ?? '';
+                                            $isImage = str_starts_with($mediaMime, 'image/') || $this->validateImage($media->file_name);
+                                            $isAudio = str_starts_with($mediaMime, 'audio/');
+                                            $isVideo = str_starts_with($mediaMime, 'video/');
+                                        @endphp
                                         @if($isImage)
                                             <div class="mt-1 relative group">
                                                 <img src="{{ $media->getUrl() }}"
                                                      class="rounded-lg max-w-full h-auto cursor-pointer shadow-sm"
                                                      wire:click="downloadAttachment({{ $media->id }})" />
                                                 <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg pointer-events-none">
-                                                    <x-filament::icon icon="heroicon-o-arrow-down-tray" class="w-6 h-6 text-white" />
+                                                    <x-filament::icon icon="/images/icons/download.svg" class="w-6 h-6 text-white" />
                                                 </div>
                                             </div>
+                                        @elseif($isAudio)
+                                            <audio src="{{ $media->getUrl() }}" controls playsinline class="mt-1 w-full max-w-full"></audio>
+                                        @elseif($isVideo)
+                                            <video src="{{ $media->getUrl() }}" controls playsinline class="mt-1 max-w-full rounded-lg"></video>
                                         @else
                                             <div wire:click="downloadAttachment({{ $media->id }})"
                                                 @class([
@@ -424,10 +595,10 @@
                                                     'bg-primary-500 dark:bg-primary-400' => $isMine,
                                                 ])>
                                                 @php
-                                                    $icon = 'heroicon-o-document';
-                                                    if ($this->validateDocument($media->file_name)) $icon = 'heroicon-o-paper-clip';
-                                                    if ($this->validateVideo($media->file_name)) $icon = 'heroicon-o-video-camera';
-                                                    if ($this->validateAudio($media->file_name)) $icon = 'heroicon-o-speaker-wave';
+                                                    $icon = '/images/icons/document.svg';
+                                                    if ($this->validateDocument($media->file_name)) $icon = '/images/icons/paperclip.svg';
+                                                    if ($this->validateVideo($media->file_name)) $icon = '/images/icons/video.svg';
+                                                    if ($this->validateAudio($media->file_name)) $icon = '/images/icons/speaker.svg';
                                                 @endphp
                                                 <x-filament::icon icon="{{ $icon }}" class="w-4 h-4" />
                                                 <p class="text-sm truncate">{{ $media->file_name }}</p>
@@ -459,103 +630,32 @@
                             </div>
                         @endif
 
-                        {{-- Timestamp + read status + actions --}}
+                        {{-- Timestamp + read status --}}
+                        {{--
+                            Tombol ellipsis yang tadinya ada di baris waktu sudah
+                            dihapus: aksi pesan sekarang muncul sebagai gelembung
+                            yang menempel pada pesan itu sendiri saat pesannya
+                            ditahan, bukan sebagai menu dropdown yang harus dibuka
+                            lewat tombol kecil.
+                        --}}
                         <div @class(['flex items-center gap-1 mt-0.5 px-1', 'justify-end' => $isMine, 'justify-start' => !$isMine])>
                             @if ($isForwarded)
                                 <span class="text-[9px] text-gray-400 dark:text-gray-500 italic">{{ __('Diteruskan') }}</span>
-                                <x-filament::icon icon="heroicon-o-arrow-right-start-on-rectangle" class="w-3 h-3 text-gray-400 dark:text-gray-500" />
+                                <x-filament::icon icon="/images/icons/arrow_right_start.svg" class="w-3 h-3 text-gray-400 dark:text-gray-500" />
                             @endif
                             @if ($isStarred && !$deletedForMe)
-                                <x-filament::icon icon="heroicon-m-star" class="w-3 h-3 text-amber-400" />
+                                <x-filament::icon icon="/images/icons/star.svg" class="w-3 h-3 text-amber-400" />
                             @endif
                             <span class="text-[10px] text-gray-400 dark:text-gray-500">{{ $date }}</span>
                             @if ($isMine)
                                 @if ($isRead)
-                                    <svg class="w-3.5 h-3.5 text-blue-400" viewBox="0 0 24 24" fill="none">
-                                        <path d="M1.5 12.5l5 5L18 5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M6 12.5l5 5L22.5 5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
+                                    <x-filament::icon icon="/images/icons/chevron_double_right.svg" class="w-3.5 h-3.5 text-blue-400" />
                                     <span class="text-[9px] text-blue-400">{{ __('Dibaca') }}</span>
                                 @else
-                                    <svg class="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none">
-                                        <path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
+                                    <x-filament::icon icon="/images/icons/check.svg" class="w-3.5 h-3.5 text-gray-400" />
                                     <span class="text-[9px] text-gray-400">{{ __('Terkirim') }}</span>
                                 @endif
                             @endif
-
-                            {{-- Per-message action menu --}}
-                            <div class="relative" x-data="{ open: false }" @click.outside="open = false">
-                                <button type="button" @click="open = !open"
-                                    class="p-1 rounded-full text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-300 transition"
-                                    title="{{ __('Aksi Pesan') }}">
-                                    <x-filament::icon icon="heroicon-o-ellipsis-horizontal" class="w-4 h-4" />
-                                </button>
-                                <div x-show="open" x-transition x-cloak
-                                    @class([
-                                        'absolute z-30 mt-1 w-52 rounded-xl bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black/5 border border-gray-200 dark:border-gray-700 text-xs overflow-hidden',
-                                        'right-0', 'left-0' => !$isMine,
-                                    ])>
-                                    @if (!$deletedForMe)
-                                        <div class="grid grid-cols-6 gap-1 p-2 bg-gray-50 dark:bg-gray-900/60">
-                                            @foreach ($quickEmojis as $quickEmoji)
-                                                <button type="button" wire:click="toggleReaction({{ $message->id }}, '{{ $quickEmoji }}')"
-                                                    class="aspect-square text-sm rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition flex items-center justify-center">
-                                                    {{ $quickEmoji }}
-                                                </button>
-                                            @endforeach
-                                        </div>
-                                        <div class="border-t border-gray-100 dark:border-gray-700 py-1">
-                                            <button type="button" wire:click="setReplyTo({{ $message->id }})"
-                                                class="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200">
-                                                <x-filament::icon icon="heroicon-o-arrow-uturn-left" class="w-4 h-4" /> {{ __('Balas') }}
-                                            </button>
-                                            <button type="button" x-on:click="navigator.clipboard.writeText({!! \Illuminate\Support\Js::from($displayMessage) !!}); open = false;"
-                                                class="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200">
-                                                <x-filament::icon icon="heroicon-o-clipboard" class="w-4 h-4" /> {{ __('Salin') }}
-                                            </button>
-                                            @if ($hasText && !$deletedForMe)
-                                                <button type="button" wire:click="mountAction('translateMessage', {{ json_encode(['messageId' => (int) $message->id]) }})"
-                                                    class="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200">
-                                                    <x-filament::icon icon="heroicon-o-language" class="w-4 h-4" /> {{ __('Terjemahkan') }}
-                                                </button>
-                                            @endif
-                                            <button type="button" wire:click="mountAction('forwardMessage', {{ json_encode(['messageId' => (int) $message->id]) }})"
-                                                class="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200">
-                                                <x-filament::icon icon="heroicon-o-arrow-right-start-on-rectangle" class="w-4 h-4" /> {{ __('Teruskan') }}
-                                            </button>
-                                            <button type="button" wire:click="toggleStar({{ $message->id }})"
-                                                class="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200">
-                                                <x-filament::icon icon="{{ $isStarred ? 'heroicon-m-star' : 'heroicon-o-star' }}" class="w-4 h-4 text-{{ $isStarred ? 'amber-400' : 'inherit' }}" />
-                                                {{ $isStarred ? __('Batal Tandai') : __('Tandai') }}
-                                            </button>
-                                            <button type="button" wire:click="mountAction('messageInfo', {{ json_encode(['messageId' => (int) $message->id]) }})"
-                                                class="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200">
-                                                <x-filament::icon icon="heroicon-o-information-circle" class="w-4 h-4" /> {{ __('Info') }}
-                                            </button>
-                                        </div>
-                                        <div class="border-t border-gray-100 dark:border-gray-700 py-1">
-                                            <button type="button" wire:click="deleteMessage({{ $message->id }}, 'me')"
-                                                class="w-full flex items-center gap-2 px-3 py-1.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10">
-                                                <x-filament::icon icon="heroicon-o-trash" class="w-4 h-4" /> {{ __('Hapus untuk Saya') }}
-                                            </button>
-                                            @if ($canDeleteEveryone)
-                                                <button type="button" wire:click="deleteMessage({{ $message->id }}, 'everyone')"
-                                                    class="w-full flex items-center gap-2 px-3 py-1.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10">
-                                                    <x-filament::icon icon="heroicon-o-trash" class="w-4 h-4" /> {{ __('Hapus untuk Semua') }}
-                                                </button>
-                                            @endif
-                                        </div>
-                                    @else
-                                        <div class="py-1">
-                                            <button type="button" wire:click="mountAction('messageInfo', {{ json_encode(['messageId' => (int) $message->id]) }})"
-                                                class="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200">
-                                                <x-filament::icon icon="heroicon-o-information-circle" class="w-4 h-4" /> {{ __('Info') }}
-                                            </button>
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
                         </div>
 
                     </div>{{-- end content column --}}
@@ -594,7 +694,6 @@
             @include('Welcome.components.cbir-browse-modal.cbir-browse-modal', [
                 'isNative' => \App\Support\AppPlatform\AppPlatform::isAnyMobile(),
             ])
-            @include('Welcome.components.messages-camera-modal.messages-camera-modal')
 
             {{-- Hidden file input for cbir-browse-modal (web) — inject files to FilePond attachment --}}
             <input
@@ -636,7 +735,11 @@
                     </div>
                 </div>
             @endif
-            <form wire:submit="sendMessage()" class="flex items-end justify-between w-full gap-4">
+            {{-- `x-on:submit` menutup menu lampiran sebelum pesan terkirim.
+                 Tanpa itu menu bisa tetap terbuka di atas gelembung pesan. --}}
+            <form wire:submit="sendMessage()"
+                x-on:submit="window.dispatchEvent(new CustomEvent('messages-attach-menu-close'))"
+                class="flex items-end justify-between w-full gap-4">
                 <div class="w-full max-h-96 overflow-y-auto p-1">
                     @if ($this->replyTo)
                         <div class="flex items-center gap-2 mb-1 px-3 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 border-l-4 border-primary-500">
@@ -648,7 +751,7 @@
                             </div>
                             <button type="button" wire:click="clearReplyTo()"
                                 class="p-1 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
-                                <x-filament::icon icon="heroicon-o-x-mark" class="w-4 h-4" />
+                                <x-filament::icon icon="/images/icons/x.svg" class="w-4 h-4" />
                             </button>
                         </div>
                     @endif
@@ -657,73 +760,91 @@
                 <div class="p-1">
                     <x-filament::button 
                         wire:click="sendMessage()" 
-                        icon="heroicon-o-paper-airplane"
+                        icon="/images/icons/send.svg"
                         wire:loading.attr="disabled"
+                        x-on:click="window.dispatchEvent(new CustomEvent('messages-attach-menu-close'))"
                         class="native-send-btn">
                     </x-filament::button>
                 </div>
             </form>
+            {{--
+                Menu lampiran ala WhatsApp, dipanggil oleh tombol "+" di baris
+                composer. Ada di sini, bukan di dalam <form>, karena hanya
+                wadah "Chat Input" yang punya `relative` -- itu yang membuat
+                menu ini menempel tepat di atas baris composer tanpa perlu
+                menghitung tingginya sendiri.
+            --}}
+            {{--
+                Jembatan modal -> komponen percakapan.
+
+                Modal (kamera/audio/kontak) dirender di level HALAMAN, jadi ada di
+                luar akar Livewire dan tidak bisa memanggil $wire. Ia
+                menembakkan event window `messages-send-pending`; jembatan di
+                bawah yang_wait_ sampai lampiran selesai terunggah, lalu
+                memanggil $wire.sendMessage().
+
+                Menunggu lampiran itu penting: FilePond mengunggah file lewat
+                protocol upload Livewire secara asinkron, jadi state
+                `data.attachments` baru terisi setelah upload selesai. Kalau
+                pesan dikirim lebih dulu, lampirannya hilang.
+            --}}
+            <span
+                x-data="{
+                    messagesUploadingAttachment: false,
+                    async messagesAttachFile(file) {
+                        if (!file || this.messagesUploadingAttachment) return;
+                        this.messagesUploadingAttachment = true;
+
+                        try {
+                            // Nama file temporary-nya ikut dikirim. Jadiandainya
+                            // state Livewire belum ter-update saat callback
+                            // dipanggil, file-nya tetap bisa ditemukan di
+                            // folder temporary Livewire.
+                            const tmpFilename = await new Promise((resolve, reject) => {
+                                $wire.upload('pendingAttachment', file, resolve, reject);
+                            });
+
+                            $wire.sendPendingAttachment(tmpFilename);
+                        } catch (e) {
+                            console.error('[messages] gagal mengunggah lampiran', e);
+                        } finally {
+                            this.messagesUploadingAttachment = false;
+                        }
+                    },
+
+                    messagesCreatePoll(question, options) {
+                        $wire.createPoll(question, options);
+                    },
+
+                    messagesSendSticker(sticker) {
+                        $wire.sendSticker(sticker);
+                    },
+                }"
+                x-on:messages-attach-file.window="messagesAttachFile($event.detail.file)"
+                x-on:messages-create-poll.window="messagesCreatePoll($event.detail.question, $event.detail.options)"
+                x-on:messages-send-sticker.window="messagesSendSticker($event.detail.sticker)"
+                class="hidden"
+                aria-hidden="true"></span>
+            @include('Shared.components.attachment-menu.attachment-menu', ['showSharedActions' => true])
+
             <x-filament-actions::modals />
         </div>
         <!-- Chat Input : End -->
 
-        <!-- Camera Modal : Start -->
-        <div id="camera-modal"
-            class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" style="display:none;">
-            <div class="fi-glass-modal bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden w-full max-w-md mx-4">
-                <!-- Modal Header -->
-                <div class="flex items-center justify-between px-5 py-4 border-b dark:border-gray-700">
-                    <h3 class="text-base font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-                        <x-filament::icon icon="heroicon-o-camera" class="w-5 h-5 text-primary-500" />
-                        {{ __('Take a Photo') }}
-                    </h3>
-                    <button id="close-camera-btn" type="button"
-                        class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-                        <x-filament::icon icon="heroicon-o-x-mark" class="w-5 h-5" />
-                    </button>
-                </div>
-                <!-- Video / Preview -->
-                <div class="relative bg-black">
-                    <video id="camera-video" autoplay playsinline
-                        class="w-full" style="max-height: 320px; object-fit: cover;"></video>
-                    <canvas id="camera-canvas" class="hidden w-full" style="max-height: 320px; object-fit: cover;"></canvas>
-                    <!-- Switch camera overlay button -->
-                    <button id="switch-camera-btn" type="button"
-                        class="absolute top-3 right-3 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition">
-                        <x-filament::icon icon="heroicon-o-arrow-path" class="w-5 h-5" />
-                    </button>
-                </div>
-                <!-- Controls -->
-                <div id="camera-controls-capture" class="flex items-center justify-center gap-4 p-5">
-                    <button id="capture-btn" type="button"
-                        class="w-16 h-16 bg-primary-600 hover:bg-primary-700 text-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105">
-                        <x-filament::icon icon="heroicon-o-camera" class="w-7 h-7" />
-                    </button>
-                </div>
-                <div id="camera-controls-preview" class="flex items-center justify-between gap-3 px-5 pb-5" style="display:none;">
-                    <button id="retake-btn" type="button"
-                        class="flex-1 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium transition">
-                        {{ __('Retake') }}
-                    </button>
-                    <button id="send-photo-btn" type="button"
-                        class="flex-1 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium transition">
-                        {{ __('Send Photo') }}
-                    </button>
-                </div>
-            </div>
-        </div>
-        <!-- Camera Modal : End -->
 
     @else
         <div class="flex flex-col items-center justify-center h-full p-3">
             <div class="p-3 mb-4 bg-gray-100 rounded-full dark:bg-gray-500/20">
-                <x-filament::icon icon="heroicon-o-x-mark" class="w-6 h-6 text-gray-500 dark:text-gray-400" />
+                <x-filament::icon icon="/images/icons/x.svg" class="w-6 h-6 text-gray-500 dark:text-gray-400" />
             </div>
             <p class="text-base text-center text-gray-600 dark:text-gray-400">
                 {{ __('No selected conversation') }}
             </p>
         </div>
     @endif
+
+    {{-- Satu panel gelembung untuk seluruh panel chat ini --}}
+    @include('Shared.components.message-bubble.message-bubble-panel')
 </div>
 @script
     <script>
@@ -762,100 +883,144 @@
             if (url) window.location.assign(url);
         });
 
+        // --- Text-to-Speech (TTS) for Bot Messages ---
+        let currentUtterance = null;
+        let isSpeaking = false;
+        let currentSpeakingMessageId = null;
 
-
-
-        let cameraStream = null;
-        let facingMode = 'user'; // 'user' = front, 'environment' = back
-
-        async function startCamera() {
-            if (cameraStream) {
-                cameraStream.getTracks().forEach(t => t.stop());
+        /**
+         * Speak a bot message using Web Speech API.
+         * @param {number} messageId - The message ID for UI state tracking
+         * @param {string} text - The text to speak
+         */
+        function speakBotMessage(messageId, text) {
+            // Check browser support
+            if (!('speechSynthesis' in window)) {
+                alert('{{ __('Fitur suara tidak didukung oleh browser Anda.') }}');
+                return;
             }
-            try {
-                cameraStream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: facingMode },
-                    audio: false
-                });
-                const video = document.getElementById('camera-video');
-                video.srcObject = cameraStream;
 
-                // Reset to live view
-                video.classList.remove('hidden');
-                document.getElementById('camera-canvas').classList.add('hidden');
-                document.getElementById('camera-controls-capture').classList.remove('hidden');
-                document.getElementById('camera-controls-preview').style.display = 'none';
-            } catch (err) {
-                alert('{{ __('Cannot access camera. Please allow camera permission.') }}');
-                closeCameraModal();
+            // If currently speaking this message, stop it
+            if (isSpeaking && currentSpeakingMessageId === messageId) {
+                stopSpeaking();
+                return;
+            }
+
+            // If speaking another message, stop it first
+            if (isSpeaking) {
+                stopSpeaking();
+            }
+
+            // Clean text: remove HTML tags, extra whitespace, and emojis for better TTS
+            const cleanText = text
+                .replace(/<[^>]*>/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            if (!cleanText) return;
+
+            // Create utterance
+            currentUtterance = new SpeechSynthesisUtterance(cleanText);
+            currentUtterance.lang = 'id-ID'; // Indonesian language
+            currentUtterance.rate = 1.0; // Normal speed
+            currentUtterance.pitch = 1.0; // Normal pitch
+            currentUtterance.volume = 1.0; // Max volume
+
+            // Try to find an Indonesian voice
+            const voices = window.speechSynthesis.getVoices();
+            const indonesianVoice = voices.find(voice => voice.lang.startsWith('id'));
+            if (indonesianVoice) {
+                currentUtterance.voice = indonesianVoice;
+            }
+
+            // Event handlers
+            currentUtterance.onstart = () => {
+                isSpeaking = true;
+                currentSpeakingMessageId = messageId;
+                updateTtsButton(messageId, true);
+            };
+
+            currentUtterance.onend = () => {
+                isSpeaking = false;
+                currentSpeakingMessageId = null;
+                updateTtsButton(messageId, false);
+            };
+
+            currentUtterance.onerror = (event) => {
+                console.error('TTS Error:', event);
+                isSpeaking = false;
+                currentSpeakingMessageId = null;
+                updateTtsButton(messageId, false);
+            };
+
+            // Speak the text
+            window.speechSynthesis.speak(currentUtterance);
+        }
+
+        /**
+         * Stop current speech and reset UI.
+         */
+        function stopSpeaking() {
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+            }
+            isSpeaking = false;
+            currentSpeakingMessageId = null;
+            // Reset all TTS buttons
+            document.querySelectorAll('[id^="tts-btn-"]').forEach(btn => {
+                const messageId = btn.id.replace('tts-btn-', '');
+                updateTtsButton(parseInt(messageId), false);
+            });
+        }
+
+        /**
+         * Update TTS button UI state.
+         * @param {number} messageId - The message ID
+         * @param {boolean} speaking - Whether currently speaking
+         */
+        function updateTtsButton(messageId, speaking) {
+            const btn = document.getElementById('tts-btn-' + messageId);
+            const icon = document.getElementById('tts-icon-' + messageId);
+            const text = document.getElementById('tts-text-' + messageId);
+
+            if (!btn || !icon || !text) return;
+
+            if (speaking) {
+                // Change to stop icon
+                btn.classList.add('bg-red-100', 'dark:bg-red-900/30', 'border-red-300', 'dark:border-red-700', 'text-danger-700', 'dark:text-primary-400');
+                btn.classList.remove('border-gray-300', 'dark:border-gray-600', 'text-gray-700', 'dark:text-gray-300');
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />';
+                text.textContent = '{{ __('Berhenti') }}';
+            } else {
+                // Reset to play icon
+                btn.classList.remove('bg-red-100', 'dark:bg-red-900/30', 'border-red-300', 'dark:border-red-700', 'text-danger-700', 'dark:text-primary-400');
+                btn.classList.add('border-gray-300', 'dark:border-gray-600', 'text-gray-700', 'dark:text-gray-300');
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />';
+                text.textContent = '{{ __('Dengarkan') }}';
             }
         }
 
-        function closeCameraModal() {
-            if (cameraStream) {
-                cameraStream.getTracks().forEach(t => t.stop());
-                cameraStream = null;
-            }
-            document.getElementById('camera-modal').style.display = 'none';
+        // Load voices (some browsers load voices asynchronously)
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = () => {
+                // Voices loaded, ready to use
+            };
+            // Force load voices
+            window.speechSynthesis.getVoices();
         }
 
-
-        window.addEventListener('open-camera', () => {
-            document.getElementById('camera-modal').style.display = 'flex';
-            facingMode = 'environment';
-            startCamera();
+        // Auto-speak new bot messages when they arrive via Livewire poll
+        $wire.on('new-bot-message', ({ messageId, messageText }) => {
+            if (messageId && messageText && !isSpeaking) {
+                // Small delay to ensure DOM is ready
+                setTimeout(() => {
+                    speakBotMessage(messageId, messageText);
+                }, 500);
+            }
         });
 
-        document.getElementById('close-camera-btn').addEventListener('click', closeCameraModal);
 
-        document.getElementById('switch-camera-btn').addEventListener('click', () => {
-            facingMode = facingMode === 'user' ? 'environment' : 'user';
-            startCamera();
-        });
 
-        document.getElementById('capture-btn').addEventListener('click', () => {
-            const video = document.getElementById('camera-video');
-            const canvas = document.getElementById('camera-canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
 
-            video.classList.add('hidden');
-            canvas.classList.remove('hidden');
-            document.getElementById('camera-controls-capture').classList.add('hidden');
-            document.getElementById('camera-controls-preview').style.display = 'flex';
-        });
-
-        document.getElementById('retake-btn').addEventListener('click', () => {
-            startCamera();
-        });
-
-        document.getElementById('send-photo-btn').addEventListener('click', async () => {
-            const canvas = document.getElementById('camera-canvas');
-            canvas.toBlob(async (blob) => {
-                const fileName = 'camera_' + Date.now() + '.jpg';
-                const file = new File([blob], fileName, { type: 'image/jpeg' });
-
-                // Use FilePond or native input — inject into a hidden file input
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(file);
-
-                // Find the Livewire file input for attachments
-                const fileInputs = document.querySelectorAll('input[type="file"]');
-                if (fileInputs.length > 0) {
-                    const fileInput = fileInputs[0];
-                    fileInput.files = dataTransfer.files;
-                    fileInput.dispatchEvent(new Event('change', { bubbles: true }));
-                    closeCameraModal();
-                } else {
-                    // Fallback: download the image
-                    const a = document.createElement('a');
-                    a.href = canvas.toDataURL('image/jpeg');
-                    a.download = fileName;
-                    a.click();
-                    closeCameraModal();
-                }
-            }, 'image/jpeg', 0.92);
-        });
     </script>
 @endscript

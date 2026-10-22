@@ -2,12 +2,12 @@
 
 namespace App\Filament\User\Resources\WishlistResource;
 
-use App\Filament\User\Resources\ProductResource\ProductResource;
+use App\Filament\User\Resources\CatalogResource\CatalogResource;
 use App\Filament\User\Resources\WishlistResource\Pages\ManageWishlists\ManageWishlists;
 use App\Helpers\NativeNotificationHelper\NativeNotificationHelper;
-use App\Models\Package\Package;
-use App\Models\Product\Product;
+use App\Models\Catalog\Catalog;
 use App\Models\Wishlist\Wishlist;
+use App\Support\AppIcon\AppIcon;
 use App\Support\AppPlatform\AppPlatform;
 use Filament\Facades\Filament;
 use Filament\Forms;
@@ -27,25 +27,25 @@ class WishlistResource extends Resource
 
     protected static ?int $navigationSort = 3;
 
-    protected static ?string $navigationIcon = 'heroicon-s-heart';
+    protected static ?string $navigationIcon = AppIcon::WISHLIST;
 
     protected static bool $shouldRegisterNavigation = false;
 
     public static function getGloballySearchableAttributes(): array
     {
-        return ['package.name', 'package.category.name', 'product.name', 'product.category.name'];
+        return ['catalog.name', 'catalog.category.name'];
     }
 
     public static function getGlobalSearchResultTitle(Model $record): string
     {
-        return $record->package?->name ?? $record->product?->name ?? __('Wishlist');
+        return $record->catalog?->name ?? __('Wishlist');
     }
 
     public static function getGlobalSearchResultDetails(Model $record): array
     {
         return [
-            __('Jenis') => $record->package_id ? __('Paket') : __('Produk'),
-            __('Kategori') => $record->package?->category?->name ?? $record->product?->category?->name ?? '-',
+            __('Jenis') => __('Katalog'),
+            __('Kategori') => $record->catalog?->category?->name ?? '-',
         ];
     }
 
@@ -94,45 +94,45 @@ class WishlistResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Section::make(__('Favorit Baru'))
-                    ->description(__('Pilih paket yang ingin disimpan ke daftar wishlist Anda.'))
-                    ->icon('heroicon-s-heart')
+                    ->description(__('Pilih katalog yang ingin disimpan ke daftar wishlist Anda.'))
+                    ->icon('/images/icons/heart.svg')
                     ->schema([
-                        Forms\Components\Select::make('package_id')
+                        Forms\Components\Select::make('catalog_id')
                             ->searchable()
-                            ->relationship('package', 'name')
+                            ->relationship('catalog', 'name')
                             ->required()
                             ->preload()
                             ->live()
-                            ->prefixIcon('heroicon-s-gift')
-                            ->label(__('Pilih Paket')),
+                            ->prefixIcon('/images/icons/bag.svg')
+                            ->label(__('Pilih Katalog')),
 
-                        Forms\Components\Placeholder::make('package_preview')
+                        Forms\Components\Placeholder::make('catalog_preview')
                             ->hiddenLabel()
                             ->content(function (Forms\Get $get) {
-                                $packageId = $get('package_id');
-                                if (! $packageId) {
+                                $catalogId = $get('catalog_id');
+                                if (! $catalogId) {
                                     return null;
                                 }
 
-                                $package = Package::with('category')->find($packageId);
-                                if (! $package) {
+                                $catalog = Catalog::with('category')->find($catalogId);
+                                if (! $catalog) {
                                     return null;
                                 }
 
-                                $imageUrl = $package->image_url;
+                                $imageUrl = $catalog->image_url;
                                 $imageHtml = $imageUrl
                                     ? '<img src="'.$imageUrl.'" style="height: 15rem; width: 100%; object-fit: cover;" class="rounded-t-2xl">'
-                                    : '<div style="height: 15rem; width: 100%;" class="bg-gray-100 dark:bg-gray-800 rounded-t-2xl flex products-center justify-center"><svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>';
+                                    : '<div style="height: 15rem; width: 100%;" class="bg-gray-100 dark:bg-gray-800 rounded-t-2xl flex items-center justify-center"><svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>';
 
-                                $categoryName = $package->category ? $package->category->name : 'Uncategorized';
-                                $price = 'IDR '.number_format((float) $package->price, 2, '.', ',');
+                                $categoryName = $catalog->category ? $catalog->category->name : 'Uncategorized';
+                                $price = 'IDR '.number_format((float) $catalog->price, 2, '.', ',');
 
                                 return new HtmlString('
-                                    <div class="mt-4 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden w-full max-w-sm mx-auto flex flex-col products-center">
+                                    <div class="mt-4 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden w-full max-w-sm mx-auto flex flex-col items-center">
                                         '.$imageHtml.'
-                                        <div class="p-6 flex flex-col products-center justify-center space-y-3 w-full text-center">
-                                            <h3 class="font-bold text-lg text-gray-950 dark:text-white leading-tight">'.e(__($package->name)).'</h3>
-                                            <span class="inline-flex products-center justify-center px-2 py-0.5 rounded-md text-sm font-medium ring-1 ring-inset ring-amber-600/20 text-amber-600 bg-amber-50 dark:ring-amber-500/30 dark:text-amber-500 dark:bg-amber-500/10">
+                                        <div class="p-6 flex flex-col items-center justify-center space-y-3 w-full text-center">
+                                            <h3 class="font-bold text-lg text-gray-950 dark:text-white leading-tight">'.e(__($catalog->name)).'</h3>
+                                            <span class="inline-flex items-center justify-center px-2 py-0.5 rounded-md text-sm font-medium ring-1 ring-inset ring-amber-600/20 text-amber-600 bg-amber-50 dark:ring-amber-500/30 dark:text-amber-500 dark:bg-amber-500/10">
                                                 '.e(__($categoryName)).'
                                             </span>
                                             <p class="font-bold text-md text-amber-600 dark:text-amber-500">'.$price.'</p>
@@ -140,7 +140,7 @@ class WishlistResource extends Resource
                                     </div>
                                 ');
                             })
-                            ->visible(fn (Forms\Get $get) => filled($get('package_id')))
+                            ->visible(fn (Forms\Get $get) => filled($get('catalog_id')))
                             ->columnSpanFull(),
                     ]),
             ]);
@@ -152,12 +152,12 @@ class WishlistResource extends Resource
             ->paginated(false)
             ->poll(AppPlatform::isNativeMobile() ? null : '30s')
             ->emptyStateHeading(__('Belum ada favorit'))
-            ->emptyStateDescription(__('Temukan produk atau layanan impian Anda dan simpan di sini.'))
-            ->emptyStateIcon('heroicon-s-heart')
+            ->emptyStateDescription(__('Temukan katalog atau layanan impian Anda dan simpan di sini.'))
+            ->emptyStateIcon('/images/icons/heart.svg')
             ->emptyStateActions([
                 Tables\Actions\Action::make('explore')
-                    ->label(__('Cari Produk & Layanan'))
-                    ->url(ProductResource::getUrl())
+                    ->label(__('Cari Katalog & Layanan'))
+                    ->url(CatalogResource::getUrl())
                     ->button()
                     ->color('rose')
                     ->size('lg'),
@@ -173,7 +173,7 @@ class WishlistResource extends Resource
                     // Image with absolute discount badge placeholder logic
                     Tables\Columns\Layout\Stack::make([
                         Tables\Columns\ImageColumn::make('item_image')
-                            ->state(fn ($record) => $record ? ($record->product_id ? $record->product?->image_url : $record->package?->image_url) : null)
+                            ->state(fn ($record) => $record ? $record->catalog?->image_url : null)
                             ->label('')
                             ->height('170px')
                             ->width('100%')
@@ -188,7 +188,7 @@ class WishlistResource extends Resource
                                 if (! $record) {
                                     return null;
                                 }
-                                $item = $record->product ?? $record->package;
+                                $item = $record->catalog;
                                 if (! $item || $item->discount_price <= 0 || $item->price <= 0) {
                                     return null;
                                 }
@@ -199,19 +199,19 @@ class WishlistResource extends Resource
                                 'class' => 'absolute top-2 right-2 font-black px-2 py-1 rounded shadow-lg z-10 transform scale-100 group-hover/img-overlay:scale-110 transition-transform duration-300',
                                 'style' => 'background-color: #dc2626 !important; color: #ffffff !important; width: fit-content; font-size: 0.8rem; line-height: 1; pointer-events: none; visibility: visible !important;',
                             ])
-                            ->visible(fn ($record) => $record && (($record->product?->discount_price > 0) || ($record->package?->discount_price > 0))),
+                            ->visible(fn ($record) => $record && ($record->catalog?->discount_price > 0)),
                     ])->extraAttributes(['class' => 'relative overflow-hidden group/img-overlay']),
 
                     Tables\Columns\Layout\Stack::make([
                         // Category & Name
                         Tables\Columns\TextColumn::make('item_category')
-                            ->state(fn ($record) => $record ? ($record->product_id ? $record->product?->category?->name : $record->package?->category?->name) : null)
+                            ->state(fn ($record) => $record ? $record->catalog?->category?->name : null)
                             ->formatStateUsing(fn ($state) => __($state))
                             ->badge()
                             ->size('xs')
                             ->extraAttributes(['class' => 'mt-1 mb-1']),
                         Tables\Columns\TextColumn::make('item_name')
-                            ->state(fn ($record) => $record ? ($record->product_id ? $record->product?->name : $record->package?->name) : null)
+                            ->state(fn ($record) => $record ? $record->catalog?->name : null)
                             ->formatStateUsing(fn ($state) => __($state))
                             ->weight('bold')
                             ->size('xs')
@@ -223,7 +223,7 @@ class WishlistResource extends Resource
                                     if (! $record) {
                                         return null;
                                     }
-                                    $item = $record->product ?? $record->package;
+                                    $item = $record->catalog;
 
                                     return $item?->discount_price > 0 ? $item->discount_price : $item?->price;
                                 })
@@ -237,7 +237,7 @@ class WishlistResource extends Resource
                                     if (! $record) {
                                         return null;
                                     }
-                                    $item = $record->product ?? $record->package;
+                                    $item = $record->catalog;
 
                                     return $item?->discount_price > 0 ? $item->price : null;
                                 })
@@ -245,7 +245,7 @@ class WishlistResource extends Resource
                                 ->size('xs')
                                 ->color('gray')
                                 ->extraAttributes(['class' => 'line-through opacity-70'])
-                                ->visible(fn ($record) => $record && (($record->product?->discount_price > 0) || ($record->package?->discount_price > 0))),
+                                ->visible(fn ($record) => $record && ($record->catalog?->discount_price > 0)),
                         ])->space(0),
 
                         // Stats Footer
@@ -255,14 +255,11 @@ class WishlistResource extends Resource
                                     if (! $record) {
                                         return null;
                                     }
-                                    $item = $record->product ?? $record->package;
-                                    if ($item instanceof Product) {
-                                        return null;
-                                    }
+                                    $item = $record->catalog;
 
                                     return $item ? number_format($item->reviews()->avg('rating') ?: 0, 1) : null;
                                 })
-                                ->icon('heroicon-m-star')
+                                ->icon('/images/icons/star.svg')
                                 ->iconColor('warning')
                                 ->size('xs')
                                 ->color('gray'),
@@ -272,7 +269,7 @@ class WishlistResource extends Resource
                                     if (! $record) {
                                         return null;
                                     }
-                                    $item = $record->product ?? $record->package;
+                                    $item = $record->catalog;
 
                                     return $item ? $item->orders()->count().' '.__('Terjual') : null;
                                 })
@@ -289,12 +286,12 @@ class WishlistResource extends Resource
             ->actions([
                 Tables\Actions\DeleteAction::make()
                     ->label(__('Hapus'))
-                    ->icon('heroicon-s-trash')
+                    ->icon('/images/icons/trash.svg')
                     ->button()
                     ->color('danger')
                     ->size('sm')
                     ->extraAttributes(['class' => 'flex-1 justify-center rounded-lg shadow-sm font-bold'])
-                    ->after(fn () => NativeNotificationHelper::info(__('Dihapus'), __('Produk berhasil dihapus dari favorit.'))),
+                    ->after(fn () => NativeNotificationHelper::info(__('Dihapus'), __('Katalog berhasil dihapus dari favorit.'))),
             ])
             ->actionsAlignment('center')
             ->extraAttributes([
@@ -307,7 +304,7 @@ class WishlistResource extends Resource
                     ->button()
                     ->size('lg')
                     ->color('primary')
-                    ->icon('heroicon-m-plus-circle')
+                    ->icon('/images/icons/plus_circle.svg')
                     ->mutateFormDataUsing(function (array $data): array {
                         $data['user_id'] = Filament::auth()->id();
 

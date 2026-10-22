@@ -5,6 +5,10 @@ namespace App\Filament\User\Auth\SignIn;
 use App\Filament\User\Auth\Auth\Auth;
 use App\Filament\User\Auth\Concerns\HasAuthBreadcrumbs;
 use App\Models\User\User;
+use App\Models\Admin\Admin;
+use App\Support\StorefrontUrls\StorefrontUrls;
+use Illuminate\Support\Facades\Auth as AuthFacade;
+use Illuminate\Support\Facades\Hash;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Hidden;
@@ -17,7 +21,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Auth\Login as BaseLogin;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Validation\ValidationException;
-use Mews\Captcha\Facades\Captcha;
+use MarcoGermani87\FilamentCaptcha\Forms\Components\CaptchaField;
 
 class SignIn extends BaseLogin
 {
@@ -58,10 +62,10 @@ class SignIn extends BaseLogin
     }
 
     /**
-     * Parent crumb Sign-In adalah halaman auth (`/user/auth`), bukan Welcome
+     * Parent crumb Sign-In adalah halaman auth (`/auth`), bukan Welcome
      * Home.
      *
-     * Alur auth bercabang dari satu halaman: `/user/auth` memegang dua pintu
+     * Alur auth bercabang dari satu halaman: `/auth` memegang dua pintu
      * (Sign In + Masuk Dengan Google), dan halaman ini salah satu cabangnya.
      * Jadi di sinilah "Beranda" DIHAPUS -- crumb-nya jadi "Masuk / Sign In",
      * dan klik "Masuk" mengembalikan pengguna ke pemilih pintu, bukan melompat
@@ -83,7 +87,7 @@ class SignIn extends BaseLogin
     /**
      * Tujuan tombol back di halaman login: kembali ke halaman yang
      * diklik pengguna sebelum diarahkan ke login (detail package /
-     * product), bukan selalu ke beranda.
+     * catalog), bukan selalu ke beranda.
      *
      * Sumber: `url.intended` yang disimpan saat guest membuka modal
      * Add to Cart (atau aksi guest lain), plus `url()->previous()`
@@ -106,37 +110,39 @@ class SignIn extends BaseLogin
             $candidates[] = $intended;
         }
 
-        $retiredRegisterPaths = $this->retiredRegisterPaths();
+        // Pendaftaran sudah HIDUP lagi (`->registration(SignUp::class)` di
+        // UserPanelProvider, slug `signup`), jadi `/signup` bukan lagi
+        // URL mati dan tidak lagi masuk daftar "unusable". Kalau tetap
+        // diblokir di sini, tombol "kembali" ke halaman pendaftaran yang
+        // benar-benar ada akan ditolak tanpa alasan.
 
         $isUnusable = fn (string $url): bool => str_contains($url, 'livewire')
             || str_contains($url, $this->authPagePath())
-            // `/user/signup` & `/user/register`: halaman pendaftaran sudah
-            // dihapus, keduanya hanya redirect ke `/user/auth`. Kalau URL lama
-            // ini dipakai sebagai tujuan tombol "kembali", pengguna cuma
-            // terlempar ke halaman auth lagi.
-            || collect($retiredRegisterPaths)->contains(fn (string $path): bool => str_contains($url, $path))
             || str_contains($url, 'password-reset')
             || str_contains($url, 'verify-otp')
             || str_contains($url, '/admin');
 
-        // Prioritas: detail / index paket & produk welcome.
+        // Prioritas: detail / index paket & katalog welcome.
         foreach ($candidates as $url) {
             if ($isUnusable($url)) {
                 continue;
             }
 
-            if (str_contains($url, '/welcome/flowerdecorationspackagecatalog') || str_contains($url, '/welcome/flowerdecorationscatalog')) {
+            if (str_contains($url, '/flowerdecorationscatalog')) {
                 return $url;
             }
         }
 
-        // Cadangan: halaman welcome lain yang valid.
+        // Cadangan: halaman storefront lain yang valid. Panel welcome pindah
+        // ke path '/' (shopee-style), jadi URL halamannya kini /home,
+        // /messages, /settings, dst. -- penanda '/welcome' hanya tersisa di
+        // bookmark lama. StorefrontUrls mengenali keduanya.
         foreach ($candidates as $url) {
             if ($isUnusable($url)) {
                 continue;
             }
 
-            if (str_contains($url, '/welcome')) {
+            if (StorefrontUrls::isStorefrontUrl($url)) {
                 return $url;
             }
         }
@@ -153,6 +159,10 @@ class SignIn extends BaseLogin
                         $this->getEmailFormComponent(),
                         $this->getPasswordFormComponent(),
                         $this->getCaptchaFormComponent(),
+                        // HANYA SEKALI. View ini memuat "Ingat Saya" +
+                        // persetujuan; dulu didaftarkan dua kali (baris
+                        // duplikat) sehingga kedua checkbox tampil dobel di
+                        // halaman Sign In.
                         View::make('User.social-buttons.agreement-checkboxes.agreement-checkboxes'),
                         View::make('User.social-buttons.auth-buttons.auth-buttons')
                             ->viewData(['authMode' => 'login']),
@@ -166,23 +176,8 @@ class SignIn extends BaseLogin
 
     protected function getCaptchaFormComponent(): Component
     {
-        return TextInput::make('captcha')
+        return CaptchaField::make('captcha')
             ->label(__('Kode Keamanan'))
-            ->placeholder(__('Masukkan kode dari gambar'))
-            ->required()
-            ->autocomplete('off')
-            ->extraAttributes([
-                'class' => 'captcha-input',
-                'data-captcha' => 'true',
-            ])
-            ->suffix(function (): string {
-                return '<div class="captcha-image-wrapper">
-                    <img src="' . route('captcha.image') . '" alt="CAPTCHA" class="captcha-image" onclick="this.src=\'' . route('captcha.image') . '?reload=' . time() . '\'" title="' . __('Klik untuk refresh') . '">
-                    <button type="button" class="captcha-refresh" onclick="document.querySelector(\'.captcha-image\').src=\'' . route('captcha.image') . '?reload=\' + Date.now()" aria-label="' . __('Refresh CAPTCHA') . '">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                    </button>
-                </div>';
-            })
             ->columnSpanFull();
     }
 
@@ -277,30 +272,71 @@ class SignIn extends BaseLogin
             ]);
         }
 
-        // Validate CAPTCHA
-        $captchaInput = $this->data['captcha'] ?? null;
-        if (! $captchaInput || ! Captcha::check($captchaInput)) {
-            Notification::make()
-                ->title(__('Kode Keamanan Salah'))
-                ->body(__('Kode keamanan yang Anda masukkan tidak valid. Silakan coba lagi.'))
-                ->danger()
-                ->send();
-            throw ValidationException::withMessages([
-                'data.captcha' => __('Kode keamanan tidak valid.'),
-            ]);
+        // CAPTCHA divalidasi oleh CaptchaField (validasi bawaan plugin).
+        // Rate limit sebelum menyentuh database, sama seperti parent.
+        try {
+            $this->rateLimit(5);
+        } catch (\DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException $exception) {
+            $this->getRateLimitedNotification($exception)?->send();
+
+            return null;
         }
 
-        $response = parent::authenticate();
+        $data = $this->form->getState();
 
-        if ($response) {
-            Notification::make()
-                ->title(__('Selamat Datang Kembali!'))
-                ->body(__('Anda telah berhasil masuk ke sistem Weeding Decorasi Bunga pada :time.', ['time' => now()->format('H:i:s')]))
-                ->success()
-                ->send();
+        $credentials = $this->getCredentialsFromFormData($data);
+        $remember = (bool) ($data['remember'] ?? false);
+
+        $authenticated = false;
+
+        // 1. Jalur normal: akun belanja di tabel users.
+        if (AuthFacade::guard('web')->attempt($credentials, $remember)) {
+            $authenticated = true;
+        } else {
+            // 2. Admin tim internal boleh masuk lewat halaman ini juga. Kredensialnya
+            //    milik tabel admins (guard admin); kalau cocok, pastikan ada
+            //    identitas belanja yang tertaut lalu login sebagai user itu.
+            $login = $data['login'];
+            $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
+            $admin = Admin::query()->where($field, $login)->first();
+
+            if (
+                $admin
+                && $admin->active_status
+                && Hash::check($data['password'], $admin->password)
+            ) {
+                $user = $admin->ensureStorefrontIdentity($data['password']);
+
+                AuthFacade::guard('web')->login($user, $remember);
+                $authenticated = true;
+            }
         }
 
-        return $response;
+        if (! $authenticated) {
+            $this->throwFailureValidationException();
+        }
+
+        $user = AuthFacade::guard('web')->user();
+
+        if (
+            ($user instanceof \Filament\Models\Contracts\FilamentUser)
+            && (! $user->canAccessPanel(\Filament\Facades\Filament::getCurrentPanel()))
+        ) {
+            AuthFacade::guard('web')->logout();
+
+            $this->throwFailureValidationException();
+        }
+
+        session()->regenerate();
+
+        Notification::make()
+            ->title(__('Selamat Datang Kembali!'))
+            ->body(__('Anda telah berhasil masuk ke sistem Dekorasi Bunga Pernikahan pada :time.', ['time' => now()->format('H:i:s')]))
+            ->success()
+            ->send();
+
+        return app(\Filament\Http\Responses\Auth\Contracts\LoginResponse::class);
     }
 
     protected function throwFailureValidationException(): never

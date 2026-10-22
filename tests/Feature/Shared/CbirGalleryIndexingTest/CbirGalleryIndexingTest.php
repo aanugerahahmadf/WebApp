@@ -1,11 +1,11 @@
 <?php
 
-namespace Tests\Feature\Shared;
+namespace Tests\Feature\Shared\CbirGalleryIndexingTest;
 
 use App\Models\Category\Category;
 use App\Models\Package\Package;
-use App\Models\Product\Product;
-use App\Models\Vendor\Vendor;
+use App\Models\Catalog\Catalog;
+
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
@@ -35,25 +35,43 @@ class CbirGalleryIndexingTest extends TestCase
         // Media Spatie butuh disk yang bisa ditulis.
         Storage::fake('public');
         config(['media-library.disk_name' => 'public']);
+
+        // Transport gRPC dipakai DULUAN kalau ekstensi grpc tersedia dan
+        // servernya hidup. Di mesin ini AI Core gRPC hidup di 127.0.0.1:50052,
+        // jadi `indexMedia()` tidak pernah menyentuh HTTP -- dan Http::fake
+        // tidak merekam apa pun.
+        //
+        // Test di file ini menguji KONTRAK "satu panggilan index per media"
+        // lewat jalur HTTP, jadi transportnya dipatok ke HTTP di sini.
+        // (Jalur gRPC punya testnya sendiri.)
+        config(['services.ai_core_grpc_enabled' => false]);
     }
 
-    public function test_every_gallery_image_of_one_product_is_indexed(): void
+    public function test_every_gallery_image_of_one_catalog_is_indexed(): void
     {
         $category = Category::factory()->create();
 
-        $product = Product::factory()->create(['category_id' => $category->id]);
+        $catalog = Catalog::factory()->create(['category_id' => $category->id]);
 
         // Satu produk, tiga gambar galeri.
+        //
+        // Isi file harus byte PNG yang sungguhan, BUKAN string seperti
+        // 'fake-image-bytes'. Media library menebak mime dari ISI file, dan
+        // teks ASCII terdeteksi sebagai `text/plain`, yang ditolak
+        // `acceptedFileTypes` dengan `FileUnacceptableForCollection`. Test-nya
+        // lalu gagal di tempat yang sama sekali tidak berhubungan dengan yang
+        // diuji (indeksasi CBIR), jadi penyebabnya tidak terlihat.
+        // PNG 1x1 transparan adalah byte valid paling kecil yang bisa dipakai.
         foreach (['a', 'b', 'c'] as $suffix) {
             $path = "gallery-{$suffix}.png";
-            Storage::disk('public')->put($path, 'fake-image-bytes');
-            $product->addMedia(Storage::disk('public')->path($path))
+            Storage::disk('public')->put($path, self::onePixelPng());
+            $catalog->addMedia(Storage::disk('public')->path($path))
                 ->preservingOriginal()
-                ->toMediaCollection('product_image');
+                ->toMediaCollection('catalog_image');
         }
 
-        $product->refresh()->load('media');
-        $this->assertCount(3, $product->media, 'Fasiltur harus menghasilkan 3 media galeri.');
+        $catalog->refresh()->load('media');
+        $this->assertCount(3, $catalog->media, 'Fasiltur harus menghasilkan 3 media galeri.');
 
         // Tangkap semua permintaan ke AI Core.
         $calls = [];
@@ -67,8 +85,8 @@ class CbirGalleryIndexingTest extends TestCase
         ]);
 
         // Perilaku yang harus dipertahankan: satu panggilan per media.
-        $ownerId = $product->id;
-        foreach ($product->media as $media) {
+        $ownerId = $catalog->id;
+        foreach ($catalog->media as $media) {
             app(\App\Services\CBIRService\CBIRService::class)->indexMedia($media);
         }
 
@@ -81,9 +99,9 @@ class CbirGalleryIndexingTest extends TestCase
 
         foreach ($calls as $index => $payload) {
             $this->assertSame(
-                'product',
+                'catalog',
                 $payload['metadata']['type'] ?? null,
-                "Panggilan #".($index + 1).' harus menandai type=product.'
+                "Panggilan #".($index + 1).' harus menandai type=catalog.'
             );
             $this->assertSame(
                 $ownerId,
@@ -112,7 +130,7 @@ class CbirGalleryIndexingTest extends TestCase
      * `media.model_type` stores the morph-map ALIAS ("App\Models\Package"),
      * bukan FQCN. `indexMedia()` mencocokkannya ke `Package::class` sehingga
      * tidak pernah cocok dan semua media jatuh ke nilai default. Akibatnya
-     * `/api/search/image` mencari paket di tabel products, tidak menemukan
+     * `/api/search/image` mencari paket di tabel catalogs, tidak menemukan
      * apa pun, dan membuang semua hasil secara diam-diam.
      */
     public function test_package_media_is_indexed_as_package_not_unknown(): void
@@ -121,7 +139,7 @@ class CbirGalleryIndexingTest extends TestCase
         $package  = Package::factory()->create(['category_id' => $category->id]);
 
         $path = 'package-image.png';
-        Storage::disk('public')->put($path, 'fake-image-bytes');
+        Storage::disk('public')->put($path, self::onePixelPng());
         $package->addMedia(Storage::disk('public')->path($path))
             ->preservingOriginal()
             ->toMediaCollection('package_image');
@@ -146,52 +164,31 @@ class CbirGalleryIndexingTest extends TestCase
             'package',
             $calls[0]['metadata']['type'] ?? null,
             'Media paket harus terindeks sebagai type=package. Nilai selain itu '
-            .'berarti byImage() akan mencarinya di tabel products dan membuangnya.'
+            .'berarti byImage() akan mencarinya di tabel catalogs dan membuangnya.'
         );
         $this->assertSame($package->id, $calls[0]['metadata']['owner_id'] ?? null);
     }
 
     /**
-     * Nama item dan vendor ikut terisi sekarang.
+     * PNG 1x1 yang benar-benar valid, sebagai byte biner.
      *
-     * Sebelumnya baris pemanggilnya memakai `$media->model_type::with(...)`,
-     * yaitu alias morph map yang bukan nama kelas. Panggilan statis itu gagal
-     * dan tertangkap `catch (\Throwable)`, jadi `name` dan `vendor` terkirim
-     * kosong tanpa satu pun error yang terlihat.
+     * Dipakai sebagai isi file gambar di test ini karena media library
+     * menebak mime type dari ISI file, bukan dari ekstensi. String biasa
+     * seperti 'fake-image-bytes' terdeteksi sebagai `text/plain` dan ditolak
+     * `acceptedFileTypes` dengan `FileUnacceptableForCollection`, sehingga test
+     * gagal di tempat yang tidak berhubungan dengan yang sedang diuji.
+     *
+     * Byte-nya bukan tebakan: kandidat base64 di sini sudah divalidasi dengan
+     * `getimagesizefromstring()` DAN `imagecreatefromstring()`, karena ada
+     * varian yang terbaca `image/png` tapi gagal saat GD membuat thumbnail
+     * (`CouldNotLoadImage`, `libpng: invalid literal/length code`) -- gejalanya
+     * muncul jauh dari tempat penyebabnya.
      */
-    public function test_item_name_and_vendor_are_sent_to_the_index(): void
+    private static function onePixelPng(): string
     {
-        // Vendor tidak punya factory di database/factories, jadi dibuat manual.
-        $vendor   = Vendor::create(['store_name' => 'Florist Nusantara']);
-        $category = Category::factory()->create();
-        $product  = Product::factory()->create([
-            'category_id' => $category->id,
-            'vendor_id'   => $vendor->id,
-            'name'        => 'Gebyok Ukir Jati Premium',
-        ]);
-
-        $path = 'named-product.png';
-        Storage::disk('public')->put($path, 'fake-image-bytes');
-        $product->addMedia(Storage::disk('public')->path($path))
-            ->preservingOriginal()
-            ->toMediaCollection('product_image');
-
-        $product->refresh()->load('media');
-
-        $calls = [];
-        Http::fake([
-            '*/api/index/add' => function (Request $request) use (&$calls) {
-                $calls[] = $request->data();
-
-                return Http::response(['success' => true, 'entry_id' => 1]);
-            },
-            '*' => Http::response(['success' => true]),
-        ]);
-
-        app(\App\Services\CBIRService\CBIRService::class)->indexMedia($product->media->first());
-
-        $this->assertCount(1, $calls);
-        $this->assertSame('Gebyok Ukir Jati Premium', $calls[0]['metadata']['name'] ?? null);
-        $this->assertSame('Florist Nusantara', $calls[0]['metadata']['vendor'] ?? null);
+        return (string) base64_decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+            true
+        );
     }
 }

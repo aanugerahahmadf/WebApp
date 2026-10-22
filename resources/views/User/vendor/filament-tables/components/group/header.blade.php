@@ -38,7 +38,7 @@
     @if ($collapsible)
         <x-filament::icon-button
             color="gray"
-            icon="heroicon-m-chevron-up"
+            icon="/images/icons/chevron_up.svg"
             icon-alias="tables::grouping.collapse-button"
             :label="filled($label) ? ($label . ': ' . $title) : $title"
             size="sm"

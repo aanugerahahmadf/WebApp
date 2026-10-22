@@ -1,0 +1,186 @@
+syntax = "proto3";
+
+package wedding.user.v1;
+
+option go_package = "github.com/wedding/user/v1;userv1";
+option php_namespace = "App\\Grpc\\User\\V1";
+option php_metadata_namespace = "App\\Grpc\\User\\V1\\GPBMetadata";
+
+import "wedding/user/v1/common.proto";
+import "wedding/user/v1/auth.proto";
+import "wedding/user/v1/category.proto";
+
+// Profile Service
+service ProfileService {
+  // Get user profile
+  rpc GetProfile(GetProfileRequest) returns (UserProfile);
+  
+  // Update user profile
+  rpc UpdateProfile(UpdateProfileRequest) returns (User);
+  
+  // Change password
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
+  
+  // Update avatar
+  rpc UpdateAvatar(UpdateAvatarRequest) returns (User);
+  
+  // Delete avatar
+  rpc DeleteAvatar(DeleteAvatarRequest) returns (User);
+  
+  // Delete account
+  rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse);
+  
+  // Update notification preferences
+  rpc UpdateNotificationPreferences(UpdateNotificationPreferencesRequest) returns (User);
+  
+  // Update locale preferences
+  rpc UpdateLocalePreferences(UpdateLocalePreferencesRequest) returns (User);
+  
+  // Get user addresses
+  rpc GetAddresses(GetAddressesRequest) returns (UserAddressesResponse);
+  
+  // Create address
+  rpc CreateAddress(CreateAddressRequest) returns (UserAddress);
+  
+  // Update address
+  rpc UpdateAddress(UpdateAddressRequest) returns (UserAddress);
+  
+  // Delete address
+  rpc DeleteAddress(DeleteAddressRequest) returns (DeleteAddressResponse);
+  
+  // Set default address
+  rpc SetDefaultAddress(SetDefaultAddressRequest) returns (UserAddress);
+}
+
+// Profile Requests/Responses
+message GetProfileRequest {
+  string user_id = 1;
+}
+
+message UserProfile {
+  User user = 1;
+  int32 order_count = 2;
+  int32 review_count = 3;
+  int32 wishlist_count = 4;
+  double total_spent = 5;
+  Category favorite_category = 6;
+  string joined_at = 7;
+}
+
+message UpdateProfileRequest {
+  string name = 1;
+  string phone = 2;
+  string address = 3;
+  string city = 4;
+  string province = 5;
+  string postal_code = 6;
+  string date_of_birth = 7;
+  Gender gender = 8;
+  string avatar = 9;
+  bool notification_email = 10;
+  bool notification_sms = 11;
+  bool notification_push = 12;
+  string language = 13;
+  string currency = 14;
+  string timezone = 15;
+}
+
+message ChangePasswordRequest {
+  string current_password = 1;
+  string new_password = 2;
+  string new_password_confirmation = 3;
+}
+
+message ChangePasswordResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message UpdateAvatarRequest {
+  string avatar = 1;
+  bool delete_current = 2;
+}
+
+message DeleteAvatarRequest {}
+
+message DeleteAccountRequest {
+  string password = 1;
+  string reason = 2;
+}
+
+message DeleteAccountResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message UpdateNotificationPreferencesRequest {
+  bool notification_email = 1;
+  bool notification_sms = 2;
+  bool notification_push = 3;
+}
+
+message UpdateLocalePreferencesRequest {
+  string language = 1;
+  string currency = 2;
+  string timezone = 3;
+}
+
+// Address messages
+message GetAddressesRequest {
+  string user_id = 1;
+}
+
+message UserAddressesResponse {
+  repeated UserAddress addresses = 1;
+}
+
+message CreateAddressRequest {
+  string name = 1;
+  string phone = 2;
+  string address = 3;
+  string city = 4;
+  string province = 5;
+  string postal_code = 6;
+  AddressType type = 7;
+  bool is_default = 8;
+}
+
+message UpdateAddressRequest {
+  string id = 1;
+  string name = 2;
+  string phone = 3;
+  string address = 4;
+  string city = 5;
+  string province = 6;
+  string postal_code = 7;
+  AddressType type = 8;
+  bool is_default = 9;
+}
+
+message DeleteAddressRequest {
+  string id = 1;
+}
+
+message DeleteAddressResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message SetDefaultAddressRequest {
+  string id = 1;
+}
+
+message UserAddress {
+  string id = 1;
+  string user_id = 2;
+  string name = 3;
+  string phone = 4;
+  string address = 5;
+  string city = 6;
+  string province = 7;
+  string postal_code = 8;
+  AddressType type = 9;
+  bool is_default = 10;
+  string created_at = 11;
+  string updated_at = 12;
+}

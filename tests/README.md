@@ -1,4 +1,4 @@
-# tests/ — struktur dan konvensi
+# tests/ ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â struktur dan konvensi
 
 Suite ini memakai **Pest** (Pest 4) di atas Laravel 12 + Filament 3.
 
@@ -6,25 +6,45 @@ Suite ini memakai **Pest** (Pest 4) di atas Laravel 12 + Filament 3.
 
 ```
 tests/
-├── Feature/         satu komponen / satu Livewire page
-│   ├── Admin/      <TestName>/<TestName>.php
-│   ├── User/       <TestName>/<TestName>.php
-│   ├── Welcome/    <TestName>/<TestName>.php
-│   └── Shared/     <TestName>/<TestName>.php
-├── Integration/     request HTTP nyata + seluruh rantai middleware + efek ke DB
-│   ├── Http/       <TestName>/<TestName>.php
-│   ├── Middleware/ <TestName>/<TestName>.php
-│   ├── Database/   <TestName>/<TestName>.php
-│   └── Shared/     <TestName>/<TestName>.php
-├── Unit/            satu kelas, tanpa DB dan tanpa HTTP
-│   ├── Platform/   <TestName>/<TestName>.php
-│   ├── User/       <TestName>/<TestName>.php
-│   └── Shared/     <TestName>/<TestName>.php
-├── TestHelpers/
-├── Pest.php        TestCase + RefreshDatabase untuk Feature dan Integration
-├── TestCase.php
-└── bootstrap.php
+ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Feature/         satu komponen / satu Livewire page
+ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Admin/      <TestName>/<TestName>.php
+ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ User/       <TestName>/<TestName>.php
+ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Welcome/    <TestName>/<TestName>.php
+ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬ÂÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Shared/     <TestName>/<TestName>.php
+ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Integration/     request HTTP nyata + seluruh rantai middleware + efek ke DB
+ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Http/       <TestName>/<TestName>.php
+ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Middleware/ <TestName>/<TestName>.php
+ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Database/   <TestName>/<TestName>.php
+ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬ÂÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Shared/     <TestName>/<TestName>.php
+ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Unit/            satu kelas, tanpa DB dan tanpa HTTP
+ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Platform/   <TestName>/<TestName>.php
+ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ User/       <TestName>/<TestName>.php
+ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬ÂÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Shared/     <TestName>/<TestName>.php
+ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ TestHelpers/     helper yang dipakai lebih dari satu file test
+ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Pest.php        TestCase + RefreshDatabase untuk Feature dan Integration
+ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ TestCase.php    base class: isolasi view per proses + suppressor notice
+ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬ÂÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ bootstrap.php   bootstrap PHPUnit (dipakai phpunit.xml)
 ```
+
+**`tests/bootstrap.php` itu dipakai, bukan sisa.** `phpunit.xml` menunjuknya
+lewat `bootstrap="tests/bootstrap.php"`. Dulu file itu tidak pernah dimuat
+(`phpunit.xml` menunjuk `vendor/autoload.php`), jadi isinya cuma kode mati.
+Sekarang isinya: require autoloader + isolasi hasil kompilasi Blade per
+proses (`Tests\TestHelpers\CompiledViews`).
+
+Yang TIDAK ada di sana: `set_error_handler`. Alasannya bukan sekadar
+"biarkan PHPUnit yangurus" -- ada dua jebakan, dan keduanya sudah diuji:
+
+| Jebakan | Gejala |
+|---|---|
+| Handler dipasang di bootstrap | `PHPUnit\Runner\ErrorHandler::enable()` BERHENTI kalau sudah ada handler yang terpasang (`if ($oldErrorHandler !== null) { restore_error_handler(); return; }`). PHPUnit jadi TIDAK memasang handler-nya, dan error PHP yang biasanya jadi test failure (E_WARNING, E_ERROR) berubah jadi tulisan biasa di output |
+| Handler dipasang di `setUp()`, di atas handler PHPUnit | Untuk meneruskan error yang tidak dikenali, ia memanggil handler PHPUnit secara manual. PHPUnit mencari test case yang sedang jalan lewat `debug_backtrace()`, dan frame tambahan itu menggagalkan atribusinya -- deprecation yang seharusnya dikumpulkan PHPUnit tercetak mentah: `PHP Deprecated: ... in vendor/filament/support/src/View/ViewManager.php on line 63` |
+
+Jadi suite ini **tidak menekan apa pun**. Dua pesan yang dulu dimaksudkan
+ditekan di `tests/bootstrap.php` (`tempnam()` di `AliasLoader`, dan
+`PDO::MYSQL_ATTR_SSL_CA` yang deprecated) memang tidak pernah muncul:
+`config/database.php` sudah memakai `PDO\Mysql::ATTR_SSL_CA` yang ada sejak
+PHP 8.4, jadi konstanta lama tidak pernah dievaluasi.
 
 **Unit vs Feature vs Integration** -- pilih yang mana:
 
@@ -56,8 +76,8 @@ Aturan folder:
    juga rekursif. Menambah folder di dalam tidak perlu mengubah konfigurasi.
 4. File yang berbasis class PHPUnit (bukan closure Pest) **wajib** memiliki
    namespace yang cocok dengan lokasinya, misalnya
-   `tests/Feature/User/AuthTest/AuthTest.php` → `namespace Tests\Feature\User\AuthTest;`
-   karena PSR-4 memetakan `Tests\` → `tests/`. `composer dump-autoload -o`
+   `tests/Feature/User/AuthTest/AuthTest.php` ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ `namespace Tests\Feature\User\AuthTest;`
+   karena PSR-4 memetakan `Tests\` ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ `tests/`. `composer dump-autoload -o`
    akan memperingatkan kalau tidak sesuai.
 
 ## Menjalankan
@@ -69,31 +89,25 @@ php artisan test tests/Feature/User/SignInAuthenticationTest/SignInAuthenticatio
 php artisan test --filter="the guest dropdown"     # per nama test
 ```
 
-> Catatan MySQL lokal: suite memakai database `testing` yang di-wipe oleh
-> `RefreshDatabase`. **Jangan** menjalankan dua `php artisan test` bersamaan --
-> keduanya akan saling men-drop tabel di database yang sama dan menghasilkan
-> error palsu (`Table ... doesn't exist`, `Unknown column ...`).
+> **Database suite: SQLite in-memory.** `phpunit.xml` mengunci
+> `DB_CONNECTION=sqlite` dan `DB_DATABASE=:memory:`, jadi `php artisan test`
+> **tidak pernah menyentuh database MySQL dev** -- tidak ada `migrate:fresh`
+> yang jalan di sana, dan `RefreshDatabase` hanya membangun ulang skema di
+> memori. Dua proses test yang jalan bersamaan karena itu tidak saling
+> men-drop tabel.
 >
-> Pakai DB khusus kalau bisa, lalu arahkan `DB_DATABASE` ke situ supaya suite
-> kebal dari proses lain:
+> Yang tetap tidak aman adalah perintah artisan manual dengan `--env=testing`
+> -- lihat bagian "Database: kenapa `.env.testing` wajib ada" di bawah.
 >
-> ```bash
-> # PowerShell
-> $env:DB_DATABASE='wedding_cbir_test'; php artisan migrate:fresh --force; php artisan test
-> ```
->
-> Gejala kalau DB-nya dipakai proses lain di tengah jalan: puluhan `QueryException`
-> beruntun (`Unknown column 'two_factor_type'`, `Table '...users' doesn't exist`)
-> yang **hanya muncul di sebagian test**, sementara test yang sama lolos kalau
-> dijalankan sendiri. Jangan mencari bug di kode sebelum memastikan tidak ada
-> `migrate:fresh` lain yang jalan bersamaan.
+> Jalankan satu proses test pada satu waktu kalau bisa. Yang paling sering
+> jadi penyebab adalah **CPU**: dua proses suite penuh di satu laptop membuat
+> test yang punya batas waktu ikut gagal padahal kodenya benar.
 
 ## Database: kenapa `.env.testing` wajib ada
 
-`php artisan test` aman karena `phpunit.xml` mengunci `DB_DATABASE=testing`.
-
-Yang **tidak** aman adalah perintah artisan yang dipanggil manual dengan
-`--env=testing`:
+`.env.testing` tidak dipakai oleh `php artisan test` (suite memakai SQLite
+in-memory). File itu ada untuk perintah artisan yang memanggil `--env=testing`
+secara manual:
 
 ```
 php artisan migrate:fresh --env=testing --force
@@ -112,21 +126,27 @@ dipindah ke `array` supaya suite tidak menulis ke cache atau queue sungguhan.
 Cara memastikan sebelum menjalankan perintah destructive apa pun:
 
 ```
-php artisan tinker --env=testing -r 'echo config("database.connections.mysql.database");'
+php artisan db:show --env=testing
 ```
 
-Kalau keluar `testing`, aman. Kalau keluar nama database dev, jangan jalankan.
+Lihat baris **Database** di keluarannya. Kalau keluar `testing`, aman. Kalau
+keluar nama database dev, jangan jalankan.
 
-### Dua proses test tidak boleh jalan bersamaan
+(Jangan pakai `php artisan tinker -r '...'` -- opsi `-r` sudah tidak ada di
+Laravel 12, jadi perintahnya gagal dengan `The "-r" option does not exist.`
+yang tidak menjelaskan apa pun.)
 
-`RefreshDatabase` melakukan `migrate:fresh` di awal. Kalau proses test kedua
-mulai selagi yang pertama masih berjalan, tabel di-drop dan dibuat ulang di
-bawah kaki proses yang sedang jalan, dan hasilnya bukan satu test gagal tapi
-puluhan kegagalan yang menyebar ke file yang tidak ada hubungannya sama sekali
-(`WelcomePanelTest`, `PasswordSecurityPagesTest`, `FaceScanModalGuardTest`,
-`OtpEmailOrTwoFactoryTest` sekaligus).
+### Dua proses test sekaligus: yang sudah diisolasi, yang belum
 
-Tanda tangan yang muncul saat kejadian ini:
+Suite sekarang aman dari dua proses yang jalan bersamaan. Dua hal yang
+pernah dipakai bersama sudah dipisah:
+
+| Yang dipakai bersama | Sekarang | Kenapa |
+|---|---|---|
+| Database | SQLite `:memory:` per proses | `phpunit.xml` mengunci `DB_CONNECTION` + `DB_DATABASE` (sudah sejak awal) |
+| Hasil kompilasi Blade | `storage/framework/views/testing-<pid>` per proses | `Tests\TestHelpers\CompiledViews` (baru) |
+
+Tanda tangan dari zaman saat keduanya masih berbagi state:
 
 ```
 SQLSTATE[42S02]: Base table or view not found: 1146 Table 'testing.roles' doesn't exist
@@ -139,9 +159,23 @@ menjalankan migrate. Kalau tanda tangan ini muncul, **jangan buru-buru mencari
 bug di kode produksi.** Periksa dulu apakah ada proses `php artisan test` lain
 yang masih jalan.
 
-Aturan: satu proses test pada satu database. Butuh menjalankan test tambahan
-sambil suite penuh berjalan? Pakai database lain (`DB_DATABASE` berbeda), bukan
-database yang sama.
+Tanda tangan yang lain -- dan yang lebih sering muncul di Windows -- adalah
+kegagalan menulis hasil kompilasi view:
+
+```
+rename(...\views\81a1B04.tmp, ...\views\81a27ff3....php): Access is denied (code: 5)
+```
+
+Kode 5 itu `ERROR_ACCESS_DENIED` di Windows: destination sedang dipegang
+proses lain. Gejalanya muncul sebagai `ViewException` dari dalam Filament,
+beberapa lapis dari penyebabnya, jadi terlihat seperti bug produksi. Folder
+hasil kompilasi per proses menghilangkannya.
+
+Yang **belum** terisolasi: CPU dan file di luar database. Dua suite penuh
+sekaligus tetap bisa membuat test yang punya batas waktu gagal, dan test yang
+menulis ke disk yang sama (media, export) bisa saling menimpa. Jadi aturan
+"satukan proses test pada satu waktu" tetap berlaku -- hanya alasannya sekarang
+bukan database.
 
 ### 3b. Test yang hanya gagal di suite penuh
 
@@ -172,6 +206,98 @@ dengan menambahkan `afterEach` yang mengembalikan state itu.
 
 
 ## Jebakan yang sudah pernah menggigit
+
+### Panel 'user' sudah dilebur ke 'welcome' -- `getPanel('user')` TIDAK error
+
+Sejak 2026-10-21 hanya ada dua panel: `welcome` (path `/`) dan `admin`
+(path `/admin`). `UserPanelProvider` **tidak lagi terdaftar** di
+`bootstrap/providers.php`; file-nya masih ada sebagai rujukan, tapi bukan
+sumber kebenaran.
+
+```php
+// TIDAK error -- PanelRegistry::get() mengembalikan panel DEFAULT kalau
+// id-nya tidak terdaftar, dan default-nya sekarang 'welcome'.
+Filament::getPanel('user');   // -> objek panel 'welcome'
+
+// INI yang error -- route prefix lama sudah tidak ada.
+route('filament.user.pages.home');   // RouteNotFoundException
+```
+
+Akibatnya kode lama yang menulis `Filament::getPanel('user')` **tidak langsung
+gagal** -- dia diam-diam memakai panel `welcome`. Route-nya ikut ke panel yang
+benar, jadi sering kali test tetap hijau; yang salah biasanya terlihat
+beberapa langkah kemudian, atau tidak sama sekali.
+
+Yang boleh jadi rujukan:
+
+- `Filament::getPanel('welcome')` (atau `getPanel()` tanpa argumen).
+- `route('filament.welcome....')`.
+- `Route::has('filament.welcome....')`.
+
+Cek `php artisan route:list`, bukan `getPanel()`, kalau sedang mencari tahu
+apakah suatu route lama masih hidup.
+
+### 0. Role harus menyebut guard-nya
+
+```php
+// SALAH -- role jadi ber-guard `web`
+Role::firstOrCreate(['name' => 'super_admin']);
+Admin::factory()->superAdmin();  // RoleDoesNotExist: no role `super_admin` for guard `admin`
+
+// BENAR -- lewat helper, guard mengikuti model
+seedRoles();                                     // admin: super_admin, web: customer
+seedRoles(adminRoles: [], webRoles: ['super_admin']);  // untuk User di guard web
+```
+
+Pakai `seedRoles()` dari `tests/Pest.php`. Role admin hidup di guard `admin`
+(tabel `admins`), role shopper di guard `web` (tabel `users`), dan
+`Model::assignRole()` mencari di guard model itu sendiri.
+
+`makeAdminWithStorefrontIdentity()` untuk admin yang juga harus punya
+identitas belanja (`admins.user_id`), karena `ChatStaff::adminUser()` mencari
+`Admin::whereNotNull('user_id')`.
+
+### 0b. Override `name` pada `Catalog::factory()` tidak berefek
+
+```php
+// TIDAK BERKEFEK -- yang tampil tetap nama dari daftar produk di factory
+Catalog::factory()->create(['name' => 'Bunga Mawar']);
+
+// BENAR -- accessor `name` membaca translations dulu
+Catalog::factory()->create([
+    'name_translations' => ['id' => 'Bunga Mawar', 'en' => 'Red Rose'],
+]);
+```
+
+Tidak ada error dan baris tetap tersimpan -- gejalanya hanya assertion yang
+membandingkan nama jadi gagal jauh dari penyebabnya. Lihat catatan di
+`CatalogFactory`.
+
+### 0c. `APP_URL` wajib dikunci di `phpunit.xml`
+
+`route()` dan `Page::getUrl()` mengembalikan URL ABSOLUT, jadi nilainya ikut
+`APP_URL`. Tanpa kunci di `phpunit.xml`, `assertSee(route(...))` membandingkan
+host dari `.env` mesin itu: hijau di satu mesin, merah di mesin lain, untuk
+kode yang sama persis.
+
+### 0d. CAPTCHA harus diisi pada setiap pemanggilan `authenticate()`
+
+`CaptchaField` menulis `session('filament_captcha_code')` dari dalam
+`render()`, dan `render()` jalan pada SETIAP request Livewire. Kode yang di-set
+sebelum `Livewire::test()` ditimpa di render pertama; kode yang dibaca setelah
+`fillForm()`/`set()` sudah basi.
+
+Pakai helper dari `tests/Pest.php`:
+
+```php
+fillCaptcha($component)->call('authenticate');
+```
+
+Helper ini menyamakan session dan field tepat sebelum `call()`, tanpa ada
+request Livewire di antaranya. Menebak kode yang "kelihatan valid" tidak
+berhasil: `Captcha` membandingkan dengan session, bukan dengan format, dan
+pesan errornya sama untuk semua nilai -- jadi test tidak bisa membedakan "kode
+salah" dari "sesi basi".
 
 ### 1. `__()` di dalam `->with([...])` membuat seluruh suite mati
 
@@ -273,7 +399,7 @@ di dalam komentar.
 - **HTML mentah** (`$response->getContent()`) dibandingkan dengan
   `expect($html)->toContain(...)` -- bentuk ini **tidak** meng-escape. Label
   yang berisi kutip atau `&` muncul di markup sebagai entity
-  (`Don't` → `Don&#039;t`), jadi bandingkannya harus memakai bentuk yang sama.
+  (`Don't` ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ `Don&#039;t`), jadi bandingkannya harus memakai bentuk yang sama.
   Dua jalan yang tersedia: `assertSee($label, escape: false)` atau helper
   `label()` yang membungkus `e(__($key))` -- dipakai di
   `SignInBreadcrumbsTest` dan `TopbarAccountControlTest`.
@@ -306,40 +432,105 @@ di dalam komentar.
   (route `language.update`) yang menulis session; test label memakai jalur query
   karena middleware memperlakukannya sebagai sumber prioritas pertama.
 
+## Refactor `Product` -> `Catalog`: apa yang hilang, dan bagaimana cara mengatakannya
+
+Penataan ulang itu menghapus `ProductResource` dan `PackageResource` di ketiga
+panel, dan `Package` sekarang adalah TIER dari katalog
+(`Catalog::tiers()` -> `hasMany(Package, 'catalog_id')`). Akibatnya banyak test
+yang memanggil class atau URL yang sudah tidak ada. Semuanya diperlakukan
+dengan aturan yang sama:
+
+- **Test yang menguji hal yang MASIH ADA tapi lewat class/URL mati** -> arahkan
+  ke resource yang benar, dan tulis di docblock kenapa class lama tidak bisa
+  dipakai.
+- **Test yang hanya mengulang test katalog dengan label "paket"** -> HAPUS, dan
+  tulis alasannya. Menyalinnya akan menghasilkan dua test dengan nama berbeda
+  yang menguji hal yang sama -- lebih buruk dari tidak ada, karena suite terlihat
+  punya cakupan padahal tidak.
+- **Test untuk fitur yang benar-benar tidak ada lagi** -> `->skip()` dengan
+  alasan tertulis, DAN tambahkan test penjaga yang tidak di-skip. Penjaga itu
+  membaca `class_exists()` dan akan GAGAL begitu fiturnya dibangun kembali --
+  supaya saat itu ada yang mengingatkan untuk mengaktifkan kembali test yang
+  di-skip, bukan diam-diam tetap hijau selamanya.
+
+Contoh: `FilamentCheckoutVirtualAccountTest` menguji checkout paket, dan
+`PackageResource`-nya sudah tidak ada. `CheckoutCatalog` tidak bisa
+menggantikannya karena `Package` bukan turunan `Catalog`: `resolveRecord()`
+mencari di tabel `catalogs`.
+
+### Test penjaga statis
+
+`tests/Unit/Shared/MissingImportsTest` memindai seluruh `app/` untuk kelas milik
+project yang dipanggil tanpa import. Ini menjaga bug yang sudah beberapa kali
+terjadi: satu baris `use` hilang saat refactor, PHP tidak melempar error sampai
+class itu benar-benar dipanggil, dan errornya muncul jauh dari sumbernya
+(`ViewException` dari dalam Filament).
+
+Dua detail yang membuatnya berguna, dan keduanya sudah sempat membuat test ini
+hijau tanpa mengecek apa pun:
+
+1. **Komentar harus dibuang dulu.** Repo ini lebih banyak docblock daripada
+   kode; tanpa pembuangan komentar setiap referensi di dalam komentar dilaporkan
+   sebagai pelanggaran, dan 73 false positive langsung membuat orang
+   mengabaikannya.
+2. **Class dicari di seluruh `app/`, bukan di `app/<Name>.php`.**
+   `CatalogResource` tidak ada di `app/CatalogResource.php`.
+
+Yang ditemukan dan sudah diperbaiki: `FcmChannel` di `CustomNotification`
+(import hilang -> fatal saat notifikasi dikirim), `CatalogResource` di dua
+`VoucherResource`, `VerifyOtp` di empat halaman OTP, `CbirResultService` di tiga
+Livewire Messages, `Notification` di `TransactionsRelationManager`, dan
+`CatalogResource` di dua `HistoryResource`.
+
+Dua false positive yang **diketahui** dan sengaja tidak dilaporkan, karena
+setelah diperiksa manual keduanya benar-benar aman. Keduanya didokumentasikan
+di kode supaya orang tidak "memperbaiki" hal yang tidak rusak:
+
+- `TextColumn::make('value.bypass_secret')` -- dot notation pada atribut yang
+  di-cast array. Ini membaca `$record->value['bypass_secret']`, jadi yang
+  di-render selalu scalar. Pola ini disengaja dan dipakai
+  `MaintenanceResource`.
+- `TextColumn::make('label')` di `ReferenceOptionResource` -- dua kolom dengan
+  nama sama, masing-masing untuk locale berbeda, dan **keduanya** memakai
+  `->state(fn ($record) => $record->getLabelForLocale(...))`. Tool yang
+  memeriksa per-blok bisa melewatkan pengaman di kolom kedua.
+
 ## Test yang sengaja tidak ada
 
 Beberapa perilaku memang belum punya test dan itu tercatat di header file yang
 berkaitan (bukan di file terpisah), misalnya:
 
 - `?locale=` tanpa validasi terhadap daftar locale yang didukung.
-- **Halaman Sign Up / Register di panel User DINONAKTIFKAN, kodenya disimpan.**
-  Baris pemanggilnya tidak dihapus, hanya dikomentari dengan `//` dalam
-  bentuk aslinya: `use App\Filament\User\Auth\SignUp\SignUp;`,
-  `->registration(SignUp::class)`, dan
-  `->registrationRouteSlug('signup')` di `UserPanelProvider`, plus import dan
-  alias `Livewire::component('app.filament.user.auth.sign-up', UserSignUp::class)`
-  di `AppServiceProvider`. `app/Filament/User/Auth/SignUp` beserta view-nya
-  masih utuh, jadi pendaftaran bisa dihidupkan lagi tanpa menulis ulang form.
-  `SignIn::registerAction()` juga tetap di-`->hidden()`. Pendaftaran aktif hanya
-  lewat tombol Google di `/user/auth` (`SocialiteController` membuat akun
-  otomatis). Konsekuensinya, dipin oleh test:
-  - `filament.user.auth.register` **tidak terdaftar**,
-  - `/user/signup` dan `/user/register` redirect ke `/user/auth` (bukan 404),
-  - tidak ada halaman auth yang lagi menautkan ke door pendaftaran (markup-nya
-    ada sebagai Blade comment di `social-buttons`),
-  - crumb "Sign Up" tidak ada di `HasAuthBreadcrumbs` -- sebelum cabangnya
-    dihapus, cabang itu memanggil `route()` yang hilang dan membuat halaman auth
-    500 untuk tamu yang datang dengan referer `/user/signup`. URL lama itu kini
-    hanya dikenali lewat `HasAuthBreadcrumbs::retiredRegisterPaths()` supaya
-    `SignIn::getBackUrl()` tidak menunjuk ke halaman yang tidak ada.
+- **Halaman Sign Up / Register sudah HIDUP lagi.** Catatan lama yang
+  menyebutnya "DINONAKTIFKAN, kodenya disimpan" sudah usang. Yang benar
+  sekarang:
+  - Panggilannya ada di **`WelcomePanelProvider`**. Panel 'user' dilebur ke
+    panel 'welcome' pada 2026-10-21, jadi `UserPanelProvider` -- yang masih
+    ada sebagai file, tapi sudah **tidak terdaftar** di
+    `bootstrap/providers.php` -- bukan lagi sumber kebenaran. Yang aktif:
+    `->registration(SignUp::class)` dan `->registrationRouteSlug('signup')`.
+  - `filament.welcome.auth.register` **terdaftar**, URL utamanya `/signup`.
+  - Alias lama dilayani redirect di `routes/web/web.php`:
+    `/register` dan `/user/register` -> `/signup`, `/login` dan `/user/login`
+    -> `/signin`.
+  - `SignIn::registerAction()` tetap di-`->hidden()`, jadi form Sign In tidak
+    menampilkan tombol register bawaan Filament. Pintu pendaftaran ada di
+    halaman Sign In (`/signin`) dan di item menu topbar storefront (`/home`).
+    Halaman auth landing `/auth` justru **tidak** menautkan ke sana -- halaman
+    itu hanya punya dua pintu: Sign In dan Google (lihat
+    `UserAuthLandingPageTest`).
+  - Crumb "Sign Up" **ada lagi** di `HasAuthBreadcrumbs` -- cabangnya memanggil
+    `route('filament.welcome.auth.register')`, jadi halaman auth tidak lagi 500
+    untuk tamu yang datang dengan referer `/signup`.
   - Field yang tadinya ada di form pendaftaran (nama depan/tengah/belakang,
-    unggah KTP/selfie/avatar, KYC) dirender di `/user/complete-profile`.
+    unggah KTP/selfie/avatar, KYC) dirender di `/complete-profile`.
   - `RenameSmokeTest` menjaga dua sisi sekaligus: class + view SignUp harus
-    **ada**, route register harus **tidak ada**.
-  - `UserAuthLandingPageTest` membaca `UserPanelProvider.php` dan
-    `AppServiceProvider.php`, lalu memastikan keempat baris pemanggilnya masih
-    berkomentar `//` -- jadi "dimatikan" tidak bisa diam-diam berubah jadi
-    "dihapus" atau "terdaftar".
+    **ada**, route register storefront harus **terdaftar**, dan route register
+    panel admin harus **tidak** ada.
+  - `UserAuthLandingPageTest` membaca `WelcomePanelProvider.php` (provider yang
+    benar-benar terdaftar) plus `bootstrap/providers.php`, lalu memastikan
+    pendaftaran hidup dan `UserPanelProvider` tidak mendaftarkan diri lagi --
+    jadi panel yang mati tidak bisa diam-diam jadi sumber kebenaran.
 - Pencocokan kolom `email` yang case-sensitive di
   `SignIn::getCredentialsFromFormData()`, sehingga email yang diketik huruf
   kapital tidak bisa login.
@@ -364,7 +555,7 @@ karena "kayaknya cuma detail".
 - **`redirect()` di dalam action Livewire bukan `Illuminate\Http\RedirectResponse`.**
   Livewire menukar binding `redirect` di container dengan `Redirector`-nya
   sendiri, yang tidak punya `getTargetUrl()` dan tidak cocok dengan return type
-  `?RedirectResponse`. `ProductResource`/`PackageResource` (panel Welcome)
+  `?RedirectResponse`. `CatalogResource`/`PackageResource` (panel Welcome)
   memanggilnya dari action wishlist/cart/chat, sehingga **setiap tamu** yang
   menekan tombol itu mendapat TypeError. Solusinya bukan facade `Redirect`
   (ia juga membaca binding yang sama), tapi `new RedirectResponse(...)` untuk

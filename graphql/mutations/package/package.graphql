@@ -1,0 +1,53 @@
+# Package Mutations (Admin only)
+# Wedding Flower Decoration App - Package GraphQL Mutations
+
+input CreatePackageInput {
+  name: String!
+  slug: String!
+  description: String
+  price: Float!
+  discountPrice: Float
+  isActive: Boolean! = true
+  isFeatured: Boolean! = false
+  imageUrl: String
+  features: [String!]
+  theme: String
+  color: String
+  minCapacity: Int
+  maxCapacity: Int
+  categoryId: ID!
+}
+
+input UpdatePackageInput {
+  name: String
+  slug: String
+  description: String
+  price: Float
+  discountPrice: Float
+  isActive: Boolean
+  isFeatured: Boolean
+  imageUrl: String
+  features: [String!]
+  theme: String
+  color: String
+  minCapacity: Int
+  maxCapacity: Int
+  categoryId: ID
+}
+
+type Mutation {
+  # Admin: Create Package
+  createPackage(input: CreatePackageInput!): Package @field(resolver: "App\\Http\\GraphQL\\Resolvers\\PackageResolver@create")
+
+  # Admin: Update Package
+  updatePackage(id: ID!, input: UpdatePackageInput!): Package @field(resolver: "App\\Http\\GraphQL\\Resolvers\\PackageResolver@update")
+
+  # Admin: Delete Package
+  deletePackage(id: ID!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\PackageResolver@delete")
+
+  # Admin: Toggle Featured
+  togglePackageFeatured(id: ID!): Package @field(resolver: "App\\Http\\GraphQL\\Resolvers\\PackageResolver@toggleFeatured")
+
+  # Admin: Bulk Update Packages
+  bulkUpdatePackages(ids: [ID!]!, input: UpdatePackageInput!): [Package!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\PackageResolver@bulkUpdate")
+}

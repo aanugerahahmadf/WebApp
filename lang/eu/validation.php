@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'posta kodea',
         'preview'                  => 'aurrebista',
         'price'                    => 'prezioa',
-        'product_id'               => 'produktuaren ID',
+        'catalog_id'               => 'produktuaren ID',
         'product_uid'              => 'produktuaren UID',
         'product_uuid'             => 'produktuaren UUID',
         'promo_code'               => 'Promozio kodea',

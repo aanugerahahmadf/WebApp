@@ -1,0 +1,394 @@
+# Main GraphQL Schema Entry Point
+# Wedding Flower Decoration App - GraphQL API
+# This file imports all modular schema parts
+
+# ============================================================
+# SCHEMA DEFINITION
+# ============================================================
+
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+# ============================================================
+# IMPORTS - Types
+# ============================================================
+
+# User Types
+type User @model(class: "App\\Models\\User\\User") {
+  id: ID!
+  name: String!
+  email: String!
+  phone: String
+  avatar: String
+  emailVerifiedAt: String
+  createdAt: String!
+  profileCompletion: Float @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ProfileResolver@completion")
+  orders: [Order!]! @hasMany
+  reviews: [Review!]! @hasMany
+  wishlist: [Wishlist!]! @hasMany
+}
+
+# Category Types
+type Category @model(class: "App\\Models\\Category\\Category") {
+  id: ID!
+  name: String!
+  slug: String!
+  description: String
+  imageUrl: String
+  isActive: Boolean!
+  catalogs: [Catalog!]! @hasMany
+  packages: [Package!]! @hasMany
+  createdAt: String!
+}
+
+# Catalog Types
+type Catalog @model(class: "App\\Models\\Catalog\\Catalog") {
+  id: ID!
+  name: String!
+  slug: String!
+  description: String
+  price: Float!
+  discountPrice: Float
+  finalPrice: Float!
+  stock: Int!
+  isActive: Boolean!
+  isFeatured: Boolean!
+  isOutOfStock: Boolean!
+  imageUrl: String
+  thumbnailUrl: String
+  galleryUrls: [GalleryImage!]!
+  videoUrl: String
+  features: [String!]
+  theme: String
+  color: String
+  minCapacity: Int
+  maxCapacity: Int
+  category: Category @belongsTo
+  averageRating: Float
+  reviews: [Review!]! @hasMany
+  createdAt: String!
+  updatedAt: String!
+}
+
+type GalleryImage {
+  id: Int!
+  url: String!
+  thumb: String!
+  collection: String!
+  order: Int!
+}
+
+# Package Types
+type Package @model(class: "App\\Models\\Package\\Package") {
+  id: ID!
+  name: String!
+  slug: String!
+  description: String
+  price: Float!
+  discountPrice: Float
+  finalPrice: Float!
+  isActive: Boolean!
+  isFeatured: Boolean!
+  imageUrl: String
+  features: [String!]
+  theme: String
+  color: String
+  minCapacity: Int
+  maxCapacity: Int
+  category: Category @belongsTo
+  averageRating: Float
+  reviews: [Review!]! @hasMany
+  createdAt: String!
+  updatedAt: String!
+}
+
+# Order Types
+type Order @model(class: "App\\Models\\Order\\Order") {
+  id: ID!
+  orderNumber: String!
+  user: User! @belongsTo
+  package: Package @belongsTo
+  catalog: Catalog @belongsTo
+  totalPrice: Float!
+  status: String!
+  paymentStatus: String!
+  bookingDate: String
+  quantity: Int
+  notes: String
+  createdAt: String!
+  updatedAt: String!
+}
+
+# Review Types
+type Review @model(class: "App\\Models\\Review\\Review") {
+  id: ID!
+  user: User @belongsTo
+  catalog: Catalog @belongsTo
+  package: Package @belongsTo
+  rating: Int!
+  title: String
+  comment: String
+  photos: [String!]
+  helpfulCount: Int!
+  createdAt: String!
+  updatedAt: String!
+}
+
+# Cart Types
+type CartItem @model(class: "App\\Models\\Cart\\Cart") {
+  id: ID!
+  user: User @belongsTo
+  catalog: Catalog @belongsTo
+  package: Package @belongsTo
+  quantity: Int!
+  subtotal: Float!
+  createdAt: String!
+}
+
+# Wishlist Types
+type Wishlist @model(class: "App\\Models\\Wishlist\\Wishlist") {
+  id: ID!
+  user: User @belongsTo
+  catalog: Catalog @belongsTo
+  package: Package @belongsTo
+  createdAt: String!
+}
+
+# Voucher Types
+type Voucher @model(class: "App\\Models\\Voucher\\Voucher") {
+  id: ID!
+  name: String
+  code: String!
+  description: String
+  isActive: Boolean!
+  isGlobal: Boolean!
+  maxUses: Int
+  usesCount: Int!
+  expiresAt: String
+  discountAmount: Float!
+  discountType: String!
+  minPurchase: Float!
+  createdAt: String!
+}
+
+# Voucher Validation Result
+type VoucherValidation {
+  valid: Boolean!
+  voucher: Voucher
+  discount: Float
+  message: String
+}
+
+# CBIR Types
+type CbirStats {
+  totalImages: Int!
+  totalFeatures: Int!
+  databaseSize: String
+  lastUpdated: String
+}
+
+type CbirSearchResult {
+  success: Boolean!
+  results: [CbirResult!]!
+  totalResults: Int!
+  queryTimeSeconds: Float!
+}
+
+type CbirResult {
+  type: String!
+  similarity: Float!
+  score: Float!
+  data: CbirResultData!
+}
+
+type CbirResultData {
+  id: ID!
+  name: String!
+  slug: String!
+  description: String
+  price: Float!
+  discountPrice: Float
+  imageUrl: String
+  category: String
+}
+
+# Home Data Types
+type HomeData {
+  featuredCatalogs: [Catalog!]!
+  featuredPackages: [Package!]!
+  onSaleCatalogs: [Catalog!]!
+  onSalePackages: [Package!]!
+  categories: [Category!]!
+}
+
+# Search Types
+type SearchResult {
+  id: ID!
+  type: String!
+  name: String!
+  slug: String!
+  price: Float
+  imageUrl: String
+  category: String
+}
+
+# Auth Payload
+type AuthPayload {
+  user: User!
+  token: String!
+  tokenType: String!
+  expiresIn: Int!
+}
+
+# ============================================================
+# IMPORTS - Input Types
+# ============================================================
+
+input RegisterInput {
+  name: String!
+  email: String!
+  password: String!
+  passwordConfirmation: String!
+  phone: String
+}
+
+input UpdateProfileInput {
+  name: String
+  phone: String
+}
+
+input CreateOrderInput {
+  catalogId: ID
+  packageId: ID
+  quantity: Int! = 1
+  bookingDate: String
+  notes: String
+}
+
+input CreateReviewInput {
+  catalogId: ID
+  packageId: ID
+  rating: Int!
+  comment: String
+}
+
+input UpdateReviewInput {
+  rating: Int
+  comment: String
+}
+
+# ============================================================
+# IMPORTS - Enums
+# ============================================================
+
+enum SearchType {
+  CATALOG
+  PACKAGE
+  BOTH
+}
+
+# ============================================================
+# QUERY ROOT
+# ============================================================
+
+type Query {
+  # User & Auth
+  user(id: ID @eq): User @find
+  users(first: Int): [User!]! @paginate(defaultCount: 10)
+
+  # Categories
+  category(id: ID @eq): Category @find
+  categories(first: Int, active: Boolean @where(key: "is_active")): [Category!]! @paginate(defaultCount: 10)
+
+  # Catalogs
+  catalog(id: ID @eq, slug: String @eq): Catalog @find
+  catalogs(
+    first: Int
+    categoryId: ID @where(key: "category_id")
+    featured: Boolean @where(key: "is_featured")
+    minPrice: Float @where(key: "price", operator: ">=")
+    maxPrice: Float @where(key: "price", operator: "<=")
+    active: Boolean @where(key: "is_active")
+    theme: String @where(key: "theme")
+    color: String @where(key: "color")
+  ): [Catalog!]! @paginate(defaultCount: 10)
+  featuredCatalogs(first: Int): [Catalog!]! @paginate(defaultCount: 10)
+  onSaleCatalogs(first: Int): [Catalog!]! @paginate(defaultCount: 10)
+
+  # Packages
+  package(id: ID @eq, slug: String @eq): Package @find
+  packages(
+    first: Int
+    categoryId: ID @where(key: "category_id")
+    featured: Boolean @where(key: "is_featured")
+    minPrice: Float @where(key: "price", operator: ">=")
+    maxPrice: Float @where(key: "price", operator: "<=")
+    active: Boolean @where(key: "is_active")
+  ): [Package!]! @paginate(defaultCount: 10)
+  featuredPackages(first: Int): [Package!]! @paginate(defaultCount: 10)
+  onSalePackages(first: Int): [Package!]! @paginate(defaultCount: 10)
+
+  # Orders
+  order(id: ID @eq): Order @find
+  orders(first: Int, status: String @where(key: "status"), userId: ID @where(key: "user_id")): [Order!]! @paginate(defaultCount: 10)
+
+  # Reviews
+  review(id: ID @eq): Review @find
+  reviews(first: Int, userId: ID @where(key: "user_id"), rating: Int @where(key: "rating")): [Review!]! @paginate(defaultCount: 10)
+
+  # Vouchers
+  vouchers(first: Int, code: String @where(key: "code"), active: Boolean @where(key: "is_active")): [Voucher!]! @paginate(defaultCount: 10)
+
+  # CBIR Stats
+  cbirStats: CbirStats @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@stats")
+
+  # Home Data
+  homeData: HomeData @field(resolver: "App\\Http\\GraphQL\\Resolvers\\HomeResolver@index")
+
+  # Search
+  search(query: String!, type: SearchType, first: Int): [SearchResult!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\SearchResolver@index")
+}
+
+# ============================================================
+# MUTATION ROOT
+# ============================================================
+
+type Mutation {
+  # Auth
+  login(email: String!, password: String!): AuthPayload @field(resolver: "App\\Http\\GraphQL\\Resolvers\\AuthResolver@login")
+  register(input: RegisterInput!): AuthPayload @field(resolver: "App\\Http\\GraphQL\\Resolvers\\AuthResolver@register")
+  logout: Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\AuthResolver@logout")
+  forgotPassword(email: String!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\AuthResolver@forgotPassword")
+  resetPassword(token: String!, email: String!, password: String!, passwordConfirmation: String!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\AuthResolver@resetPassword")
+
+  # Profile
+  updateProfile(input: UpdateProfileInput!): User @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ProfileResolver@update")
+  changePassword(currentPassword: String!, newPassword: String!, newPasswordConfirmation: String!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ProfileResolver@changePassword")
+
+  # Cart
+  addToCart(catalogId: ID!, quantity: Int! = 1): CartItem @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CartResolver@add")
+  updateCartItem(cartItemId: ID!, quantity: Int!): CartItem @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CartResolver@update")
+  removeFromCart(cartItemId: ID!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CartResolver@remove")
+  clearCart: Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CartResolver@clear")
+
+  # Wishlist
+  toggleWishlist(catalogId: ID): Wishlist @field(resolver: "App\\Http\\GraphQL\\Resolvers\\WishlistResolver@toggle")
+  removeWishlist(wishlistId: ID!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\WishlistResolver@remove")
+
+  # Orders
+  createOrder(input: CreateOrderInput!): Order @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@store")
+  cancelOrder(orderId: ID!): Order @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@cancel")
+
+  # Reviews
+  createReview(input: CreateReviewInput!): Review @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ReviewResolver@store")
+  updateReview(reviewId: ID!, input: UpdateReviewInput!): Review @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ReviewResolver@update")
+  deleteReview(reviewId: ID!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ReviewResolver@destroy")
+
+  # CBIR (use REST API /cbir/search for image upload)
+  cbirStats: CbirStats @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@stats")
+
+  # Voucher
+  validateVoucher(code: String!): VoucherValidation @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@validate")
+}

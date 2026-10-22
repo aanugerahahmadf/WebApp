@@ -69,7 +69,7 @@ class MessageObserver
             Notification::make()
                 ->title($title)
                 ->body($preview)
-                ->icon('heroicon-o-chat-bubble-left-ellipsis')
+                ->icon('/images/icons/chat_dots.svg')
                 ->color('info')
                 ->info()
                 ->sendToDatabase($recipient);
@@ -210,7 +210,7 @@ class MessageObserver
         }
 
         return '<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>'
-            .'<body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif;">'
+            .'<body style="margin:0;padding:0;background:#f3f4f6;font-family:\'Google Sans Flex\',sans-serif;">'
             .'<div style="max-width:560px;margin:24px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);border:1px solid #e5e7eb;">'
 
             // Header

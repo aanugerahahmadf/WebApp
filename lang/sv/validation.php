@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'postnummer',
         'preview'                  => 'förhandsvisning',
         'price'                    => 'pris',
-        'product_id'               => 'Serienummer',
+        'catalog_id'               => 'Serienummer',
         'product_uid'              => 'produktens UID',
         'product_uuid'             => 'produkt UUID',
         'promo_code'               => 'rabattkod',

@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\User\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 
 class CustomerSeeder extends Seeder
 {
@@ -19,7 +18,9 @@ class CustomerSeeder extends Seeder
                 'first_name' => 'Andi',
                 'last_name' => 'Pratama',
                 'username' => 'andipratama',
-                'password' => Hash::make('@Customer123'),
+                // Password MENTAH — model User punya cast 'password' => 'hashed'
+                // yang akan hash otomatis. JANGAN Hash::make di sini (double-hash).
+                'password' => '@Customer123',
                 'whatsapp' => '6281234567891',
                 'identity_type' => 'ktp',
                 'ktp_number' => '1234567890123457',
@@ -35,6 +36,7 @@ class CustomerSeeder extends Seeder
                 'country' => 'Indonesia',
                 'email_verified_at' => now(),
                 'avatar_url' => 'https://i.pravatar.cc/300?u=andipratama',
+                'active_status' => true,
             ],
             [
                 'email' => 'customer2@demo.com',
@@ -42,7 +44,8 @@ class CustomerSeeder extends Seeder
                 'first_name' => 'Siti',
                 'last_name' => 'Rahmawati',
                 'username' => 'sitirahma',
-                'password' => Hash::make('@Customer123'),
+                // Password MENTAH — model User punya cast 'password' => 'hashed'
+                'password' => '@Customer123',
                 'whatsapp' => '6281234567892',
                 'identity_type' => 'ktp',
                 'ktp_number' => '1234567890123458',
@@ -58,6 +61,7 @@ class CustomerSeeder extends Seeder
                 'country' => 'Indonesia',
                 'email_verified_at' => now(),
                 'avatar_url' => 'https://i.pravatar.cc/300?u=sitirahma',
+                'active_status' => true,
             ],
         ];
 

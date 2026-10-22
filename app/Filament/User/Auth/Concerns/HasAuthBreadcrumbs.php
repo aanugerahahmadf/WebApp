@@ -3,6 +3,7 @@
 namespace App\Filament\User\Auth\Concerns;
 
 use Filament\Facades\Filament;
+use App\Support\StorefrontUrls\StorefrontUrls;
 
 /**
  * Breadcrumb dinamis untuk halaman Auth (layout simple tidak render
@@ -15,42 +16,43 @@ use Filament\Facades\Filament;
 trait HasAuthBreadcrumbs
 {
     /**
-     * Path halaman Sign-In panel user, diturunkan dari panel (path +
+     * Path halaman Sign-In panel storefront, diturunkan dari panel (path +
      * slug route login) alih-alih ditulis manual, sehingga tetap benar
-     * kalau `loginRouteSlug()` di UserPanelProvider diubah lagi.
+     * kalau `loginRouteSlug()` di WelcomePanelProvider diubah lagi.
+     *
+     * PENTING -- cara merakit path.
+     *
+     * `getLoginRouteSlug()` SUDAH membawa garis miring di depannya ('/signin'),
+     * dan path panel sekarang ROOT ('/'). Jadi:
+     *
+     *   '/' . path . slug  ->  '//signin'   (dua garis miring: TIDAK PERNAH
+     *                                          muncul di URL mana pun)
+     *   ''  . path . slug  ->  '/signin'     (yang benar)
+     *
+     * Path panel dirtrim dulu supaya '/' tidak jadi '/', lalu slug-nya
+     * ditambahkan apa adanya (garis miringnya sudah ada).
+     *
+     *Efeknya kalau salah: cabang "asal klik di halaman Sign In / Sign Up"
+     * mati diam-diam -- crumb-nya jatuh ke "Kembali" biasa, bukan ke
+     * "Sign In"/"Sign Up".
      */
     protected function authPagePath(): string
     {
-        $panel = Filament::getPanel('user');
+        $panel = Filament::getPanel('welcome');
 
-        return '/'.$panel->getPath().$panel->getLoginRouteSlug();
+        return rtrim('/'.$panel->getPath(), '/').$panel->getLoginRouteSlug();
     }
 
     /**
-     * Path URL pendaftaran yang SUDAH DIMATIKAN, dipakai sebagai penjaga: URL
-     * lama ini masih bisa muncul di referer atau `url.intended` (bookmark,
-     * history browser), dan tidak boleh dipakai sebagai tujuan navigasi.
-     *
-     * Daftar memuat dua path karena keduanya pernah jadi URL pendaftaran:
-     * `/user/signup` (slug lama, `registrationRouteSlug('signup')`) dan
-     * `/user/register` (slug default Filament yang aktif kembali begitu
-     * `->registration()` tidak lagi dipanggil di `UserPanelProvider`).
-     * `App\Filament\User\Auth\SignUp\SignUp` beserta view-nya MASIH ADA di
-     * repo -- hanya panggilannya yang dikomentari, jadi begitu
-     * `->registration()` dihidupkan lagi ketiga nama ini harus ikut dicek:
-     * saat itu daftar ini harus dikosongkan, atau crumb akan menunjuk ke
-     * halaman yang justru sudah hidup kembali.
-     *
-     * @return array<int, string>
+     * Path URL pendaftaran, diturunkan dari panel (path + slug route
+     * registration) alih-alih ditulis manual, sehingga tetap benar kalau
+     * `registrationRouteSlug()` di WelcomePanelProvider diubah lagi.
      */
-    protected function retiredRegisterPaths(): array
+    protected function registerPagePath(): string
     {
-        $panel = Filament::getPanel('user');
+        $panel = Filament::getPanel('welcome');
 
-        return [
-            '/'.$panel->getPath().'/signup',
-            '/'.$panel->getPath().$panel->getRegistrationRouteSlug(),
-        ];
+        return rtrim('/'.$panel->getPath(), '/').$panel->getRegistrationRouteSlug();
     }
 
     public function getBreadcrumbs(): array
@@ -112,38 +114,29 @@ trait HasAuthBreadcrumbs
             }
 
             if (str_contains($url, $this->authPagePath())) {
-                return ['url' => route('filament.user.auth.login'), 'label' => __('Sign In')];
+                return ['url' => route('filament.welcome.auth.login'), 'label' => __('Sign In')];
             }
 
-            // Sign Up DINONAKTIFKAN di panel User: `->registration()` tidak
-            // dipanggil di UserPanelProvider (barisnya dikomentari), dan
-            // `SignIn::registerAction()` di-`->hidden()`. Class
-            // app/Filament/User/Auth/SignUp tidak dihapus -- masih ada di repo,
-            // hanya tidak terdaftar sebagai halaman.
+            // Sign Up sudah HIDUP di panel User: `->registration(SignUp::class)` dipanggil
+            // di UserPanelProvider dengan slug `signup`, jadi route
+            // `filament.welcome.auth.register` terdaftar lagi.
             //
-            // Cabang ini dulu memanggil route('filament.user.auth.register')
-            // tanpa mengecek, padahal route itu tidak ada. Tamu yang
-            // datang dengan referer /user/signup (bookmark lama atau history
-            // browser) membuat halaman auth melempar RouteNotFoundException,
-            // jadi seluruh halaman jadi 500 -- bukan cuma crumb yang salah.
-            //
-            // Karena tidak ada halaman Sign Up untuk dituju, cabangnya
-            // dihapus, bukan diberi fallback. Referer lama untuk tamu berakhir
-            // tanpa parent crumb; untuk user yang sudah login ia jatuh ke
-            // cabang "/user/ + sudah login" di bawah dengan label "Kembali",
-            // yang jujur karena memang tidak ada Sign Up yang hidup.
-            //
-            // Kalau pendaftaran dihidupkan lagi, cabangnya boleh dikembalikan
-            // bersama `->registration()`; jangan hanya memanggil route()
-            // tanpa mendaftarkan halamannya, karena crash yang sama akan
-            // kembali.
+            // Cabang ini memanggil route()-nya dengan nama, bukan
+            // `Route::has()` -- aman justru karena halamannya hidup. Kalau
+            // `->registration()` dimatikan lagi tanpa cabang ini ikut dilepas,
+            // route() yang hilang akan membuat halaman auth 500 untuk tamu yang
+            // datang dengan referer /signup. Kalau registration-nya
+            // dimatikan, cabangnya harus dihapus BERSAMA pemanggilan itu.
+            if (str_contains($url, $this->registerPagePath())) {
+                return ['url' => route('filament.welcome.auth.register'), 'label' => __('Sign Up')];
+            }
 
             if (str_contains($url, 'complete-profile')) {
-                return ['url' => route('filament.user.pages.complete-profile'), 'label' => __('Lengkapi Profil Anda')];
+                return ['url' => route('filament.welcome.pages.complete-profile'), 'label' => __('Lengkapi Profil Anda')];
             }
 
             if (str_contains($url, 'email-verification')) {
-                return ['url' => route('filament.user.auth.email-verification.prompt'), 'label' => __('Verifikasi Email Anda')];
+                return ['url' => route('filament.welcome.auth.email-verification.prompt'), 'label' => __('Verifikasi Email Anda')];
             }
 
             if (str_contains($url, 'password-reset/verify') || str_contains($url, 'verify-otp')) {
@@ -151,22 +144,33 @@ trait HasAuthBreadcrumbs
             }
 
             if (str_contains($url, 'password-reset/request')) {
-                return ['url' => route('filament.user.auth.password-reset.request'), 'label' => __('Lupa Kata Sandi')];
+                return ['url' => route('filament.welcome.auth.password-reset.request'), 'label' => __('Lupa Kata Sandi')];
             }
 
             if (str_contains($url, 'password-reset/reset')) {
                 return ['url' => $url, 'label' => __('Atur Ulang Kata Sandi')];
             }
 
-            // Halaman user / welcome lain yang valid: pakai URL asalnya langsung.
-            // Home hanya muncul bila asal kliknya memang home, bukan default.
-            // Tamu (belum login) tidak diarahkan balik ke /user/* karena semua
-            // halaman user butuh auth (kliknya mental balik ke login).
-            if (str_contains($url, '/welcome')) {
+            // Halaman user / storefront lain yang valid: pakai URL asalnya
+            // langsung. Home hanya muncul bila asal kliknya memang home,
+            // bukan default.
+            //
+            // Halaman AKUN (butuh login) bukan asal klik yang bermakna buat
+            // tamu: kalau dia Comes dari situ, halamannya memang akan
+            // bounced balik ke auth. Untuk yang sudah login, URL itu dipakai
+            // apa adanya.
+            if (StorefrontUrls::isStorefrontUrl($url)
+                && ! StorefrontUrls::requiresAuthentication($url)) {
+                // Storefront root (panel welcome di path '/') maupun URL lama
+                // /welcome/* (redirect legacy di web.php ke URL root).
                 return ['url' => $url, 'label' => __('Kembali')];
             }
 
-            if (str_contains($url, '/user/') && auth()->check()) {
+            if (auth()->check() && (
+                str_contains($url, '/user/')
+                || StorefrontUrls::requiresAuthentication($url)
+            )) {
+                // URL lama /user/* — redirect sudah di web.php ke URL baru.
                 return ['url' => $url, 'label' => __('Kembali')];
             }
         }

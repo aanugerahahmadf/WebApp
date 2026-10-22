@@ -7,7 +7,7 @@
                     <div class="inline-block text-xs">
                         <x-filament-breezy::clipboard-link :data="$plainTextToken" />
                     </div>
-                    <x-filament::button icon="heroicon-s-clipboard-document-check" size="sm" type="button" wire:click="$set('plainTextToken',null)">{{ __('filament-breezy::default.profile.sanctum.copied.label') }}
+                    <x-filament::button icon="/images/icons/clipboard_check.svg" size="sm" type="button" wire:click="$set('plainTextToken',null)">{{ __('filament-breezy::default.profile.sanctum.copied.label') }}
                     </x-filament::button>
                 </div>
 

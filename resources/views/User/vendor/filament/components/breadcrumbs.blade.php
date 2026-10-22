@@ -14,7 +14,7 @@
                 @if (! $loop->first)
                     <x-filament::icon
                         alias="breadcrumbs.separator"
-                        icon="heroicon-m-chevron-right"
+                        icon="/images/icons/chevron_right.svg"
                         @class([
                             $iconClasses,
                             'rtl:hidden',
@@ -24,7 +24,7 @@
                     <x-filament::icon
                         {{-- @deprecated Use `breadcrubs.separator.rtl` instead of `breadcrumbs.separator` for RTL. --}}
                         :alias="['breadcrumbs.separator.rtl', 'breadcrumbs.separator']"
-                        icon="heroicon-m-chevron-left"
+                        icon="/images/icons/chevron_left.svg"
                         @class([
                             $iconClasses,
                             'ltr:hidden',

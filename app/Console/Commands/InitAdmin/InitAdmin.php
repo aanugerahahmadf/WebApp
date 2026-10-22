@@ -56,7 +56,9 @@ class InitAdmin extends Command
             'name' => $name,
             'full_name' => $name,
             'email' => $email,
-            'password' => Hash::make($password),
+            // Password MENTAH — model User punya cast 'password' => 'hashed'
+            // yang akan hash otomatis saat create. JANGAN Hash::make di sini.
+            'password' => $password,
             'role' => 'admin',
         ]);
 

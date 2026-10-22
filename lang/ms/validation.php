@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'Poskod',
         'preview'                  => 'pratonton',
         'price'                    => 'harga',
-        'product_id'               => 'ID produk',
+        'catalog_id'               => 'ID produk',
         'product_uid'              => 'UID produk',
         'product_uuid'             => 'produk UUID',
         'promo_code'               => 'kod promosi',

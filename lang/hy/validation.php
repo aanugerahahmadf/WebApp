@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'փոստային ինդեքս',
         'preview'                  => 'նախադիտում',
         'price'                    => 'գինը',
-        'product_id'               => 'ապրանքի ID',
+        'catalog_id'               => 'ապրանքի ID',
         'product_uid'              => 'արտադրանքի UID',
         'product_uuid'             => 'արտադրանքի UUID',
         'promo_code'               => 'Պրոմո Կոդ',

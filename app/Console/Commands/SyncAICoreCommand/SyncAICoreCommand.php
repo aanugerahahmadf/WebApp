@@ -3,7 +3,7 @@
 namespace App\Console\Commands\SyncAICoreCommand;
 
 use App\Models\Package\Package;
-use App\Models\Product\Product;
+use App\Models\Catalog\Catalog;
 use App\Services\CBIRService\CBIRService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
@@ -17,7 +17,7 @@ class SyncAICoreCommand extends Command
                             {--rebuild-only : Hanya rebuild dari CSV yang sudah ada, tanpa export ulang}
                             {--app-url= : Override APP_URL untuk image_url di dataset}';
 
-    protected $description = 'Sync semua products & packages ke AI Core index (export CSV + rebuild CBIR)';
+    protected $description = 'Sync semua catalog & packages ke AI Core index (export CSV + rebuild CBIR)';
 
     public function handle(CBIRService $cbirService): int
     {
@@ -48,31 +48,30 @@ class SyncAICoreCommand extends Command
             return 1;
         }
 
-        $products = Product::with('media', 'category', 'vendor')->get();
-        $packages = Package::with('media', 'category', 'vendor')->get();
+        $catalogs = Catalog::with('media', 'category')->get();
+        $packages = Package::with('media', 'category')->get();
 
         $csvData = [];
-        $csvHeader = ['ID', 'Type', 'Name', 'Category', 'Price', 'Discount_Price', 'Organizer', 'Image_Path', 'Description'];
+        $csvHeader = ['ID', 'Type', 'Name', 'Category', 'Price', 'Discount_Price', 'Image_Path', 'Description'];
 
         $totalMedia = 0;
 
-        foreach ($products as $product) {
-            foreach ($product->media as $media) {
+        foreach ($catalogs as $catalog) {
+            foreach ($catalog->media as $media) {
                 $imagePath = $media->getPath();
                 if (! file_exists($imagePath)) {
                     continue;
                 }
 
                 $csvData[] = [
-                    $product->id,
-                    'product',
-                    $product->name,
-                    $product->category?->name ?? 'unknown',
-                    $product->price,
-                    $product->discount_price ?? '',
-                    $product->vendor?->store_name ?? '',
+                    $catalog->id,
+                    'catalog',
+                    $catalog->name,
+                    $catalog->category?->name ?? 'unknown',
+                    $catalog->price,
+                    $catalog->discount_price ?? '',
                     $imagePath,
-                    $product->description ?? '',
+                    $catalog->description ?? '',
                 ];
                 $totalMedia++;
             }
@@ -92,7 +91,6 @@ class SyncAICoreCommand extends Command
                     $package->category?->name ?? 'unknown',
                     $package->price,
                     $package->discount_price ?? '',
-                    $package->vendor?->store_name ?? '',
                     $imagePath,
                     $package->description ?? '',
                 ];
@@ -119,8 +117,8 @@ class SyncAICoreCommand extends Command
             $bar = $this->output->createProgressBar($totalMedia);
             $bar->start();
 
-            foreach ($products as $product) {
-                foreach ($product->media as $media) {
+            foreach ($catalogs as $catalog) {
+                foreach ($catalog->media as $media) {
                     $cbirService->indexMedia($media);
                     $bar->advance();
                 }

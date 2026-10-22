@@ -10,17 +10,17 @@
     class="fi-theme-switcher grid grid-flow-col gap-x-1"
 >
     <x-filament-panels::theme-switcher.button
-        icon="heroicon-m-sun"
+        icon="/images/icons/sun.svg"
         theme="light"
     />
 
     <x-filament-panels::theme-switcher.button
-        icon="heroicon-m-moon"
+        icon="/images/icons/moon.svg"
         theme="dark"
     />
 
     <x-filament-panels::theme-switcher.button
-        icon="heroicon-m-computer-desktop"
+        icon="/images/icons/computer_desktop.svg"
         theme="system"
     />
 </div>

@@ -1,12 +1,18 @@
 @php
-    // $items + $packageCount + $productCount disediakan widget: paket & produk
-    // aktif sudah dicampur selang-seling, category + rata-rata rating
-    // di-eager-load — blade ini murni render, tanpa query tambahan.
+    // $items + $catalogCount disediakan widget: hanya katalog aktif, category +
+    // rata-rata rating sudah di-eager-load — blade ini murni render, tanpa
+    // query tambahan.
+    //
+    // DULU widget mengirim paket & katalog yang sudah dicampur, dan blade
+    // membaca atribut `catalog_type` untuk membedakan keduanya. Paket sekarang
+    // tidak lagi masuk grid (paket adalah tier milik katalog, bukan item yang
+    // bisa diklik), jadi logika itu dihapus — bukan disembunyikan dengan
+    // `?? 0`, supaya tidak ada jalur kode yang diam-diam masih menganggap ada
+    // paket di sini.
     $items = isset($items) ? collect($items) : collect();
 
     $totalCount = $items->count();
-    $packageCount = $packageCount ?? $items->where('catalog_type', 'package')->count();
-    $productCount = $productCount ?? $items->where('catalog_type', 'product')->count();
+    $catalogCount = $catalogCount ?? $totalCount;
 @endphp
 
 <style>
@@ -211,28 +217,26 @@
     <div class="catalog-grid">
         @foreach($items as $item)
             @php
-                $isPackage = $item->catalog_type === 'package';
+                // Hanya katalog yang masuk grid, jadi tidak ada lagi percabangan
+                // paket/katalog di sini.
+                //
+                // DULU `$isPackage` membaca atribut `catalog_type`, lalu URL
+                // dipilih lewat ternary -- tapi kedua CABANGNYA memanggil
+                // fungsi yang sama persis (`CatalogResource::getUrl('view', ...)`)
+                // dengan argumen identik. Percabangan itu tidak pernah mengubah
+                // apa pun: kartu "paket" kliknya mendarat di halaman katalog
+                // juga, hanya memakai record package yang salah. Sekarang paket
+                // dihapus dari grid dan cabangnya dihapus bersama.
                 $originalPrice = $item->price;
                 $discountPrice = $item->discount_price;
-                $finalPrice = $discountPrice > 0 ? $discountPrice : ($isPackage ? $item->price : ($item->final_price ?? $item->price));
+                $finalPrice = $discountPrice > 0 ? $discountPrice : ($item->final_price ?? $item->price);
                 $pct = $discountPrice > 0 && $originalPrice > 0 ? round(($originalPrice - $discountPrice) / $originalPrice * 100) : null;
-                
-                $url = $isPackage 
-                    ? \App\Filament\Welcome\Resources\PackageResource\PackageResource::getUrl('view', ['record' => $item])
-                    : \App\Filament\Welcome\Resources\ProductResource\ProductResource::getUrl('view', ['record' => $item]);
+
+                $url = \App\Filament\Welcome\Resources\CatalogResource\CatalogResource::getUrl('view', ['record' => $item]);
                     
-                $normalizeImageUrl = fn (string $url) => \App\Support\AppPlatform\AppPlatform::normalizeUrl($url);
-                $placeholderImg = $normalizeImageUrl(asset('images/placeholders/image-placeholder.svg'));
-                $imgUrl = $item->image_url ?? '';
-                if (! filled($imgUrl)) {
-                    $img = $placeholderImg;
-                } elseif (str_starts_with($imgUrl, 'http://') || str_starts_with($imgUrl, 'https://') || str_starts_with($imgUrl, 'data:image')) {
-                    $img = $normalizeImageUrl($imgUrl);
-                } elseif (str_starts_with($imgUrl, '/')) {
-                    $img = $normalizeImageUrl(str_starts_with($imgUrl, '/storage/') ? asset(ltrim($imgUrl, '/')) : asset('storage/' . ltrim($imgUrl, '/')));
-                } else {
-                    $img = $normalizeImageUrl(asset('storage/' . $imgUrl));
-                }
+                $placeholderImg = \App\Support\AppPlatform\AppPlatform::normalizeUrl(asset('images/placeholders/image-placeholder.svg'));
+                // Model's image_url already returns correct full URL via AppPlatform::normalizeUrl
+                $img = $item->image_url ?? $placeholderImg;
                 $rating = number_format((float) ($item->reviews_avg_rating ?? 0), 1);
                 $stock = $item->stock ?? 0;
                 $stockClass = $stock <= 0 ? 'catalog-stock-out' : ($stock <= 3 ? 'catalog-stock-low' : 'catalog-stock-ok');
@@ -278,9 +282,7 @@
                     </div>
                     <div class="catalog-footer">
                         <span class="catalog-rating">
-                            <svg width="9" height="9" viewBox="0 0 24 24" style="fill:#facc15;flex-shrink:0;">
-                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                            </svg>
+                            <x-filament::icon icon="/images/icons/star.svg" class="h-[9px] w-[9px] shrink-0 text-yellow-400" />
                             {{ $rating }}
                         </span>
                         <span class="{{ $stockClass }}">{{ $stockLabel }}</span>
@@ -291,7 +293,7 @@
         
         @if($totalCount === 0)
             <div class="catalog-empty">
-                {{ __('Belum ada produk atau paket tersedia.') }}
+                {{ __('Belum ada katalog tersedia.') }}
             </div>
         @endif
     </div>

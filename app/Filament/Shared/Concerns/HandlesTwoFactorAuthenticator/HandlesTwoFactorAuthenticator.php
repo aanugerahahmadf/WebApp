@@ -73,7 +73,7 @@ trait HandlesTwoFactorAuthenticator
 
                 TextEntry::make('secret_key')
                     ->label(__('Kode Manual'))
-                    ->icon('heroicon-m-key')
+                    ->icon('/images/icons/key.svg')
                     ->state(fn (): ?string => $this->manualSecret())
                     // Tanpa nilai berarti setup belum dimulai; entri
                     // disembunyikan supaya tidak ada kotak kosong yang

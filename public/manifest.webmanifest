@@ -1,7 +1,7 @@
 {
     "name": "Dekorasi Bunga Pernikahan",
     "short_name": "Wedding",
-    "description": "Wedding organizer with AI visual search",
+    "description": "Wedding flower decorations with AI visual search",
     "start_url": "/user",
     "scope": "/",
     "display": "standalone",

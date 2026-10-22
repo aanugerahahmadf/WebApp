@@ -14,7 +14,7 @@ class OrderController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $query = Order::with(['user:id,full_name,email,whatsapp', 'package:id,name', 'product:id,name']);
+            $query = Order::with(['user:id,full_name,email,whatsapp', 'package:id,name', 'catalog:id,name']);
 
             if ($request->filled('status')) {
                 $query->where('status', $request->status);
@@ -40,9 +40,9 @@ class OrderController extends Controller
                 'user_name' => $o->user?->full_name,
                 'user_email' => $o->user?->email,
                 'package_id' => $o->package_id,
-                'product_id' => $o->product_id,
+                'catalog_id' => $o->catalog_id,
                 'package_name' => $o->package?->name,
-                'product_name' => $o->product?->name,
+                'catalog_name' => $o->catalog?->name,
                 'total_price' => $o->total_price,
                 'status' => $o->status->value,
                 'payment_status' => $o->payment_status->value,
@@ -72,7 +72,7 @@ class OrderController extends Controller
     public function show(int $id): JsonResponse
     {
         try {
-            $order = Order::with(['user:id,full_name,email,whatsapp', 'package', 'product', 'transactions'])->findOrFail($id);
+            $order = Order::with(['user:id,full_name,email,whatsapp', 'package', 'catalog', 'transactions'])->findOrFail($id);
 
             return response()->json(['status' => 'success', 'data' => $order]);
         } catch (\Exception $e) {

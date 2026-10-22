@@ -1,6 +1,6 @@
 # Panduan Distribusi Aplikasi Desktop
 
-Panduan ini mencakup proses membangun dan mendistribusikan aplikasi Wedding Organizer
+Panduan ini mencakup proses membangun dan mendistribusikan aplikasi Dekorasi Bunga Pernikahan
 CBIR sebagai aplikasi desktop native untuk Windows dan macOS menggunakan
 [Capacitor Electron](https://capacitorjs.com/docs/electron).
 
@@ -211,8 +211,8 @@ npx tsc -p electron/tsconfig.json
 npx electron-builder --config electron/electron-builder.config.js --win
 ```
 
-Output: `electron/dist/Wedding-Organizer-Setup-1.0.0.exe` (NSIS installer) dan
-`electron/dist/Wedding-Organizer-1.0.0-win.zip` (portable).
+Output: `electron/dist/WeddingFlowerDecorations-Setup-1.0.0.exe` (NSIS installer) dan
+`electron/dist/WeddingFlowerDecorations-1.0.0-win.zip` (portable).
 
 ### Penandatanganan Kode Windows (Authenticode)
 

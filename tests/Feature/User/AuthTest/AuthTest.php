@@ -15,8 +15,7 @@ class AuthTest extends TestCase
     {
         parent::setUp();
 
-        Role::firstOrCreate(['name' => 'user']);
-        Role::firstOrCreate(['name' => 'super_admin']);
+        seedRoles(adminRoles: ['super_admin'], webRoles: ['user']);
     }
 
     public function test_user_can_register(): void

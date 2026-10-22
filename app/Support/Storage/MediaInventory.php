@@ -17,14 +17,14 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  *
  * "Dirujuk" berarti ada baris yang menunjuk file itu:
  *   - review-photos/  -> reviews.photo atau reviews.photos (JSON list)
- *   - Products/, Packages/ -> baris di tabel `media`, nama file validnya
+ *   - Catalogs/, Packages/ -> baris di tabel `media`, nama file validnya
  *     dihitung lewat CollectionPathGenerator supaya class ini tidak perlu
  *     tahu bentuk layout disk.
  */
 class MediaInventory
 {
     /** Folder yang isinya diawasi, relatif ke storage/app/public. */
-    public const FOLDERS = ['review-photos', 'Products', 'Packages'];
+    public const FOLDERS = ['review-photos', 'Catalogs', 'Packages'];
 
     /**
      * @return array<int, array{
@@ -121,8 +121,7 @@ class MediaInventory
     {
         return [
             'review-photos' => $this->referencedReviewPhotos(),
-            'Products' => $this->referencedCatalogMedia('product_image', 'Products'),
-            'Packages' => $this->referencedCatalogMedia('package_image', 'Packages'),
+            'Catalogs' => $this->referencedCatalogMedia('catalog_image', 'Catalogs'),
         ];
     }
 

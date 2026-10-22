@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Api\User\ProfileController;
+use App\Http\Controllers\Api\User\SecurityController\SecurityController;
 
 use App\Http\Controllers\Controller;
 use App\Models\User\User;
@@ -354,13 +355,13 @@ class ProfileController extends Controller
                     'unread_notifications' => $user->unreadNotifications()->count(),
                     'total_spent' => $user->orders()->sum('total_price'),
                 ],
-                'upcoming_events' => $user->orders()->with(['package.vendor'])
+                'upcoming_events' => $user->orders()
                     ->where('booking_date', '>=', now())
                     ->whereNotIn('status', ['cancelled', 'completed'])
                     ->orderBy('booking_date')
                     ->limit(5)
                     ->get(['*']),
-                'recent_orders' => $user->orders()->with(['package.vendor'])
+                'recent_orders' => $user->orders()
                     ->latest()
                     ->limit(5)
                     ->get(['*']),
@@ -792,7 +793,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * Get user's wishlist products
+     * Get user's wishlist catalogs
      */
     public function getWishlist(Request $request)
     {
@@ -807,7 +808,7 @@ class ProfileController extends Controller
                 ], 401);
             }
 
-            $query = $user->wishlists()->with(['package.vendor', 'package.category', 'package.reviews']);
+            $query = $user->wishlists()->with(['package.category', 'package.reviews']);
 
             // Apply sorting
             $sortBy = $request->get('sort_by', 'created_at');

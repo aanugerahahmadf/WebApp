@@ -10,7 +10,7 @@ use App\Models\Message\Message;
 use App\Models\Order\Order;
 use App\Models\Package\Package;
 use App\Models\PaymentMethod\PaymentMethod;
-use App\Models\Product\Product;
+use App\Models\Catalog\Catalog;
 use App\Models\Transaction\Transaction;
 use App\Models\User\User;
 use App\Models\Voucher\Voucher;
@@ -20,6 +20,7 @@ use App\Services\FaceService\FaceService;
 use App\Services\MidtransService\MidtransService;
 use App\Services\PlatformNotificationService\PlatformNotificationService;
 use App\Services\StorageService\StorageService;
+use App\Support\ChatStaff\ChatStaff;
 use Dompdf\Dompdf;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -42,10 +43,8 @@ class OrderController extends Controller
             $locale = app()->getLocale();
             $query = Order::where('user_id', Auth::id())
                 ->with([
-                    'package' => function ($q): void {
-                        $q->with('vendor:id,store_name');
-                    },
-                    'product.category',
+                    'package',
+                    'catalog.category',
                     'user:id,full_name',
                 ]);
 
@@ -62,19 +61,18 @@ class OrderController extends Controller
             }
 
             $orders = $query->latest()->paginate($request->get('per_page', 10));
-            $products = $orders->items();
+            $catalogs = $orders->items();
 
-            $data = collect($products)->map(function (Order $order) use ($locale) {
+            $data = collect($catalogs)->map(function (Order $order) use ($locale) {
                 $pkg = $order->package;
-                $wfd = $pkg?->vendor;
 
                 return [
                     'id' => $order->id,
                     'user_id' => $order->user_id,
                     'user_name' => $order->user?->full_name ?? '',
                     'package_id' => $order->package_id,
-                    'product_id' => $order->product_id,
-                    'title' => $pkg?->trans('name', $locale) ?? $order->product?->trans('name', $locale) ?? __('Pesanan'),
+                    'catalog_id' => $order->catalog_id,
+                    'title' => $pkg?->trans('name', $locale) ?? $order->catalog?->trans('name', $locale) ?? __('Pesanan'),
                     'order_number' => $order->order_number,
                     'total_price' => (float) $order->total_price,
                     'status' => $order->status,
@@ -82,36 +80,32 @@ class OrderController extends Controller
                     'booking_date' => $order->booking_date?->format('Y-m-d'),
                     'event_date' => $order->booking_date?->format('Y-m-d'),
                     'notes' => $order->notes,
-                    'resource_type' => $order->package_id ? 'package' : 'product',
+                    'resource_type' => $order->package_id ? 'package' : 'catalog',
                     'item' => $pkg ? [
                         'id' => $pkg->id,
                         'name' => $pkg->trans('name', $locale),
                         'price' => (float) $pkg->price,
                         'discount_price' => (float) ($pkg->discount_price ?? 0),
-                        'vendor_id' => $pkg->vendor_id,
-                        'vendor' => $wfd ? ['id' => $wfd->id, 'store_name' => $wfd->store_name] : null,
                         'image_url' => $pkg->image_url ?? null,
-                    ] : ($order->product ? [
-                        'id' => $order->product->id,
-                        'name' => $order->product->trans('name', $locale),
-                        'price' => (float) $order->product->price,
-                        'discount_price' => (float) ($order->product->discount_price ?? 0),
-                        'category' => $order->product->category?->name,
-                        'image_url' => $order->product->image_url ?? null,
+                    ] : ($order->catalog ? [
+                        'id' => $order->catalog->id,
+                        'name' => $order->catalog->trans('name', $locale),
+                        'price' => (float) $order->catalog->price,
+                        'discount_price' => (float) ($order->catalog->discount_price ?? 0),
+                        'category' => $order->catalog->category?->name,
+                        'image_url' => $order->catalog->image_url ?? null,
                     ] : null),
                     'package' => $pkg ? [
                         'id' => $pkg->id,
                         'name' => $pkg->trans('name', $locale),
                         'price' => (float) $pkg->price,
-                        'vendor_id' => $pkg->vendor_id,
-                        'vendor' => $wfd ? ['id' => $wfd->id, 'store_name' => $wfd->store_name] : null,
                     ] : null,
-                    'product' => $order->product ? [
-                        'id' => $order->product->id,
-                        'name' => $order->product->trans('name', $locale),
-                        'price' => (float) $order->product->price,
-                        'discount_price' => (float) ($order->product->discount_price ?? 0),
-                        'category' => $order->product->category?->name,
+                    'catalog' => $order->catalog ? [
+                        'id' => $order->catalog->id,
+                        'name' => $order->catalog->trans('name', $locale),
+                        'price' => (float) $order->catalog->price,
+                        'discount_price' => (float) ($order->catalog->discount_price ?? 0),
+                        'category' => $order->catalog->category?->name,
                     ] : null,
                 ];
             })->all();
@@ -146,9 +140,9 @@ class OrderController extends Controller
         try {
             $validatedData = $request->validate([
                 // Tanpa rule exists: biarkan findOrFail di bawah menangani
-                // package/product tidak ada dengan 404 (bukan 422 validation).
+                // package/catalog tidak ada dengan 404 (bukan 422 validation).
                 'package_id' => 'nullable|integer',
-                'product_id' => 'nullable|integer',
+                'catalog_id' => 'nullable|integer',
                 'event_date' => 'required|date|after_or_equal:today',
                 'event_time' => 'nullable|string',
                 'quantity' => 'nullable|integer|min:1',
@@ -158,19 +152,19 @@ class OrderController extends Controller
                 'voucher_code' => 'nullable|string|max:50',
             ]);
 
-            if (! filled($validatedData['package_id'] ?? null) && ! filled($validatedData['product_id'] ?? null)) {
+            if (! filled($validatedData['package_id'] ?? null) && ! filled($validatedData['catalog_id'] ?? null)) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => __('Pilih paket atau produk terlebih dahulu'),
+                    'message' => __('Pilih paket atau katalog terlebih dahulu'),
                 ], 422);
             }
 
             $package = null;
-            $product = null;
+            $catalog = null;
             if (filled($validatedData['package_id'] ?? null)) {
                 $package = Package::with('category')->findOrFail($validatedData['package_id']);
             } else {
-                $product = Product::with('category')->findOrFail($validatedData['product_id']);
+                $catalog = Catalog::with('category')->findOrFail($validatedData['catalog_id']);
             }
 
             // 1. Atomic stock decrement
@@ -181,8 +175,8 @@ class OrderController extends Controller
                     ->where('stock', '>=', $quantity)
                     ->decrement('stock', $quantity);
             } else {
-                $affected = DB::table('products')
-                    ->where('id', $product->id)
+                $affected = DB::table('catalogs')
+                    ->where('id', $catalog->id)
                     ->where('stock', '>=', $quantity)
                     ->decrement('stock', $quantity);
             }
@@ -194,7 +188,7 @@ class OrderController extends Controller
             }
 
             // 3. Calculate prices with voucher
-            $itemPrice = (float) ($package?->final_price ?? $product?->final_price ?? $package?->price ?? $product?->price ?? 0);
+            $itemPrice = (float) ($package?->final_price ?? $catalog?->final_price ?? $package?->price ?? $catalog?->price ?? 0);
             $baseTotal = $itemPrice * $quantity;
             $discountAmount = 0;
             $voucherId = null;
@@ -232,7 +226,7 @@ class OrderController extends Controller
             $order = Order::create([
                 'user_id' => Auth::id(),
                 'package_id' => $package?->id,
-                'product_id' => $product?->id,
+                'catalog_id' => $catalog?->id,
                 'order_number' => 'ORD-'.strtoupper(Str::random(10)),
                 'total_price' => $totalPrice,
                 'quantity' => $quantity,
@@ -279,7 +273,7 @@ class OrderController extends Controller
                 Log::warning('[Order] Failed to send chat notification: '.$e->getMessage());
             }
 
-            $order->load(['package.media', 'product.media']);
+            $order->load(['package.media', 'catalog.media']);
 
             return response()->json([
                 'status' => 'success',
@@ -534,7 +528,7 @@ class OrderController extends Controller
         try {
             $user = $order->user;
             $orderNumber = $order->order_number;
-            $itemName = $order->package?->name ?? $order->product?->name ?? 'Pesanan';
+            $itemName = $order->package?->name ?? $order->catalog?->name ?? 'Pesanan';
             $total = 'Rp '.number_format((float) $order->total_price, 0, ',', '.');
             $appName = config('app.name', 'Aplikasi');
 
@@ -576,7 +570,7 @@ class OrderController extends Controller
             try {
                 if (! empty($user->email)) {
                     $html = view('User.pdf.order-invoice.order-invoice', compact('order'))->render();
-                    $dompdf = new Dompdf;
+                    $dompdf = \App\Support\PdfLayout\PdfLayout::apply(new Dompdf);
                     $dompdf->loadHtml($html);
                     $dompdf->setPaper('A4', 'portrait');
                     $dompdf->render();
@@ -599,11 +593,14 @@ class OrderController extends Controller
             // 4. In-app chat message
             try {
                 $inbox = ChatService::getOrCreateInboxWithAdmin($user->id);
-                $admin = User::whereHas('roles', function ($q) {
-                    $q->where('name', 'super_admin');
-                })->first();
-                $type = $order->package_id ? 'package' : 'product';
-                $item = $order->package ?? $order->product;
+                // Identitas staf: baris `users` yang tertaut ke super admin.
+                // `User::whereHas('roles', super_admin)` selalu null sejak role
+                // admin pindah ke tabel `admins`, jadi kode lama jatuh ke
+                // `?: $user->id` -- pesan konfirmasi terkirim seolah dari
+                // pembeli sendiri.
+                $admin = ChatStaff::adminUser();
+                $type = $order->package_id ? 'package' : 'catalog';
+                $item = $order->package ?? $order->catalog;
                 $itemName2 = $item?->name ?? $itemName;
 
                 Message::create([
@@ -656,7 +653,7 @@ class OrderController extends Controller
         try {
             $user = $order->user;
             $orderNumber = $order->order_number;
-            $itemName = $order->package?->name ?? $order->product?->name ?? 'Pesanan';
+            $itemName = $order->package?->name ?? $order->catalog?->name ?? 'Pesanan';
             $total = 'Rp '.number_format((float) $order->total_price, 0, ',', '.');
             $appName = config('app.name', 'Aplikasi');
 
@@ -697,11 +694,14 @@ class OrderController extends Controller
             // 3. In-app chat to admin so they can verify
             try {
                 $inbox = ChatService::getOrCreateInboxWithAdmin($user->id);
-                $admin = User::whereHas('roles', function ($q) {
-                    $q->where('name', 'super_admin');
-                })->first();
-                $type = $order->package_id ? 'package' : 'product';
-                $item = $order->package ?? $order->product;
+                // Identitas staf: baris `users` yang tertaut ke super admin.
+                // `User::whereHas('roles', super_admin)` selalu null sejak role
+                // admin pindah ke tabel `admins`, jadi kode lama jatuh ke
+                // `?: $user->id` -- pesan konfirmasi terkirim seolah dari
+                // pembeli sendiri.
+                $admin = ChatStaff::adminUser();
+                $type = $order->package_id ? 'package' : 'catalog';
+                $item = $order->package ?? $order->catalog;
 
                 Message::create([
                     'inbox_id' => $inbox->id,
@@ -1038,7 +1038,7 @@ class OrderController extends Controller
         try {
             $order = Order::where('order_number', $orderNumber)
                 ->where('user_id', Auth::id())
-                ->with(['package.media', 'product.media'])
+                ->with(['package.media', 'catalog.media'])
                 ->firstOrFail(['*']);
 
             return response()->json([
@@ -1068,7 +1068,7 @@ class OrderController extends Controller
         try {
             $order = Order::where('id', $id)
                 ->where('user_id', Auth::id())
-                ->with(['package.media', 'product.media', 'latestTransaction'])
+                ->with(['package.media', 'catalog.media', 'latestTransaction'])
                 ->firstOrFail(['*']);
 
             $paymentMethods = $this->paymentMethodsForResponse();
@@ -1257,11 +1257,11 @@ class OrderController extends Controller
         try {
             $order = Order::where('id', $id)
                 ->where('user_id', Auth::id())
-                ->with(['user', 'package.category', 'package.media', 'product.category', 'product.media', 'latestTransaction'])
+                ->with(['user', 'package.category', 'package.media', 'catalog.category', 'catalog.media', 'latestTransaction'])
                 ->firstOrFail();
 
             $html = view('User.pdf.order-invoice.order-invoice', compact('order'))->render();
-            $dompdf = new Dompdf;
+            $dompdf = \App\Support\PdfLayout\PdfLayout::apply(new Dompdf);
             $dompdf->loadHtml($html);
             $dompdf->setPaper('A4', 'portrait');
             $dompdf->render();
@@ -1287,12 +1287,12 @@ class OrderController extends Controller
         try {
             $order = Order::where('id', $id)
                 ->where('user_id', Auth::id())
-                ->with(['user', 'package.category', 'package.media', 'product.category', 'product.media', 'latestTransaction'])
+                ->with(['user', 'package.category', 'package.media', 'catalog.category', 'catalog.media', 'latestTransaction'])
                 ->firstOrFail();
 
             $email = $request->input('email', $order->user->email);
             $html = view('User.pdf.order-invoice.order-invoice', compact('order'))->render();
-            $dompdf = new Dompdf;
+            $dompdf = \App\Support\PdfLayout\PdfLayout::apply(new Dompdf);
             $dompdf->loadHtml($html);
             $dompdf->setPaper('A4', 'portrait');
             $dompdf->render();

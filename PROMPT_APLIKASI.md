@@ -1,10 +1,10 @@
-# PROMPT APLIKASI: Dekorasi Bunga Pernikahan - Wedding Organizer CBIR
+# PROMPT APLIKASI: Dekorasi Bunga Pernikahan - Wedding Flower Decorations CBIR
 
 ## 📋 OVERVIEW APLIKASI
 
-**Nama Aplikasi:** Dekorasi Bunga Pernikahan (Wedding Organizer CBIR)
+**Nama Aplikasi:** Dekorasi Bunga Pernikahan (Wedding Flower Decorations CBIR)
 **Penulis:** Anugerah Ahmad Fachrurochim
-**Deskripsi:** Platform wedding organizer berbasis AI dengan Content-Based Image Retrieval (CBIR) yang membantu calon pengantin merencanakan pernikahan. Pengguna bisa upload foto referensi untuk menemukan dekorasi yang cocok, mengelola anggaran, booking layanan, dan berkomunikasi dengan wedding organizer.
+**Deskripsi:** Toko dekorasi bunga pernikahan berbasis AI dengan Content-Based Image Retrieval (CBIR) yang membantu calon pengantin merencanakan pernikahan. Pengguna bisa upload foto referensi untuk menemukan dekorasi yang cocok, mengelola anggaran, dan booking layanan langsung bersama tim dekorasi internal kami.
 
 **Tipe:** Single-vendor (khusus untuk satu perusahaan: Dekorasi Bunga Pernikahan)
 **Bahasa:** Indonesian (default), English, Arabic, +30 bahasa via auto-translation
@@ -197,8 +197,6 @@
 | POST | `/api/reset-password` | AuthController | Reset password |
 | POST | `/api/auth/send-otp` | AuthController | Kirim OTP via email |
 | POST | `/api/auth/verify-otp` | AuthController | Verifikasi kode OTP |
-| GET | `/api/organizers/public` | WeddingFlowersDecorasiController | List WeddingFlowersDecorasi publik |
-| GET | `/api/organizers/public/{id}` | WeddingFlowersDecorasiController | Detail WeddingFlowersDecorasi |
 | GET | `/api/packages/public` | PackageController | List paket publik |
 | GET | `/api/legal/terms` | LegalController | Terms of Service |
 | GET | `/api/legal/privacy` | LegalController | Privacy Policy |
@@ -223,17 +221,6 @@
 | POST | `/api/profile/avatar` | Update avatar |
 | POST | `/api/profile/change-password` | Ganti password |
 | GET | `/api/profile/dashboard` | Data dashboard user |
-
-### Wedding Organizers
-| Method | Endpoint | Deskripsi |
-|--------|----------|-----------|
-| GET | `/api/organizers` | List semua organizer |
-| GET | `/api/organizers/{id}` | Detail organizer |
-| GET | `/api/organizers/{id}/packages` | Paket organizer |
-| GET | `/api/organizers/{id}/reviews` | Review organizer |
-| GET | `/api/organizers/featured` | Organizer unggulan |
-| GET | `/api/organizers/top-rated` | Organizer rating tertinggi |
-| GET | `/api/organizers/nearby` | Organizer terdekat |
 
 ### Cart
 | Method | Endpoint | Deskripsi |
@@ -322,7 +309,7 @@
 | DELETE | `/api/reviews/{id}` | Hapus review |
 | GET | `/api/reviews/user` | Review user |
 | GET | `/api/reviews/package/{packageId}` | Review per paket |
-| GET | `/api/reviews/organizer/{id}` | Review per organizer |
+
 
 ### Wallet
 | Method | Endpoint | Deskripsi |
@@ -401,7 +388,7 @@
 - Dashboard (stats overview, revenue chart, orders chart, recent orders)
 - User management
 - Category management
-- Wedding Organizer profile
+- Profil toko dekorasi bunga pernikahan
 - Package management
 - Product management
 - Order management (CRUD + status tracking)
@@ -547,7 +534,7 @@
 ### 11. GeoLocation & Maps
 - **Login Tracking**: IP geolocation via ip-api.com (city, region, country)
 - **Auto-Geocoding**: WeddingFlowersDecorasi address → lat/lng via Nominatim (OpenStreetMap)
-- **Nearby Search**: Cari organizer terdekat (filter by coordinates)
+
 
 ### 12. MCP Server (AI Agent)
 - **Protokol**: Model Context Protocol
@@ -615,7 +602,7 @@ services:
   app: PHP-FPM 8.2 + Nginx, port 8000
   mysql: MySQL 8.0, port 3307
   phpmyadmin: port 8081
-network: weeding-network
+network: wedding-flower-decorations
 ```
 
 ### Google Cloud Run

@@ -39,6 +39,11 @@ $app = Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Panel admin tanpa pagination: naikkan batas waktu HANYA untuk
+        // /admin* dan /livewire/* (tabel 611 baris). Lihat class-nya untuk
+        // alasan lengkapnya.
+        $middleware->append(\App\Http\Middleware\AdminExecutionTime\AdminExecutionTime::class);
+
         // Mendaftarkan middleware SetLocale ke group web agar session dan auth tersedia
         $middleware->web(append: [
             SetLocale::class,
@@ -48,6 +53,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
         // Mendaftarkan middleware SetLocale ke group api untuk sinkronisasi bahasa aplikasi mobile
         $middleware->api(append: [
             SetLocale::class,
+            \Illuminate\Http\Middleware\HandleCors::class,
         ]);
 
         // Define the mobile middleware group, used by the Capacitor shells
@@ -59,14 +65,63 @@ $app = Application::configure(basePath: dirname(__DIR__))
 
         $middleware->replace(ValidateCsrfToken::class, VerifyCsrfToken::class);
 
-        $middleware->redirectGuestsTo(fn () => route('filament.user.auth.login'));
+        // Pengecualian CSRF yang BENAR-BENAR berlaku untuk request web.
+        //
+        // `replace()` di atas HANYA berlaku untuk middleware GLOBAL.
+        // `ValidateCsrfToken` ada di grup `web`, bukan global, jadi
+        // penggantian itu praktis tidak berpengaruh: grup `web` tetap
+        // menjalankan middleware dasar, yang `$except`-nya kosong.
+        //
+        // Yang dipakai grup `web` adalah middleware dasar itu sendiri, jadi
+        // pengecualian harus didaftarkan di sana lewat
+        // `validateCsrfTokens(except: ...)` -- yang menulis ke daftar
+        // `neverVerify` milik middleware dasar.
+        //
+        // Kenapa `livewire/*` wajib ada di sini: setiap klik pada halaman
+        // Filament = POST /livewire/update, dan token sesi BERUBAH setiap
+        // kali user login (OTP/2FA memanggil `regenerateToken()`). Tab lama
+        // masih memegang token lama, jadi request-nya kena 419 dan
+        // livewire.js memunculkan dialog "This page has expired. Would you
+        // like to refresh the page?" tepat setelah unduhan data selesai.
+        //
+        // `logout` / `user/logout` / `welcome/logout` ikut dikecualikan
+        // karena logout itu idempotent: paling buruk korban logout, dan
+        // bentuknya justru session yang sudah tidak berlaku.
+        //
+        // SENGAJA TIDAK ada `admin/*` di sini. Wildcard itu ada di
+        // `App\Http\Middleware\VerifyCsrfToken` dan sudah membebaskan
+        // seluruh panel admin dari CSRF; menambahkannya di sini berarti
+        // membebaskan juga endpoint non-panel di bawah /admin (mis.
+        // admin.reviews.vote) yang selama ini masih dijaga middleware
+        // dasar. Persempitannya keputusan tersendiri, bukan efek samping.
+        $middleware->validateCsrfTokens(except: [
+            'livewire/*',
+            'logout',
+            'user/logout',
+            'welcome/logout',
+            'api/*',
+        ]);
 
-        // Trust proxies for production deployments or ngrok development.
-        if (env('APP_ENV') === 'production' ||
-            str_contains((string) env('APP_URL'), 'ngrok-free.dev') ||
-            (isset($_SERVER['HTTP_X_FORWARDED_HOST']) && str_contains($_SERVER['HTTP_X_FORWARDED_HOST'], 'ngrok')) ||
-            (isset($_SERVER['HTTP_HOST']) && str_contains($_SERVER['HTTP_HOST'], 'ngrok'))
-        ) {
+        $middleware->redirectGuestsTo(fn () => route('filament.welcome.auth.index'));
+
+        // Trust proxies for production deployments or edge/CDN hosting.
+        // Domain yang dikenali: Cloudflare Quick Tunnel (trycloudflare.com),
+        // localtunnel (loca.lt), dan edge Whop Hosting
+        // (*.whop.site, dilayani Cloudflare).
+        // Tanpa ini, asset URL / link Storage dan redirect auth akan tetap
+        // menunjuk ke host lama karena Laravel cuma lihat proxy.
+        $edgeHosts = ['trycloudflare.com', 'loca.lt', 'localtunnel', 'lhr.life', 'whop.site'];
+        $appUrl = (string) env('APP_URL');
+        $forwardedHost = (string) ($_SERVER['HTTP_X_FORWARDED_HOST'] ?? '');
+        $httpHost = (string) ($_SERVER['HTTP_HOST'] ?? '');
+        $isEdgeFronted = (bool) array_filter(
+            $edgeHosts,
+            fn (string $needle) => str_contains($appUrl, $needle)
+                || str_contains($forwardedHost, $needle)
+                || str_contains($httpHost, $needle)
+        );
+
+        if (env('APP_ENV') === 'production' || $isEdgeFronted) {
             $middleware->trustProxies('*');
         }
     })
@@ -136,5 +191,36 @@ $app = Application::configure(basePath: dirname(__DIR__))
             return redirect()->to($target);
         });
     })->create();
+
+/*
+ * Handler exception milik aplikasi, bukan bawaan Laravel.
+ *
+ * KENAPA PERLU DI-BIND DI SINI:
+ *
+ *   Laravel 11+ mengikat `Illuminate\Contracts\Debug\ExceptionHandler` ke
+ *   `Illuminate\Foundation\Exceptions\Handler` DI DALAM
+ *   `ApplicationBuilder::__construct()` -- yaitu sebelum provider apa pun
+ *   berjalan. Kalau tidak di-bind ulang, `App\Exceptions\Handler\Handler`
+ *   hanya kode mati: tidak pernah di-resolve, tidak pernah dipakai.
+ *
+ *   Akibatnya semua view error milik aplikasi
+ *   (`Welcome/errors/*`, `User/errors/*`, `Admin/errors/*`) TIDAK PERNAH
+ *   dirender -- yang muncul adalah halaman polos bawaan Laravel.
+ *
+ *   Handler ini yang memilih view per panel: request di /admin/* memakai
+ *   `Admin.errors.*`, sisanya `Welcome.errors.*`.
+ *
+ * CATATAN SOAL `withExceptions()`:
+ *
+ *   Callback 419 (lihat blok di atas) TIDAK hilang. `withExceptions()`
+ *   mendaftarkan `afterResolving` untuk kelas
+ *   `Illuminate\Foundation\Exceptions\Handler`; kelas milik aplikasi
+ *   adalah turunannya, jadi callback itu tetap terpanggil -- hanya
+ *   sekarang ia menerima instance handler milik aplikasi.
+ */
+$app->singleton(
+    \Illuminate\Contracts\Debug\ExceptionHandler::class,
+    \App\Exceptions\Handler\Handler::class,
+);
 
 return $app;

@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category\Category;
 use App\Models\Order\Order;
 use App\Models\Package\Package;
-use App\Models\Product\Product;
+use App\Models\Catalog\Catalog;
 use App\Models\User\User;
 use App\Models\Voucher\Voucher;
 use Illuminate\Http\JsonResponse;
@@ -70,7 +70,7 @@ class HomeController extends Controller
         try {
             $totalUsers = User::count();
             $totalPackages = Package::count();
-            $totalProducts = Product::count();
+            $totalCatalogs = Catalog::count();
             $totalOrders = Order::count();
             $totalVouchers = Voucher::count();
             $totalCategories = Category::count();
@@ -82,7 +82,7 @@ class HomeController extends Controller
             $newUsers = User::where('created_at', '>=', now()->subDays(7))->count();
             $newOrders = Order::where('created_at', '>=', now()->subDays(7))->count();
             $newPackages = Package::where('created_at', '>=', now()->subDays(7))->count();
-            $newProducts = Product::where('created_at', '>=', now()->subDays(7))->count();
+            $newCatalogs = Catalog::where('created_at', '>=', now()->subDays(7))->count();
 
             $recentOrders = Order::with('user:id,full_name,email')
                 ->latest()
@@ -122,7 +122,7 @@ class HomeController extends Controller
                     // Totals
                     'total_users' => $totalUsers,
                     'total_packages' => $totalPackages,
-                    'total_products' => $totalProducts,
+                    'total_catalogs' => $totalCatalogs,
                     'total_categories' => $totalCategories,
                     'total_orders' => $totalOrders,
                     'total_vouchers' => $totalVouchers,
@@ -131,14 +131,14 @@ class HomeController extends Controller
                     'new_users_7d' => $newUsers,
                     'new_orders_7d' => $newOrders,
                     'new_packages_7d' => $newPackages,
-                    'new_products_7d' => $newProducts,
+                    'new_catalogs_7d' => $newCatalogs,
                     'total_revenue_month' => $thisMonthRevenue,
                     // Sparklines (10 hari, termasuk hari ini)
                     'sparklines' => [
                         'users' => $this->dailyTrend(User::class),
                         'orders' => $this->dailyTrend(Order::class),
                         'packages' => $this->dailyTrend(Package::class),
-                        'products' => $this->dailyTrend(Product::class),
+                        'catalogs' => $this->dailyTrend(Catalog::class),
                         'revenue' => $this->dailyTrend(Order::class, 'total_price'),
                     ],
                     // Chart bulanan (6 bulan)

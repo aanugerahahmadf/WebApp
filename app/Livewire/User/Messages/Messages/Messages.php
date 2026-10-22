@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Livewire\User\Messages\Messages;
+use App\Services\CbirResultService\CbirResultService;
 
 use App\Enums\DiscountType\DiscountType;
 use App\Enums\Messages\MediaCollectionType\MediaCollectionType;
@@ -8,9 +9,11 @@ use App\Enums\OrderPaymentStatus\OrderPaymentStatus;
 use App\Enums\OrderStatus\OrderStatus;
 use App\Enums\ReportStatus\ReportStatus;
 use App\Filament\User\Pages\MessagesPage\MessagesPage;
-use App\Filament\User\Resources\PackageResource\PackageResource;
-use App\Filament\User\Resources\ProductResource\ProductResource;
+use App\Support\ChatStaff\ChatStaff;
+
+use App\Filament\User\Resources\CatalogResource\CatalogResource;
 use App\Jobs\SendBotReply\SendBotReply;
+use App\Livewire\Shared\Traits\CanSendRichMessages\CanSendRichMessages;
 use App\Livewire\User\Traits\CanMarkAsRead\CanMarkAsRead;
 use App\Livewire\User\Traits\CanValidateFiles\CanValidateFiles;
 use App\Livewire\User\Traits\HasPollInterval\HasPollInterval;
@@ -18,7 +21,7 @@ use App\Models\Inbox\Inbox;
 use App\Models\Message\Message;
 use App\Models\Order\Order;
 use App\Models\Package\Package;
-use App\Models\Product\Product;
+use App\Models\Catalog\Catalog;
 use App\Models\Report\Report;
 use App\Models\Voucher\Voucher;
 use App\Support\AppPlatform\AppPlatform;
@@ -48,12 +51,14 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
@@ -62,7 +67,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  */
 class Messages extends Component implements HasActions, HasForms
 {
-    use CanMarkAsRead, CanValidateFiles, HasPollInterval, InteractsWithActions, InteractsWithForms, WithPagination;
+    use CanMarkAsRead, CanSendRichMessages, CanValidateFiles, HasPollInterval, InteractsWithActions, InteractsWithForms, WithFileUploads, WithPagination;
 
     public $selectedConversation;
 
@@ -71,6 +76,20 @@ class Messages extends Component implements HasActions, HasForms
     public ?Collection $conversationMessages = null;
 
     public ?array $data = [];
+
+    /**
+     * Lampiran yang ditangkap di browser (kamera / audio / kontak).
+     *
+     * Sengaja terpisah dari field FileUpload `attachments`: field itu
+     * bergantung pada FilePond, dan di halaman Messages komponen FilePond
+     * tidak pernah selesai diinisialisasi -- jadi lampirannya tidak pernah
+     * sampai ke server. Tombol "Kirim Audio" tampak berhasil, tapi gelembung
+     * pesannya tidak pernah muncul.
+     *
+     * Diunggah lewat `$wire.upload()` dari jembatan di dalam view, lalu dikirim
+     * oleh sendPendingAttachment().
+     */
+    public ?TemporaryUploadedFile $pendingAttachment = null;
 
     public string $searchItem = '';
 
@@ -123,6 +142,16 @@ class Messages extends Component implements HasActions, HasForms
 
             // Mark new incoming messages as read
             $this->markAsRead();
+
+            // Dispatch TTS event for new bot messages (auto-speak)
+            foreach ($polledMessages as $msg) {
+                $meta = $msg->meta ?? [];
+                if (!empty($meta['is_bot']) && !empty($msg->message)) {
+                    $displayMessage = \App\Support\Chat\BotReplyLocalizer\BotReplyLocalizer::display($msg);
+                    $displayMessage = str_replace(['\\r\\n', '\\n', '\\r'], ["\r\n", "\n", "\r"], $displayMessage);
+                    $this->dispatch('new-bot-message', messageId: $msg->id, messageText: $displayMessage);
+                }
+            }
         }
 
         // Re-fetch outgoing messages to get updated read_by status
@@ -221,23 +250,52 @@ class Messages extends Component implements HasActions, HasForms
                 //     ->extraAttributes(['class' => 'messages-attachment-upload'])
                 //     ->live(),
                 Forms\Components\Actions::make([
-                    // Paperclip → cbir-browse-modal (file/folder/drive/cloud)
-                    // alpineClickHandler = murni client-side, zero Livewire network call
-                    Forms\Components\Actions\Action::make('show_hide_upload')
+                    // Satu tombol "+" untuk semua jenis lampiran. Menu-nya
+                    // dirender di Shared/components/attachment-menu, bukan di
+                    // sini, karena isinya cuma Alpine murni tanpa perlu tahu
+                    // apa pun tentang Livewire.
+                    //
+                    // `alpineClickHandler` = murni client-side, nol panggilan
+                    // jaringan Livewire -- menu harus muncul di bawah satu
+                    // frame, bukan setelah satu round-trip.
+                    Forms\Components\Actions\Action::make('toggle_attachment_menu')
                         ->hiddenLabel()
-                        ->icon('heroicon-o-plus-circle')
+                        ->icon('/images/icons/plus_circle.svg')
                         ->color('gray')
                         ->tooltip(__('Attach Files'))
-                        ->alpineClickHandler("window.dispatchEvent(new CustomEvent('cbir-browse-open'))"),
-                    // Camera → messages-camera-modal (kamera belakang/depan, video, galeri)
-                    // alpineClickHandler = murni client-side, zero Livewire network call
-                    Forms\Components\Actions\Action::make('toggle_camera')
-                        ->hiddenLabel()
-                        ->icon('heroicon-o-camera')
-                        ->color('gray')
-                        ->tooltip(__('Open Camera'))
-                        ->alpineClickHandler("window.dispatchEvent(new CustomEvent('messages-camera-open'))"),
+                        ->alpineClickHandler("window.dispatchEvent(new CustomEvent('messages-attach-menu-toggle'))")
+                        // PENTING: Filament menambahkan `wire:loading.attr="disabled"`
+                        // ke SETIAP <button> miliknya. Karena tombol ini tidak punya
+                        // wire:click, Livewire menganggapnya "target semua request",
+                        // jadi tombolnya nonaktif selama polling komponen (tiap 2-3
+                        // detik) -- praktis tidak pernah bisa diklik, dan menu
+                        // lampiran tidak pernah terbuka.
+                        //
+                        // Memberi nilai null membuat atribut itu tidak dirender,
+                        // sehingga tombolnya selalu bisa diklik.
+                        ->extraAttributes(['wire:loading.attr' => null]),
                 ]),
+                /*
+                 * Field lampiran yang sebenarnya. UI-nya disembunyikan lewat
+                 * class `messages-attachment-upload` (lihat
+                 * Shared/components/messages-camera-modal), tetapi FilePond-nya
+                 * HARUS tetap dirender: tombol "+" -> menu (Document, Photos &
+                 * videos, Camera, Rekam Video) mengisi FilePond ini, dan
+                 * sendMessage() membaca state `attachments` di bawah.
+                 *
+                 * Tanpa field ini, kamera sempat "menangkap" lalu membuang
+                 * hasilnya tanpa pesan error apa pun, karena injectFile()
+                 * tidak menemukan FilePond untuk diisi.
+                 */
+                Forms\Components\FileUpload::make('attachments')
+                    ->hiddenLabel()
+                    ->multiple()
+                    ->disk('public')
+                    ->directory('messages-attachments')
+                    ->maxFiles(config('messages.attachments.max_files'))
+                    ->maxSize(config('messages.attachments.max_file_size'))
+                    ->extraAttributes(['class' => 'messages-attachment-upload'])
+                    ->live(),
                 Forms\Components\TextInput::make('message')
                     ->live()
                     ->hiddenLabel()
@@ -246,13 +304,33 @@ class Messages extends Component implements HasActions, HasForms
             ])->statePath('data');
     }
 
+    /**
+     * Kirim pesan yang lampirannya baru saja diunggah dari browser.
+     *
+     * Dipanggil dari jembatan di dalam view, tepat setelah `$wire.upload()`
+     * selesai, supaya lampirannya sudah ada di server saat pesan dibuat.
+     */
+    public function sendPendingAttachment(string $tmpFilename): void
+    {
+        $this->pendingAttachment = TemporaryUploadedFile::createFromLivewire($tmpFilename);
+
+        $this->sendMessage();
+    }
     public function sendMessage(): void
     {
+        /*
+         * getState() menyimpan lampiran ke disk `public` (lihat
+         * ->disk('public')->directory('messages-attachments') pada field
+         * `attachments`) dan mengembalikan PATH-nya, bukan objek file.
+         */
         $data = $this->form->getState();
-        $rawData = $this->form->getRawState();
+
+        // Lampiran yang ditangkap di browser (kamera / audio / kontak).
+        $pending = $this->pendingAttachment;
+        $this->pendingAttachment = null;
 
         try {
-            DB::transaction(function () use ($data, $rawData): void {
+            DB::transaction(function () use ($data, $pending): void {
                 $newMessage = $this->selectedConversation->messages()->create([
                     'message' => $data['message'] ?? null,
                     'user_id' => Auth::id(),
@@ -263,14 +341,40 @@ class Messages extends Component implements HasActions, HasForms
                 ]);
 
                 // Dispatch bot reply if user is not admin
-                if (! auth()->user()->hasRole('super_admin')) {
+                if (! ChatStaff::isStaff(auth()->user())) {
                     SendBotReply::dispatch($newMessage->id)->delay(now()->addSeconds(5));
                 }
 
                 $this->conversationMessages->prepend($newMessage);
-                collect($rawData['attachments'] ?? [])->each(function ($attachment) use ($newMessage): void {
-                    $newMessage->addMedia($attachment)->usingFileName(Str::slug(config('messages.slug'), '_').'_'.Str::random(20).'.'.$attachment->extension())->toMediaCollection(MediaCollectionType::FILAMENT_MESSAGES->value);
-                });
+
+                /*
+                 * `attachments` berisi path relatif di disk `public` setelah
+                 * form di-dehydrate. addMedia() butuh file nyata, jadi path
+                 * itu diubah dulu menjadi path absolut. File sumber dihapus
+                 * setelah disalin ke media library supaya
+                 * storage/app/public/messages-attachments tidak menumpuk.
+                 */
+                $attachments = collect($data['attachments'] ?? [])
+                    ->filter(fn ($attachment) => is_string($attachment) && $attachment !== '');
+
+                if ($pending) {
+                    $attachments->push($pending->store('messages-attachments', 'public'));
+                }
+
+                $attachments->each(function (string $attachment) use ($newMessage): void {
+                        $path = Storage::disk('public')->path($attachment);
+
+                        if (! is_file($path)) {
+                            return;
+                        }
+
+                        $newMessage
+                            ->addMedia($path)
+                            ->usingFileName(Str::slug(config('messages.slug'), '_').'_'.Str::random(20).'.'.pathinfo($path, PATHINFO_EXTENSION))
+                            ->toMediaCollection(MediaCollectionType::FILAMENT_MESSAGES->value);
+
+                        @unlink($path);
+                    });
 
                 $this->form->fill();
 
@@ -282,6 +386,8 @@ class Messages extends Component implements HasActions, HasForms
                 $this->dispatch('refresh-inbox');
             });
         } catch (\Exception $exception) {
+            report($exception);
+
             Notification::make()
                 ->title(__('Something went wrong'))
                 ->body($exception->getMessage())
@@ -446,7 +552,7 @@ class Messages extends Component implements HasActions, HasForms
         }
 
         if ($deleteType === 'everyone') {
-            if ((int) $message->user_id !== (int) auth()->id() && ! auth()->user()->hasRole('super_admin')) {
+            if ((int) $message->user_id !== (int) auth()->id() && ! ChatStaff::isStaff(auth()->user())) {
                 Notification::make()
                     ->title(__('Tidak diizinkan'))
                     ->danger()
@@ -907,10 +1013,19 @@ class Messages extends Component implements HasActions, HasForms
                 Select::make('item_type')
                     ->label(__('Tipe Item'))
                     ->options([
-                        'package' => __('Paket'),
-                        'product' => __('Produk'),
+                        // Hanya "Katalog". Opsi "Paket" dihapus karena paket
+                        // dekorasi sudah direpresentasikan sebagai tier di dalam
+                        // katalog; menampilkannya sebagai entri terpisah membuat
+                        // pengguna mengira ada dua daftar barang yang berbeda,
+                        // padahal isinya tumpang tindih.
+                        //
+                        // Field-nya sendiri dibiarkan: masih berguna sebagai
+                        // penanda di data yang dikirim, dan tidak perlu
+                        // diubah lagi kalau suatu saat paket kembali berdiri
+                        // sendiri sebagai daftar.
+                        'catalog' => __('Katalog'),
                     ])
-                    ->default('package')
+                    ->default('catalog')
                     ->native(false)
                     ->required()
                     ->live(),
@@ -918,7 +1033,7 @@ class Messages extends Component implements HasActions, HasForms
                     ->label(__('Pilih Item'))
                     ->searchable()
                     ->preload()
-                    ->options(fn (Forms\Get $get): array => $this->catalogItemOptions((string) $get('item_type')))
+                    ->options(fn (): array => $this->catalogItemOptions())
                     ->required(),
             ])
             ->action(function (array $arguments, array $data): void {
@@ -926,10 +1041,8 @@ class Messages extends Component implements HasActions, HasForms
                     return;
                 }
 
-                $type = $data['item_type'] ?? 'package';
-                $item = $type === 'package'
-                    ? Package::find((int) $data['item_id'])
-                    : Product::find((int) $data['item_id']);
+                $type = $data['item_type'] ?? 'catalog';
+                $item = Catalog::find((int) $data['item_id']);
 
                 if (! $item) {
                     return;
@@ -939,11 +1052,9 @@ class Messages extends Component implements HasActions, HasForms
                     'type' => $type,
                     'id' => (int) $item->id,
                     'name' => $item->name,
-                    'price' => $type === 'package' ? ($item->final_price ?? $item->price ?? 0) : ($item->price ?? 0),
+                    'price' => $item->price ?? 0,
                     'image' => $item->image_url,
-                    'url' => $type === 'package'
-                        ? ($this->tryResourceUrl(PackageResource::class))
-                        : ($this->tryResourceUrl(ProductResource::class)),
+                    'url' => $this->tryResourceUrl(CatalogResource::class),
                     'cs_category' => 'catalog',
                 ]);
 
@@ -959,17 +1070,24 @@ class Messages extends Component implements HasActions, HasForms
     }
 
     /**
-     * Options for a catalog item type (package/product).
+     * Options untuk field "Pilih Item" pada form Bagikan Katalog.
+     *
+     * Tanpa parameter: sejak opsi "Paket" dihapus dari form, satu-satunya tipe
+     * yang bisa dipilih adalah katalog. Parameter `$type` pernah ada supaya
+     * helper ini bisa dipakai ulang; membiarkannya kini hanya menyisakan satu
+     * cabang yang tidak akan pernah true.
      */
-    protected function catalogItemOptions(string $type): array
+    protected function catalogItemOptions(): array
     {
-        $query = $type === 'package' ? Package::query() : Product::query();
-
-        return $query
+        return Catalog::query()
             ->limit(50)
             ->get()
             ->mapWithKeys(fn ($item) => [
-                $item->id => '['.($type === 'package' ? __('Paket') : __('Produk')).'] '.$item->name.' — Rp '.number_format($type === 'package' ? ($item->final_price ?? $item->price ?? 0) : ($item->price ?? 0), 0, ',', '.'),
+                // Pemisah memakai escape \u{} supaya file ini tetap ASCII:
+                // sumber yang ditulis UTF-8 tapi dibaca sebagai Windows-1252 akan
+                // mengubah pemisah ini menjadi "ÔÇö", persis yang terjadi di
+                // baris lama sebelum helper ini disentuh.
+                $item->id => '['.__('Katalog').'] '.$item->name." \u{00B7} Rp ".number_format($item->price ?? 0, 0, ',', '.'),
             ])
             ->all();
     }
@@ -994,7 +1112,7 @@ class Messages extends Component implements HasActions, HasForms
                         ->limit(50)
                         ->get()
                         ->mapWithKeys(fn ($order) => [
-                            $order->id => '#'.$order->order_number.' — '.$order->package?->name ?? $order->product?->name ?? $order->order_number,
+                            $order->id => '#'.$order->order_number.' — '.$order->package?->name ?? $order->catalog?->name ?? $order->order_number,
                         ])
                         ->all())
                     ->required(),
@@ -1087,18 +1205,18 @@ class Messages extends Component implements HasActions, HasForms
                         Forms\Components\TextInput::make('search')
                             ->label(__('Cari Visual'))
                             ->placeholder(__('Ketik, ambil foto, atau galeri...'))
-                            ->prefixIcon('heroicon-m-magnifying-glass')
+                            ->prefixIcon('/images/icons/search.svg')
                             ->prefixIconColor('gray')
                             ->live(debounce: 500)
                             ->afterStateUpdated(function (Component $livewire, $state, Forms\Set $set) {
                                 if (empty($state)) {
-                                    session()->forget(['cbir_mixed_results', 'cbir_product_results_ids', 'cbir_search_time', 'cbir_context']);
+                                    session()->forget(['cbir_mixed_results', 'cbir_catalog_results_ids', 'cbir_search_time', 'cbir_context']);
                                     $set('status_message', null);
 
                                     return;
                                 }
 
-                                $products = Product::query()
+                                $catalogs = Catalog::query()
                                     ->where('name', 'like', "%{$state}%")
                                     ->orWhere('description', 'like', "%{$state}%")
                                     ->orWhereHas('category', fn ($q) => $q->where('name', 'like', "%{$state}%"))
@@ -1112,8 +1230,8 @@ class Messages extends Component implements HasActions, HasForms
                                     ->limit(10)
                                     ->get();
 
-                                if ($products->isEmpty() && $packages->isEmpty()) {
-                                    session()->forget(['cbir_mixed_results', 'cbir_product_results_ids', 'cbir_search_time', 'cbir_context']);
+                                if ($catalogs->isEmpty() && $packages->isEmpty()) {
+                                    session()->forget(['cbir_mixed_results', 'cbir_catalog_results_ids', 'cbir_search_time', 'cbir_context']);
                                     $set('status_message', __('Tidak ada item yang cocok untuk pencarian teks.'));
 
                                     return;
@@ -1121,9 +1239,9 @@ class Messages extends Component implements HasActions, HasForms
 
                                 $mixedResults = [];
 
-                                foreach ($products as $model) {
+                                foreach ($catalogs as $model) {
                                     $mixedResults[] = [
-                                        'type' => 'product',
+                                        'type' => 'catalog',
                                         'similarity' => 100,
                                         'data' => array_merge($model->toArray(), [
                                             'image_url' => $model->image_url,
@@ -1142,20 +1260,20 @@ class Messages extends Component implements HasActions, HasForms
                                 }
 
                                 session()->put('cbir_mixed_results', $mixedResults);
-                                session()->put('cbir_product_results_ids', collect($mixedResults)->pluck('data.id')->all());
+                                session()->put('cbir_catalog_results_ids', collect($mixedResults)->pluck('data.id')->all());
                                 session()->put('cbir_search_time', 0);
-                                session()->put('cbir_context', 'product');
+                                session()->put('cbir_context', 'catalog');
 
                                 $set('status_message', __('Berhasil menemukan :count hasil teks!', ['count' => count($mixedResults)]));
                             })
                             ->suffixActions([
                                 Forms\Components\Actions\Action::make('toggle_camera_search')
-                                    ->icon('heroicon-o-camera')
+                                    ->icon('/images/icons/camera.svg')
                                     ->color('gray')
                                     ->tooltip(__('Ambil Foto'))
                                     ->action(fn (Forms\Set $set, Forms\Get $get) => $set('show_camera', ! $get('show_camera'))),
                                 Forms\Components\Actions\Action::make('toggle_gallery_search')
-                                    ->icon('heroicon-o-photo')
+                                    ->icon('/images/icons/photo.svg')
                                     ->color('gray')
                                     ->tooltip(__('Pilih Galeri'))
                                     ->action(fn (Forms\Set $set, Forms\Get $get) => $set('show_upload', ! $get('show_upload'))),
@@ -1173,7 +1291,7 @@ class Messages extends Component implements HasActions, HasForms
                             ->registerActions([
                                 Forms\Components\Actions\Action::make('manualSearch')
                                     ->label(__('Cari Sekarang'))
-                                    ->icon('heroicon-m-arrow-up-tray')
+                                    ->icon('/images/icons/upload.svg')
                                     ->color('primary')
                                     ->action(function ($state, Forms\Set $set, CBIRService $cbirService) {
                                         if (! $state) {
@@ -1218,11 +1336,11 @@ class Messages extends Component implements HasActions, HasForms
                                         $results = collect($results)->filter(fn ($r) => ($r['similarity'] ?? 0) > 0)->all();
 
                                         if (! empty($results)) {
-                                            $mixedResults = PackageResource::buildCbirMixedResults($results);
+                                            $mixedResults = CbirResultService::buildCbirMixedResults($results);
                                             session()->put('cbir_mixed_results', $mixedResults);
                                             $set('status_message', __('Berhasil menemukan :count hasil!', ['count' => count($mixedResults)]));
                                         } else {
-                                            session()->forget(['cbir_mixed_results', 'cbir_product_results_ids', 'cbir_search_time', 'cbir_context']);
+                                            session()->forget(['cbir_mixed_results', 'cbir_catalog_results_ids', 'cbir_search_time', 'cbir_context']);
                                             $set('status_message', __('Tidak ada item yang cocok.'));
                                         }
                                     }),
@@ -1257,11 +1375,11 @@ class Messages extends Component implements HasActions, HasForms
                                 $results = collect($results)->filter(fn ($r) => ($r['similarity'] ?? 0) > 0)->all();
 
                                 if (! empty($results)) {
-                                    $mixedResults = PackageResource::buildCbirMixedResults($results);
+                                    $mixedResults = CbirResultService::buildCbirMixedResults($results);
                                     session()->put('cbir_mixed_results', $mixedResults);
                                     $set('status_message', __('Berhasil menemukan :count hasil!', ['count' => count($mixedResults)]));
                                 } else {
-                                    session()->forget(['cbir_mixed_results', 'cbir_product_results_ids', 'cbir_search_time', 'cbir_context']);
+                                    session()->forget(['cbir_mixed_results', 'cbir_catalog_results_ids', 'cbir_search_time', 'cbir_context']);
                                     $set('status_message', __('Tidak ada item yang cocok.'));
                                 }
                             }),
@@ -1300,11 +1418,11 @@ class Messages extends Component implements HasActions, HasForms
                                 $results = collect($results)->filter(fn ($r) => ($r['similarity'] ?? 0) > 0)->all();
 
                                 if (! empty($results)) {
-                                    $mixedResults = PackageResource::buildCbirMixedResults($results);
+                                    $mixedResults = CbirResultService::buildCbirMixedResults($results);
                                     session()->put('cbir_mixed_results', $mixedResults);
                                     $set('status_message', __('Berhasil menemukan :count hasil!', ['count' => count($mixedResults)]));
                                 } else {
-                                    session()->forget(['cbir_mixed_results', 'cbir_product_results_ids', 'cbir_search_time', 'cbir_context']);
+                                    session()->forget(['cbir_mixed_results', 'cbir_catalog_results_ids', 'cbir_search_time', 'cbir_context']);
                                     $set('status_message', __('Item tidak ditemukan.'));
                                 }
                             }),
@@ -1349,7 +1467,7 @@ class Messages extends Component implements HasActions, HasForms
     //                 ];
     //             }
 
-    //             $item     = $order->package ?? $order->product;
+    //             $item     = $order->package ?? $order->catalog;
     //             $imageUrl = $item?->image_url ?? '';
     //             $itemName = $item?->name ?? '-';
     //             $woName   = '-';
@@ -1426,7 +1544,7 @@ class Messages extends Component implements HasActions, HasForms
                         DatePicker::make('booking_date')
                             ->label(__('Tanggal Acara'))
                             ->native(false)
-                            ->prefixIcon('heroicon-o-calendar'),
+                            ->prefixIcon('/images/icons/calendar.svg'),
                         Textarea::make('notes')
                             ->label(__('Catatan'))
                             ->rows(3)
@@ -1458,7 +1576,7 @@ class Messages extends Component implements HasActions, HasForms
 
     public function clearVisualSearch(): void
     {
-        session()->forget(['cbir_mixed_results', 'cbir_product_results_ids', 'cbir_search_time', 'cbir_context']);
+        session()->forget(['cbir_mixed_results', 'cbir_catalog_results_ids', 'cbir_search_time', 'cbir_context']);
         $this->dispatch('refresh_items');
         $this->dispatch('refresh_catalog');
     }
@@ -1479,7 +1597,7 @@ class Messages extends Component implements HasActions, HasForms
 
     public function selectNewItem(string $type, int $id, int $orderId): void
     {
-        $item = $type === 'package' ? Package::find($id) : Product::find($id);
+        $item = $type === 'package' ? Package::find($id) : Catalog::find($id);
         if (! $item) {
             return;
         }
@@ -1508,7 +1626,7 @@ class Messages extends Component implements HasActions, HasForms
                 $type = $arguments['type'] ?? 'package';
                 $itemId = $arguments['itemId'] ?? null;
                 $orderId = $arguments['orderId'] ?? null;
-                $item = $type === 'package' ? Package::find($itemId) : Product::find($itemId);
+                $item = $type === 'package' ? Package::find($itemId) : Catalog::find($itemId);
                 $order = Order::find($orderId);
 
                 if (! $item) {
@@ -1528,7 +1646,7 @@ class Messages extends Component implements HasActions, HasForms
                             .($item->image_url ? '<img src="'.$item->image_url.'" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">' : '')
                             .'<div class="flex-1 min-w-0">'
                             .'<p class="text-[10px] font-semibold mb-0.5 text-warning-600 dark:text-warning-400">'
-                            .($type === 'package' ? PackageResource::getModelLabel() : ProductResource::getModelLabel())
+                            .($type === 'package' ? __('Paket') : CatalogResource::getModelLabel())
                             .'</p>'
                             .'<p class="text-sm font-semibold text-gray-950 dark:text-white truncate">'.$item->name.'</p>'
                             .'<p class="text-xs font-semibold mt-0.5 text-primary-600 dark:text-primary-400">Rp '.number_format($finalPrice, 0, ',', '.').'</p>'
@@ -1542,7 +1660,7 @@ class Messages extends Component implements HasActions, HasForms
 
                     Forms\Components\Wizard::make([
                         Forms\Components\Wizard\Step::make(__('Detail Acara'))
-                            ->icon('heroicon-o-calendar-days')
+                            ->icon('/images/icons/calendar_days.svg')
                             ->schema([
                                 Section::make(__('Pilih Waktu & Kebutuhan'))
                                     ->schema([
@@ -1552,7 +1670,7 @@ class Messages extends Component implements HasActions, HasForms
                                             ->native(false)
                                             ->default($order?->booking_date)
                                             ->minDate(now())
-                                            ->prefixIcon('heroicon-o-calendar-days')
+                                            ->prefixIcon('/images/icons/calendar_days.svg')
                                             ->columnSpanFull(),
                                         Textarea::make('notes')
                                             ->label(__('Catatan Khusus / Alamat Lokasi'))
@@ -1564,7 +1682,7 @@ class Messages extends Component implements HasActions, HasForms
                             ]),
 
                         Forms\Components\Wizard\Step::make(__('Info Kontak'))
-                            ->icon('heroicon-o-user-circle')
+                            ->icon('/images/icons/user_circle.svg')
                             ->schema([
                                 Section::make(__('Verifikasi Data Anda'))
                                     ->schema([
@@ -1581,16 +1699,16 @@ class Messages extends Component implements HasActions, HasForms
                             ]),
 
                         Forms\Components\Wizard\Step::make(__('Voucher & Diskon'))
-                            ->icon('heroicon-o-ticket')
+                            ->icon('/images/icons/ticket.svg')
                             ->schema([
                                 Section::make(__('Pilih Voucher Anda'))
                                     ->description(__('Gunakan voucher yang telah Anda klaim di menu Voucher.'))
-                                    ->icon('heroicon-o-ticket')
+                                    ->icon('/images/icons/ticket.svg')
                                     ->schema([
                                         Select::make('voucher_id')
                                             ->searchable()
                                             ->label(__('Voucher Tersedia'))
-                                            ->prefixIcon('heroicon-o-ticket')
+                                            ->prefixIcon('/images/icons/ticket.svg')
                                             ->options(function () use ($finalPrice) {
                                                 $user = auth()->user();
                                                 if (! $user) {
@@ -1637,8 +1755,8 @@ class Messages extends Component implements HasActions, HasForms
                                                 default => null,
                                             })
                                             ->hintIcon(fn (Forms\Get $get) => match (true) {
-                                                str_starts_with((string) $get('_voucher_info'), 'valid:') => 'heroicon-m-check-circle',
-                                                $get('_voucher_info') === 'invalid' => 'heroicon-m-x-circle',
+                                                str_starts_with((string) $get('_voucher_info'), 'valid:') => '/images/icons/check_circle.svg',
+                                                $get('_voucher_info') === 'invalid' => '/images/icons/x_circle.svg',
                                                 default => null,
                                             })
                                             ->hintColor(fn (Forms\Get $get) => str_starts_with((string) $get('_voucher_info'), 'valid:') ? 'success' : 'danger')
@@ -1675,7 +1793,7 @@ class Messages extends Component implements HasActions, HasForms
                             ]),
 
                         Forms\Components\Wizard\Step::make(__('Konfirmasi'))
-                            ->icon('heroicon-o-check-badge')
+                            ->icon('/images/icons/check_badge.svg')
                             ->schema([
                                 Section::make(__('Ringkasan Pembayaran'))
                                     ->schema([
@@ -1702,7 +1820,7 @@ class Messages extends Component implements HasActions, HasForms
                 $itemId = $arguments['itemId'] ?? null;
                 $orderId = $arguments['orderId'] ?? null;
 
-                $item = $type === 'package' ? Package::find($itemId) : Product::find($itemId);
+                $item = $type === 'package' ? Package::find($itemId) : Catalog::find($itemId);
                 $order = Order::find($orderId);
 
                 if (! $item || ! $order || $order->user_id !== auth()->id()) {
@@ -1718,8 +1836,8 @@ class Messages extends Component implements HasActions, HasForms
                 $finalPrice = max(0, $finalPrice - $voucherDiscount);
 
                 $updateData = $type === 'package'
-                    ? ['package_id' => $item->id, 'product_id' => null]
-                    : ['product_id' => $item->id, 'package_id' => null];
+                    ? ['package_id' => $item->id, 'catalog_id' => null]
+                    : ['catalog_id' => $item->id, 'package_id' => null];
 
                 $order->update(array_merge($updateData, [
                     'total_price' => $finalPrice,
@@ -1754,8 +1872,8 @@ class Messages extends Component implements HasActions, HasForms
                         'price' => $finalPrice,
                         'image' => $item->image_url,
                         'url' => $type === 'package'
-                            ? PackageResource::getUrl()
-                            : ProductResource::getUrl(),
+                            ? CatalogResource::getUrl()
+                            : CatalogResource::getUrl(),
                         'is_order' => true,
                         'order_id' => $order->id,
                         'order_number' => $order->order_number,

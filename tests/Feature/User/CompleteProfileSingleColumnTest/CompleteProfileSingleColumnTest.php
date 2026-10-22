@@ -88,7 +88,7 @@ test('the page still renders for a user who has to complete it', function (strin
 
     get($path)->assertOk();
 })->with([
-    '/user/complete-profile',
+    '/complete-profile',
 ]);
 
 test('the heading and layout are untouched by the column change', function (): void {

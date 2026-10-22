@@ -1,0 +1,42 @@
+# Cart Type Definitions
+# Wedding Flower Decoration App - Cart GraphQL Types
+
+type Cart {
+  id: ID!
+  user: User
+  items: [CartItem!]!
+  subtotal: Float!
+  discount: Float!
+  voucher: Voucher
+  shippingCost: Float
+  tax: Float!
+  total: Float!
+  itemCount: Int!
+  updatedAt: String!
+}
+
+type CartItem {
+  id: ID!
+  user: User @belongsTo
+  catalog: Catalog @belongsTo
+  package: Package @belongsTo
+  quantity: Int!
+  subtotal: Float!
+  options: JSON
+  createdAt: String!
+  updatedAt: String!
+}
+
+type ShippingEstimate {
+  cost: Float!
+  estimatedDays: Int!
+  method: String!
+  available: Boolean!
+}
+
+type CartSummary {
+  itemCount: Int!
+  subtotal: Float!
+  estimatedTotal: Float!
+  hasVoucher: Boolean!
+}

@@ -2,49 +2,79 @@
 
 namespace App\Filament\Admin\Pages\DataExportPage;
 
-use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Services\DataExportService\DataExportService;
+use App\Support\AppIcon\AppIcon;
 use Filament\Actions\Action;
-use Filament\Forms;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Livewire\Component;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Support\Facades\Auth;
 
-class DataExportPage extends Page implements HasForms
+/**
+ * Pusat Unduhan Data.
+ *
+ * Admin centang dataset yang mau diunduh, lalu pilih formatnya. Berkasnya
+ * dibuat di server (`DataExportService`) dan DIUNDUH lewat iframe tersembunyi
+ * -- bukan `redirect()`.
+ *
+ * Kenapa bukan redirect: redirect = navigasi penuh, jadi browser sempat
+ * memuat ulang dokumen. Begitu token/sesi bergeser (mis. karena login di
+ * tab lain), livewire.js memunculkan dialog "This page has expired" tepat
+ * setelah unduhan selesai -- padahal yang terjadi cuma unduhan.
+ */
+class DataExportPage extends Page
 {
     use HasDynamicBreadcrumbs;
-    use InteractsWithForms;
 
     protected static string $view = 'Admin.pages.data-export-page.data-export-page';
 
-    protected static ?string $navigationIcon = 'heroicon-s-arrow-down-tray';
+    protected static ?string $navigationIcon = AppIcon::EXPORT;
 
-    protected static ?int $navigationSort = 99;
+    /**
+     * Key dataset yang dicentang.
+     *
+     * @var array<string, bool>
+     */
+    public array $data = [];
 
-    public ?array $data = [];
+    /**
+     * URL berkas yang baru dibuat (dipakai iframe tersembunyi).
+     */
+    public ?string $downloadUrl = null;
+
+    public function getTitle(): string
+    {
+        return __('Pusat Unduhan Data');
+    }
+
+    /**
+     * Slug halaman: `data-export`, bukan `data-export-page`.
+     *
+     * Filament menurunkan slug dari nama class, jadi tanpa override ini
+     * URL-nya jadi `/admin/data-export-page`.
+     */
+    public static function getSlug(): string
+    {
+        return 'data-export';
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('Pusat Unduhan Data');
+    }
 
     public static function getNavigationGroup(): ?string
     {
         return __('Data Master');
     }
 
-    public static function getNavigationLabel(): string
+    public static function getNavigationSort(): ?int
     {
-        return __('Pusat Unduhan');
-    }
-
-    public static function getSlug(): string
-    {
-        return 'data-export';
-    }
-
-    public function getTitle(): string
-    {
-        return __('Pusat Unduhan Data');
+        return 11;
     }
 
     public function getBreadcrumbs(): array
@@ -55,104 +85,120 @@ class DataExportPage extends Page implements HasForms
         ];
     }
 
-    public function mount(): void
-    {
-        $this->form->fill(
-            collect(DataExportService::datasets())->mapWithKeys(fn (array $dataset, string $key): array => [$key => true])->all()
-        );
-    }
-
     public function form(Form $form): Form
     {
         $counts = DataExportService::counts();
 
+        $options = [];
+
+        foreach (DataExportService::groups() as $group) {
+            foreach (DataExportService::datasets() as $key => $dataset) {
+                if (($dataset['group'] ?? null) !== $group) {
+                    continue;
+                }
+
+                $options[$dataset['label'].' ('.($counts[$key] ?? 0).')'] = $key;
+            }
+        }
+
         return $form
             ->schema([
-                Forms\Components\Section::make(__('Unduh Semua Data Aplikasi'))
-                    ->description(__('Aktif/nonaktifkan toggle per dataset, lalu klik Unduh Data dan pilih format file (Excel atau PDF) pada modal yang muncul.'))
-                    ->icon('heroicon-s-arrow-down-tray')
-                    ->schema([
-                        Forms\Components\Grid::make(['default' => 1, 'md' => 2])
-                            ->schema(
-                                collect(DataExportService::datasets())
-                                    ->map(fn (array $dataset, string $key): Forms\Components\Toggle => Forms\Components\Toggle::make($key)
-                                        ->label($dataset['label'])
-                                        ->helperText(__('Total :count baris', ['count' => number_format($counts[$key] ?? 0)]))
-                                        ->inline(false)
-                                        ->default(true))
-                                    ->values()
-                                    ->all()
-                            ),
-                    ]),
+                CheckboxList::make('data')
+                    ->label(__('Pilih Data yang Ingin Diunduh'))
+                    ->options($options)
+                    ->columns(3)
+                    ->bulkToggleable()
+                    ->searchable()
+                    ->helperText(__('Bisa pilih beberapa sekaligus. Arsip berisi semua tabel yang dipilih.')),
             ])
             ->statePath('data');
     }
 
+    /**
+     * Aksi unduh: buat arsip, lalu trigger unduhan lewat iframe.
+     */
+    public function unduhDataAction(): Action
+    {
+        return Action::make('unduh_data')
+            ->label(__('Unduh Data'))
+            ->icon('/images/icons/export.svg')
+            ->color('primary')
+            ->form([
+                Select::make('format')
+                    ->searchable()
+                    ->label(__('Format Berkas'))
+                    ->options([
+                        'xlsx' => __('Excel (.xlsx)'),
+                        'pdf' => __('PDF (.pdf)'),
+                    ])
+                    ->default('xlsx')
+                    ->required(),
+            ])
+            ->action(function (array $data): void {
+                $keys = array_keys(array_filter($this->data));
+
+                if ($keys === []) {
+                    Notification::make()
+                        ->title(__('Pilih data yang ingin diunduh dulu.'))
+                        ->warning()
+                        ->send();
+
+                    return;
+                }
+
+                try {
+                    $actor = $this->actor();
+
+                    $path = ($data['format'] ?? 'xlsx') === 'pdf'
+                        ? DataExportService::buildPdf($keys, $actor)
+                        : DataExportService::buildWorkbook($keys, $actor);
+                } catch (\Throwable $e) {
+                    report($e);
+
+                    Notification::make()
+                        ->title(__('Gagal membuat arsip.'))
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
+                $this->downloadUrl = route('admin.data-exports.download', ['file' => basename($path)]);
+
+                $this->dispatch('unduh_data', url: $this->downloadUrl);
+
+                Notification::make()
+                    ->title(__('Arsip siap diunduh.'))
+                    ->success()
+                    ->send();
+            });
+    }
+
+    /**
+     * Siapa yang menjemduh.
+     *
+     * Panel admin memakai guard `admin`, jadi actor-nya model `Admin` --
+     * bukan `User`. Relasi `exports.user` yang polimorfik mencatatnya apa
+     * adanya.
+     */
+    protected function actor(): Authenticatable
+    {
+        $actor = Auth::guard('admin')->user();
+
+        if ($actor instanceof Authenticatable) {
+            return $actor;
+        }
+
+        return Auth::user();
+    }
+
+    /**
+     * @return array<Action>
+     */
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('unduh_data')
-                ->label(__('Unduh Data'))
-                ->icon('heroicon-m-arrow-down-tray')
-                ->color('primary')
-                ->button()
-                ->modalHeading(__('Pilih Format Unduhan'))
-                ->modalDescription(__('Dataset yang aktif akan digabung ke dalam satu file.'))
-                ->modalSubmitActionLabel(__('Unduh'))
-                ->modalCancelActionLabel(__('Batal'))
-                ->form([
-                    Forms\Components\Radio::make('format')
-                        ->label(__('Format File'))
-                        ->options([
-                            'xlsx' => __('Excel / Spreadsheet (.xlsx) — satu sheet per dataset'),
-                            'pdf' => __('PDF (.pdf) — satu bagian per dataset'),
-                        ])
-                        ->descriptions([
-                            'xlsx' => __('Cocok untuk olah data lanjutan.'),
-                            'pdf' => __('Cocok untuk arsip / cetak.'),
-                        ])
-                        ->default('xlsx')
-                        ->required(),
-                ])
-                ->action(function (array $data, Component $livewire): void {
-                    $format = $data['format'] ?? 'xlsx';
-                    if (! in_array($format, ['xlsx', 'pdf'], true)) {
-                        $format = 'xlsx';
-                    }
-
-                    $keys = collect($this->form->getState())->filter()->keys()->values()->all();
-
-                    if ($keys === []) {
-                        Notification::make()
-                            ->title(__('Pilih minimal satu dataset.'))
-                            ->warning()
-                            ->send();
-
-                        return;
-                    }
-
-                    try {
-                        $filePath = $format === 'pdf'
-                            ? DataExportService::buildPdf($keys, auth()->user())
-                            : DataExportService::buildWorkbook($keys, auth()->user());
-                    } catch (\Throwable $e) {
-                        report($e);
-                        Notification::make()
-                            ->title(__('Gagal membuat arsip.'))
-                            ->body($e->getMessage())
-                            ->danger()
-                            ->send();
-
-                        return;
-                    }
-
-                    // Unduhan lewat GET biasa (bukan POST Livewire) sehingga
-                    // tidak ada risiko 419 Page Expired.
-                    $livewire->redirect(
-                        route('admin.data-exports.download', ['file' => basename($filePath)]),
-                        navigate: false
-                    );
-                }),
+            $this->unduhDataAction(),
         ];
     }
 }

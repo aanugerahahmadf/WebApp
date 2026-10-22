@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{{ __('Notifikasi Pembayaran') }}</title>
 <style>
-  body  { margin:0; padding:0; background:#f5f5f5; font-family:Arial,sans-serif; font-size:14px; color:#333; }
+  body  { margin:0; padding:0; background:#f5f5f5; font-family:'Google Sans Flex',sans-serif; font-size:14px; color:#333; }
   .wrap { max-width:600px; margin:24px auto; background:#fff; border:1px solid #e0e0e0; }
 
   .logo-bar { text-align:center; padding:24px 0 20px; border-bottom:1px solid #e0e0e0; }
@@ -58,10 +58,10 @@ $statusText  = $isFailed
     ? __('Pembayaran Gagal')
     : ($isPaid ? __('Pembayaran Berhasil') : __('Menunggu Pembayaran'));
 
-$item      = $order->package ?? $order->product;
+$item      = $order->package ?? $order->catalog;
 $itemType  = $order->package_id
-    ? \App\Filament\User\Resources\PackageResource\PackageResource::getModelLabel()
-    : \App\Filament\User\Resources\ProductResource\ProductResource::getModelLabel();
+    ? __('Paket')
+    : \App\Filament\User\Resources\CatalogResource\CatalogResource::getModelLabel();
 $itemName  = $item?->name ?? '-';
 $itemCat   = $item?->category?->name ?? '-';
 $itemPrice = $order->total_price;
@@ -113,7 +113,7 @@ $logoSrc = $logoSrc      ?? null;
       <p>{{ __('Pesanan Anda belum dibayar. Segera selesaikan pembayaran agar pesanan dapat diproses.') }}</p>
     @endif
 
-    {{-- Produk/Paket yang dipesan seperti marketplace --}}
+    {{-- Katalog/Paket yang dipesan seperti marketplace --}}
     <table style="width:100%; border-collapse:collapse; margin:16px 0; background:#fafafa; border-radius:8px; overflow:hidden;">
       <tr>
         <td style="width:80px; padding:12px; vertical-align:top;">

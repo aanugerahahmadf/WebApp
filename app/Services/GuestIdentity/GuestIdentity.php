@@ -121,6 +121,20 @@ class GuestIdentity
     }
 
     /**
+     * Email a guest id maps to.
+     *
+     * Public karena "siapa tamu ini" juga ditanyakan dari tempat yang tidak
+     * boleh membuat apa pun -- accessor Inbox menyelesaikan penonton untuk
+     * browser yang hanya memegang cookie, dan membuat baris dari dalam accessor
+     * akan jadi kejutan yang tidak diminta siapa pun. Kedua sisi menurunkan
+     * email dari sini supaya tidak bisa melenceng.
+     */
+    public static function emailFor(string $guestId): string
+    {
+        return 'guest_'.md5($guestId).'@guest.local';
+    }
+
+    /**
      * Find or create the guest account behind an id.
      *
      * Shared with the mobile guest flow so the two surfaces cannot drift on
@@ -129,7 +143,7 @@ class GuestIdentity
      */
     public static function resolve(string $guestId, ?string $name = null): User
     {
-        $email = 'guest_'.md5($guestId).'@guest.local';
+        $email = self::emailFor($guestId);
 
         /** @var User $guest */
         $guest = User::firstOrCreate(
@@ -137,7 +151,9 @@ class GuestIdentity
             [
                 'username' => 'tamu_'.substr(md5($guestId), 0, 8),
                 'full_name' => filled($name) ? $name : self::DEFAULT_NAME,
-                'password' => Hash::make(Str::random(40)),
+                // Password MENTAH — model User punya cast 'password' => 'hashed'
+                // yang akan hash otomatis saat create. JANGAN Hash::make di sini.
+                'password' => Str::random(40),
             ],
         );
 

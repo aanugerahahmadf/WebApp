@@ -4,6 +4,7 @@ use App\Enums\RuntimePlatform\RuntimePlatform;
 use App\Models\User\User;
 use App\Support\AppPlatform\AppPlatform;
 use App\Support\MobileNav\MobileNav;
+use Filament\Facades\Filament;
 use Illuminate\Http\Request;
 use Illuminate\Testing\TestResponse;
 
@@ -28,6 +29,19 @@ beforeEach(function (): void {
 
 function mobileUser(): User
 {
+    // Role untuk panel USER harus ber-guard `web`, bukan `admin`.
+    //
+    // `User::assignRole()` mencari role di guard model itu sendiri (`web`),
+    // sedangkan role `super_admin` yang sesungguhnya dibuat seeder hidup di
+    // guard `admin` untuk tabel `admins`. Tanpa baris tambahan ini,
+    // `assignRole()` melempar `RoleDoesNotExist` -- test gagal di helper,
+    // sebelum satu pun assertion berjalan.
+    //
+    // Ini bukan berarti ada user ber-role `super_admin` di produksi: yang ada
+    // di guard `web` hanya untuk keperluan panel user. Yang diuji file ini adalah
+    // chrome panel, jadi yang dibutuhkan hanyalah "user yang boleh masuk".
+    seedRoles(adminRoles: [], webRoles: ['super_admin']);
+
     $user = User::factory()->create();
     $user->assignRole('super_admin');
 
@@ -39,21 +53,31 @@ function mobileUser(): User
  *
  * Both panels redirect `/admin` and `/user` to their dashboard, so asserting on
  * the first response would only ever assert on a 302.
+ *
+ * Guard dipilih dari path-nya. Panel admin berjalan di guard `admin` (tabel
+ * `admins`), jadi `actingAs($user, 'web')->get('/admin')` selalu mendarat di
+ * halaman MASUK admin: `Authenticate` Filament menolak karena guard `admin`
+ * kosong. Responsnya tetap 200 dan tetap punya topbar -- tapi tidak punya
+ * sidebar maupun bottom nav, jadi test chrome panel admin ikut gagal dengan
+ * `To contain: fi-sidebar` / `fi-bottom-nav-item` yang jauh dari penyebabnya.
  */
 function getPanelPage(string $path): TestResponse
 {
-    $user = mobileUser();
+    $isAdminPanel = str_starts_with($path, '/admin');
 
-    $response = actingAs($user, 'web')->get($path);
+    $actor = $isAdminPanel ? makeAdminWithStorefrontIdentity() : mobileUser();
+    $guard = $isAdminPanel ? 'admin' : 'web';
+
+    $response = actingAs($actor, $guard)->get($path);
 
     while ($response->isRedirect() && $response->headers->get('Location')) {
-        $response = actingAs($user, 'web')->get($response->headers->get('Location'));
+        $response = actingAs($actor, $guard)->get($response->headers->get('Location'));
     }
 
     return $response;
 }
 
-// ── Platform detection ───────────────────────────────────────────────────────
+// â”€â”€ Platform detection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 test('detects a desktop browser as a desktop website', function (): void {
     $request = Request::create('/user', 'GET');
@@ -160,7 +184,7 @@ test('an unknown user agent falls back to a desktop website', function (): void 
     expect(AppPlatform::detect($request))->toBe(RuntimePlatform::WebsiteWindows);
 });
 
-// ── Bottom navigation ────────────────────────────────────────────────────────
+// â”€â”€ Bottom navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 test('the bottom navigation is hidden on desktop', function (): void {
     AppPlatform::fake(RuntimePlatform::WebsiteWindows);
@@ -192,20 +216,23 @@ test('the bottom navigation stays hidden in the electron desktop shell', functio
 test('the bottom navigation is suppressed on auth pages', function (): void {
     AppPlatform::fake(RuntimePlatform::MobileAppAndroid);
 
-    $this->get('/user/signin')->assertOk()->assertDontSee('fi-bottom-nav');
-    // Pendaftaran dinonaktifkan; door-nya redirect ke /user/auth, jadi halaman auth
-    // itulah yang harus bebas bottom-nav -- kalau tidak, halaman auth akan
-    // menampilkan nav yang tidak bisa dipakai tamu.
-    $this->get('/user/signup')->assertRedirect('/user/auth');
-    $this->get('/user/auth')->assertOk()->assertDontSee('fi-bottom-nav');
-    $this->get('/user/password-reset/request')->assertOk()->assertDontSee('fi-bottom-nav');
+    $this->get('/signin')->assertOk()->assertDontSee('fi-bottom-nav');
+    // Pendaftaran aktif lagi di `/signup`. Seperti halaman auth lain, ia
+    // harus bebas bottom-nav -- kalau tidak, tamu akan melihat nav yang
+    // tidak bisa dipakai sebelum login.
+    $this->get('/signup')->assertOk()->assertDontSee('fi-bottom-nav');
+    $this->get('/auth')->assertOk()->assertDontSee('fi-bottom-nav');
+    // Panel storefront sudah di root, jadi reset password juga di root.
+    $this->get('/password-reset/request')->assertOk()->assertDontSee('fi-bottom-nav');
     $this->get('/admin/signin')->assertOk()->assertDontSee('fi-bottom-nav');
 });
 
 test('the bottom navigation renders on an authenticated page on mobile', function (): void {
     AppPlatform::fake(RuntimePlatform::MobileAppAndroid);
 
-    getPanelPage('/user')
+    // Storefront sudah di root, jadi "/user" cuma redirect legacy ke "/home".
+    // Yang diuji halaman aslinya.
+    getPanelPage('/home')
         ->assertOk()
         ->assertSee('fi-bottom-nav', escape: false)
         ->assertSee('fi-bottom-nav-item', escape: false)
@@ -217,7 +244,7 @@ test('the bottom navigation renders on an authenticated page on mobile', functio
 test('the bottom navigation is not rendered on the same page on desktop', function (): void {
     AppPlatform::fake(RuntimePlatform::WebsiteWindows);
 
-    getPanelPage('/user')
+    getPanelPage('/home')
         ->assertOk()
         ->assertDontSee('fi-bottom-nav', escape: false);
 });
@@ -228,6 +255,23 @@ test('the admin panel gets a bottom navigation of its own on mobile', function (
     getPanelPage('/admin')
         ->assertOk()
         ->assertSee('fi-bottom-nav-item', escape: false);
+});
+
+test('every registered panel has its own bottom navigation set', function (): void {
+    /*
+     * Set item bottom-nav diambil per id panel dari config/app-platform.php.
+     * Panel yang TIDAK punya set item -> bar-nya kosong, tanpa error, tanpa
+     * jejak di log.
+     *
+     * Ini persis yang terjadi di storefront setelah panel 'user' dilebur ke
+     * panel 'welcome': config masih punya set 'user', panel yang benar-benar
+     * merender minta set 'welcome', dan bottom nav hilang total dari
+     * aplikasi HP.
+     */
+    foreach (array_keys(Filament::getPanels()) as $panelId) {
+        expect(MobileNav::items($panelId))
+            ->not->toBeEmpty("panel {$panelId} tidak punya set item bottom nav");
+    }
 });
 
 test('each panel gets its own bottom navigation destinations', function (): void {
@@ -243,7 +287,7 @@ test('each panel gets its own bottom navigation destinations', function (): void
     $userUrls = array_map(fn ($item) => $item->getUrl(), $user);
     $adminUrls = array_map(fn ($item) => $item->getUrl(), $admin);
 
-    expect($user[0]->getUrl())->toContain('/user/')
+    expect($user[0]->getUrl())->toContain('/home')
         ->and($admin[0]->getUrl())->toContain('/admin/')
         ->and(array_intersect($userUrls, $adminUrls))->toBeEmpty();
 
@@ -255,10 +299,15 @@ test('each panel gets its own bottom navigation destinations', function (): void
 });
 
 test('bottom navigation items stay inside their own panel', function (): void {
-    foreach (['user' => '/user/', 'admin' => '/admin/'] as $panelId => $prefix) {
-        foreach (MobileNav::items($panelId) as $item) {
-            expect($item->getUrl())->toContain($prefix);
-        }
+    // Storefront hidup di ROOT (/home, /messages, /settings, ...) dan panel
+    // admin di /admin/*. Jadi batasnya bukan prefix per panel, tapi "tidak
+    // pernah masuk ke panel milik orang lain".
+    foreach (MobileNav::items('user') as $item) {
+        expect($item->getUrl())->not->toContain('/admin/');
+    }
+
+    foreach (MobileNav::items('admin') as $item) {
+        expect($item->getUrl())->toContain('/admin/');
     }
 });
 
@@ -276,32 +325,33 @@ test('a bottom navigation entry pointing at a missing class is dropped', functio
         ->and($items[0]->getLabel())->toBe('Cari');
 });
 
-// ── Responsive tables ────────────────────────────────────────────────────────
+// â”€â”€ Responsive tables â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 test('the card-table script is emitted on mobile and omitted on desktop', function (): void {
     AppPlatform::fake(RuntimePlatform::MobileAppAndroid);
-    $this->get('/user/signin')->assertOk()->assertSee('fi-table-cards', escape: false);
+    $this->get('/signin')->assertOk()->assertSee('fi-table-cards', escape: false);
 
     AppPlatform::fake(RuntimePlatform::WebsiteWindows);
-    $this->get('/user/signin')->assertOk()->assertDontSee('fi-table-cards', escape: false);
+    $this->get('/signin')->assertOk()->assertDontSee('fi-table-cards', escape: false);
 });
 
 test('the card-table script can be turned off through config', function (): void {
     AppPlatform::fake(RuntimePlatform::MobileAppAndroid);
     config(['app-platform.responsive_tables.enabled' => false]);
 
-    $this->get('/user/signin')->assertOk()->assertDontSee('fi-table-cards', escape: false);
+    $this->get('/signin')->assertOk()->assertDontSee('fi-table-cards', escape: false);
 });
 
-// ── The runtime probe ────────────────────────────────────────────────────────
+// â”€â”€ The runtime probe â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 test('the runtime script reports the resolved platform to the client', function (): void {
     AppPlatform::fake(RuntimePlatform::MobileAppIos);
 
-    $response = $this->get('/user/signin')->assertOk();
+    $response = $this->get('/signin')->assertOk();
 
     $response->assertSee('mobile_app_ios', escape: false)
         ->assertSee('window.AppPlatform', escape: false)
         // The one-shot reload that teaches the server it is inside a shell.
         ->assertSee('app_shell=', escape: false);
 });
+

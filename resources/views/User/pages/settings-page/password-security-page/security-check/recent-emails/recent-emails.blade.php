@@ -10,12 +10,12 @@
 
                 <div class="mt-6 flex flex-wrap justify-end gap-3">
                     @if ($emailOtpSent)
-                        <x-filament::button type="button" wire:click="sendEmailChangeOtp" color="gray" icon="heroicon-m-arrow-path">
+                        <x-filament::button type="button" wire:click="sendEmailChangeOtp" color="gray" icon="/images/icons/refresh.svg">
                             {{ __('Kirim Ulang OTP') }}
                         </x-filament::button>
                     @endif
 
-                    <x-filament::button type="submit" :icon="$emailOtpSent ? 'heroicon-m-check-circle' : 'heroicon-m-paper-airplane'">
+                    <x-filament::button type="submit" :icon="$emailOtpSent ? '/images/icons/check_circle.svg' : '/images/icons/send.svg'">
                         {{ $emailOtpSent ? __('Verifikasi OTP') : __('Kirim Kode OTP') }}
                     </x-filament::button>
                 </div>

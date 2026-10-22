@@ -1,5 +1,9 @@
-@extends('User.errors.minimal.minimal')
+{{--
+    Halaman error 403 (storefront -- panel User).
 
-@section('title', __('Forbidden'))
-@section('code', '403')
-@section('message', __($exception->getMessage() ?: 'Forbidden'))
+    Seluruh tampilan berasal dari satu view bersama:
+    Shared.errors.glass.glass (kaca + animasi). File ini hanya meneruskan
+    kode status; isi, warna, dan tombolnya ada di
+    App\Support\ErrorPage\ErrorPage.
+--}}
+@include('Shared.errors.glass.glass', ['status' => 403])

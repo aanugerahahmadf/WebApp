@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'mã bưu điện',
         'preview'                  => 'xem trước',
         'price'                    => 'giá',
-        'product_id'               => 'ID sản phẩm',
+        'catalog_id'               => 'ID sản phẩm',
         'product_uid'              => 'UID sản phẩm',
         'product_uuid'             => 'sản phẩm UUID',
         'promo_code'               => 'mã khuyến mại',

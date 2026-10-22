@@ -16,7 +16,7 @@ class EditOrder extends EditRecord
         return [
             Actions\Action::make('back')
                 ->label(__('Kembali'))
-                ->icon('heroicon-s-arrow-left')
+                ->icon('/images/icons/arrow_left.svg')
                 ->color('gray')
                 ->url(fn () => request()->query('from') === 'view'
                     ? OrderResource::getUrl('view', ['record' => $this->record])
@@ -25,7 +25,7 @@ class EditOrder extends EditRecord
 
             Actions\Action::make('view')
                 ->label(__('Lihat Detail'))
-                ->icon('heroicon-s-eye')
+                ->icon('/images/icons/eye.svg')
                 ->color('gray')
                 ->url(fn () => OrderResource::getUrl('view', ['record' => $this->record]))
                 ->extraAttributes(['wire:navigate' => true]),

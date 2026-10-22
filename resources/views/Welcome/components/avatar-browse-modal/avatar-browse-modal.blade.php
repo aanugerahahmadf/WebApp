@@ -251,7 +251,7 @@
                             aria-label="{{ __('Balik Kamera') }}"
                             style="display:none;"
                         >
-                            <x-filament::icon icon="heroicon-m-arrow-path" class="h-5 w-5" />
+                            <x-filament::icon icon="/images/icons/refresh.svg" class="h-5 w-5" />
                         </button>
                         {{-- Back (in camera view) --}}
                         <button
@@ -262,7 +262,7 @@
                             aria-label="{{ __('Kembali') }}"
                             style="display:none;"
                         >
-                            <x-filament::icon icon="heroicon-m-arrow-left" class="h-5 w-5" />
+                            <x-filament::icon icon="/images/icons/arrow_left.svg" class="h-5 w-5" />
                         </button>
                         {{-- Close --}}
                         <button
@@ -271,7 +271,7 @@
                             class="relative -m-1.5 flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 outline-none transition duration-75 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-white/5 dark:hover:text-gray-300"
                             aria-label="{{ __('Tutup') }}"
                         >
-                            <x-filament::icon icon="heroicon-m-x-mark" class="h-5 w-5" />
+                            <x-filament::icon icon="/images/icons/x.svg" class="h-5 w-5" />
                         </button>
                     </div>
                 </div>
@@ -286,10 +286,10 @@
                         class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium outline-none transition duration-75 hover:bg-gray-50 focus-visible:bg-gray-50 active:bg-gray-100 dark:hover:bg-white/5 dark:active:bg-white/10"
                     >
                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600 ring-1 ring-primary-600/10 dark:bg-primary-400/10 dark:text-primary-400 dark:ring-primary-400/20">
-                            <x-filament::icon icon="heroicon-o-camera" class="h-5 w-5" />
+                            <x-filament::icon icon="/images/icons/camera.svg" class="h-5 w-5" />
                         </span>
                         <span class="flex-1 text-left text-gray-700 dark:text-gray-200">{{ __('Kamera') }}</span>
-                        <x-filament::icon icon="heroicon-m-chevron-right" class="h-4 w-4 shrink-0 text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300" />
+                        <x-filament::icon icon="/images/icons/chevron_right.svg" class="h-4 w-4 shrink-0 text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300" />
                     </button>
 
                     {{-- Gallery --}}
@@ -299,10 +299,10 @@
                         class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium outline-none transition duration-75 hover:bg-gray-50 focus-visible:bg-gray-50 active:bg-gray-100 dark:hover:bg-white/5 dark:active:bg-white/10"
                     >
                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600 ring-1 ring-primary-600/10 dark:bg-primary-400/10 dark:text-primary-400 dark:ring-primary-400/20">
-                            <x-filament::icon icon="heroicon-o-photo" class="h-5 w-5" />
+                            <x-filament::icon icon="/images/icons/photo.svg" class="h-5 w-5" />
                         </span>
                         <span class="flex-1 text-left text-gray-700 dark:text-gray-200">{{ __('Galeri / Album') }}</span>
-                        <x-filament::icon icon="heroicon-m-chevron-right" class="h-4 w-4 shrink-0 text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300" />
+                        <x-filament::icon icon="/images/icons/chevron_right.svg" class="h-4 w-4 shrink-0 text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300" />
                     </button>
 
                     {{-- Google Drive — tampil di Android & Windows/Linux (non Apple) --}}
@@ -323,7 +323,7 @@
                             </svg>
                         </span>
                         <span class="flex-1 text-left text-gray-700 dark:text-gray-200">{{ __('Google Drive') }}</span>
-                        <x-filament::icon icon="heroicon-m-chevron-right" class="h-4 w-4 shrink-0 text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300" />
+                        <x-filament::icon icon="/images/icons/chevron_right.svg" class="h-4 w-4 shrink-0 text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300" />
                     </button>
 
                     {{-- iCloud Drive — tampil di iOS & macOS --}}
@@ -340,7 +340,7 @@
                             </svg>
                         </span>
                         <span class="flex-1 text-left text-gray-700 dark:text-gray-200">{{ __('iCloud Drive') }}</span>
-                        <x-filament::icon icon="heroicon-m-chevron-right" class="h-4 w-4 shrink-0 text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300" />
+                        <x-filament::icon icon="/images/icons/chevron_right.svg" class="h-4 w-4 shrink-0 text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300" />
                     </button>
 
                     <div class="my-1 border-t border-gray-100 dark:border-white/10"></div>
@@ -380,10 +380,7 @@
                             class="absolute inset-0 flex items-center justify-center bg-gray-900/60"
                             style="display:none;"
                         >
-                            <svg class="h-8 w-8 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                            </svg>
+                            <x-filament::icon icon="/images/icons/refresh.svg" class="h-8 w-8 animate-spin text-white" />
                         </div>
                     </div>
 
@@ -397,7 +394,7 @@
                             class="flex h-14 w-14 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg transition hover:bg-primary-500 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
                             aria-label="{{ __('Ambil Foto') }}"
                         >
-                            <x-filament::icon icon="heroicon-m-camera" class="h-7 w-7" />
+                            <x-filament::icon icon="/images/icons/camera.svg" class="h-7 w-7" />
                         </button>
 
                         {{-- Retake + Use (after capture) --}}

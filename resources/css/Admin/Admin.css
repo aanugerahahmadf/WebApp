@@ -27,6 +27,28 @@
     --color-zinc-900: #171717;
     --color-zinc-950: #0a0a0a;
 
+    /*
+     * Warna brand panel dijembatungkan ke token Tailwind, supaya kelas
+     * `text-primary-600`, `bg-danger-50`, `focus:ring-primary-500`, dan
+     * sejenisnya ikut warna Filament -- bukan warna default Tailwind, dan
+     * tidak perlu ditimpa per-file.
+     */
+    --color-primary-50: rgb(var(--primary-50, 254 249 195));
+    --color-primary-100: rgb(var(--primary-100, 254 243 169));
+    --color-primary-200: rgb(var(--primary-200, 254 230 106));
+    --color-primary-300: rgb(var(--primary-300, 253 224 71));
+    --color-primary-400: rgb(var(--primary-400, 250 204 21));
+    --color-primary-500: rgb(var(--primary-500, 250 204 21));
+    --color-primary-600: rgb(var(--primary-600, 234 179 8));
+    --color-primary-700: rgb(var(--primary-700, 202 138 4));
+    --color-danger-50: rgb(var(--danger-50, 254 242 242));
+    --color-danger-100: rgb(var(--danger-100, 254 226 226));
+    --color-danger-300: rgb(var(--danger-300, 252 165 165));
+    --color-danger-400: rgb(var(--danger-400, 248 113 113));
+    --color-danger-500: rgb(var(--danger-500, 220 38 38));
+    --color-danger-600: rgb(var(--danger-600, 185 28 28));
+    --color-danger-700: rgb(var(--danger-700, 153 27 27));
+
     --color-accent: var(--color-neutral-800);
     --color-accent-content: var(--color-neutral-800);
     --color-accent-foreground: var(--color-white);
@@ -89,9 +111,27 @@
    Sidebar admin: full width di mobile (Android/iOS app & mobile browser).
    ═══════════════════════════════════════════════════════════════════════ */
 
+/*
+ * SEMUA selector di blok ini diawali `:root:not(.native-desktop)`.
+ *
+ * Alasannya sama dengan blok Global Search di Shared/Shared.css dan blok
+ * sidebar di Welcome.css / User.css: jendela aplikasi desktop (Electron)
+ * tidak punya `minWidth`, jadi bisa dikecilkan ke lebar apa saja termasuk
+ * di bawah 1024px. Tanpa guard itu, sidebar desktop app ikut memakai versi
+ * mobile -- `width: 100vw` -- dan menutupi seluruh layar, padahal untuk
+ * laptop/aplikasi desktop yang diminta adalah ukuran sidebar BAWAAN
+ * Filament (`var(--sidebar-width)`).
+ *
+ * `@media` SAJA tidak cukup: laptop biasa dan jendela aplikasi desktop bisa
+ * punya lebar yang sama. Yang membedakan adalah tempat aplikasi
+ * berjalan, lewat kelas `.native-desktop` yang dipasang ke <html> oleh
+ * platform-runtime-script tiap panel (registered di HEAD_START oleh
+ * PlatformSupportServiceProvider) sehingga sudah ada sebelum sidebar
+ * dirender.
+ */
 @media (max-width: 1023px) {
     /* Full width sidebar — sama seperti user panel */
-    .fi-panel-admin .fi-sidebar {
+    :root:not(.native-desktop) .fi-panel-admin .fi-sidebar {
         width: 100vw !important;
         max-width: 100vw !important;
         --tw-translate-x: -100% !important;
@@ -101,14 +141,14 @@
     }
 
 
-    .fi-panel-admin .fi-sidebar.fi-sidebar-open {
+    :root:not(.native-desktop) .fi-panel-admin .fi-sidebar.fi-sidebar-open {
         --tw-translate-x: 0 !important;
         transform: translateX(0) !important;
     }
 
 
     /* Overlay admin panel */
-    .fi-panel-admin .fi-sidebar-close-overlay {
+    :root:not(.native-desktop) .fi-panel-admin .fi-sidebar-close-overlay {
         z-index: 35 !important;
     }
 
@@ -116,42 +156,42 @@
     /*
      * Fix overflow-x-clip pada .fi-layout agar overlay fixed tidak terpotong.
      */
-    .fi-panel-admin .fi-layout {
+    :root:not(.native-desktop) .fi-panel-admin .fi-layout {
         overflow-x: visible !important;
         overflow: visible !important;
     }
 
 
     /* Nav items full width */
-    .fi-panel-admin .fi-sidebar-nav-item > a,
-.fi-panel-admin .fi-sidebar-group {
+    :root:not(.native-desktop) .fi-panel-admin .fi-sidebar-nav-item > a,
+:root:not(.native-desktop) .fi-panel-admin .fi-sidebar-group {
         margin-left: 0 !important;
         margin-right: 0 !important;
         border-radius: 0 !important;
     }
 
 
-    .fi-panel-admin .fi-sidebar-group-button {
+    :root:not(.native-desktop) .fi-panel-admin .fi-sidebar-group-button {
         padding-left: 1.5rem !important;
         padding-right: 1.5rem !important;
         width: 100% !important;
     }
 
 
-    .fi-panel-admin .fi-sidebar-nav-item > a.fi-active {
+    :root:not(.native-desktop) .fi-panel-admin .fi-sidebar-nav-item > a.fi-active {
         border-radius: 0 !important;
     }
 
 
     /* Padding bawah agar item terakhir tidak tertutup footer */
-    .fi-panel-admin .fi-sidebar-nav {
+    :root:not(.native-desktop) .fi-panel-admin .fi-sidebar-nav {
         padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px)) !important;
     }
 
     /* Bendera + nama negara pada Select kode negara WhatsApp.
        Labelnya HTML dari App\Support\Phone\CountryCallingCodeOptions::all().
        Dicerminkan dari User.css / Welcome.css supaya ketiganya sama. */
-    .fi-panel-admin .country-flag {
+    :root:not(.native-desktop) .fi-panel-admin .country-flag {
         display: inline-block;
         font-size: 1.05rem;
         line-height: 1;
@@ -160,7 +200,7 @@
     }
 
     /* Fallback kalau flag emoji tidak dirender: kode ISO gaya ringkas "AF"/"ID". */
-    .fi-panel-admin .country-iso-code {
+    :root:not(.native-desktop) .fi-panel-admin .country-iso-code {
         display: inline-block;
         min-width: 1.35rem;
         font-size: 0.5625rem;
@@ -170,7 +210,246 @@
         vertical-align: 0.05em;
     }
 
-    .fi-panel-admin .country-dial-code {
+    :root:not(.native-desktop) .fi-panel-admin .country-dial-code {
         opacity: 0.6;
     }
+}
+
+/*
+ * MESSAGES — PENUH KE TEPI, TANPA KARTU HALAMAN
+ *
+ * Halaman Messages tidak lagi dibungkus `<x-filament-panels::page>`; yang
+ * tersisa dari pembungkus itu hanya bungkus `.fi-main` milik layout panel:
+ *
+ *   .fi-main   px-4 md:px-6 lg:px-8      padding horizontal
+ *              mx-auto max-w-full        dari getMaxContentWidth() = Full
+ *
+ * Padding horizontal itulah yang membuat halaman ini terasa seperti "halaman di
+ * dalam aplikasi" -- ada lapisan putih/lengkung di sekeliling chat. Di sini
+ * padding itu dibuang HANYA kalau halaman memang halaman Messages, dibedakan
+ * lewat `:has(#messages-container)`.
+ *
+ * Kenapa `:has()` dan bukan kelas baru di body? Karena body panel dipakai
+ * bersama semua halaman lain, dan menambahkan kelas per-halaman berarti
+ * menyuntikkannya ke layout -- satu tempat lagi yang harus selalu benar.
+ * `:has()` menilai dari isi, jadi halaman Home/Settings/Katalog tidak pernah
+ * tersentuh tanpa perlu selectors tambahan.
+ *
+ * Topbar TIDAK ikut dibuang: `.fi-main` tidak menyimpan ruang untuk topbar
+ * yang position: fixed, jadi `rect.top` di messages-page-fit.blade.php sudah
+ * memuat tingginya dan tinggi chat tetap dihitung dari sana.
+ *
+ * Baris breadcrumb tetap ada (keputusan: kartu dibuang, navigasi tidak), jadi
+ * ada padding atas yang wajar supaya tidak menempel ke topbar.
+ */
+
+.fi-panel-admin .messages-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+    padding-top: 0.75rem;
+}
+
+
+.fi-panel-admin:has(#messages-container) .fi-main {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+/*
+ * SCROLLBAR PANEL ADMIN — DISEMBUNYIKAN (TRANSPARAN), TAPI TETAP BISA DI-SCROLL
+ *
+ * Permintaan pemilik: scrollbar KANAN, KIRI, ATAS, dan BAWAH di panel
+ * admin tidak boleh memenuhi layar — tapi isinya HARUS masih bisa
+ * digulir (roda mouse, trackpad, sentuhan, tombol panah keyboard).
+ *
+ * Cakupannya SELURUH panel admin: tabel resource yang lebar (gulir
+ * horizontal), sidebar, daftar panjang, dan modal. Dulu aturan ini hanya
+ * berlaku di halaman Messages (`:has(#messages-container)`) — jadi di
+ * halaman lain scrollbar tetap tampil sebagai batang gelap yang memotong
+ * tata letak.
+ *
+ * PENTING: hanya `scrollbar-width` / `::-webkit-scrollbar` yang diubah.
+ * TIDAK ada `overflow: hidden` di mana pun — memblokir `overflow` akan
+ * mematikan touch scroll di Android/iOS WebView dan membuat tabel lebar
+ * tidak bisa digulir sama sekali. Yang hilang hanya gambarnya.
+ *
+ * Aturan yang sama sudah dipakai User.css / Welcome.css untuk panelnya,
+ * dan Shared.css untuk html/body (scrollbar luar jendela).
+ */
+.fi-panel-admin *:not(html):not(body) {
+    scrollbar-width: none;      /* Firefox */
+    -ms-overflow-style: none;   /* IE/Edge lama */
+}
+
+.fi-panel-admin *::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+    background: transparent;
+}
+
+.fi-panel-admin *::-webkit-scrollbar-thumb {
+    background: transparent;
+}
+
+.fi-panel-admin *::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/*
+ * Tinggi awal SEBELUM JS dihitung. Ini hanya untuk mencegah halaman melompat
+ * di frame pertama; nilainya langsung ditimpa `container.style.height` oleh
+ * messages-page-fit.blade.php. Angka yang sama ada di User.css dan
+ * Welcome.css supaya ketiga panel melompat dengan jarak yang sama.
+ */
+.fi-panel-admin .messages-container {
+    height: calc(100dvh - 13rem);
+    min-height: 300px;
+}
+
+/*
+ * MODAL CARI TIDAK BOLEH IKUT MENGISI TINGGI KOLOM INBOX
+ *
+ * Kolom inbox adalah flex column. Di tengahnya ada
+ * `<livewire:fm-admin-search />` yang me-render <x-filament::modal>, dan
+ * akar komponen itu `.fi-modal.inline-block` -- yang oleh CSS Filament diberi
+ * `display: flex`. Sebelum Alpine sempat berjalan, `x-cloak`/`x-show` belum
+ * menyembunyikan isi modal, jadi lebarnya seukuran daftar hasil pencarian.
+ *
+ * Akibatnya modal itu jadi flex item setinggi ~402px di antara kepala dan
+ * daftar percakapan. Daftar percakapan terdorong ke bawah, keluar dari
+ * `#messages-container` yang punya `overflow: hidden` -- jadi yang tersisa
+ * hanya ~24px dari baris setinggi 104px, yaitu-padding atas yang warnanya
+ * nyaris sama dengan latar. Inbox terlihat KOSONG padahal barisnya ada dan
+ * badge "Inbox 1" tetap menampilkannya.
+ *
+ * Ini balapan, bukan selalu: kalau Alpine lebih cepat dari Livewire, modal
+ * sudah susut ke 0px sebelum diukur dan inbox tampil normal. Itu sebabnya
+ * kotak ini kadang kosong, kadang tidak.
+ *
+ * `display: contents` menghapus KOTAK pembungkus modal dari aliran layout,
+ * sehingga isinya jadi anak langsung kolom inbox. Isi modal sendiri
+ * `position: fixed` saat terbuka, jadi tidak berubah penempatannya; saat
+ * tertutup `x-show` menyembunyikannya seperti sebelumnya. Yang hilang hanya
+ * sumbu tinggi yang selama ini mendorong daftar percakapan keluar area.
+ *
+ * `!important` dipakai karena `.fi-modal` berasal dari CSS Filament yang
+ * dimuat sebelum bundle ini; tanpa itu specifikasi seri bisa tertukar.
+ * Scope-nya #messages-container supaya halaman lain tidak ikut berubah --
+ * panel User dan Welcome tidak menyertakan komponen cari sama sekali.
+ */
+.messages-container .fi-modal.inline-block {
+    display: contents !important;
+}
+
+@media (max-width: 1023px) {
+    .fi-panel-admin .messages-container {
+        height: calc(100dvh - 10rem);
+    }
+}
+
+@media (max-width: 639px) {
+    .fi-panel-admin .messages-container {
+        height: calc(100dvh - 8rem);
+    }
+}
+/*
+ * Admin panel tidak punya bottom-nav di HP (lihat config/app-platform.php),
+ * jadi tinggi chat sepenuhnya dihitung dari sisa tinggi layar. Padding bawah
+ * dibuang supaya perhitungan di messages-page-fit.blade.php jadi satu-satunya
+ * sumber kebenaran -- sebelumnya di sini ada `padding-bottom: 1rem` yang
+ * bertabrakan dengan perhitungan itu.
+ */
+
+@media (max-width: 1023px) {
+    .fi-panel-admin:has(#messages-container) .fi-main {
+        padding-bottom: 0 !important;
+    }
+}
+
+
+/*
+ * Highlighting pesan yang dituju lewat deep link (chat-highlight-message).
+ * Warna flash-nya mengikuti brand panel admin (indigo, lihat bubbleStyle di
+ * blade) -- panel ini tidak kuning seperti panel user dan welcome.
+ */
+
+.chat-msg-flash {
+    animation: chatMsgFlash 1.2s ease-in-out;
+}
+
+@keyframes chatMsgFlash {
+    0%, 100% { background-color: transparent; }
+    30% { background-color: rgba(99, 102, 241, 0.25); border-radius: 12px; }
+}
+
+
+/*
+ *
+
+
+KEPALA HALAMAN MESSAGES -- label + breadcrumb
+ *
+ * Dipisah dari `.messages-page` supaya dua hal bisa diatur terpisah:
+ * `.messages-page yang memiliki tinggi (flex column, isi panel),
+ * sedangkan blok ini hanya baris di atasnya.
+ *
+ * Kenapa tidak menempel tinggi ke `.messages-page`: saat keyboard HP terbuka,
+ * tinggi `.messages-container` menyusut. Kalau kepala ikut menyusut,
+ * breadcrumb tergencet setiap kali pengguna mulai mengetik -- dan justru di
+ * HP-lah breadcrumb ini paling dibutuhkan.
+ *
+ * Padding horizontal ada di sini, bukan di `.fi-main`, karena padding
+ * `.fi-main` sudah dibuang supaya halaman penuh. Memberi padding pada kepala
+ * sendiri membuat teksnya tidak menempel ke tepi layar, sementara gelembung pesan tetap menempel penuh.
+ */
+
+.fi-panel-admin .messages-page-head {
+    display: flex;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    margin-bottom: 0.75rem;
+    padding-inline: 1rem;
+}
+
+
+
+.fi-panel-admin .messages-page-crumbs-row {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.fi-panel-admin .messages-page-crumbs {
+    min-width: 0;
+    overflow: hidden;
+}
+
+/*
+ * Di HP breadcrumb bisa panjang (Home > Reports > Super Admin). Yang dipotong
+ * adalah butir terakhir saja, karena itu yang sedang dibaca; butir sebelumnya
+ * dibiarkan utuh sebagai konteks asal.
+ */
+
+.fi-panel-admin .messages-page-crumbs .fi-breadcrumbs-list {
+    flex-wrap: nowrap;
+    overflow: hidden;
+}
+
+.fi-panel-admin .messages-page-crumbs .fi-breadcrumbs-item {
+    flex-shrink: 0;
+    min-width: 0;
+}
+
+.fi-panel-admin .messages-page-crumbs .fi-breadcrumbs-item:last-child {
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }

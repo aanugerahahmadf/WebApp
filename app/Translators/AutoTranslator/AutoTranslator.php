@@ -22,6 +22,20 @@ class AutoTranslator extends Translator
         // Ini memastikan terjemahan yang sudah dikurasi manual selalu menang.
         $translated = parent::get($key, $replace, $targetLocale, $fallback);
 
+        // 1a. Kalau key-nya terdaftar di file terjemahan, nilai itu hasil kurasi
+        //     manual --bernilai sama persis dengan key-nya atau tidak.
+        //
+        //     Kasus ini nyata dan sering: en.json memuat "Sign In" => "Sign In"
+        //     karena istilah itu memang tidak perlu diterjemahkan. Versi lama
+        //     mendeteksi "belum diterjemahkan" lewat $translated !== $key,
+        //     sehingga label yang nilainya identik dengan key dianggap belum
+        //     ada -- lalu dikirim ke API terjemahan dan di-cache dengan
+        //     varian acak ("Sign In" -> "Log In"). Di en.json ada 552 key
+        //     seperti itu, hampir semuanya label UI.
+        if ($this->keyExistsInTranslations($key, $targetLocale, $fallback)) {
+            return is_string($translated) ? $translated : $key;
+        }
+
         // Jika Laravel berhasil menerjemahkan (hasil != key), langsung kembalikan.
         if ($translated !== $key && ! $this->isUntranslatedPlaceholder($translated, $key)) {
             return $translated;
@@ -43,6 +57,72 @@ class AutoTranslator extends Translator
         }
 
         return is_string($translated) ? $translated : $key;
+    }
+
+    /**
+     * Apakah key ini terdaftar di file terjemahan (JSON atau PHP berspaced)?
+     *
+     * Ini yang dipakai AutoTranslator::get() untuk membedakan:
+     *   - "nilainya memang sama dengan key"  -> kurasi manual, jangan diubah
+     *   - "key-nya tidak ada sama sekali"      -> boleh auto-terjemahkan
+     *
+     * Tanpa pemisahan ini, semua label yang engagement-nya kebetulan sama
+     * dengan key (mis. "Sign In" => "Sign In") dianggap belum diterjemahkan.
+     */
+    protected function keyExistsInTranslations(string $key, string $locale, bool $useFallback): bool
+    {
+        $locales = array_values(array_unique(array_filter([
+            $locale,
+            $useFallback ? $this->fallback : null,
+        ], fn ($value) => is_string($value) && $value !== '')));
+
+        foreach ($locales as $tryLocale) {
+            if ($this->jsonKeyExists($key, $tryLocale)) {
+                return true;
+            }
+
+            if ($this->phpKeyExists($key, $tryLocale)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Cek key di file JSON (group '*', mis. lang/en.json).
+     */
+    protected function jsonKeyExists(string $key, string $locale): bool
+    {
+        $this->load('*', '*', $locale);
+
+        $lines = $this->loaded['*']['*'][$locale] ?? [];
+
+        return is_array($lines) && array_key_exists($key, $lines);
+    }
+
+    /**
+     * Cek key berspaced di file PHP (mis. filament::auth.login).
+     */
+    protected function phpKeyExists(string $key, string $locale): bool
+    {
+        if (! str_contains($key, '::')) {
+            return false;
+        }
+
+        [$namespace, $item] = explode('::', $key, 2);
+
+        $segments = explode('.', $item);
+        $group = array_shift($segments);
+        $itemKey = implode('.', $segments);
+
+        if ($group === null || $group === '' || $itemKey === '') {
+            return false;
+        }
+
+        $lines = $this->loader->load($locale, $group, $namespace);
+
+        return is_array($lines) && data_get($lines, $itemKey) !== null;
     }
 
     /**

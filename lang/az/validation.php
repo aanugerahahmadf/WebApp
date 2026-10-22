@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'poçt kodu',
         'preview'                  => 'önizləmə',
         'price'                    => 'qiymət',
-        'product_id'               => 'məhsul ID',
+        'catalog_id'               => 'məhsul ID',
         'product_uid'              => 'məhsul UID',
         'product_uuid'             => 'məhsul UUID',
         'promo_code'               => 'promo kodu',

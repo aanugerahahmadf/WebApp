@@ -656,7 +656,7 @@
                         class="relative -m-1.5 flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 outline-none transition duration-75 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-white/5 dark:hover:text-gray-300"
                         aria-label="{{ __('Tutup') }}"
                     >
-                        <x-filament::icon icon="heroicon-m-x-mark" class="h-5 w-5" />
+                        <x-filament::icon icon="/images/icons/x.svg" class="h-5 w-5" />
                     </button>
                 </div>
 
@@ -672,10 +672,10 @@
                         class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium outline-none transition duration-75 hover:bg-gray-50 focus-visible:bg-gray-50 active:bg-gray-100 dark:hover:bg-white/5 dark:active:bg-white/10"
                     >
                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600 ring-1 ring-primary-600/10 dark:bg-primary-400/10 dark:text-primary-400 dark:ring-primary-400/20">
-                            <x-filament::icon icon="heroicon-o-camera" class="h-5 w-5" />
+                            <x-filament::icon icon="/images/icons/camera.svg" class="h-5 w-5" />
                         </span>
                         <span class="flex-1 text-left text-gray-700 dark:text-gray-200">{{ __('Pindai Kartu') }}</span>
-                        <x-filament::icon icon="heroicon-m-chevron-right" class="h-4 w-4 shrink-0 text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300" />
+                        <x-filament::icon icon="/images/icons/chevron_right.svg" class="h-4 w-4 shrink-0 text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300" />
                     </button>
 
                     <button
@@ -684,10 +684,10 @@
                         class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium outline-none transition duration-75 hover:bg-gray-50 focus-visible:bg-gray-50 active:bg-gray-100 dark:hover:bg-white/5 dark:active:bg-white/10"
                     >
                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600 ring-1 ring-primary-600/10 dark:bg-primary-400/10 dark:text-primary-400 dark:ring-primary-400/20">
-                            <x-filament::icon icon="heroicon-o-photo" class="h-5 w-5" />
+                            <x-filament::icon icon="/images/icons/photo.svg" class="h-5 w-5" />
                         </span>
                         <span class="flex-1 text-left text-gray-700 dark:text-gray-200">{{ __('Pilih dari Galeri') }}</span>
-                        <x-filament::icon icon="heroicon-m-chevron-right" class="h-4 w-4 shrink-0 text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300" />
+                        <x-filament::icon icon="/images/icons/chevron_right.svg" class="h-4 w-4 shrink-0 text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300" />
                     </button>
 
                     <div class="my-1 border-t border-gray-100 dark:border-white/10"></div>
@@ -741,7 +741,7 @@
                             class="flex h-11 w-11 items-center justify-center rounded-full bg-gray-100 text-gray-700 transition hover:bg-gray-200 dark:bg-white/10 dark:text-gray-200"
                             aria-label="{{ __('Balik Kamera') }}"
                         >
-                            <x-filament::icon icon="heroicon-m-arrow-path" class="h-5 w-5" />
+                            <x-filament::icon icon="/images/icons/refresh.svg" class="h-5 w-5" />
                         </button>
                         <button
                             type="button"
@@ -750,7 +750,7 @@
                             class="flex h-16 w-16 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg transition hover:bg-primary-500 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
                             aria-label="{{ __('Ambil Foto') }}"
                         >
-                            <x-filament::icon icon="heroicon-m-camera" class="h-8 w-8" />
+                            <x-filament::icon icon="/images/icons/camera.svg" class="h-8 w-8" />
                         </button>
                         <button
                             type="button"
@@ -758,7 +758,7 @@
                             class="flex h-11 w-11 items-center justify-center rounded-full bg-gray-100 text-gray-700 transition hover:bg-gray-200 dark:bg-white/10 dark:text-gray-200"
                             aria-label="{{ __('Kembali') }}"
                         >
-                            <x-filament::icon icon="heroicon-m-arrow-left" class="h-5 w-5" />
+                            <x-filament::icon icon="/images/icons/arrow_left.svg" class="h-5 w-5" />
                         </button>
                     </div>
                 </div>

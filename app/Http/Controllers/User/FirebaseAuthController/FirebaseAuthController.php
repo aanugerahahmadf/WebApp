@@ -46,7 +46,7 @@ class FirebaseAuthController extends Controller
 
         if ($user->wasRecentlyCreated || is_null($user->email_verified_at)) {
             return response()->json([
-                'redirect' => route('filament.user.auth.email-verification.prompt'),
+                'redirect' => route('filament.welcome.auth.email-verification.prompt'),
             ]);
         }
 
@@ -56,7 +56,7 @@ class FirebaseAuthController extends Controller
         // super_admin — diarahkan ke home panel user; sebelumnya super_admin
         // dilempar ke /admin yang bukan tujuan dari halaman sign-in tsb.
         return response()->json([
-            'redirect' => route('filament.user.pages.home'),
+            'redirect' => route('filament.welcome.pages.home'),
         ]);
     }
 
@@ -177,6 +177,10 @@ class FirebaseAuthController extends Controller
                     $user->assignRole($role);
                 }
             }
+
+            // Akun BARU wajib melewati SecurityQuestion sendiri. Lihat
+            // komentar padanannya di SocialiteController::findOrCreateUser().
+            session()->forget('security_question_answered');
 
             return $user;
         } catch (\Exception $e) {

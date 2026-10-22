@@ -23,7 +23,6 @@ it('opsi negara memuat bendera emoji, bukan hanya kode ISO', function (): void {
         ->toContain('country-flag')
         ->toContain(CountryCallingCodeOptions::flag('ID'))
         ->toContain('Indonesia');
-
     foreach (['+1|US' => '🇺🇸', '+81|JP' => '🇯🇵', '+44|GB' => '🇬🇧', '+65|SG' => '🇸🇬', '+60|MY' => '🇲🇾'] as $key => $flag) {
         expect(array_key_exists($key, $options))->toBeTrue("kode negara {$key} tidak ada di daftar");
         expect($options[$key])->toContain($flag);

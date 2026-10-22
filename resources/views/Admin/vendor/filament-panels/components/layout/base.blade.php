@@ -25,11 +25,32 @@
         @php
             $title = trim(strip_tags(($livewire ?? null)?->getTitle() ?? ''));
             $brandName = trim(strip_tags(filament()->getBrandName()));
+
+            /*
+             * Awalan judul untuk shell desktop (Electron).
+             *
+             * Electron memakai <title> sebagai judul jendela, jadi dua
+             * jendela ini (toko & admin) harus bisa dibedakan di taskbar.
+             *
+             * Prefix-nya dirender di SERVER, bukan cuma lewat JS: dokumen
+             * baru bisa beres kira-kira 3 detik di server pengembangan, dan
+             * selama itu judul jendela sudah tampil TANPA awalan --
+             * lalu meloncat begitu script di akhir body jalan. Dengan prefix
+             * di server, judulnya benar sejak byte pertama.
+             *
+             * Script di partial `desktop-shell` tetap ada: Filament menulis
+             * ulang <title> tiap kali Livewire berpindah halaman, dan
+             * awalan perlu dipasang ulang tiap kali berubah.
+             *
+             * Predikatnya sama dengan yang dipakai untuk merender partial
+             * itu: `AppPlatform::isDesktopApp()`.
+             */
+            $shellName = \App\Support\AppPlatform\AppPlatform::isDesktopApp()
+                ? \App\Support\DesktopApp\DesktopApp::appName()
+                : null;
         @endphp
 
-        <title>
-            {{ filled($title) ? "{$title} - " : null }} {{ $brandName }}
-        </title>
+        <title>{{ filled($shellName) ? "{$shellName} — " : '' }}{{ filled($title) ? "{$title} - {$brandName}" : $brandName }}</title>
 
         {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::STYLES_BEFORE, scopes: $livewire?->getRenderHookScopes()) }}
 

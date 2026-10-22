@@ -17,7 +17,8 @@ class VerifyCsrfToken extends Middleware
 
         // Logout itu idempotent (terburuk: korban ke-logout orang).
         // Tanpa ini, sesi kedaluwarsa bikin klik SignOut mendarat di 419
-        // PAGE EXPIRED alih-alih welcome/home.
+        // PAGE EXPIRED alih-alih /home.
+        'logout',
         'user/logout',
         'welcome/logout',
 

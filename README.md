@@ -1,4 +1,4 @@
-# 💍 Wedding Organizer — Dekorasi Bunga Pernikahan
+# 💍 Dekorasi Bunga Pernikahan — Wedding Flower Decorations
 
 Aplikasi multi-platform untuk perencanaan pernikahan dan perdagangan dekorasi.
 Menggabungkan katalog pelanggan, pesanan, pembayaran, obrolan, notifikasi,

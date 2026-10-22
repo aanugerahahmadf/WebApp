@@ -7,7 +7,7 @@
         </div>
 
         {{-- ── TAMPILAN & DATA BROWSER ─────────────────────────── --}}
-        <x-filament::section aside icon="heroicon-o-swatch" :heading="__('Data Browser')" :description="__('Hapus data lokal aplikasi pada browser ini.')">
+        <x-filament::section aside icon="/images/icons/swatch.svg" :heading="__('Data Browser')" :description="__('Hapus data lokal aplikasi pada browser ini.')">
             <div class="flex justify-end">
                 <x-filament::button x-on:click="localStorage.removeItem('notification_prefs'); localStorage.removeItem('theme'); $dispatch('notify', { status: 'success', title: '{{ __('Data browser dibersihkan') }}' })" color="danger" size="sm">{{ __('Bersihkan Data Browser') }}</x-filament::button>
             </div>
@@ -19,7 +19,7 @@
         {{-- ── LAPORAN ───────────────────────────────────────────── --}}
         <x-filament::section
             aside
-            icon="heroicon-o-flag"
+            icon="/images/icons/flag.svg"
             :heading="__('Lapor')"
             :description="__('Laporkan masalah atau sampaikan keluhan melalui chat.')"
         >
@@ -29,7 +29,7 @@
                     :href="\App\Filament\User\Pages\MessagesPage\MessagesPage::getUrl([
                         'returnTo' => \App\Filament\User\Pages\SettingsPage\SettingsPage::getUrl(panel: 'user'),
                     ], panel: 'user')"
-                    icon="heroicon-m-chevron-right"
+                    icon="/images/icons/chevron_right.svg"
                     icon-position="after"
                     color="primary"
                     size="sm"

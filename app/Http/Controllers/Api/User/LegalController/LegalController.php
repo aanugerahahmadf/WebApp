@@ -107,7 +107,7 @@ class LegalController extends Controller
                 'success' => true,
                 'data' => [
                     'title' => 'About WeddingApp',
-                    'content' => 'Wedding Flowers Organizer is your ultimate companion.',
+                    'content' => 'Wedding Flower Decorations is your ultimate companion.',
                     'mission' => null,
                     'owner' => config('app.name'),
                 ],

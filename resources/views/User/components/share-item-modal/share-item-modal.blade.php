@@ -37,7 +37,7 @@
         rel="noopener noreferrer"
         class="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-primary-600 dark:text-primary-400 hover:bg-white/10 transition-colors"
     >
-        <span>@svg('heroicon-m-arrow-top-right-on-square', 'w-4 h-4')</span>
+        <span>@svg('/images/icons/external.svg', 'w-4 h-4')</span>
         {{ __('Buka di Tab Baru') }}
     </a>
 </div>

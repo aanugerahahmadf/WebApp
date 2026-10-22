@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'pašto kodas',
         'preview'                  => 'peržiūra',
         'price'                    => 'kaina',
-        'product_id'               => 'produkto ID',
+        'catalog_id'               => 'produkto ID',
         'product_uid'              => 'produkto UID',
         'product_uuid'             => 'produkto UUID',
         'promo_code'               => 'reklamos kodas',

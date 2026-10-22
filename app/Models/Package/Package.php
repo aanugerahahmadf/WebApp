@@ -5,10 +5,10 @@ use App\Models\Traits\LegacyMorphClass\LegacyMorphClass;
 
 
 use App\Models\Category\Category;
+use App\Models\Catalog\Catalog;
 use App\Models\Discount\Discount;
 use App\Models\Order\Order;
 use App\Models\Review\Review;
-use App\Models\Vendor\Vendor;
 use App\Models\Wishlist\Wishlist;
 
 use App\Support\AppPlatform\AppPlatform;
@@ -100,6 +100,27 @@ class Package extends Model implements HasMedia
     use LegacyMorphClass;
     use HasFactory, HasTranslations, InteractsWithMedia;
 
+    /**
+     * Kolom yang masih dibaca tapi TIDAK LAGI diedit dari halaman paket.
+     *
+     * Dua di antaranya -- `description` dan `features` -- masih ada di sini
+     * karena tiga pemanggil di luar Admin bergantung padanya:
+     *
+     *   - `App\Filament\Concerns\CatalogHasTiers::catalogHasTiers()`
+     *     (`'features' => array_values($tier->features ?? [])`) untuk API
+     *   - `app\Filament\Welcome\Resources\CatalogResource` yang menampilkannya
+     *     sebagai daftar poin di halaman detail
+     *   - `app\Filament\User\Resources\CatalogResource`, sama
+     *
+     * Yang dihapus hanya field editornya: `tier_<key>_description` dan
+     * `tier_<key>_features` di section "Pilihan Paket" milik CatalogResource,
+     * serta TagsInput "Fitur Paket" di TiersRelationManager. Deskripsi tiap
+     * tier punya satu tempat untuk diisi, dan fitur tidak punya tempat sama
+     * sekali.
+     *
+     * Menghapus kolomnya berarti mengubah tiga pemanggil di atas juga --
+     * itu keputusan tersendiri, bukan ikutannya.
+     */
     protected array $translatable = ['name', 'description'];
 
     public function registerMediaCollections(): void
@@ -110,6 +131,8 @@ class Package extends Model implements HasMedia
 
     protected $fillable = [
         'category_id',
+        'catalog_id',
+        'sort_order',
         'name',
         'slug',
         'description',
@@ -136,6 +159,7 @@ class Package extends Model implements HasMedia
         'stock' => 'integer',
         'name_translations' => 'json',
         'description_translations' => 'json',
+        'sort_order' => 'integer',
     ];
 
     public function getNameAttribute($value): ?string
@@ -209,9 +233,13 @@ class Package extends Model implements HasMedia
         return false;
     }
 
-    public function vendor()
+    /**
+     * The catalog this tier belongs to. A tier is only ever shown inside its
+     * catalog's detail page.
+     */
+    public function catalog()
     {
-        return $this->belongsTo(Vendor::class, 'vendor_id');
+        return $this->belongsTo(Catalog::class, 'catalog_id');
     }
 
     public function category()

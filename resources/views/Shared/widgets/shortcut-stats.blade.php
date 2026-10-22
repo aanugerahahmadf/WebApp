@@ -15,7 +15,7 @@
     // Lebar kartu selalu 100% (1 per halaman)
     $cardBasis = '100%';
 
-    // 1 halaman = 1 kartu, jadi pageCount = jumlah kartu (4)
+    // 1 halaman = 1 kartu, jadi pageCount = jumlah kartu (6)
     $pageCount = count($stats);
 @endphp
 
@@ -52,7 +52,9 @@
 
         Di mobile: satu kartu per halaman, digeser dengan swipe (lihat
         .shortcut-stats-track di Shared.css). Di luar mobile: grid 4 kolom
-        seperti biasa.
+        seperti biasa. Jumlah kartu (6: Catalog Bunga, Package Bunga, Pesanan Saya,
+        Favorit, Voucher Aktif, Keranjang) tidak mengubah apa pun di
+        sini -- view ini membacanya apa adanya lewat $pageCount.
 
         CARA MEMBAWA POSISI KE TITIK-TITIKNYA — dan kenapa bukan `x-data`
         bersama seperti biasa.

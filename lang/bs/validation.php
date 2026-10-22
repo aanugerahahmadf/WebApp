@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'poštanski broj',
         'preview'                  => 'pregled',
         'price'                    => 'cijena',
-        'product_id'               => 'ID proizvoda',
+        'catalog_id'               => 'ID proizvoda',
         'product_uid'              => 'UID proizvoda',
         'product_uuid'             => 'UUID proizvoda',
         'promo_code'               => 'promo kod',

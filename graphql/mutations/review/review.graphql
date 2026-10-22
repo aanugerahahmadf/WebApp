@@ -1,0 +1,93 @@
+# Review Mutations
+# Wedding Flower Decoration App - Review GraphQL Mutations
+
+input CreateReviewInput {
+  catalogId: ID
+  packageId: ID
+  orderId: ID!
+  rating: Int!
+  title: String
+  comment: String
+  photos: [String!]
+  isAnonymous: Boolean = false
+}
+
+input UpdateReviewInput {
+  rating: Int
+  title: String
+  comment: String
+  photos: [String!]
+  isAnonymous: Boolean
+}
+
+input ReviewPhotoInput {
+  url: String!
+  caption: String
+}
+
+type Mutation {
+  # Create review
+  createReview(input: CreateReviewInput!): Review @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ReviewResolver@store")
+  
+  # Update review
+  updateReview(reviewId: ID!, input: UpdateReviewInput!): Review @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ReviewResolver@update")
+  
+  # Delete review
+  deleteReview(reviewId: ID!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ReviewResolver@destroy")
+  
+  # Add photo to review
+  addReviewPhoto(reviewId: ID!, photo: ReviewPhotoInput!): Review @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ReviewResolver@addPhoto")
+  
+  # Remove photo from review
+  removeReviewPhoto(reviewId: ID!, photoUrl: String!): Review @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ReviewResolver@removePhoto")
+  
+  # Mark review as helpful
+  markReviewHelpful(reviewId: ID!): Review @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ReviewResolver@markHelpful")
+  
+  # Unmark review as helpful
+  unmarkReviewHelpful(reviewId: ID!): Review @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ReviewResolver@unmarkHelpful")
+  
+  # Admin: Moderate review
+  moderateReview(reviewId: ID!, status: ReviewStatus!, moderationNote: String): Review @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ReviewResolver@moderate")
+  
+  # Admin: Reply to review
+  replyToReview(reviewId: ID!, reply: String!): Review @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ReviewResolver@reply")
+  
+  # Report review
+  reportReview(reviewId: ID!, reason: ReportReason!, description: String): ReviewReport @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ReviewResolver@report")
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  HIDDEN
+}
+
+enum ReportReason {
+  SPAM
+  INAPPROPRIATE
+  FAKE
+  OFFENSIVE
+  IRRELEVANT
+  OTHER
+}
+
+type ReviewReport {
+  id: ID!
+  review: Review!
+  reporter: User!
+  reason: ReportReason!
+  description: String
+  status: ReportStatus!
+  createdAt: String!
+  reviewedAt: String
+  reviewedBy: User
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+  DISMISSED
+}

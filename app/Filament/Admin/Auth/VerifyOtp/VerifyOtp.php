@@ -2,10 +2,12 @@
 
 namespace App\Filament\Admin\Auth\VerifyOtp;
 
-use App\Filament\Concerns\HasDynamicBreadcrumbs;
+use App\Filament\Admin\Auth\Concerns\HasAuthBreadcrumbs;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\View;
 use Filament\Forms\Components\ViewField;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -16,9 +18,15 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
 
+/**
+ * Verifikasi kode OTP untuk atur ulang kata sandi admin.
+ *
+ * Halaman ini milik panel admin saja, jadi route-nya didaftarkan manual
+ * lewat `VerifyOtp::registerRoutes($panel)` di AdminPanelProvider.
+ */
 class VerifyOtp extends SimplePage
 {
-    use HasDynamicBreadcrumbs;
+    use HasAuthBreadcrumbs;
     use InteractsWithFormActions;
 
     protected static string $view = 'Admin.auth.verify-otp.verify-otp';
@@ -53,11 +61,10 @@ class VerifyOtp extends SimplePage
         $email = $data['email'];
         $otp = $data['otp'];
 
-        $cachedOtp = Cache::get('password_reset_otp_'.$email);
+        $cachedOtp = Cache::get('admin_password_reset_otp_'.$email);
 
         if ($cachedOtp && (string) $cachedOtp === (string) $otp) {
-            // Tandai bahwa OTP sudah valid untuk email ini (berlaku 30 menit)
-            Cache::put('otp_verified_for_'.$email, true, now()->addMinutes(30));
+            Cache::put('admin_otp_verified_for_'.$email, true, now()->addMinutes(30));
 
             Notification::make()
                 ->title(__('Kode OTP valid! Silakan atur kata sandi baru.'))
@@ -84,38 +91,25 @@ class VerifyOtp extends SimplePage
     {
         return $form
             ->schema([
-                TextInput::make('email')
-                    ->label(__('Alamat Email'))
-                    ->disabled()
-                    ->dehydrated(),
-                ViewField::make('otp')
-                    ->label(__('6 Digit Kode OTP'))
-                    ->view('Admin.auth.otp-field.otp-field')
-                    ->required(),
+                Section::make()
+                    ->schema([
+                        TextInput::make('email')
+                            ->label(__('Alamat Email'))
+                            ->disabled()
+                            ->dehydrated(),
+                        ViewField::make('otp')
+                            ->label(__('6 Digit Kode OTP'))
+                            ->view('Admin.auth.otp-field.otp-field')
+                            ->required(),
+                        View::make('Admin.auth.verify-otp.actions.actions'),
+                    ])
+                    ->columns(1),
             ]);
     }
 
     public function getHeading(): string
     {
         return __('Verifikasi Kode OTP');
-    }
-
-    public function getBreadcrumbs(): array
-    {
-        return [...$this->breadcrumbParentCrumb(), $this->getAuthCrumbLabel()];
-    }
-
-    protected function getAuthCrumbLabel(): string
-    {
-        if (method_exists($this, 'getHeading')) {
-            return (string) $this->getHeading();
-        }
-
-        if (method_exists($this, 'getTitle')) {
-            return (string) $this->getTitle();
-        }
-
-        return class_basename(static::class);
     }
 
     public function getSubheading(): string
@@ -140,7 +134,7 @@ class VerifyOtp extends SimplePage
     public function loginAction(): Action
     {
         return Action::make('login')
-            ->label(__('Sudah punya akun? Sign In'))
+            ->label(__('Kembali ke Halaman Sign In'))
             ->url(Filament::getLoginUrl())
             ->color('gray');
     }

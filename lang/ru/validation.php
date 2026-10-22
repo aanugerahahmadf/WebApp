@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'индекс',
         'preview'                  => 'предпросмотр',
         'price'                    => 'стоимость',
-        'product_id'               => 'ID продукта',
+        'catalog_id'               => 'ID продукта',
         'product_uid'              => 'UID продукта',
         'product_uuid'             => 'UUID продукта',
         'promo_code'               => 'промокод',

@@ -36,7 +36,7 @@ class PlatformDependencyValidator
      */
     public function validateDependencies(PlatformMode $mode): array
     {
-        // Web mode has no shell: the Laravel server is the whole product.
+        // Web mode has no shell: the Laravel server is the whole catalog.
         if ($mode === PlatformMode::Web) {
             return [];
         }

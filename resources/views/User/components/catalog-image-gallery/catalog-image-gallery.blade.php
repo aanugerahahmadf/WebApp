@@ -1,9 +1,8 @@
 @php
     $record = $getRecord();
-    $images = $record->getMedia($mediaCollection)
-        ->filter(fn ($media) => str_starts_with((string) $media->mime_type, 'image/'))
-        ->map(fn ($media) => $media->getUrl())
-        ->values();
+    // Use gallery_urls accessor which returns clean URL arrays
+    $gallery = $record->gallery_urls;
+    $images = collect($gallery)->pluck('url')->values();
 
     if ($images->isEmpty()) {
         $images->push($record->image_url);
@@ -32,10 +31,10 @@
         <div x-show="images.length > 1" class="absolute right-3 top-3 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white" x-text="(active + 1) + ' / ' + images.length"></div>
 
         <button type="button" x-show="images.length > 1" x-on:click="active = (active - 1 + images.length) % images.length" class="absolute left-3 rounded-full bg-black/50 p-2 text-white transition hover:bg-black/70" aria-label="{{ __('Foto sebelumnya') }}">
-            <x-heroicon-m-chevron-left class="h-5 w-5" />
+            <img src="/images/icons/chevron_left.svg" class="h-5 w-5" />
         </button>
         <button type="button" x-show="images.length > 1" x-on:click="active = (active + 1) % images.length" class="absolute right-3 rounded-full bg-black/50 p-2 text-white transition hover:bg-black/70" aria-label="{{ __('Foto berikutnya') }}">
-            <x-heroicon-m-chevron-right class="h-5 w-5" />
+            <img src="/images/icons/chevron_right.svg" class="h-5 w-5" />
         </button>
     </div>
 

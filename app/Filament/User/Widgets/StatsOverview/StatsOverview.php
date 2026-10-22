@@ -4,6 +4,7 @@ namespace App\Filament\User\Widgets\StatsOverview;
 
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use App\Support\AppIcon\AppIcon;
 use Illuminate\Support\Facades\Auth;
 
 class StatsOverview extends BaseWidget
@@ -29,7 +30,7 @@ class StatsOverview extends BaseWidget
         return [
             Stat::make(__('filament-panels::widgets/account-widget.welcome'), $name)
                 ->description(__('Make your special moment today'))
-                ->descriptionIcon('heroicon-m-sparkles')
+                ->descriptionIcon(AppIcon::SPARKLES)
                 ->color('primary')
                 ->extraAttributes([
                     'class' => 'home-stat-card home-stat-welcome h-full col-span-2',

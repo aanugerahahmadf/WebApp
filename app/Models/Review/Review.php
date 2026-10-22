@@ -5,12 +5,13 @@ use App\Models\Traits\LegacyMorphClass\LegacyMorphClass;
 
 
 use App\Models\Package\Package;
-use App\Models\Product\Product;
+use App\Models\Catalog\Catalog;
 use App\Models\ReviewReply\ReviewReply;
 use App\Models\ReviewVote\ReviewVote;
 use App\Models\User\User;
 
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
@@ -18,7 +19,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $user_id
  * @property int|null $package_id
- * @property int|null $product_id
+ * @property int|null $catalog_id
  * @property int $rating
  * @property string|null $title
  * @property string|null $comment
@@ -29,7 +30,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property-read User|null $user
  * @property-read Package|null $package
- * @property-read Product|null $product
+ * @property-read Catalog|null $catalog
  * @property-read Collection<int, ReviewReply> $replies
  * @property-read Collection<int, ReviewVote> $votes
  *
@@ -37,13 +38,14 @@ use Illuminate\Support\Carbon;
  */
 class Review extends Model
 {
+    use HasFactory;
     use LegacyMorphClass;
     protected $appends = ['photo_url', 'photo_urls'];
 
     protected $fillable = [
         'user_id',
         'package_id',
-        'product_id',
+        'catalog_id',
         'rating',
         'title',
         'comment',
@@ -88,9 +90,9 @@ class Review extends Model
         return $this->belongsTo(Package::class);
     }
 
-    public function product()
+    public function catalog()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Catalog::class, 'catalog_id');
     }
 
     public function replies()

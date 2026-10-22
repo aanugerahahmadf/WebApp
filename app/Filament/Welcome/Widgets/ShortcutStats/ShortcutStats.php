@@ -4,6 +4,7 @@ namespace App\Filament\Welcome\Widgets\ShortcutStats;
 
 use App\Models\Cart\Cart;
 use App\Models\Order\Order;
+use App\Models\Catalog\Catalog;
 use App\Models\Wishlist\Wishlist;
 use Filament\Support\Enums\IconPosition;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
@@ -11,8 +12,15 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Facades\Auth;
 
 /**
- * Empat kartu aksi beranda: | Pesanan Saya | Favorit | Voucher Aktif | Keranjang |.
- * Aman untuk guest (semua angka 0).
+ * Enam kartu aksi beranda:
+ * | Catalog Bunga | Pesanan Saya | Favorit | Voucher Aktif | Keranjang |.
+ *
+ * Dua kartu katalog deliberate ditaruh paling depan: itu pintu masuk
+ * belanja, jadi yang pertama dilihat. Empat kartu setelahnya milik user.
+ *
+ * Aman untuk guest (semua angka user 0). Dua kartu katalog memang bukan
+ * milik user -- keduanya menghitung isi katalog yang aktif, jadi tetap
+ * bermakna walau belum ada yang login.
  *
  * Tata letaknya per platform, dikerjakan di view
  * resources/views/Shared/widgets/shortcut-stats.blade.php — kelas PHP ini
@@ -45,7 +53,7 @@ class ShortcutStats extends BaseWidget
 
     protected function getColumns(): int
     {
-        return 4;
+        return 6;
     }
 
     protected function getStats(): array
@@ -55,10 +63,25 @@ class ShortcutStats extends BaseWidget
         $user = Auth::user();
         $userId = $user?->id;
 
+        // Urutannya: dua kartu katalog dulu (pintu masuk belanja), lalu
+        // empat kartu milik user.
         return [
+            // Kartu katalog: tidak bergantung pada user sama sekali, jadi
+            // tetap tampil utuh untuk tamu. Hanya katalog aktif (is_active)
+            // yang dihitung, sama seperti CombinedCatalogWidget.
+            Stat::make(__('Catalog Bunga'), Catalog::query()->where('is_active', true)->count())
+                ->description(__('Katalog'))
+                ->descriptionIcon('/images/icons/flower.svg', IconPosition::Before)
+                ->color('primary')
+                ->extraAttributes([
+                    'class' => 'home-stat-card home-stat-action cursor-pointer hover:scale-105 transition-transform h-full',
+                    'onclick' => "window.location.href='".route('filament.welcome.resources.flowerdecorationscatalog.index')."'",
+                ]),
+
+
             Stat::make(__('Pesanan Saya'), $userId ? Order::query()->where('user_id', $userId)->count('id') : 0)
                 ->description(__('Transaksi'))
-                ->descriptionIcon('heroicon-m-shopping-bag', IconPosition::Before)
+                ->descriptionIcon('/images/icons/bag.svg', IconPosition::Before)
                 ->color('info')
                 ->extraAttributes([
                     'class' => 'home-stat-card home-stat-action cursor-pointer hover:scale-105 transition-transform h-full',
@@ -66,7 +89,7 @@ class ShortcutStats extends BaseWidget
                 ]),
             Stat::make(__('Favorit'), $userId ? Wishlist::query()->where('user_id', $userId)->count('id') : 0)
                 ->description(__('Tersimpan'))
-                ->descriptionIcon('heroicon-m-heart', IconPosition::Before)
+                ->descriptionIcon('/images/icons/heart.svg', IconPosition::Before)
                 ->color('danger')
                 ->extraAttributes([
                     'class' => 'home-stat-card home-stat-action cursor-pointer hover:scale-105 transition-transform h-full',
@@ -74,7 +97,7 @@ class ShortcutStats extends BaseWidget
                 ]),
             Stat::make(__('Voucher Aktif'), $user ? $user->vouchers()->whereNull('user_vouchers.used_at')->count() : 0)
                 ->description(__('Diskon'))
-                ->descriptionIcon('heroicon-m-ticket', IconPosition::Before)
+                ->descriptionIcon('/images/icons/ticket.svg', IconPosition::Before)
                 ->color('warning')
                 ->extraAttributes([
                     'class' => 'home-stat-card home-stat-action cursor-pointer hover:scale-105 transition-transform h-full',
@@ -82,7 +105,7 @@ class ShortcutStats extends BaseWidget
                 ]),
             Stat::make(__('Keranjang'), $userId ? Cart::query()->where('user_id', $userId)->count() : 0)
                 ->description(__('Checkout'))
-                ->descriptionIcon('heroicon-m-shopping-cart', IconPosition::Before)
+                ->descriptionIcon('/images/icons/cart.svg', IconPosition::Before)
                 ->color('success')
                 ->extraAttributes([
                     'class' => 'home-stat-card home-stat-action cursor-pointer hover:scale-105 transition-transform h-full',

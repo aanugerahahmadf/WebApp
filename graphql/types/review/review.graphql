@@ -1,0 +1,78 @@
+# Review Type Definitions
+# Wedding Flower Decoration App - Review GraphQL Types
+
+type Review @model(class: "App\\Models\\Review\\Review") {
+  id: ID!
+  user: User @belongsTo
+  catalog: Catalog @belongsTo
+  package: Package @belongsTo
+  order: Order @belongsTo
+  rating: Int!
+  title: String
+  comment: String
+  photos: [String!]
+  helpfulCount: Int!
+  isAnonymous: Boolean!
+  isVerifiedPurchase: Boolean!
+  status: ReviewStatus!
+  reply: ReviewReply
+  createdAt: String!
+  updatedAt: String!
+}
+
+type ReviewReply {
+  id: ID!
+  reviewId: ID!
+  content: String!
+  createdBy: User!
+  createdAt: String!
+}
+
+type ReviewStats {
+  totalReviews: Int!
+  averageRating: Float!
+  ratingDistribution: [RatingCount!]!
+  withPhotos: Int!
+  verifiedPurchases: Int!
+}
+
+type RatingCount {
+  rating: Int!
+  count: Int!
+  percentage: Float!
+}
+
+type ReviewReport {
+  id: ID!
+  review: Review!
+  reporter: User!
+  reason: ReportReason!
+  description: String
+  status: ReportStatus!
+  createdAt: String!
+  reviewedAt: String
+  reviewedBy: User
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  HIDDEN
+}
+
+enum ReportReason {
+  SPAM
+  INAPPROPRIATE
+  FAKE
+  OFFENSIVE
+  IRRELEVANT
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+  DISMISSED
+}

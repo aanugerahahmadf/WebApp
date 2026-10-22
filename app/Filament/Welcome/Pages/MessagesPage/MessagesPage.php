@@ -5,13 +5,13 @@ namespace App\Filament\Welcome\Pages\MessagesPage;
 use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\Welcome\Pages\Home\Home;
 use App\Filament\Welcome\Pages\SettingsPage\SettingsPage;
-use App\Filament\Welcome\Resources\PackageResource\PackageResource;
-use App\Filament\Welcome\Resources\ProductResource\ProductResource;
+
+use App\Filament\Welcome\Resources\CatalogResource\CatalogResource;
 use App\Models\Inbox\Inbox;
 use App\Models\Package\Package;
-use App\Models\Product\Product;
+use App\Models\Catalog\Catalog;
+use App\Support\AppIcon\AppIcon;
 use App\Services\GuestIdentity\GuestIdentity;
-use Filament\Actions\Action;
 use Filament\Pages\Page;
 use Filament\Support\Enums\MaxWidth;
 use Illuminate\Contracts\Support\Htmlable;
@@ -27,7 +27,7 @@ class MessagesPage extends Page
 
     protected static string $view = 'Welcome.pages.messages.messages';
 
-    protected static ?string $activeNavigationIcon = 'heroicon-s-chat-bubble-left-right';
+    protected static ?string $activeNavigationIcon = AppIcon::MESSAGES;
 
     protected static ?int $navigationSort = 1;
 
@@ -152,49 +152,45 @@ class MessagesPage extends Page
     }
 
     /**
-     * Remove the default Filament page header (title + breadcrumbs) on desktop
-     * so the chat container gets the full available vertical space.
-     * The page title is still used for the browser tab / navigation badge.
+     * URL Settings kalau halaman ini dibuka dari Settings (returnTo), else null.
+     *
+     * Dulu aksi "Kembali ke Pengaturan" dibuat lewat getHeaderActions(), yang
+     * dirender oleh <x-filament-panels::page>. Wrapper itu sudah tidak dipakai
+     * di halaman Messages -- kartu section dan judul besarnya justru yang mau
+     * dibuang -- jadi blade perlu memanggilnya sendiri lewat method publik ini.
+     *
+     * Sengaja hanya membandingkan dengan URL Settings, bukan URL apa pun:
+     * `returnTo` berasal dari query string dan isinya tidak dipercaya. Kalau
+     * longgarkan, param `?returnTo=https://phishing.example` akan
+     * mendapat tombol "Kembali" yang mengarah ke domain lain.
      */
-    public function hasHeader(): bool
-    {
-        if ($this->settingsReturnUrl()) {
-            return true;
-        }
-
-        // Keep heading visible on mobile (â‰¤ 1023px) because the layout is single-column
-        // and the user needs context. On desktop the topnav already shows the page name.
-        return request()->header('X-Filament-Mobile', false) || (
-            isset($_SERVER['HTTP_USER_AGENT']) &&
-            preg_match('/Mobile|Android|iPhone|iPad/i', $_SERVER['HTTP_USER_AGENT'] ?? '')
-        );
-    }
-
-    /**
-     * @return array<Action>
-     */
-    protected function getHeaderActions(): array
-    {
-        $settingsUrl = $this->settingsReturnUrl();
-
-        if (! $settingsUrl) {
-            return [];
-        }
-
-        return [
-            Action::make('backToSettings')
-                ->label(__('Kembali ke Pengaturan'))
-                ->icon('heroicon-m-arrow-left')
-                ->color('gray')
-                ->url($settingsUrl),
-        ];
-    }
-
-    private function settingsReturnUrl(): ?string
+    public function backToSettingsUrl(): ?string
     {
         $settingsUrl = SettingsPage::getUrl(panel: 'welcome');
 
         return $this->returnTo === $settingsUrl ? $settingsUrl : null;
+    }
+
+    /**
+     * Crumb parent TIDAK mengikuti halaman asal klik.
+     *
+     * Panel Welcome memang membuat crumb 'Beranda' selalu di depan, tapi crumb
+     * kedua -- yang berasal dari `url()->previous()` -- dimatikan di sini.
+     *
+     * Alasannya: header chat sudah punya tombol panah ke Inbox, jadi navigasi
+     * balik tidak bergantung pada breadcrumb. Tanpa itu, crumb kedua hanya
+     * berisi halaman yang kebetulan diklik sebelum membuka Messages,
+     * dan terlihat seperti bagian dari riwayat percakapan padahal tidak ada
+     * hubungannya -- persis yang terjadi dengan crumb "Ulasan" yang pernah muncul
+     * di tengah "Beranda > Inbox > Super Admin".
+     *
+     * Yang TIDAK ikut dimatikan: crumb asal item katalog dari
+     * resolveOriginItem(). Itu bukan kebetulan, tapi konteks yang benar --
+     * "percakapan ini soal produk itu".
+     */
+    protected function followsReferrerInBreadcrumb(): bool
+    {
+        return false;
     }
 
     public function getBreadcrumbs(): array
@@ -204,12 +200,27 @@ class MessagesPage extends Page
         ];
 
         if ($origin = $this->resolveOriginItem()) {
-            $resource = $origin['type'] === 'product' ? ProductResource::class : PackageResource::class;
+            // Packages are tiers now, so every browsable origin resolves to the catalog.
+            $resource = CatalogResource::class;
             $breadcrumbs[$resource::getUrl('index')] = $resource::getNavigationLabel();
             $breadcrumbs[$resource::getUrl('view', ['record' => $origin['item']])] = $origin['item']->name;
         }
 
-        $breadcrumbs[static::getUrl()] = __('Inbox');
+        /*
+         * Crumb halaman ini memakai label NAVIGASI, bukan `__('Inbox')`.
+         *
+         * Alasannya: `lang/id.json` punya entri `"Inbox": "Kotak Masuk"` --
+         * itu arti generik kata "inbox" (kotak surat), bukan nama halaman
+         * pesan. Dipakai apa adanya, breadcrumb berbunyi "Beranda > Kotak Masuk
+         * > Super Admin" sementara item sidebar-nya berbunyi "Pesan". Dua nama
+         * untuk satu tujuan, dan hanya satu yang cocok dengan yang diklik
+         * pengguna.
+         *
+         * `getNavigationLabel()` juga membuat satu sumber kebenaran dengan
+         * sidebar: mengganti label di config/messages.php langsung terlihat
+         * berubah di keduanya, tidak di satu tempat saja.
+         */
+        $breadcrumbs[static::getUrl()] = static::getNavigationLabel();
 
         if ($this->selectedConversation) {
             $breadcrumbs[] = $this->selectedConversation->inbox_title ?: __('Pesan');
@@ -222,7 +233,7 @@ class MessagesPage extends Page
      * Lacak item katalog asal percakapan dari kartu konteks / laporan item
      * terbaru (meta type + id). Kartu pesanan (is_order) hanya jadi cadangan.
      *
-     * @return array{type: string, item: Package|Product}|null
+     * @return array{type: string, item: Package|Catalog}|null
      */
     protected function resolveOriginItem(): ?array
     {
@@ -239,12 +250,12 @@ class MessagesPage extends Page
         foreach ($messages as $message) {
             $meta = $message->meta ?? [];
 
-            if (! in_array($meta['type'] ?? null, ['package', 'product'], true) || empty($meta['id'])) {
+            if (! in_array($meta['type'] ?? null, ['package', 'catalog'], true) || empty($meta['id'])) {
                 continue;
             }
 
-            $item = $meta['type'] === 'product'
-                ? Product::query()->find($meta['id'])
+            $item = $meta['type'] === 'catalog'
+                ? Catalog::query()->find($meta['id'])
                 : Package::query()->find($meta['id']);
 
             if (! $item) {

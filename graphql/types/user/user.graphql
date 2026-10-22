@@ -1,0 +1,75 @@
+# User Type Definitions
+# Wedding Flower Decoration App - User GraphQL Types
+
+type User @model(class: "App\\Models\\User\\User") {
+  id: ID!
+  name: String!
+  email: String!
+  phone: String
+  avatar: String
+  emailVerifiedAt: String
+  address: String
+  city: String
+  province: String
+  postalCode: String
+  dateOfBirth: String
+  gender: Gender
+  notificationEmail: Boolean!
+  notificationSms: Boolean!
+  notificationPush: Boolean!
+  language: String!
+  currency: String!
+  timezone: String!
+  roles: [String!]!
+  createdAt: String!
+  updatedAt: String!
+  orders: [Order!]! @hasMany
+  reviews: [Review!]! @hasMany
+  wishlist: [Wishlist!]! @hasMany
+  addresses: [UserAddress!]! @hasMany
+}
+
+type UserAddress {
+  id: ID!
+  user: User! @belongsTo
+  name: String!
+  phone: String!
+  address: String!
+  city: String!
+  province: String!
+  postalCode: String!
+  type: AddressType!
+  isDefault: Boolean!
+  createdAt: String!
+}
+
+type UserProfile {
+  user: User!
+  orderCount: Int!
+  reviewCount: Int!
+  wishlistCount: Int!
+  totalSpent: Float!
+  favoriteCategory: Category
+  joinedAt: String!
+}
+
+type UserActivity {
+  id: ID!
+  type: String!
+  description: String!
+  metadata: JSON
+  createdAt: String!
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+enum AddressType {
+  HOME
+  WORK
+  OTHER
+}

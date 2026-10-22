@@ -45,13 +45,13 @@ enum PaymentStatus: string implements HasColor, HasIcon, HasLabel
     public function getIcon(): ?string
     {
         return match ($this) {
-            self::PENDING => 'heroicon-m-clock',
-            self::PROCESSING => 'heroicon-m-arrow-path',
-            self::SUCCESS => 'heroicon-m-check-circle',
-            self::FAILED => 'heroicon-m-x-circle',
-            self::EXPIRED => 'heroicon-m-clock',
-            self::CANCELLED => 'heroicon-m-x-circle',
-            self::REFUNDED => 'heroicon-m-backspace',
+            self::PENDING => '/images/icons/clock.svg',
+            self::PROCESSING => '/images/icons/refresh.svg',
+            self::SUCCESS => '/images/icons/check_circle.svg',
+            self::FAILED => '/images/icons/x_circle.svg',
+            self::EXPIRED => '/images/icons/clock.svg',
+            self::CANCELLED => '/images/icons/x_circle.svg',
+            self::REFUNDED => '/images/icons/backspace.svg',
         };
     }
 }

@@ -2,17 +2,17 @@
 
 namespace App\Filament\Welcome\Pages\Home;
 
-use App\Filament\User\Pages\Home\Home as UserHome;
 use App\Filament\Welcome\Widgets\CombinedCatalogWidget\CombinedCatalogWidget;
 use App\Filament\Welcome\Widgets\ShortcutStats\ShortcutStats;
 use App\Filament\Welcome\Widgets\StatsOverview\StatsOverview;
+use App\Support\AppIcon\AppIcon;
 use Filament\Pages\Dashboard as BaseDashboard;
 
 class Home extends BaseDashboard
 {
     protected static string $routePath = 'home';
 
-    protected static ?string $navigationIcon = 'heroicon-s-home';
+    protected static ?string $navigationIcon = AppIcon::HOME;
 
     protected static ?int $navigationSort = 1;
 
@@ -47,35 +47,24 @@ class Home extends BaseDashboard
     }
 
     /**
-     * Beranda storefront milik tamu. User yang sudah Sign In -- termasuk
-     * super_admin yang juga punya panel admin -- mendarat di home panel user,
-     * bukan berhenti di storefront dan mencari-cari menu akunnya.
+     * Beranda SHOPEE-STYLE: satu halaman untuk tamu DAN yang sudah sign in.
      *
-     * Dipakai mount() Livewire, bukan middleware, karena halaman katalog /
-     * detail harus tetap bisa dibuka user yang sudah login
-     * (Browse-from-storefront-after-SignIn). Kalau sampai ke middleware,
-     * seluruh panel welcome tertutup untuk mereka.
+     * DULU mount() mengirim user yang sudah login ke home panel user dengan
+     * `UserHome::getUrl(panel: 'user')`. Sesudah panel user dilebur ke panel
+     * ini (lihat WelcomePanelProvider), `Filament::getPanel('user')` tidak
+     * terdaftar lagi -- setiap kunjungan /home orang yang sudah sign in 500
+     * dengan InvalidArgumentException sebelum halaman dirender. Redirect itu
+     * DIHAPUS, dan halaman ini sengaja terbuka untuk DUA status: pintu akun
+     * tamu ada di topbar (dropdown "Masuk ke Akun"), pintu akun user ada di
+     * user menu bawaan Filament.
      *
-     * Hanya `/welcome/home` yang disentuh; `/welcome` dan `/` ikut karena
-     * keduanya sudah diarahkan ke sini oleh RedirectToHomeController.
+     * "/" ikut karena route closure '/' di routes/web/web.php mengarahkan ke
+     * sini.
      *
-     * `url.intended` tidak ditulis di sini, jadi tujuan setelah login yang
-     * disimpan middleware tetap utuh untuk tamu yang Galilee.
+     * Mount Livewire sengaja TIDAK ditulis: tanpa redirect ronde, tidak ada
+     * jalur yang bisa berputar balik ke /home sendiri (pembatalan 5 hop
+     * Laravel + halaman 500 yang dulu terjadi karena getPanel('user')).
      */
-    public function mount(): void
-    {
-        if (auth()->check()) {
-            // `panel: 'user'` itu wajib, bukan opsional. Page::getUrl() menulis
-            // route name dari getCurrentPanel() kalau argumennya null, dan saat
-            // halaman ini dirender current panel adalah 'welcome' -- sehingga
-            // UserHome::getUrl() tanpa panel menghasilkan /welcome/home, yaitu
-            // halaman ini sendiri. Akibatnya user yang sudah login diarahkan balik
-            // ke tempat dia datang, tanpa henti; Laravel membatalkan karena lebih
-            // dari 5 hop dan test gagal dengan "5 is less than 5".
-            $this->redirect(UserHome::getUrl(panel: 'user'), navigate: false);
-        }
-    }
-
     public function getWidgets(): array
     {
         // StatsOverview aman untuk guest (angka 0 + sapaan "Tamu"),

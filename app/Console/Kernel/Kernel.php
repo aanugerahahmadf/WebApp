@@ -19,7 +19,7 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping()
             ->appendOutputTo(storage_path('logs/scheduler-prune-storage.log'));
 
-        // Bersihkan file media yatim (review-photos/, Products/, Packages/)
+        // Bersihkan file media yatim (review-photos/, Catalogs/, Packages/)
         // yang tidak dirujuk review/tabel media — mingguan hari Minggu jam 03:00
         $schedule->command('media:prune --apply')
             ->weeklyOn(0, '03:00') // 0 = Sunday
@@ -27,7 +27,7 @@ class Kernel extends ConsoleKernel
             ->appendOutputTo(storage_path('logs/scheduler-prune-media.log'));
 
         // Sync upload ke Firebase Storage — harian jam 04:00
-        // Upload Packages, Products, review-photos ke Firebase (GCS)
+        // Upload Packages, Catalogs, review-photos ke Firebase (GCS)
         // Hapus lokal setelah upload (--delete-local) untuk free storage lokal
         $schedule->command('firebase:sync --apply --delete-local')
             ->dailyAt('04:00')

@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Filament\User\Auth\OtpResetPassword;
+use App\Filament\User\Auth\VerifyOtp\VerifyOtp;
 
 use App\Filament\User\Auth\Concerns\HasAuthBreadcrumbs;
 use App\Models\User\User;
@@ -74,7 +75,9 @@ class OtpResetPassword extends BaseResetPassword
         $user = User::where('email', $email)->first(['*']);
 
         if ($user) {
-            $user->password = Hash::make($data['password']);
+            // Password MENTAH — model User punya cast 'password' => 'hashed'
+            // yang akan hash otomatis saat save. JANGAN Hash::make di sini.
+            $user->password = $data['password'];
             $user->save();
 
             Cache::forget('otp_verified_for_'.$email);

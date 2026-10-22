@@ -1,0 +1,143 @@
+syntax = "proto3";
+
+package weddingapp.cart;
+
+import "proto/auth.proto";
+import "proto/catalog.proto";
+import "proto/package.proto";
+import "proto/voucher.proto";
+
+option php_namespace = "App\\Grpc\\Cart";
+option java_package = "com.weddingapp.cart";
+option csharp_namespace = "WeddingApp.Cart";
+option go_package = "github.com/weddingapp/grpc/cart";
+
+service CartService {
+  rpc GetCart (GetCartRequest) returns (CartResponse);
+  rpc AddToCart (AddToCartRequest) returns (CartItemResponse);
+  rpc UpdateCartItem (UpdateCartItemRequest) returns (CartItemResponse);
+  rpc RemoveFromCart (RemoveFromCartRequest) returns (RemoveFromCartResponse);
+  rpc ClearCart (ClearCartRequest) returns (ClearCartResponse);
+  rpc ApplyVoucher (ApplyVoucherRequest) returns (CartResponse);
+  rpc RemoveVoucher (RemoveVoucherRequest) returns (CartResponse);
+  rpc SyncCart (SyncCartRequest) returns (CartResponse);
+  rpc EstimateShipping (EstimateShippingRequest) returns (ShippingEstimateResponse);
+}
+
+message GetCartRequest {
+  string access_token = 1;
+}
+
+message AddToCartRequest {
+  string access_token = 1;
+  int64 catalog_id = 2;
+  int64 package_id = 3;
+  int32 quantity = 4;
+  map<string, string> options = 5;
+}
+
+message UpdateCartItemRequest {
+  string access_token = 1;
+  int64 cart_item_id = 2;
+  int32 quantity = 3;
+  map<string, string> options = 4;
+}
+
+message RemoveFromCartRequest {
+  string access_token = 1;
+  int64 cart_item_id = 2;
+}
+
+message ClearCartRequest {
+  string access_token = 1;
+}
+
+message ApplyVoucherRequest {
+  string access_token = 1;
+  string code = 2;
+}
+
+message RemoveVoucherRequest {
+  string access_token = 1;
+}
+
+message SyncCartRequest {
+  string access_token = 1;
+  repeated SyncCartItem items = 2;
+}
+
+message SyncCartItem {
+  int64 catalog_id = 1;
+  int64 package_id = 2;
+  int32 quantity = 3;
+  map<string, string> options = 4;
+}
+
+message EstimateShippingRequest {
+  string access_token = 1;
+  int64 address_id = 2;
+}
+
+message CartResponse {
+  Cart cart = 1;
+}
+
+message CartItemResponse {
+  CartItem item = 1;
+  string message = 2;
+}
+
+message RemoveFromCartResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ClearCartResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ShippingEstimateResponse {
+  ShippingEstimate estimate = 1;
+}
+
+message Cart {
+  string id = 1;
+  User user = 2;
+  repeated CartItem items = 3;
+  double subtotal = 4;
+  double discount = 5;
+  Voucher voucher = 6;
+  double shipping_cost = 7;
+  double tax = 8;
+  double total = 9;
+  int32 item_count = 10;
+  string updated_at = 11;
+}
+
+message CartItem {
+  int64 id = 1;
+  int64 user_id = 2;
+  int64 catalog_id = 3;
+  int64 package_id = 4;
+  weddingapp.catalog.Catalog catalog = 5;
+  weddingapp.package.Package package = 6;
+  int32 quantity = 7;
+  double subtotal = 8;
+  map<string, string> options = 9;
+  string created_at = 10;
+  string updated_at = 11;
+}
+
+message User {
+  int64 id = 1;
+  string name = 2;
+  string email = 3;
+}
+
+message ShippingEstimate {
+  double cost = 1;
+  int32 estimated_days = 2;
+  string method = 3;
+  bool available = 4;
+}

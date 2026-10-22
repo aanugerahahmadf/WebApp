@@ -9,6 +9,7 @@ use App\Livewire\User\Traits\CanValidateFiles\CanValidateFiles;
 use App\Livewire\User\Traits\HasPollInterval\HasPollInterval;
 use App\Models\Inbox\Inbox as InboxModel;
 use App\Models\User\User;
+use App\Support\ChatStaff\ChatStaff;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -97,42 +98,42 @@ class Inbox extends Component implements HasActions, HasForms
         return [
             [
                 'key' => 'bug_report',
-                'icon' => 'heroicon-o-bug-ant',
+                'icon' => '/images/icons/bug.svg',
                 'color' => 'text-orange-500 bg-orange-500/10',
                 'title' => __('Lapor Bug'),
                 'subtitle' => __('Laporkan masalah atau error'),
             ],
             [
                 'key' => 'account_issue',
-                'icon' => 'heroicon-o-user',
+                'icon' => '/images/icons/user.svg',
                 'color' => 'text-blue-500 bg-blue-500/10',
                 'title' => __('Masalah Akun'),
                 'subtitle' => __('Masalah dengan akun Anda'),
             ],
             [
                 'key' => 'order_help',
-                'icon' => 'heroicon-o-clipboard-document-list',
+                'icon' => '/images/icons/clipboard.svg',
                 'color' => 'text-green-500 bg-green-500/10',
                 'title' => __('Bantuan Pesanan'),
                 'subtitle' => __('Bantuan terkait pesanan'),
             ],
             [
                 'key' => 'payment_issue',
-                'icon' => 'heroicon-o-credit-card',
+                'icon' => '/images/icons/card.svg',
                 'color' => 'text-red-500 bg-red-500/10',
                 'title' => __('Masalah Pembayaran'),
                 'subtitle' => __('Masalah dengan pembayaran'),
             ],
             [
                 'key' => 'decor_consultation',
-                'icon' => 'heroicon-o-sparkles',
+                'icon' => '/images/icons/sparkles.svg',
                 'color' => 'text-pink-500 bg-pink-500/10',
                 'title' => __('Konsultasi Dekorasi'),
                 'subtitle' => __('Konsultasi tentang dekorasi'),
             ],
             [
                 'key' => 'general_question',
-                'icon' => 'heroicon-o-question-mark-circle',
+                'icon' => '/images/icons/question.svg',
                 'color' => 'text-teal-500 bg-teal-500/10',
                 'title' => __('Pertanyaan Umum'),
                 'subtitle' => __('Tanya apa saja'),
@@ -196,7 +197,7 @@ class Inbox extends Component implements HasActions, HasForms
                 'notified' => [Auth::id()],
             ]);
 
-            if (! Auth::user()->hasRole('super_admin')) {
+            if (! ChatStaff::isStaff(Auth::user())) {
                 SendBotReply::dispatch($newMessage->id)->delay(now()->addSeconds(5));
             }
         }
@@ -224,9 +225,7 @@ class Inbox extends Component implements HasActions, HasForms
     {
         $userId = Auth::id();
 
-        $admin = User::query()->whereHas('roles', function ($q) {
-            $q->where('name', 'super_admin');
-        })->first();
+        $admin = ChatStaff::adminUser();
 
         if (! $admin) {
             return null;

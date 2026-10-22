@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\User\CBIRController;
 
 use App\Http\Controllers\Controller;
 use App\Models\Package\Package;
-use App\Models\Product\Product;
+use App\Models\Catalog\Catalog;
 use App\Services\CBIRService\CBIRService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,14 +14,14 @@ use Illuminate\Support\Facades\Log;
 class CBIRController extends Controller
 {
     /**
-     * Search for similar wedding packages using image
+     * Search for similar wedding catalog items using image
      *
      * @return JsonResponse
      */
     public function searchSimilar(Request $request, CBIRService $cbirService)
     {
         $request->validate([
-            'image' => 'required|file|mimes:jpeg,png,jpg,bmp,webp,mp4,mov,m4v,webm,3gp|max:51200', // Foto 10MB / video 50MB
+            'image' => 'required|file|mimes:jpeg,png,jpg,bmp,webp,mp4,mov,m4v,webm,3gp|max:51200',
         ]);
 
         $apiResponse = $cbirService->searchByImage($request->file('image'));
@@ -36,28 +36,27 @@ class CBIRController extends Controller
 
         $results = $apiResponse['results'] ?? [];
 
-        // Group IDs by type
         $idsByType = collect($results)->groupBy('type');
 
         $packageIds = $idsByType->get('package', collect())->pluck('owner_id')->all();
-        $itemIds = $idsByType->get('product', collect())->pluck('owner_id')->all();
+        $catalogIds = $idsByType->get('catalog', collect())->pluck('owner_id')->all();
 
         $packages = Package::with(['category'])
             ->whereIn('id', $packageIds)
             ->get()
             ->keyBy('id');
 
-        $products = Product::with(['category'])
-            ->whereIn('id', $itemIds)
+        $catalogs = Catalog::with(['category'])
+            ->whereIn('id', $catalogIds)
             ->get()
             ->keyBy('id');
 
         $locale = app()->getLocale();
-        $enrichedResults = collect($results)->map(function (array $res) use ($packages, $products, $locale): ?array {
+        $enrichedResults = collect($results)->map(function (array $res) use ($packages, $catalogs, $locale): ?array {
             $type = $res['type'] ?? 'unknown';
             $id = (int) ($res['owner_id'] ?? 0);
 
-            $model = ($type === 'package') ? $packages->get($id) : (($type === 'product') ? $products->get($id) : null);
+            $model = ($type === 'package') ? $packages->get($id) : (($type === 'catalog') ? $catalogs->get($id) : null);
 
             if (! $model) {
                 return null;
@@ -76,13 +75,10 @@ class CBIRController extends Controller
                     'discount_price' => $model->discount_price > 0 ? $model->discount_price : null,
                     'image_url' => $model->image_url,
                     'category' => $model->category?->name,
-                    'vendor' => ['store_name' => $model->vendor?->store_name ?? ''],
-                    'vendor_id' => $model->vendor_id,
                 ],
             ];
         })->filter()->values();
 
-        // Store in session for Blade preview
         session([
             'cbir_mixed_results' => $enrichedResults->toArray(),
             'cbir_search_time' => $apiResponse['query_time_seconds'] ?? 0,
@@ -97,30 +93,33 @@ class CBIRController extends Controller
     }
 
     /**
-     * Index an product image into CBIR database
+     * Index a catalog image into CBIR database
      *
      * @return JsonResponse
      */
     public function indexItem(Request $request, CBIRService $cbirService)
     {
         $request->validate([
-            'product_id' => 'required|exists:products,id',
+            'catalog_id' => 'required|exists:catalogs,id',
         ]);
 
-        $product = Product::findOrFail($request->product_id);
-        $media = $product->getFirstMedia('product_image');
+        $catalog = Catalog::findOrFail($request->catalog_id);
+        $media = $catalog->getFirstMedia('catalog_image');
 
         if (! $media) {
-            return response()->json(['success' => false, 'message' => 'No image found for this product'], 400);
+            return response()->json([
+                'success' => false,
+                'message' => 'No image found for this catalog',
+            ], 400);
         }
 
         $success = $cbirService->indexMedia($media);
 
         return response()->json([
             'success' => $success,
-            'message' => $success ? __('Product indexed successfully') : __('Failed to index product'),
+            'message' => $success ? __('Catalog indexed successfully') : __('Failed to index catalog'),
             'data' => [
-                'product_id' => $product->id,
+                'catalog_id' => $catalog->id,
             ],
         ]);
     }
@@ -128,10 +127,10 @@ class CBIRController extends Controller
     public function buildIndex(CBIRService $cbirService)
     {
         $packages = Package::all();
-        $products = Product::all();
+        $catalogs = Catalog::all();
 
         $pCount = 0;
-        $iCount = 0;
+        $cCount = 0;
         $errors = [];
 
         foreach ($packages as $package) {
@@ -145,32 +144,27 @@ class CBIRController extends Controller
             }
         }
 
-        foreach ($products as $product) {
-            $media = $product->getFirstMedia('product_image');
+        foreach ($catalogs as $catalog) {
+            $media = $catalog->getFirstMedia('catalog_image');
             if ($media) {
                 if ($cbirService->indexMedia($media)) {
-                    $iCount++;
+                    $cCount++;
                 } else {
-                    $errors[] = "Failed to index product ID {$product->id}";
+                    $errors[] = "Failed to index catalog ID {$catalog->id}";
                 }
             }
         }
 
         return response()->json([
             'success' => true,
-            'message' => __('CBIR Index built with :pCount packages and :iCount products', ['pCount' => $pCount, 'iCount' => $iCount]),
+            'message' => __('CBIR Index built with :pCount packages and :cCount catalogs', ['pCount' => $pCount, 'cCount' => $cCount]),
             'indexed_packages' => $pCount,
-            'indexed_items' => $iCount,
-            'total_products' => $packages->count() + $products->count(),
+            'indexed_catalogs' => $cCount,
+            'total_items' => $packages->count() + $catalogs->count(),
             'errors' => $errors,
         ]);
     }
 
-    /**
-     * Get CBIR index statistics
-     *
-     * @return JsonResponse
-     */
     public function getStats(CBIRService $cbirService)
     {
         try {
@@ -185,8 +179,9 @@ class CBIRController extends Controller
                     'data' => [
                         'mode' => 'local',
                         'server_status' => 'online',
-                        'indexed_products' => $status['total_products'] ?? 0,
-                        'total_database_items' => Product::query()->count(),
+                        // Accept both keys so it works before/after the AI Core rename.
+                        'indexed_catalogs' => $status['total_catalogs'] ?? $status['total_catalogs'] ?? 0,
+                        'total_database_items' => Catalog::query()->count(),
                     ],
                 ]);
             }
@@ -198,23 +193,11 @@ class CBIRController extends Controller
             'data' => [
                 'mode' => 'local',
                 'server_status' => 'offline',
-                'total_database_items' => Product::query()->count(),
+                'total_database_items' => Catalog::query()->count(),
             ],
         ]);
     }
 
-    /**
-     * Aritmetika Citra: gabungkan fitur dari beberapa gambar
-     * lalu cari hasilnya di database CBIR.
-     *
-     * Request JSON:
-     * {
-     *   "images": ["/path/gambar1.jpg", "/path/gambar2.jpg"],
-     *   "operation": "add|average|subtract|multiply|divide",
-     *   "top_k": 20,
-     *   "weights": [0.7, 0.3]
-     * }
-     */
     public function arithmeticSearch(Request $request, CBIRService $cbirService): JsonResponse
     {
         $request->validate([
@@ -243,16 +226,16 @@ class CBIRController extends Controller
         $results = $apiResponse['results'] ?? [];
         $idsByType = collect($results)->groupBy('type');
         $packageIds = $idsByType->get('package', collect())->pluck('owner_id')->all();
-        $itemIds = $idsByType->get('product', collect())->pluck('owner_id')->all();
+        $catalogIds = $idsByType->get('catalog', collect())->pluck('owner_id')->all();
 
         $packages = Package::with(['category'])->whereIn('id', $packageIds)->get()->keyBy('id');
-        $products = Product::with(['category'])->whereIn('id', $itemIds)->get()->keyBy('id');
+        $catalogs = Catalog::with(['category'])->whereIn('id', $catalogIds)->get()->keyBy('id');
         $locale = app()->getLocale();
 
-        $enrichedResults = collect($results)->map(function (array $res) use ($packages, $products, $locale): ?array {
+        $enrichedResults = collect($results)->map(function (array $res) use ($packages, $catalogs, $locale): ?array {
             $type = $res['type'] ?? 'unknown';
             $id = (int) ($res['owner_id'] ?? 0);
-            $model = ($type === 'package') ? $packages->get($id) : (($type === 'product') ? $products->get($id) : null);
+            $model = ($type === 'package') ? $packages->get($id) : (($type === 'catalog') ? $catalogs->get($id) : null);
             if (! $model) return null;
             return [
                 'type' => $type,
@@ -267,8 +250,6 @@ class CBIRController extends Controller
                     'discount_price' => $model->discount_price > 0 ? $model->discount_price : null,
                     'image_url' => $model->image_url,
                     'category' => $model->category?->name,
-                    'vendor' => ['store_name' => $model->vendor?->store_name ?? ''],
-                    'vendor_id' => $model->vendor_id,
                 ],
             ];
         })->filter()->values();
@@ -283,9 +264,6 @@ class CBIRController extends Controller
         ]);
     }
 
-    /**
-     * Daftar operasi aritmetika citra yang tersedia
-     */
     public function arithmeticOps(CBIRService $cbirService): JsonResponse
     {
         $ops = $cbirService->getArithmeticOps();
@@ -295,11 +273,6 @@ class CBIRController extends Controller
         ]);
     }
 
-    /**
-     * Health check for CBIR service
-     *
-     * @return JsonResponse
-     */
     public function healthCheck()
     {
         try {
@@ -336,11 +309,6 @@ class CBIRController extends Controller
         ]);
     }
 
-    /**
-     * Evaluasi kualitatif CBIR — MAP, MRR, Precision@3, First Rank Accuracy
-     *
-     * @return JsonResponse
-     */
     public function evaluate(CBIRService $cbirService)
     {
         try {

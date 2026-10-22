@@ -17,6 +17,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application Version (API)
+    |--------------------------------------------------------------------------
+    |
+    | Versi backend, di-upsert otomatis setiap Sabtu oleh
+    | scripts/weekly_saturday_update.ps1 (folder root) supaya sinkron dengan
+    | versionName aplikasi HP. Bila APP_VERSION tidak ada di .env, fallback
+    | di bawah tetap membuat config('app.version') valid.
+    |
+    */
+
+    'version' => env('APP_VERSION', '1.0.0+2'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |
@@ -53,6 +67,29 @@ return [
     */
 
     'url' => env('APP_URL', 'http://localhost'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Force HTTPS Scheme
+    |--------------------------------------------------------------------------
+    |
+    | Paksa semua URL ter-generate memakai skema https, apa pun skema request
+    | yang masuk. Default: false.
+    |
+    | JANGAN nyalakan hanya karena APP_URL diawali "https://". Panggilan
+    | URL::forceScheme() hanya mengganti skema, host-nya tetap mengikuti host
+    | request. Akibatnya, kalau developer membuka http://127.0.0.1:8000
+    | sementara APP_URL menunjuk domain tunnel (https://xxx.trycloudflare.com),
+    | setiap asset berubah menjadi https://127.0.0.1:8000/build/... Browser
+    | gagal handshake TLS dan halaman tampil tanpa CSS sama sekali.
+    |
+    | Di balik tunnel/ reverse proxy, skema https sudah dibaca otomatis oleh
+    | Symfony lewat X-Forwarded-Proto karena bootstrap/app.php mendaftarkan
+    | trustProxies('*'). Jadi paksaannya tidak diperlukan untuk skripsi ini.
+    |
+    */
+
+    'force_https_scheme' => env('APP_FORCE_HTTPS_SCHEME', false),
 
     /*
     |--------------------------------------------------------------------------

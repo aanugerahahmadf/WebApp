@@ -7,7 +7,7 @@ use Illuminate\Console\Command;
 class GenerateSeedImages extends Command
 {
     protected $signature = 'db:generate-seed-images';
-    protected $description = 'Generate placeholder images for package and product seeders';
+    protected $description = 'Generate placeholder images for package and catalog seeders';
 
     private const CATEGORY_COLORS = [
         'traditional' => [139, 69, 19],
@@ -56,124 +56,18 @@ class GenerateSeedImages extends Command
         $prdIdx = 1;
         foreach (self::CATEGORY_COLORS as $cat => $color) {
             for ($i = 0; $i < 5; $i++) {
-                $path = public_path("images/product/product-{$prdIdx}.png");
+                $path = public_path("images/catalog/catalog-{$prdIdx}.png");
                 if (!file_exists($path)) {
-                    $this->generateImage($path, "Produk {$cat}", $prdIdx, $color, self::CATEGORY_ACCENTS[$cat], 'product');
-                    $this->line("  <info>✓</info> product-{$prdIdx}.png");
+                    $this->generateImage($path, "Produk {$cat}", $prdIdx, $color, self::CATEGORY_ACCENTS[$cat], 'catalog');
+                    $this->line("  <info>✓</info> catalog-{$prdIdx}.png");
                 } else {
-                    $this->line("  • product-{$prdIdx}.png (already exists)");
+                    $this->line("  • catalog-{$prdIdx}.png (already exists)");
                 }
                 $prdIdx++;
             }
         }
 
-        // ── Vendor Logos ──────────────────────────────────────────────────────
-        $vendorColors = [
-            [139, 69, 19], [74, 144, 217], [210, 105, 30], [200, 162, 200],
-            [34, 139, 34], [255, 215, 0], [0, 206, 209], [230, 195, 195],
-            [72, 72, 72], [0, 255, 127],
-        ];
-        $vendorAccents = [
-            [178, 58, 38], [30, 60, 114], [139, 90, 43], [180, 130, 170],
-            [0, 100, 0], [184, 134, 11], [0, 150, 160], [160, 120, 140],
-            [105, 105, 105], [50, 205, 50],
-        ];
-        $vendorNames = [
-            'Toko Bunga Indah', 'Dekorasi Cinta Abadi', 'Pelaminan Mewah', 'Bridal Bloom Studio',
-            'Florist Nusantara', 'Dekorasi Bahagia', 'Taman Cinta Abadi', 'Panggung Istimewa',
-            'Bunga Kasih Sayang', 'Pernikahan Idaman',
-        ];
-
-        $vendorLogoDir = storage_path("app/public/images/vendor");
-        foreach ($vendorNames as $i => $name) {
-            $path = "{$vendorLogoDir}/vendor-logo-{$i}.png";
-            $short = str_replace('Toko ', '', $name);
-            $short = str_replace('Dekorasi ', '', $short);
-            $short = str_replace('Bunga ', '', $short);
-            $short = str_replace('Florist ', '', $short);
-            $short = str_replace('Panggung ', '', $short);
-            $short = str_replace('Taman ', '', $short);
-            $short = str_replace('Bridal ', '', $short);
-            $short = str_replace('Pelaminan ', '', $short);
-            $short = str_replace('Pernikahan ', '', $short);
-            $short = explode(' ', trim($short))[0] ?? 'Vendor';
-            if (!file_exists($path)) {
-                $this->generateVendorLogo($path, $short, $vendorColors[$i], $vendorAccents[$i]);
-                $this->line("  <info>✓</info> vendor-logo-{$i}.png");
-            } else {
-                $this->line("  • vendor-logo-{$i}.png (already exists)");
-            }
-        }
-
         $this->info('--- Seed Image Generation Complete ---');
-    }
-
-    private function generateVendorLogo(string $path, string $initial, array $base, array $accent): void
-    {
-        $dir = dirname($path);
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-
-        $w = 200;
-        $h = 200;
-        $img = imagecreatetruecolor($w, $h);
-
-        [$r1, $g1, $b1] = $base;
-        [$r2, $g2, $b2] = [
-            min(255, $base[0] + 60),
-            min(255, $base[1] + 60),
-            min(255, $base[2] + 60),
-        ];
-
-        // Gradient circular background
-        for ($y = 0; $y < $h; $y++) {
-            $ratio = $y / $h;
-            $r = (int)($r1 * (1 - $ratio) + $r2 * $ratio);
-            $g = (int)($g1 * (1 - $ratio) + $g2 * $ratio);
-            $b = (int)($b1 * (1 - $ratio) + $b2 * $ratio);
-            imageline($img, 0, $y, $w, $y, imagecolorallocate($img, $r, $g, $b));
-        }
-
-        // Outer ring
-        $ringColor = imagecolorallocatealpha($img, $accent[0], $accent[1], $accent[2], 30);
-        imagefilledellipse($img, 100, 100, 170, 170, $ringColor);
-        $ringColor2 = imagecolorallocatealpha($img, $accent[0], $accent[1], $accent[2], 15);
-        imagefilledellipse($img, 100, 100, 140, 140, $ringColor2);
-
-        // Center white circle
-        $white = imagecolorallocatealpha($img, 255, 255, 255, 20);
-        imagefilledellipse($img, 100, 100, 110, 110, $white);
-
-        // Letter
-        $textColor = imagecolorallocate($img, 255, 255, 255);
-        $fontFile = null;
-        foreach (['C:/Windows/Fonts/arial.ttf', 'C:/Windows/Fonts/segoeui.ttf', 'C:/Windows/Fonts/calibri.ttf'] as $p) {
-            if (file_exists($p)) { $fontFile = $p; break; }
-        }
-        $size = 64;
-        if ($fontFile) {
-            $bbox = imagettfbbox($size, 0, $fontFile, $initial);
-            $tx = (int)(($w - ($bbox[2] - $bbox[0])) / 2);
-            $ty = (int)(($h + ($bbox[1] - $bbox[7])) / 2);
-            imagettftext($img, $size, 0, $tx, $ty, $textColor, $fontFile, $initial);
-        } else {
-            $fw = imagefontwidth(5) * strlen($initial);
-            $fh = imagefontheight(5);
-            imagestring($img, 5, (int)(($w - $fw) / 2), (int)(($h - $fh) / 2), $initial, $textColor);
-        }
-
-        // Small icon at bottom
-        $smallTextColor = imagecolorallocatealpha($img, 255, 255, 255, 60);
-        if ($fontFile) {
-            $smallSize = 14;
-            $bbox = imagettfbbox($smallSize, 0, $fontFile, 'STORE');
-            $tx = (int)(($w - ($bbox[2] - $bbox[0])) / 2);
-            imagettftext($img, $smallSize, 0, $tx, 180, $smallTextColor, $fontFile, 'STORE');
-        }
-
-        imagepng($img, $path);
-        imagedestroy($img);
     }
 
     private function generateImage(string $path, string $label, int $num, array $base, array $accent, string $type): void
@@ -241,7 +135,7 @@ class GenerateSeedImages extends Command
 
         // Text
         $textColor = imagecolorallocate($img, 255, 255, 255);
-        $label = $type === 'package' ? "Wedding Package" : "Wedding Product";
+        $label = $type === 'package' ? "Wedding Package" : "Wedding Catalog";
         $this->drawCenteredText($img, $label, $w / 2, $h * 0.68, 26, $textColor);
 
         $numColor = imagecolorallocatealpha($img, 255, 255, 255, 80);

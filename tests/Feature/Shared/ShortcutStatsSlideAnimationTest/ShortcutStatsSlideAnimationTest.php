@@ -10,7 +10,7 @@
  * sebagai custom property --shortcut-stats-page:
  *
  *   - HP (aplikasi shell Android/iOS + browser mobile Android/iOS):
- *     --shortcut-stats-page: 100%  -> 1 kartu per halaman, 4 titik.
+ *     --shortcut-stats-page: 100%  -> 1 kartu per halaman, 6 titik.
  *   - tablet, macOS, desktop, desktop app:
  *     --shortcut-stats-page: calc(50% - 0.375rem) -> 2 kartu per halaman,
  *     2 titik. Bukan 1 kartu per halaman: di lebar 1600-1920px satu kartu
@@ -90,13 +90,18 @@ it('tetap slide di tablet, macOS, desktop, dan desktop app, dua kartu per halama
         ->assertSee('--shortcut-stats-page: 100%')
         ->html();
 
-    // Empat kartu = empat halaman (1 kartu per halaman untuk SEMUA platform).
-    // Jadi ada 4 titik: snap === 0, 1, 2, 3.
+    // LIMA kartu = lima halaman (1 kartu per halaman untuk SEMUA platform).
+    // Jadi ada 5 titik: snap === 0, 1, 2, 3, 4.
+    //
+    // Jumlahnya turun dari enam karena kartu "Package Bunga" dihapus dari
+    // `ShortcutStats::getStats()` mengikuti refactor `Product` -> `Catalog`.
+    // Lihat catatan di `ShortcutStatsLayoutTest`.
     expect(substr_count($html, 'snap === 0'))->toBe(1)
         ->and(substr_count($html, 'snap === 1'))->toBe(1)
         ->and(substr_count($html, 'snap === 2'))->toBe(1)
         ->and(substr_count($html, 'snap === 3'))->toBe(1)
-        ->and($html)->not->toContain('snap === 4');
+        ->and(substr_count($html, 'snap === 4'))->toBe(1)
+        ->and($html)->not->toContain('snap === 5');
 })->with([
     'desktop windows' => RuntimePlatform::WebsiteWindows,
     'macos' => RuntimePlatform::WebsiteMacOS,
@@ -104,8 +109,8 @@ it('tetap slide di tablet, macOS, desktop, dan desktop app, dua kartu per halama
     'desktop app macos' => RuntimePlatform::DesktopAppMacOS,
 ]);
 
-it('tetap merender keempat kartu di semua platform', function (): void {
-    $labels = ['Pesanan Saya', 'Favorit', 'Voucher Aktif', 'Keranjang'];
+it('tetap merender kelima kartu di semua platform', function (): void {
+    $labels = ['Pesanan Saya', 'Favorit', 'Voucher Aktif', 'Keranjang', 'Catalog Bunga'];
 
     foreach ([RuntimePlatform::MobileAppAndroid, RuntimePlatform::WebsiteWindows] as $platform) {
         AppPlatform::fake($platform);
@@ -132,11 +137,15 @@ it('membuat titik penanda sejumlah kartu', function (): void {
     AppPlatform::fake(RuntimePlatform::MobileAppAndroid);
 
     // Satu titik per kartu; titik pertama aktif (snap = 0), sisanya pendek.
+    //
+    // Indeks terakhir ikut 4, bukan 5: kartu "Package Bunga" dihapus dari
+    // `ShortcutStats::getStats()` mengikuti refactor `Product` -> `Catalog`,
+    // jadi jumlah titiknya lima.
     $html = Livewire::test(WelcomeShortcutStats::class)->html();
 
     expect(substr_count($html, "snap === 0"))
         ->toBe(1)
-        ->and(substr_count($html, "snap === 3"))
+        ->and(substr_count($html, "snap === 4"))
         ->toBe(1);
 });
 

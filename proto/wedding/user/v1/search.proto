@@ -1,0 +1,96 @@
+syntax = "proto3";
+
+package wedding.user.v1;
+
+option go_package = "github.com/wedding/user/v1;userv1";
+option php_namespace = "App\\Grpc\\User\\V1";
+option php_metadata_namespace = "App\\Grpc\\User\\V1\\GPBMetadata";
+
+import "wedding/user/v1/common.proto";
+import "wedding/user/v1/auth.proto";
+import "wedding/user/v1/catalog.proto";
+import "wedding/user/v1/package.proto";
+import "wedding/user/v1/category.proto";
+
+// Search Service
+service SearchService {
+  rpc Search(SearchRequest) returns (SearchResponse);
+  rpc GetSuggestions(GetSuggestionsRequest) returns (SearchSuggestionsResponse);
+  rpc GetPopularSearches(GetPopularSearchesRequest) returns (PopularSearchesResponse);
+  rpc GetFilters(GetFiltersRequest) returns (SearchFiltersResponse);
+}
+
+message SearchRequest {
+  string query = 1;
+  SearchType type = 2;
+  PaginationRequest pagination = 3;
+}
+
+message SearchResponse {
+  repeated SearchResult results = 1;
+  PaginationResponse pagination = 2;
+  double took = 3;
+}
+
+message GetSuggestionsRequest {
+  string query = 1;
+  int32 limit = 2;
+}
+
+message SearchSuggestionsResponse {
+  repeated SearchSuggestion suggestions = 1;
+}
+
+message GetPopularSearchesRequest {
+  int32 limit = 1;
+}
+
+message PopularSearchesResponse {
+  repeated PopularSearch searches = 1;
+}
+
+message GetFiltersRequest {
+  string query = 1;
+  string category_id = 2;
+}
+
+message SearchFiltersResponse {
+  SearchFilters filters = 1;
+}
+
+message SearchResult {
+  string id = 1;
+  string type = 2; // "catalog" or "package"
+  string name = 3;
+  string slug = 4;
+  double price = 5;
+  string image_url = 6;
+  string category = 7;
+}
+
+message SearchSuggestion {
+  string text = 1;
+  SearchSuggestionType type = 2;
+  int32 count = 3;
+  string image_url = 4;
+}
+
+message PopularSearch {
+  string query = 1;
+  int32 count = 2;
+  string trend = 3; // "rising", "stable", "declining"
+}
+
+message SearchFilters {
+  repeated CategoryFilter categories = 1;
+  PriceRange price_range = 2;
+  repeated string themes = 3;
+  repeated string colors = 4;
+  int32 min_capacity = 5;
+  int32 max_capacity = 6;
+}
+
+message CategoryFilter {
+  Category category = 1;
+  int32 count = 2;
+}

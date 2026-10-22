@@ -6,7 +6,7 @@
         {{__('Search Messages')}}
     </x-slot>
 
-    <x-filament::input.wrapper suffix-icon="heroicon-o-magnifying-glass">
+    <x-filament::input.wrapper suffix-icon="/images/icons/search.svg">
         <x-filament::input type="search" placeholder="{{__('Search messages...')}}" wire:model.live.debounce.500ms="search"/>
     </x-filament::input.wrapper>
 

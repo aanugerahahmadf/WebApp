@@ -1,0 +1,63 @@
+# Package Type Definition
+# Wedding Flower Decoration App - Package GraphQL Types
+
+type Package @model(class: "App\\Models\\Package\\Package") {
+  id: ID!
+  name: String!
+  slug: String!
+  description: String
+  price: Float!
+  discountPrice: Float
+  finalPrice: Float!
+  isActive: Boolean!
+  isFeatured: Boolean!
+  imageUrl: String
+  features: [String!]
+  theme: String
+  color: String
+  minCapacity: Int
+  maxCapacity: Int
+  category: Category @belongsTo
+  averageRating: Float
+  reviews: [Review!]! @hasMany
+  createdAt: String!
+  updatedAt: String!
+}
+
+# Package Connection for pagination
+type PackageConnection {
+  data: [Package!]!
+  pageInfo: PageInfo!
+}
+
+# Package Filter Input
+input PackageFilter {
+  categoryId: ID
+  featured: Boolean
+  onSale: Boolean
+  minPrice: Float
+  maxPrice: Float
+  active: Boolean
+  theme: String
+  color: String
+  minCapacity: Int
+  maxCapacity: Int
+  search: String
+}
+
+# Package Sort Input
+input PackageSort {
+  field: PackageSortField!
+  direction: SortDirection!
+}
+
+enum PackageSortField {
+  NAME
+  PRICE
+  CREATED_AT
+  UPDATED_AT
+  RATING
+  POPULARITY
+  MIN_CAPACITY
+  MAX_CAPACITY
+}

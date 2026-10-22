@@ -17,14 +17,18 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [
+    // `array_unique`/`array_filter` dipakai karena FRONTEND_URL dan ADMIN_URL
+    // bisa menunjuk origin yang sama (kasus umum: satu domain untuk web, API,
+    // dan panel admin). Tanpa itu domain itu muncul dua kali di header
+    // Access-Control-Allow-Origin.
+    'allowed_origins' => array_values(array_unique(array_filter([
         env('FRONTEND_URL', 'https://localhost'),
         env('ADMIN_URL', 'https://localhost'),
         'http://localhost:5173',
         'http://localhost:4200',
         'http://127.0.0.1:5173',
         'http://127.0.0.1:4200',
-    ],
+    ]))),
 
     'allowed_origins_patterns' => [],
 

@@ -69,7 +69,7 @@ class PaymentMethod extends Model
         return static::activeQuery()
             ->get()
             ->mapWithKeys(fn (PaymentMethod $m) => [
-                $m->id => static::typeLabel($m->type).' ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· '.$m->name.($m->fee > 0 ? ' ('.number_format($m->fee, 0, ',', '.').')' : ''),
+                $m->id => static::typeLabel($m->type).' · '.$m->name.($m->fee > 0 ? ' ('.number_format($m->fee, 0, ',', '.').')' : ''),
             ])
             ->all();
     }
@@ -82,7 +82,7 @@ class PaymentMethod extends Model
         return static::activeQuery()
             ->get()
             ->mapWithKeys(fn (PaymentMethod $m) => [
-                $m->id => trim(implode(' ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ', array_filter([
+                $m->id => trim(implode(' · ', array_filter([
                     $m->bank_name,
                     $m->account_holder,
                     $m->account_number ? (string) $m->account_number : null,

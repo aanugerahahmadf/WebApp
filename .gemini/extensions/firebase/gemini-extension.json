@@ -4,7 +4,7 @@
   "mcpServers": {
     "firebase": {
       "command": "npx",
-      "args": ["-y", "firebase-tools", "mcp", "--dir", "d:\\Weeding-Organizer-CBIR\\Mobile-App"]
+      "args": ["-y", "firebase-tools", "mcp", "--dir", "d:\\WeddingFlowersDecorationApp\\Mobile-App"]
     }
   },
   "contextFileName": "FIREBASE.md"

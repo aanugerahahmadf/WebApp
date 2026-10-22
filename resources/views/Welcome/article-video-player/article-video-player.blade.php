@@ -21,7 +21,7 @@
         </video>
     @else
         <div class="flex flex-col items-center justify-center p-12 bg-gray-100 rounded-2xl border-2 border-dashed border-gray-300">
-            <x-heroicon-o-video-camera-slash class="w-12 h-12 text-gray-400 mb-2 opacity-50" />
+            <img src="/images/icons/video.svg" class="w-12 h-12 text-gray-400 mb-2 opacity-50" />
             <p class="text-gray-500 italic">{{ __('Tidak ada video tersedia untuk artikel ini.') }}</p>
         </div>
     @endif

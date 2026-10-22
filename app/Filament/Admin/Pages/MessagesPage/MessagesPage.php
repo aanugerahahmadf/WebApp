@@ -2,9 +2,9 @@
 
 namespace App\Filament\Admin\Pages\MessagesPage;
 
-use App\Filament\Admin\Pages\Home\Home;
-use App\Models\Inbox\Inbox;
 use App\Filament\Concerns\HasDynamicBreadcrumbs;
+use App\Models\Inbox\Inbox;
+use App\Support\AppIcon\AppIcon;
 use Filament\Pages\Page;
 use Filament\Support\Enums\MaxWidth;
 use Illuminate\Contracts\Support\Htmlable;
@@ -13,12 +13,25 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Halaman pesan panel admin.
+ *
+ * Isinya komponen Livewire `fm-admin-inbox` dan `fm-admin-messages` yang
+ * sudah terdaftar di AppServiceProvider; halaman ini hanya kerangkanya.
+ *
+ * Percakapan yang tampil bukan milik admin yang sedang login: admin
+ * sebagai STAFF melihat semua percakapan shopper, jadi daftar inboxnya
+ * diambil dari seluruh inbox, bukan dari milik admin.
+ */
 class MessagesPage extends Page
 {
     use HasDynamicBreadcrumbs;
+
     protected static string $view = 'Admin.pages.messages.messages';
 
-    protected static ?string $activeNavigationIcon = 'heroicon-s-chat-bubble-left-right';
+    protected static ?string $navigationIcon = AppIcon::MESSAGES;
+
+    protected static ?string $activeNavigationIcon = AppIcon::MESSAGES;
 
     protected static ?int $navigationSort = 1;
 
@@ -26,7 +39,7 @@ class MessagesPage extends Page
 
     public static function getSlug(): string
     {
-        return 'inbox/messages/{id?}';
+        return config('messages.slug', 'messages').'/{id?}';
     }
 
     public static function shouldRegisterNavigation(): bool
@@ -36,7 +49,7 @@ class MessagesPage extends Page
 
     public static function getNavigationGroup(): ?string
     {
-        return __(config('messages.navigation.navigation_group'));
+        return __('Pesan');
     }
 
     public static function getNavigationLabel(): string
@@ -46,27 +59,17 @@ class MessagesPage extends Page
 
     public static function getNavigationBadge(): ?string
     {
-        $userId = Auth::id();
-        if (! $userId) {
-            return null;
-        }
-
         $count = Cache::remember(
-            "admin_{$userId}_unread_messages_count",
+            'admin_unread_messages_count',
             now()->addSeconds(30),
-            function () use ($userId) {
+            function (): int {
                 return Inbox::query()
-                    ->whereJsonContains('user_ids', $userId)
-                    ->whereHas('messages', function (Builder $query) use ($userId) {
+                    ->whereHas('messages', function (Builder $query): void {
                         if (DB::getDriverName() === 'sqlite') {
-                            $query->whereRaw('read_by NOT LIKE ?', ["%\"{$userId}\"%"]);
+                            $query->whereRaw('read_by NOT LIKE ?', ['%"1"%']);
                         } else {
-                            $query->whereRaw(
-                                'JSON_SEARCH(read_by, "one", ?) IS NULL',
-                                [(string) $userId]
-                            );
+                            $query->whereRaw('JSON_SEARCH(read_by, "one", ?) IS NULL', ['1']);
                         }
-                        $query->where('user_id', '!=', $userId);
                     })
                     ->count();
             }
@@ -80,21 +83,20 @@ class MessagesPage extends Page
         return __('Pesan belum dibaca');
     }
 
-    public static function getNavigationIcon(): string|Htmlable|null
-    {
-        return config('messages.navigation.navigation_icon', static::$activeNavigationIcon);
-    }
-
-    public static function getNavigationSort(): ?int
-    {
-        return config('messages.navigation.navigation_sort', static::$navigationSort);
-    }
-
     public function mount(?int $id = null): void
     {
-        if ($id) {
-            $this->selectedConversation = Inbox::findOrFail($id, ['*']);
-        }
+        $this->selectedConversation = $id
+            ? Inbox::query()->findOrFail($id, ['*'])
+            : null;
+    }
+
+    /**
+     * Crumb parent TIDAK mengikuti halaman asal klik: header chat sudah punya
+     * tombol panah ke Inbox.
+     */
+    protected function followsReferrerInBreadcrumb(): bool
+    {
+        return false;
     }
 
     public function getTitle(): string
@@ -112,11 +114,23 @@ class MessagesPage extends Page
         return __('Messages');
     }
 
+    public function hasHeader(): bool
+    {
+        return false;
+    }
+
     public function getBreadcrumbs(): array
     {
-        return [
+        $breadcrumbs = [
             ...$this->breadcrumbParentCrumb(),
-            $this->getTitle(),
         ];
+
+        $breadcrumbs[static::getUrl()] = static::getNavigationLabel();
+
+        if ($this->selectedConversation) {
+            $breadcrumbs[] = $this->selectedConversation->inbox_title ?: __('Pesan');
+        }
+
+        return $breadcrumbs;
     }
 }

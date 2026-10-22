@@ -1,0 +1,62 @@
+# CBIR Type Definitions
+# Wedding Flower Decoration App - CBIR GraphQL Types
+
+type CbirStats {
+  totalImages: Int!
+  totalFeatures: Int!
+  databaseSize: String
+  lastUpdated: String
+}
+
+type CbirSearchResult {
+  success: Boolean!
+  results: [CbirResult!]!
+  totalResults: Int!
+  queryTimeSeconds: Float!
+}
+
+type CbirResult {
+  type: String!
+  similarity: Float!
+  score: Float!
+  data: CbirResultData!
+}
+
+type CbirResultData {
+  id: ID!
+  name: String!
+  slug: String!
+  description: String
+  price: Float!
+  discountPrice: Float
+  finalPrice: Float @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@finalPrice")
+  imageUrl: String
+  category: String
+  categoryObj: Category @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@category")
+  isAvailable: Boolean! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@isAvailable")
+}
+
+type CbirHistory {
+  id: ID!
+  userId: ID!
+  queryImageUrl: String!
+  results: [CbirHistoryResult!]!
+  resultsCount: Int!
+  topSimilarity: Float!
+  createdAt: String!
+}
+
+type CbirHistoryResult {
+  type: String!
+  itemId: ID!
+  similarity: Float!
+  score: Float!
+  item: CbirResultData!
+}
+
+type CbirIndexResult {
+  success: Boolean!
+  message: String!
+  affectedCount: Int!
+  processingTime: Float!
+}

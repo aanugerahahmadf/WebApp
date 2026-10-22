@@ -3,7 +3,6 @@
 namespace App\Filament\User\Auth\Auth;
 
 use App\Filament\User\Auth\Concerns\HasAuthBreadcrumbs;
-use App\Filament\User\Pages\Home\Home;
 use App\Filament\Welcome\Pages\Home\Home as WelcomeHome;
 use Filament\Facades\Filament;
 use Filament\Panel;
@@ -12,7 +11,7 @@ use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Route;
 
 /**
- * Halaman auth pertama yang ditemui tamu: `/user/auth`.
+ * Halaman auth pertama yang ditemui tamu: `/auth`.
  *
  * Isinya sengaja dikecilkan -- logo, heading "Welcome Back", dan DUA tombol:
  * Sign In (ke form email/kata sandi) dan Masuk Dengan Google (en: "Continue
@@ -57,8 +56,8 @@ class Auth extends SimplePage
      * Halaman ini bukan form -- dia hanya menawarkan dua pintu (Sign In dan
      * Google). Menamainya "Sign In" menyesatkan karena crumb terakhir, <title>
      * tab browser, dan heading besar semuanya ikut mengulang nama form yang
-     * sudah ada di halaman lain (/user/signin), sehingga /user/auth dan
-     * /user/signin terlihat seperti halaman yang sama. "Welcome Back" cuma
+     * sudah ada di halaman lain (/signin), sehingga /auth dan
+     * /signin terlihat seperti halaman yang sama. "Welcome Back" cuma
      * sapaan untuk orang yang kembali ke akunnya -- bukan nama halaman form,
      * jadi tidak bentrok dengan heading Sign In yang tetap "Sign In".
      *
@@ -83,7 +82,7 @@ class Auth extends SimplePage
      * Label untuk crumb halaman ini, dipakai OLEH Sign In dan Sign Up sebagai
      * parent-nya. Sengaja sama dengan getHeading(): crumb harus memakai nama
      * halaman yang ditunjuk, jadi "Sign In / Welcome Back" tetap menunjuk ke
-     * /user/auth yang bergelar "Welcome Back".
+     * /auth yang bergelar "Welcome Back".
      *
      * Dulu labelnya "Masuk" (id) / "Log in" (en) -- key "Masuk" sudah jadi
      * "Log in" di en.json, jadi crumb di browser English terbaca "Log in / Sign
@@ -127,21 +126,21 @@ class Auth extends SimplePage
     public function mount(): void
     {
         if (auth()->check()) {
-            // `panel: 'user'` wajib: tanpa itu Page::getUrl() mengambil panel dari
+            // `panel: 'welcome'` wajib: tanpa itu Page::getUrl() mengambil panel dari
             // getCurrentPanel(). Di sini kebetulan hasilnya sama, tapi begitu
             // panel default berubah, halaman ini diam-diam melompat ke panel lain.
-            $this->redirect(Home::getUrl(panel: 'user'), navigate: false);
+            $this->redirect(WelcomeHome::getUrl(panel: 'welcome'), navigate: false);
         }
     }
 
     /**
      * Route-nya didaftarkan manual, jadi route name bawaan Filament
-     * (`filament.user.pages.auth`) tidak ada. Menunjuk langsung ke route yang
+     * (`filament.welcome.pages.auth`) tidak ada. Menunjuk langsung ke route yang
      * dibuat registerRoutes() di bawah.
      */
     public static function getUrl(array $parameters = []): string
     {
-        return route('filament.user.auth.index', $parameters);
+        return route('filament.welcome.auth.index', $parameters);
     }
 
     /**
@@ -157,7 +156,7 @@ class Auth extends SimplePage
     protected function getViewData(): array
     {
         return [
-            'signInUrl' => Filament::getPanel('user')->getLoginUrl(),
+            'signInUrl' => Filament::getPanel('welcome')->getLoginUrl(),
         ];
     }
 

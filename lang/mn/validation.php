@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'шуудангийн код',
         'preview'                  => 'урьдчилан харах',
         'price'                    => 'Үнэ',
-        'product_id'               => 'бүтээгдэхүүний ID',
+        'catalog_id'               => 'бүтээгдэхүүний ID',
         'product_uid'              => 'бүтээгдэхүүний UID',
         'product_uuid'             => 'бүтээгдэхүүн UUID',
         'promo_code'               => 'сурталчилгааны код',

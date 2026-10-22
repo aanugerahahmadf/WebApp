@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'Codice Postale',
         'preview'                  => 'anteprima',
         'price'                    => 'prezzo',
-        'product_id'               => 'Codice prodotto',
+        'catalog_id'               => 'Codice prodotto',
         'product_uid'              => 'ID del prodotto',
         'product_uuid'             => 'UUID del prodotto',
         'promo_code'               => 'codice promozionale',

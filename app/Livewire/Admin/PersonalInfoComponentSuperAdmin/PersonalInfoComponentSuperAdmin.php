@@ -70,7 +70,7 @@ class PersonalInfoComponentSuperAdmin extends Component implements HasForms
             ->schema([
                 Section::make(__('Informasi Profil'))
                     ->aside()
-                    ->icon('heroicon-o-user-circle')
+                    ->icon('/images/icons/user_circle.svg')
                     ->description(__('Perbarui foto profil, nama, dan nomor WhatsApp Anda.'))
                     ->schema([
                         FileUpload::make('avatar_url')
@@ -95,7 +95,7 @@ class PersonalInfoComponentSuperAdmin extends Component implements HasForms
                             ->email()
                             ->disabled()
                             ->dehydrated(false)
-                            ->prefixIcon('heroicon-o-envelope')
+                            ->prefixIcon('/images/icons/envelope.svg')
                             ->columnSpanFull(),
                         TextInput::make('first_name')
                             ->label(__('Nama Depan'))
@@ -123,7 +123,7 @@ class PersonalInfoComponentSuperAdmin extends Component implements HasForms
                             ->label(__('Nama Lengkap'))
                             ->disabled()
                             ->dehydrated(false)
-                            ->prefixIcon('heroicon-o-user')
+                            ->prefixIcon('/images/icons/user.svg')
                             ->helperText(__('Terisi otomatis dari Nama Depan, Tengah, dan Belakang.'))
                             ->columnSpanFull(),
                         WhatsappField::group(withOtpButton: true),

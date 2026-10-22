@@ -4,7 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title ?? __('Verifikasi Kode') }}</title>
     <style>
-        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f4f7; color: #51545e; margin: 0; padding: 0; }
+        body { font-family: 'Google Sans Flex', sans-serif; background-color: #f4f4f7; color: #51545e; margin: 0; padding: 0; }
         .wrapper { width: 100%; background-color: #f4f4f7; padding: 40px 0; }
         .content { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .header { background-color: #1a202c; padding: 30px 40px; text-align: center; }

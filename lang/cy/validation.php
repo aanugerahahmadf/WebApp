@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'Côd Post',
         'preview'                  => 'rhagolwg',
         'price'                    => 'pris',
-        'product_id'               => 'ID cynnyrch',
+        'catalog_id'               => 'ID cynnyrch',
         'product_uid'              => 'UID cynnyrch',
         'product_uuid'             => 'UUID cynnyrch',
         'promo_code'               => 'cod hyrwyddo',

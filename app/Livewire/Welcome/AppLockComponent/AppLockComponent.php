@@ -14,6 +14,7 @@ use Filament\Notifications\Notification;
 use Filament\Support\Enums\Alignment;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 
 /**
@@ -49,7 +50,7 @@ class AppLockComponent extends Component implements HasActions, HasForms
                 Section::make(__('Kunci Aplikasi'))
                     ->description(__('Kunci Aplikasi menggunakan sidik jari perangkat, verifikasi wajah AI Core, atau PIN untuk membuka aplikasi. Ini berbeda dari Verifikasi Wajah profil (KYC) yang memindai wajah untuk verifikasi identitas.'))
                     ->aside()
-                    ->icon('heroicon-o-lock-closed')
+                    ->icon('/images/icons/lock.svg')
                     ->schema([
                         Section::make(__('Sidik Jari'))
                             ->description(fn () => __('Gunakan sidik jari untuk membuka aplikasi').' — '.($this->fingerprintEnabled ? __('Aktif') : __('Nonaktif')))
@@ -57,12 +58,12 @@ class AppLockComponent extends Component implements HasActions, HasForms
                                 Actions::make([
                                     Actions\Action::make('enableFingerprint')
                                         ->label(__('Aktifkan'))
-                                        ->icon('heroicon-m-hand-raised')
+                                        ->icon('/images/icons/hand.svg')
                                         ->visible(fn () => ! $this->fingerprintEnabled)
                                         ->action(fn () => $this->setFingerprint(true)),
                                     Actions\Action::make('disableFingerprint')
                                         ->label(__('Nonaktifkan'))
-                                        ->icon('heroicon-m-hand-raised')
+                                        ->icon('/images/icons/hand.svg')
                                         ->color('danger')
                                         ->requiresConfirmation()
                                         ->modalHeading(__('Nonaktifkan Sidik Jari'))
@@ -77,12 +78,12 @@ class AppLockComponent extends Component implements HasActions, HasForms
                                 Actions::make([
                                     Actions\Action::make('enableFace')
                                         ->label(__('Aktifkan'))
-                                        ->icon('heroicon-m-face-smile')
+                                        ->icon('/images/icons/smile.svg')
                                         ->visible(fn () => ! $this->faceEnabled)
                                         ->action(fn () => $this->setFace(true)),
                                     Actions\Action::make('disableFace')
                                         ->label(__('Nonaktifkan'))
-                                        ->icon('heroicon-m-face-smile')
+                                        ->icon('/images/icons/smile.svg')
                                         ->color('danger')
                                         ->requiresConfirmation()
                                         ->modalHeading(__('Nonaktifkan Kunci Aplikasi Wajah'))
@@ -97,7 +98,7 @@ class AppLockComponent extends Component implements HasActions, HasForms
                                 Actions::make([
                                     Actions\Action::make('managePin')
                                         ->label(fn () => $this->pinEnabled ? __('Ubah PIN') : __('Atur PIN'))
-                                        ->icon('heroicon-m-key')
+                                        ->icon('/images/icons/key.svg')
                                         ->modalHeading(__('Kunci PIN'))
                                         ->modalSubmitActionLabel(__('Simpan'))
                                         ->form([
@@ -122,7 +123,7 @@ class AppLockComponent extends Component implements HasActions, HasForms
                                         }),
                                     Actions\Action::make('deletePin')
                                         ->label(__('Hapus PIN'))
-                                        ->icon('heroicon-m-trash')
+                                        ->icon('/images/icons/trash.svg')
                                         ->color('danger')
                                         ->requiresConfirmation()
                                         ->modalHeading(__('Hapus PIN'))
@@ -159,7 +160,21 @@ class AppLockComponent extends Component implements HasActions, HasForms
     protected function setFace(bool $value): void
     {
         $user = Auth::user();
+
+        if (! $value && $user->app_lock_face_reference && Storage::disk('public')->exists($user->app_lock_face_reference)) {
+            // Delete the stored face reference file when disabling
+            Storage::disk('public')->delete($user->app_lock_face_reference);
+        }
+
         $user->app_lock_face_enabled = $value;
+
+        // When disabling, also clear enrollment data
+        if (! $value) {
+            $user->app_lock_face_enrolled = false;
+            $user->app_lock_face_reference = null;
+            $user->app_lock_face_enrolled_at = null;
+        }
+
         $user->save();
         $this->refreshStatus();
 

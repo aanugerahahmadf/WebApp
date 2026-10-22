@@ -18,6 +18,7 @@
         "dompdf/dompdf": "^3.1",
         "dotswan/filament-map-picker": "^1.8",
         "emmanpbarrameda/filament-take-picture-field": "^1.2.1",
+        "emuniq/filament-collapsible-subnav": "^1.6",
         "endroid/qr-code": "^5.1",
         "filament/actions": "^3.3.0",
         "filament/filament": "^3.3",
@@ -28,6 +29,7 @@
         "filament/tables": "^3.3.0",
         "filament/widgets": "^3.3.0",
         "google/cloud-firestore": "^2.1",
+        "google/protobuf": "^5.36",
         "jeddsaliba/filament-messages": "^1.0",
         "jeffersongoncalves/filament-qrcode-field": "^1.2",
         "jeffgreco13/filament-breezy": "^2.6",
@@ -52,8 +54,11 @@
         "livewire/volt": "^1.10",
         "maiden-voyage-software/blade-emojis": "^0.1.5",
         "mallardduck/blade-boxicons": "^2.5",
+        "marcogermani87/filament-captcha": "^1.10",
         "mews/captcha": "^3.5",
         "mix-code/filament-multi-2fa": "^1.3",
+        "nuwave/lighthouse": "^6.72",
+        "nyholm/psr7": "^1.8",
         "phpoffice/phpspreadsheet": "^1.30",
         "phpseclib/phpseclib": "^3.0",
         "pxlrbt/filament-excel": "^2.5",
@@ -67,6 +72,9 @@
         "spatie/laravel-package-tools": "^1.92",
         "spatie/laravel-permission": "^7.2",
         "spatie/yaml-front-matter": "^2.0",
+        "spiral/goridge": "^4.2",
+        "spiral/roadrunner": "^2025.1",
+        "spiral/roadrunner-grpc": "^3.7",
         "stechstudio/filament-impersonate": "^3.3",
         "stichoza/google-translate-php": "^5.3",
         "symfony/expression-language": "^8.0",
@@ -108,6 +116,14 @@
         }
     },
     "scripts": {
+        "proto:generate": [
+            "Composer\\Config::disableProcessTimeout",
+            "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\generate-protos.ps1"
+        ],
+        "grpc:serve": [
+            "Composer\\Config::disableProcessTimeout",
+            "php vendor\\bin\\rr serve -c .rr.yaml"
+        ],
         "setup": [
             "composer install",
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",

@@ -234,7 +234,7 @@ return [
         'postal_code'              => '郵便番号',
         'preview'                  => 'プレビュー',
         'price'                    => '価格',
-        'product_id'               => '製品番号',
+        'catalog_id'               => '製品番号',
         'product_uid'              => '製品UID',
         'product_uuid'             => '製品UUID',
         'promo_code'               => 'プロモーションコード',

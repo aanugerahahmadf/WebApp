@@ -23,6 +23,7 @@ use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
+use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
 
 use function Pest\Laravel\actingAs;
@@ -33,8 +34,10 @@ uses(RefreshDatabase::class);
 beforeEach(function (): void {
     Queue::fake();
 
-    Role::firstOrCreate(['name' => 'super_admin']);
-    Role::firstOrCreate(['name' => 'customer']);
+    // Role untuk user di bawah (guard `web`) DAN untuk panel admin (guard
+    // `admin`). `User::assignRole()` mencari di guard model itu sendiri, jadi
+    // `super_admin` versi `web` harus ada juga.
+    seedRoles(adminRoles: ['super_admin'], webRoles: ['super_admin', 'customer']);
 
     $this->admin = User::factory()->create();
     $this->admin->assignRole('super_admin');
@@ -56,16 +59,16 @@ it('messages page slug contains the optional id segment', function (): void {
 it('messages page URL resolves to the welcome panel path', function (): void {
     Filament::setCurrentPanel(Filament::getPanel('welcome'));
     $url = MessagesPage::getUrl(panel: 'welcome');
-    expect($url)->toContain('/welcome/messages');
+    expect($url)->toContain('/messages');
 });
 
 // ---------------------------------------------------------------------------
-// Rendering — authenticated
+// Rendering â€” authenticated
 // ---------------------------------------------------------------------------
 
 it('renders the messages page for a signed-in customer', function (): void {
     actingAs($this->customer, 'web');
-    get('/welcome/messages')->assertOk();
+    get('/messages')->assertOk();
 });
 
 it('renders the messages page with a pre-selected conversation', function (): void {
@@ -79,11 +82,11 @@ it('renders the messages page with a pre-selected conversation', function (): vo
         'read_by'  => [$this->admin->id],
     ]);
 
-    get("/welcome/messages/{$inbox->id}")->assertOk();
+    get("/messages/{$inbox->id}")->assertOk();
 });
 
 // ---------------------------------------------------------------------------
-// hasRole() null-safety — the 500 bug regression test
+// hasRole() null-safety â€” the 500 bug regression test
 // ---------------------------------------------------------------------------
 
 it('does not 500 when a guest opens a messages conversation (null-safe hasRole)', function (): void {
@@ -100,7 +103,7 @@ it('does not 500 when a guest opens a messages conversation (null-safe hasRole)'
     // Act as the guest user (authenticated but no roles assigned)
     actingAs($guestUser, 'web');
 
-    get("/welcome/messages/{$inbox->id}")
+    get("/messages/{$inbox->id}")
         ->assertOk(); // must NOT be 500
 });
 
@@ -132,7 +135,7 @@ it('a customer cannot open another customers conversation (403)', function (): v
     $otherUser = User::factory()->create();
     $inbox     = Inbox::create(['user_ids' => [$otherUser->id, $this->admin->id]]);
 
-    get("/welcome/messages/{$inbox->id}")->assertForbidden();
+    get("/messages/{$inbox->id}")->assertForbidden();
 });
 
 it('the admin can open any conversation', function (): void {
@@ -140,11 +143,11 @@ it('the admin can open any conversation', function (): void {
 
     $inbox = Inbox::create(['user_ids' => [$this->customer->id, $this->admin->id]]);
 
-    get("/welcome/messages/{$inbox->id}")->assertOk();
+    get("/messages/{$inbox->id}")->assertOk();
 });
 
 // ---------------------------------------------------------------------------
-// Navigation badge — unread count
+// Navigation badge â€” unread count
 // ---------------------------------------------------------------------------
 
 it('navigation badge returns zero when there are no unread messages', function (): void {
@@ -180,7 +183,7 @@ it('navigation badge returns the unread inbox count', function (): void {
 });
 
 // ---------------------------------------------------------------------------
-// Livewire — conversation interactions
+// Livewire â€” conversation interactions
 // ---------------------------------------------------------------------------
 
 it('can send a message in a conversation', function (): void {
@@ -211,7 +214,7 @@ it('can toggle a reaction on a message', function (): void {
     ]);
 
     Livewire::test(Messages::class, ['selectedConversation' => $inbox])
-        ->call('toggleReaction', $message->id, '👍');
+        ->call('toggleReaction', $message->id, 'ðŸ‘');
 
     $message->refresh();
     $reactions = $message->meta['reactions'] ?? [];
@@ -319,3 +322,4 @@ it('can clear the reply-to reference', function (): void {
         ->call('clearReplyTo')
         ->assertSet('replyTo', null);
 });
+

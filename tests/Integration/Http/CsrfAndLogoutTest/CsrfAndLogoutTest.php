@@ -20,12 +20,14 @@
  *      VerifyCsrfToken::class)`. Di Laravel 11/12 `replace()` hanya berlaku untuk
  *      middleware GLOBAL, sedangkan `ValidateCsrfToken` berada di grup `web`,
  *      bukan global -- jadi penggantian itu praktis tidak berpengaruh dan grup
- *      `web` tetap menjalankan middleware dasar dengan `$except` kosong.
- *      Test terakhir mengunci fakta ini supaya tidak ada yang mengira
- *      penggantian itu bekerja.
+ *      `web` tetap menjalankan middleware dasar. Yang benar-benar mengecualikan
+ *      path di grup `web` adalah `validateCsrfTokens(except: ...)` yang
+ *      mengisi daftar `neverVerify` middleware dasar; test di bawah memisahkan
+ *      dua daftar itu supaya tidak ada yang mengira `replace()` bekerja.
  */
 
 use App\Http\Middleware\VerifyCsrfToken\VerifyCsrfToken;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\TokenMismatchException;
@@ -72,6 +74,25 @@ function csrfExcludes(string $uri, string $method = 'GET'): bool
     return (bool) $method_inExceptArray->invoke($middleware, Request::create($uri, $method));
 }
 
+/**
+ * Sama seperti `csrfExcludes()`, tapi untuk middleware yang BENAR-BENAR
+ * dipakai grup `web`, yaitu `ValidateCsrfToken` bawaan Laravel.
+ *
+ * Bedanya penting. `csrfExcludes()` membaca daftar `$except` milik subclass
+ * APLIKASI, yang -- karena `replace()` hanya berlaku untuk middleware global --
+ * tidak pernah berjalan di grup `web`. Semua request web masuk ke middleware
+ * dasar, jadi hanya daftar `neverVerify` yang di `bootstrap/app.php` lewat
+ * `validateCsrfTokens(except: ...)` yang benar-benar mengecualikan path.
+ */
+function webCsrfExcludes(string $uri, string $method = 'GET'): bool
+{
+    $middleware = new ValidateCsrfToken(app(), app('encrypter'));
+
+    $inExceptArray = new ReflectionMethod($middleware, 'inExceptArray');
+
+    return (bool) $inExceptArray->invoke($middleware, Request::create($uri, $method));
+}
+
 test('the logout paths are excluded from csrf verification', function (): void {
     // Dua-duanya harus ada. Tanpa `user/logout`, sesi kedaluwarsa + klik SignOut
     // berakhir di 419 dan pengguna tersesat, dan itu justru terjadi pada akun
@@ -106,9 +127,9 @@ test('the logout urls actually match the exclusion list', function (): void {
 test('a path that is not on the list is not excluded', function (): void {
     // Penyeimbang test sebelumnya: daftar `$except` tidak boleh sampai terlalu
     // longgar sampai semua endpoint biasa ikut bebas CSRF.
-    expect(csrfExcludes('/user/home'))->toBeFalse()
-        ->and(csrfExcludes('/user/settings'))->toBeFalse()
-        ->and(csrfExcludes('/welcome/orders'))->toBeFalse()
+    expect(csrfExcludes('/home'))->toBeFalse()
+        ->and(csrfExcludes('/settings'))->toBeFalse()
+        ->and(csrfExcludes('/orders'))->toBeFalse()
         // `admin/*` memang ada di daftar sebagai wildcard, jadi yang di sini harus
         // benar: `/admin` polos TIDAK ikut wildcard itu.
         ->and(csrfExcludes('/admin'))->toBeFalse();
@@ -153,21 +174,20 @@ test('the base middleware still guards the web group', function (): void {
     // Fakta yang mudah disalahpahami: `replace()` di bootstrap/app.php tidak
     // mengganti apa pun di grup `web` -- penggantian itu hanya berlaku
     // untuk middleware global, dan `ValidateCsrfToken` bukan global. Jadi grup
-    // `web` berjalan dengan middleware DASAR yang `$except`-nya kosong, dan
+    // `web` berjalan dengan middleware DASAR, dan
     // `App\Http\Middleware\VerifyCsrfToken` hanya berjalan sebagai lapisan kedua
     // di level panel Filament.
     //
-    // Konsekuensinya: `POST /user/logout` tetap diperiksa oleh middleware dasar
-    // lebih dulu. Belum jelas apakah itu yang diinginkan, tapi test ini ada supaya
-    // orang yang membaca `replace()` itu mengira pengaruhnya lebih besar dari
-    // kenyataan -- dan supaya kalau suatu saat diperbaiki, test ini yang
-    // memberitahu.
+    // Yang membuat pengecualian berlaku untuk request web adalah
+    // `validateCsrfTokens(except: ...)` di bootstrap/app.php, bukan subclass
+    // aplikasi. Konsekuensinya harus tetap terlihat di sini: `admin/*` TIDAK
+    // ikut bebas di grup `web` -- hanya `livewire/*` dan ketiga path logout.
     $webGroup = app('router')->getMiddlewareGroups()['web'] ?? [];
 
     $baseCsrfIndex = null;
 
     foreach (array_values($webGroup) as $index => $middleware) {
-        if ($middleware === \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class) {
+        if ($middleware === ValidateCsrfToken::class) {
             $baseCsrfIndex = $index;
 
             break;
@@ -177,5 +197,42 @@ test('the base middleware still guards the web group', function (): void {
     expect($baseCsrfIndex)->not->toBeNull()
         // Dan aplikasi TIDAK menumpuk middleware-nya sendiri di grup web --
         // tidak ada penggantian, tidak ada pengurangan.
-        ->and($webGroup)->not->toContain(VerifyCsrfToken::class);
+        ->and($webGroup)->not->toContain(VerifyCsrfToken::class)
+        // Wildcard `admin/*` milik subclass aplikasi tidak boleh ikut
+        // ditambahkan ke `validateCsrfTokens()` tanpa keputusan tersendiri:
+        // itu akan membebaskan endpoint non-panel (mis. admin.reviews.vote).
+        ->and(webCsrfExcludes('/admin/reviews/12/helpful', 'POST'))->toBeFalse();
+});
+
+test('the web group really exempts the livewire update endpoint', function (): void {
+    // Ini penyebab dialog "This page has expired. Would you like to refresh the
+    // page?" yang muncul tepat setelah Pusat Unduhan Data selesai mengunduh.
+    //
+    // Setiap klik pada halaman Filament = POST /livewire/update. Token sesi
+    // berubah setiap kali user login (OTP/2FA memanggil `regenerateToken()`),
+    // jadi tab yang sudah terbuka sebelum login masih memegang token lama dan
+    // request-nya kena 419 -- livewire.js menampilkan dialog, halaman mungkin
+    // kehilangan state, dan user mengira unduhannya gagal.
+    //
+    // Test ini membaca middleware yang BENAR-BENAR dipakai grup `web`, bukan
+    // daftar `$except` milik subclass aplikasi yang tidak pernah jalan di sini.
+    expect(webCsrfExcludes('/livewire/update', 'POST'))->toBeTrue()
+        ->and(webCsrfExcludes('/livewire/upload-file', 'POST'))->toBeTrue();
+});
+
+test('the web group really exempts the logout paths', function (): void {
+    // Sama seperti di atas, tapi untuk SignOut: logout itu idempotent, dan
+    // bentuk yang paling sering terjadi justru sesi yang sudah tidak berlaku.
+    expect(webCsrfExcludes('/user/logout', 'POST'))->toBeTrue()
+        ->and(webCsrfExcludes('/welcome/logout', 'POST'))->toBeTrue()
+        ->and(webCsrfExcludes('/logout', 'POST'))->toBeTrue();
+});
+
+test('the web group still guards ordinary web routes', function (): void {
+    // Penyeimbang: pengecualian di atas tidak boleh melebar sampai semua
+    // request web bebas CSRF.
+    expect(webCsrfExcludes('/home', 'POST'))->toBeFalse()
+        ->and(webCsrfExcludes('/settings', 'POST'))->toBeFalse()
+        ->and(webCsrfExcludes('/orders', 'POST'))->toBeFalse()
+        ->and(webCsrfExcludes('/home', 'GET'))->toBeFalse();
 });

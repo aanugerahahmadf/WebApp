@@ -2,10 +2,13 @@
 
 namespace App\Filament\Admin\Auth\OtpResetPassword;
 
-use App\Models\User\User;
+use App\Filament\Admin\Auth\Concerns\HasAuthBreadcrumbs;
+use App\Filament\Admin\Auth\VerifyOtp\VerifyOtp;
+use App\Models\Admin\Admin;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Component;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Http\Responses\Auth\Contracts\PasswordResetResponse;
@@ -13,10 +16,16 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Auth\PasswordReset\ResetPassword as BaseResetPassword;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Hash;
 
+/**
+ * Atur ulang kata sandi admin (setelah OTP terverifikasi).
+ *
+ * Akun admin hidup di tabel `admins` -- bukan `users`.
+ */
 class OtpResetPassword extends BaseResetPassword
 {
+    use HasAuthBreadcrumbs;
+
     public function getHeading(): string|Htmlable
     {
         return __('Atur Ulang Kata Sandi');
@@ -49,8 +58,8 @@ class OtpResetPassword extends BaseResetPassword
         $data = $this->form->getState();
         $email = $data['email'] ?? $this->email;
 
-        // Cek apakah OTP sudah diverifikasi di halaman sebelumnya
-        if (! Cache::get('otp_verified_for_'.$email)) {
+        // OTP harus sudah diverifikasi di halaman sebelumnya.
+        if (! Cache::get('admin_otp_verified_for_'.$email)) {
             Notification::make()
                 ->title(__('Sesi verifikasi habis. Silakan verifikasi ulang OTP Anda.'))
                 ->danger()
@@ -61,40 +70,46 @@ class OtpResetPassword extends BaseResetPassword
             return null;
         }
 
-        $user = User::where('email', $email)->first(['*']);
+        $admin = Admin::query()->where('email', $email)->first();
 
-        if ($user) {
-            $user->password = Hash::make($data['password']);
-            $user->save();
-
-            Cache::forget('otp_verified_for_'.$email);
-            Cache::forget('password_reset_otp_'.$email);
-
+        if (! $admin) {
             Notification::make()
-                ->title(__('Kata sandi berhasil diatur ulang.'))
-                ->success()
-                ->send();
-
-            $this->redirect(Filament::getLoginUrl());
-
-            return null;
-        } else {
-            Notification::make()
-                ->title(__('Pengguna tidak ditemukan.'))
+                ->title(__('Admin tidak ditemukan.'))
                 ->danger()
                 ->send();
 
             return null;
         }
+
+        // Password MENTAH -- model Admin punya cast 'password' => 'hashed'
+        // yang meng-hash otomatis saat disimpan. JANGAN Hash::make di sini.
+        $admin->password = $data['password'];
+        $admin->save();
+
+        Cache::forget('admin_otp_verified_for_'.$email);
+        Cache::forget('admin_password_reset_otp_'.$email);
+
+        Notification::make()
+            ->title(__('Kata sandi berhasil diatur ulang.'))
+            ->success()
+            ->send();
+
+        $this->redirect(Filament::getLoginUrl());
+
+        return null;
     }
 
     public function form(Form $form): Form
     {
         return $form
             ->schema([
-                $this->getEmailFormComponent(),
-                $this->getPasswordFormComponent(),
-                $this->getPasswordConfirmationFormComponent(),
+                Section::make()
+                    ->schema([
+                        $this->getEmailFormComponent(),
+                        $this->getPasswordFormComponent(),
+                        $this->getPasswordConfirmationFormComponent(),
+                    ])
+                    ->columns(1),
             ]);
     }
 

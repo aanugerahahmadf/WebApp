@@ -1,14 +1,22 @@
 @php
-    $type  = $res['type'] ?? 'product';
+    $type  = $res['type'] ?? 'catalog';
     $data  = $res['data'] ?? [];
     $score = $res['similarity'] ?? 0;
     $pct   = number_format($score, 1);
 
     $category = is_array($data['category'] ?? null) ? ($data['category']['name'] ?? null) : ($data['category'] ?? null);
 
+    $pkg = $type === 'package' && isset($data['id'])
+        ? \App\Models\Package\Package::find($data['id'])
+        : null;
+
+    // `PackageResource` sudah dilipat ke `CatalogResource`, jadi route
+    // `filament.welcome.resources.packages.view` tidak ada lagi. Memanggilnya
+    // melempar RouteNotFoundException dan mematikan seluruh halaman hasil CBIR,
+    // bukan hanya satu kartu. Paket diarahkan ke katalog pemiliknya (tier).
     $url = $type === 'package'
-        ? route('filament.welcome.resources.packages.view', ['record' => $data['id'] ?? 0])
-        : route('filament.welcome.resources.products.view', ['record' => $data['id'] ?? 0]);
+        ? route('filament.welcome.resources.flowerdecorationscatalog.view', ['record' => $pkg->catalog_id ?? $data['catalog_id'] ?? 0])
+        : route('filament.welcome.resources.flowerdecorationscatalog.view', ['record' => $data['id'] ?? 0]);
 
     $imgSrc = str_starts_with($data['image_url'] ?? '', 'http')
         ? $data['image_url']
@@ -29,9 +37,8 @@
 
     // Rating (package only)
     $rating = null;
-    if ($type === 'package' && isset($data['id'])) {
-        $pkg    = \App\Models\Package\Package::find($data['id']);
-        $rating = $pkg ? number_format($pkg->reviews()->avg('rating') ?: 0, 1) : null;
+    if ($pkg) {
+        $rating = number_format($pkg->reviews()->avg('rating') ?: 0, 1);
     }
 
     // Category color
@@ -106,7 +113,7 @@
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:2px;">
             @if($type === 'package' && $rating !== null)
                 <span style="display:flex;align-items:center;gap:2px;font-size:9px;color:#9ca3af;">
-                    <svg width="9" height="9" viewBox="0 0 24 24" style="fill:#facc15;flex-shrink:0;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    <x-filament::icon icon="/images/icons/star.svg" class="h-[9px] w-[9px] shrink-0 text-yellow-400" />
                     {{ $rating }}
                 </span>
             @else

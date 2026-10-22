@@ -2,24 +2,21 @@
 
 namespace App\Filament\Admin\Resources\OrderResource\Pages\CreateOrder;
 
-use App\Filament\Admin\Pages\Home\Home;
 use App\Filament\Admin\Resources\OrderResource\OrderResource;
+use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use Filament\Resources\Pages\CreateRecord;
 
-class CreateOrder extends CreateRecord
+class CreateOrder extends \Filament\Resources\Pages\CreateRecord
 {
+    use HasDynamicBreadcrumbs;
+
     protected static string $resource = OrderResource::class;
 
     public function getBreadcrumbs(): array
     {
         return [
-            Home::getUrl() => __('Beranda'),
-            ...parent::getBreadcrumbs(),
+            ...$this->breadcrumbParentCrumb(),
+            OrderResource::getUrl('index') => OrderResource::getNavigationLabel(),
         ];
-    }
-
-    protected function getRedirectUrl(): string
-    {
-        return $this->getResource()::getUrl('index');
     }
 }

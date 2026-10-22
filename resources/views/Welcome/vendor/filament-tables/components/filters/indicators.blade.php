@@ -35,7 +35,7 @@
         <div class="mt-0.5">
             <x-filament::icon-button
                 color="gray"
-                icon="heroicon-m-x-mark"
+                icon="/images/icons/x.svg"
                 icon-alias="tables::filters.remove-all-button"
                 size="sm"
                 :tooltip="__('filament-tables::table.filters.actions.remove_all.tooltip')"

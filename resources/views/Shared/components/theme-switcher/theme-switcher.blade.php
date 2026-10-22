@@ -8,10 +8,21 @@
     tidak ada salinan yang bisa saling ketinggalan.
 
     Dipakai dari dua tempat:
-      - topbar, lewat Welcome.components.topbar-auth-actions -- hanya untuk
-        tablet dan website desktop, lihat syaratnya di sana
+      - topbar, lewat hook GLOBAL_SEARCH_AFTER tiap panel (dan partial
+        Welcome.components.topbar-auth-actions) -- untuk tablet, website
+        desktop, dan APLIKASI DESKTOP. Lihat syaratnya di sana.
       - sidebar, lewat render hook SIDEBAR_NAV_START tiap panel -- HP,
-        mobile web, dan aplikasi desktop
+        mobile web Android/iOS, dan aplikasi mobile (Capacitor).
+
+    Dua tempat itu SALING MENGGANTIKAN, ditentukan predikat yang sama
+    (AppPlatform::switchersBelongInTopbar() / switchersBelongInSidebar()),
+    jadi tidak pernah dua switcher untuk satu pengaturan.
+
+    CATATAN: jangan bungkus partial ini dengan `hidden sm:block`. Wrapper
+    itu menyembunyikannya di bawah 640px -- dan satu-satunya permukaan tempat
+    switcher ini berada di topbar adalah permukaan non-HP, termasuk APLIKASI
+    DESKTOP yang jendelannya bisa dikecilkan ke bawah 640px. Di sana switcher
+    akan hilang total, bukan pindah ke sidebar.
 
     Ditulis ulang dari dropdown parts Filament, dan membaca event
     'theme-changed' yang sama seperti switcher bawaan Filament; file ini
@@ -19,9 +30,9 @@
 --}}
 @php
     $themeOptions = [
-        'light' => 'heroicon-m-sun',
-        'dark' => 'heroicon-m-moon',
-        'system' => 'heroicon-m-computer-desktop',
+        'light' => '/images/icons/sun.svg',
+        'dark' => '/images/icons/moon.svg',
+        'system' => '/images/icons/computer_desktop.svg',
     ];
 @endphp
 

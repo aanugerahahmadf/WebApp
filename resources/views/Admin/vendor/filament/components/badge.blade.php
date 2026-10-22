@@ -192,7 +192,7 @@
         >
             <x-filament::icon
                 alias="badge.delete-button"
-                icon="heroicon-m-x-mark"
+                icon="/images/icons/x.svg"
                 class="h-3.5 w-3.5"
             />
 

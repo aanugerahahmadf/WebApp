@@ -1,185 +1,153 @@
 <?php
 
 /**
- * Halaman "Kata Sandi dan Keamanan" yang sudah dipecah per route.
+ * Halaman "Kata Sandi dan Keamanan".
  *
- * Dulunya semuanya satu kelas 469 baris dengan query ?section=, yang
- * menggabungkan 7 halaman jadi satu file dan mustahil dicari asal-usulnya.
- * Sekarang tiap bagian punya kelas, folder, view, dan route sendiri.
+ * Bentuknya sekarang SATU halaman dengan bagian-bagian di dalamnya, dipilih
+ * lewat query `?section=`. Homepage halaman ini: `/settings/password-security`
+ * di panel Welcome (path root).
  *
- * Test ini mengunci dua hal:
+ * Kenapa satu halaman, bukan satu route per bagian:
  *
- *   1. Register -- kedelapan halaman benar-benar terdaftar di panel User,
- *      tidak ada yang tertinggal jadi 404.
+ *   - Panel 'user' sudah dilebur ke panel 'welcome'. Versi User punya route
+ *     sendiri per bagian (`settings/password-security/change-password` dst.),
+ *     Versi Welcome punya satu route dengan `?section=`. Mendaftarkan
+ *     keduanya membuat route yang sama terdaftar dua kali, dan yang kalah
+ *     biasanya bukan yang disangka.
+ *   - Jadi hanya SATU bentuk yang hidup, dan bentuk itu yang diuji di sini.
  *
- *   2. Render -- setiap halaman benar-benar bisa dirender. Ini yang paling
- *      rawan: view yang salah path akan lolos saat kelasnya syntax-nya
- *      bersih, tapi meledak jadi 500 saat dibuka.
+ * Yang dikunci:
+ *
+ *   1. Halamannya terdaftar di panel Welcome dan benar-benar bisa dirender.
+ *      View yang salah path lolos saat kelasnya syntax-nya bersih, tapi
+ *      meledak jadi 500 saat dibuka.
+ *   2. Tiap bagian punya judul sendiri dan punya URL sendiri.
+ *   3. Label kelompoknya lewat file bahasa, bukan ditulis di view.
+ *   4. Tombol notifikasi mengarah ke bagian yang benar, bukan ke route mati.
  */
 
-use App\Filament\User\Auth\TwoFactorAuth\TwoFactorAuth as AuthTwoFactorAuth;
-use App\Filament\User\Pages\SettingsPage\PasswordSecurityPage\PasswordSecurityPage;
-use App\Filament\User\Pages\SettingsPage\PasswordSecurityPage\SecurityCheck\Checkup\Checkup;
-use App\Filament\User\Pages\SettingsPage\PasswordSecurityPage\SecurityCheck\RecentEmails\RecentEmails;
-use App\Filament\User\Pages\SettingsPage\PasswordSecurityPage\SecurityCheck\SignInActivity\BrowserSessionsComponent\BrowserSessionsComponent;
-use App\Filament\User\Pages\SettingsPage\PasswordSecurityPage\SecurityCheck\SignInActivity\SignInActivity;
-use App\Filament\User\Pages\SettingsPage\PasswordSecurityPage\SignInAndRecovery\ChangePassword\ChangePassword;
-use App\Filament\User\Pages\SettingsPage\PasswordSecurityPage\SignInAndRecovery\SavedLogin\SavedLogin;
-use App\Filament\User\Pages\SettingsPage\PasswordSecurityPage\SignInAndRecovery\TwoFactor\TwoFactor;
 use App\Filament\User\Pages\SettingsPage\PasswordSecurityPage\SignInAndRecovery\TwoFactorySetup\TwoFactorySetup;
+use App\Filament\Welcome\Pages\SettingsPage\PasswordSecurityPage\PasswordSecurityPage;
 use App\Models\User\User;
 use Filament\Facades\Filament;
+use Illuminate\Support\Facades\Route;
 use Livewire\Livewire;
+use MixCode\FilamentMulti2fa\Enums\TwoFactorAuthType;
 
 // getUrl() milik Filament butuh panel aktif.
 beforeEach(function (): void {
-    Filament::setCurrentPanel(Filament::getPanel('user'));
+    Filament::setCurrentPanel(Filament::getPanel('welcome'));
 });
 
 /**
- * [class, url]
+ * [section, judul yang harus tampil]
  *
  * Dipakai sebagai dataset, jadi tiap elemen harus berupa array berisi dua
  * nilai -- bukan peta asosiatif. Peta asosiatif akan mengirim satu argumen
  * saja, sehingga testnya diam-dim menguji URL sebagai nama class.
  */
-dataset('halaman keamanan', [
-    [PasswordSecurityPage::class, 'user/settings/password-security'],
-    [ChangePassword::class, 'user/settings/password-security/change-password'],
-    [TwoFactor::class, 'user/settings/password-security/two-factor'],
-    [TwoFactorySetup::class, 'user/settings/password-security/two-factor/setup'],
-    [SavedLogin::class, 'user/settings/password-security/saved-login'],
-    [SignInActivity::class, 'user/settings/password-security/sign-in-activity'],
-    [RecentEmails::class, 'user/settings/password-security/recent-emails'],
-    [Checkup::class, 'user/settings/password-security/checkup'],
+dataset('bagian keamanan', [
+    ['index', 'Kata Sandi dan Keamanan'],
+    ['change-password', 'Ubah Kata Sandi'],
+    ['two-factor', 'Autentikasi Dua Faktor'],
+    ['saved-login', 'Sign In Tersimpan'],
+    ['sign-in-activity', 'Tempat Anda Sign In'],
+    ['recent-emails', 'Ubah Email'],
+    ['checkup', 'Pemeriksaan Keamanan'],
 ]);
 
 /*
  * Render -- yang paling rawan. View yang salah path lolos saat kelasnya
  * syntax-nya bersih, tapi meledak jadi 500 begitu halamannya dibuka.
  */
-it('merender setiap halaman keamanan tanpa error', function (string $class) {
+it('merender setiap bagian keamanan tanpa error', function (string $section): void {
     $this->actingAs(User::factory()->create());
 
-    Livewire::test($class)->assertSuccessful();
-})->with('halaman keamanan');
+    Livewire::test(PasswordSecurityPage::class)
+        ->set('section', $section)
+        ->assertSuccessful();
+})->with('bagian keamanan');
 
-it('membuka setiap halaman keamanan di URL yang semestinya', function (string $class, string $path) {
+it('membuka setiap bagian keamanan di URL yang semestinya', function (string $section): void {
     $this->actingAs(User::factory()->create());
 
-    $this->get($path)->assertSuccessful();
-})->with('halaman keamanan');
+    $this->get(PasswordSecurityPage::getUrl(['section' => $section], panel: 'welcome'))
+        ->assertSuccessful();
+})->with('bagian keamanan');
+
+it('menampilkan judul yang berbeda untuk setiap bagian', function (string $section, string $title): void {
+    $this->actingAs(User::factory()->create());
+
+    $html = Livewire::test(PasswordSecurityPage::class)
+        ->set('section', $section)
+        ->html();
+
+    expect($html)->toContain(__($title));
+})->with('bagian keamanan');
+
+it('halaman keamanan terdaftar di panel Welcome', function (): void {
+    $routes = collect(Route::getRoutes()->getRoutes())
+        ->filter(fn ($route) => $route->uri() === 'settings/password-security');
+
+    expect($routes)->not->toBeEmpty();
+
+    // Exactly one page owns the URL. Two pages with the same slug means the
+    // route resolves twice and the loser is decided by registration order.
+    expect($routes->map(fn ($route): ?string => $route->getActionName())->filter(
+        fn (?string $action): bool => str_contains((string) $action, 'PasswordSecurityPage')
+    )->count())->toBe(1);
+});
+
+it('halaman keamanan hidup di root, bukan di /user', function (): void {
+    expect(PasswordSecurityPage::getUrl(panel: 'welcome'))->toContain('/settings/password-security')
+        ->and(PasswordSecurityPage::getUrl(panel: 'welcome'))->not->toContain('/user/');
+});
 
 /*
- * Pemecahan yang harus tetap begitu
+ * Daftar di halaman index
  */
-it('tidak lagi memakai query ?section= untuk berpindah antar halaman', function () {
-    $routes = collect(Route::getRoutes()->getRoutes())
-        ->filter(fn ($r) => str_starts_with((string) $r->uri(), 'user/settings/password-security'));
+it('halaman index menautkan semua bagian', function (): void {
+    $this->actingAs(User::factory()->create());
 
-    expect($routes)->toHaveCount(8);
+    $html = Livewire::test(PasswordSecurityPage::class)->set('section', 'index')->html();
 
-    // Setiap halaman punya URI sendiri; tidak ada satu URI dengan ?section=
-    // yang menggabungkan ketujuhnya.
-    foreach ($routes as $route) {
-        expect($route->uri())->not->toContain('section=');
+    foreach ([
+        'change-password',
+        'two-factor',
+        'saved-login',
+        'sign-in-activity',
+        'recent-emails',
+        'checkup',
+    ] as $section) {
+        expect($html)->toContain('section='.$section);
     }
-});
-
-it('menaruh setiap kelas keamanan di foldernya sendiri', function () {
-    $root = app_path('Filament/User/Pages/SettingsPage/PasswordSecurityPage');
-
-    // [class, lokasi relatif dari root]. BrowserSessionsComponent bukan
-    // turunan langsung dari root: ia milik halaman SignInActivity, jadi
-    // diletakkan di sebelahnya.
-    $classes = [
-        [ChangePassword::class, 'SignInAndRecovery/ChangePassword/ChangePassword.php'],
-        [TwoFactor::class, 'SignInAndRecovery/TwoFactor/TwoFactor.php'],
-        [TwoFactorySetup::class, 'SignInAndRecovery/TwoFactorySetup/TwoFactorySetup.php'],
-        [SavedLogin::class, 'SignInAndRecovery/SavedLogin/SavedLogin.php'],
-        [SignInActivity::class, 'SecurityCheck/SignInActivity/SignInActivity.php'],
-        [RecentEmails::class, 'SecurityCheck/RecentEmails/RecentEmails.php'],
-        [Checkup::class, 'SecurityCheck/Checkup/Checkup.php'],
-        [BrowserSessionsComponent::class, 'SecurityCheck/SignInActivity/BrowserSessionsComponent/BrowserSessionsComponent.php'],
-        [PasswordSecurityPage::class, 'PasswordSecurityPage.php'],
-    ];
-
-    foreach ($classes as [$class, $rel]) {
-        // Konvensi repo: 1 file = 1 folder, jadi file berada di folder
-        // bernama sama dengan class-nya.
-        expect(class_exists($class), "{$class} tidak bisa di-autoload")->toBeTrue();
-        expect(is_file($root.'/'.$rel), "{$rel} tidak ada")->toBeTrue();
-    }
-});
-
-it('membuang blade lama yang menyatukan semua bagian', function () {
-    $old = resource_path('views/User/pages/settings-page/password-security-page/password-security-page.blade.php');
-
-    expect(is_file($old))->toBeFalse();
-});
-
-it('membuang kelas lama yang menumpuk semua bagian', function () {
-    $old = app_path('Filament/User/Pages/SettingsPage/PasswordSecurityPage.php');
-
-    expect(is_file($old))->toBeFalse();
 });
 
 /*
  * Breadcrumb
- *
- * Naik halaman dulu diwujudkan tombol "Kembali". Sekarang breadcrumb, dan
- * crumb itu memuat nama kelompok -- sebelumnya semua halaman detail punya
- * induk yang identik, sehingga "Change Password" dan "Saved Sign In" tidak
- * bisa dibedakan dari posisinya.
  */
-it('menampilkan kelompok di breadcrumb halaman detail', function (string $class, string $group) {
+it('menyambung breadcrumb dari Pengaturan sampai halaman ini', function (): void {
     $this->actingAs(User::factory()->create());
 
-    expect(Livewire::test($class)->html())->toContain($group);
-})->with([
-    [ChangePassword::class, 'Sign In dan Pemulihan'],
-    [TwoFactor::class, 'Sign In dan Pemulihan'],
-    [TwoFactorySetup::class, 'Sign In dan Pemulihan'],
-    [SavedLogin::class, 'Sign In dan Pemulihan'],
-    [SignInActivity::class, 'Pemeriksaan Keamanan'],
-    [RecentEmails::class, 'Pemeriksaan Keamanan'],
-    [Checkup::class, 'Pemeriksaan Keamanan'],
-]);
-
-it('menyambung breadcrumb dari Pengaturan sampai halaman ini', function (string $class) {
-    $this->actingAs(User::factory()->create());
-
-    $html = Livewire::test($class)->html();
+    $html = Livewire::test(PasswordSecurityPage::class)->set('section', 'index')->html();
 
     expect($html)
         ->toContain('Pengaturan')
         ->toContain('Kata Sandi dan Keamanan');
-})->with('halaman keamanan');
+});
 
-it('tidak lagi memakai tombol kembali', function (string $class) {
-    $this->actingAs(User::factory()->create());
-
-    $html = Livewire::test($class)->html();
-
-    // Naik lewat crumb, bukan tombol.
-    expect($html)
-        ->not->toContain(__('Kembali ke Pengaturan'))
-        ->not->toContain(__('Kembali ke Kata Sandi dan Keamanan'))
-        ->not->toContain('heroicon-m-arrow-left');
-})->with('halaman keamanan');
-
-it('tidak menggandakan "Kata Sandi dan Keamanan" di crumb index', function () {
+it('tidak menggandakan "Kata Sandi dan Keamanan" di crumb index', function (): void {
     // Induk index adalah kata yang sama dengan judulnya, jadi tanpa penjaga
     // crumbsnya jadi: Pengaturan / Kata Sandi dan Keamanan / Kata Sandi dan
     // Keamanan.
     $this->actingAs(User::factory()->create());
 
-    $html = Livewire::test(PasswordSecurityPage::class)->html();
+    $html = Livewire::test(PasswordSecurityPage::class)->set('section', 'index')->html();
 
     expect(substr_count($html, 'Kata Sandi dan Keamanan'))->toBeLessThan(4);
 });
 
-it('tidak menulis label kelompok dengan huruf kapital', function () {
+it('tidak menulis label kelompok dengan huruf kapital', function (): void {
     // Labelnya "Sign In dan Pemulihan" di Indonesia, tapi en.json
     // menerjemahkannya jadi "Sign In and Recovery". CSS uppercase membuatnya
     // tampil "SIGN IN AND RECOVERY", yang berbeda dari teks aslinya -- dan
@@ -191,7 +159,7 @@ it('tidak menulis label kelompok dengan huruf kapital', function () {
     // yang locale-nya id -- dan lulus di mesin yang kebetulan en.
     $this->actingAs(User::factory()->create());
 
-    $html = Livewire::test(PasswordSecurityPage::class)->html();
+    $html = Livewire::test(PasswordSecurityPage::class)->set('section', 'index')->html();
 
     // Ditampilkan apa adanya hasil __(), tanpa dimodifikasi CSS.
     expect($html)
@@ -206,12 +174,12 @@ it('tidak menulis label kelompok dengan huruf kapital', function () {
     expect($html)->not->toMatch('/SIGN IN (DAN PEMULIHAN|AND RECOVERY)/');
 });
 
-it('menerjemahkan label kelompok lewat file bahasa', function () {
+it('menerjemahkan label kelompok lewat file bahasa', function (): void {
     $en = json_decode((string) file_get_contents(lang_path('en.json')), true);
 
     // Label yang tampil di browser Inggris harus persis seperti di UI, dan
     // harus berasal dari file bahasa -- bukan ditulis langsung di view,
-    // karena itu akan membuat panel User terkunci ke Inggris.
+    // karena itu akan membuat panel terkunci ke Inggris.
     expect($en['Sign In dan Pemulihan'] ?? null)->toBe('Sign In and Recovery')
         ->and($en['Pemeriksaan Keamanan'] ?? null)->toBe('Security Checkup');
 });
@@ -224,32 +192,37 @@ it('menerjemahkan label kelompok lewat file bahasa', function () {
  * In" jadi mendarat di halaman DAFTAR Keamanan, bukan di "Tempat Anda Sign
  * In": tombolnya terlihat benar tapi tidak melakukan apa pun.
  */
-it('mengarahkan notifikasi Sign In ke halaman Sign In Activity, bukan ke ?section=', function () {
-    Filament::setCurrentPanel(Filament::getPanel('user'));
+it('mengarahkan notifikasi Sign In ke bagian Sign In Activity', function (): void {
+    Filament::setCurrentPanel(Filament::getPanel('welcome'));
 
-    $expected = SignInActivity::getUrl(panel: 'user');
-
-    // Dipakai AppServiceProvider saat mencatat "Login Detected", dan
-    // NotificationDetailPage untuk tombolnya.
+    // Notifikasi "Login Terdeteksi" dibangun oleh DeviceTrustService
+    // (AppServiceProvider hanya meneruskan recognize()), dan tombolnya harus
+    // menunjuk "Tempat Anda Sign In" -- bagian 'sign-in-activity' dari
+    // halaman Keamanan.
     foreach ([
-        'app/Providers/AppServiceProvider/AppServiceProvider.php',
-        'app/Filament/User/Pages/NotificationDetailPage/NotificationDetailPage.php',
+        'app/Support/DeviceTrust/DeviceTrustService.php',
+        'app/Filament/Welcome/Pages/NotificationDetailPage/NotificationDetailPage.php',
     ] as $file) {
         $source = (string) file_get_contents(base_path($file));
 
         expect($source)
-            ->toContain('SignInActivity::getUrl')
-            ->not->toContain("'section' => 'sign-in-activity'")
-            ->not->toContain("getUrl(['section'");
+            ->toContain('sign-in-activity')
+            ->not->toContain('settings/password-security/sign-in-activity');
     }
 
-    expect($expected)->toContain('/user/settings/password-security/sign-in-activity');
+    expect((string) file_get_contents(base_path('app/Support/DeviceTrust/DeviceTrustService.php')))
+        ->toContain('DeviceTrustPrompt::getUrl');
+
+    // URL bagiannya harus benar-benar ada (route yang hidup), bukan URL
+    // karangan.
+    expect(PasswordSecurityPage::getUrl(['section' => 'sign-in-activity'], panel: 'welcome'))
+        ->toContain('/settings/password-security');
 });
 
-it('menjaga label tombol notifikasi tetap lewat file bahasa', function () {
+it('menjaga label tombol notifikasi tetap lewat file bahasa', function (): void {
     // Teksnya harus mengikuti language switcher, jadi label harus dibungkus
     // __() dan kuncinya ada di lang/en.json. Kalau teksnya ditulis langsung
-    // di kode, panel User dan Welcome akan selalu Inggris.
+    // di kode, panelnya akan selalu Inggris.
     $en = json_decode((string) file_get_contents(lang_path('en.json')), true);
 
     expect($en)->toHaveKey('Lihat aktivitas Sign In')
@@ -257,75 +230,68 @@ it('menjaga label tombol notifikasi tetap lewat file bahasa', function () {
 });
 
 /*
- * Halaman setup 2FA
+ * Aplikasi autentikasi (TOTP)
+/*
+ * Aplikasi autentikasi (TOTP)
  *
- * Paket mix-code/filament-multi-2fa memakai layout.simple, yang tidak punya
- * Top Navigation maupun breadcrumb -- tampilannya polos, hanya tombol bahasa
- * di kanan atas. Karena itu halaman ini mengembalikan layout ke default
- * Filament, dan view-nya memakai <x-filament-panels::page> bukan page.simple.
+ * Setup TOTP TIDAK ditulis ulang di halaman ini. Halaman Keamanan hanya
+ * menaut ke halaman setup (TwoFactorySetup), yang mewarisi alur
+ * mix-code/filament-multi-2fa: QR, verifikasi TOTP sungguhan, dan
+ * penyimpanan secret yang formatnya benar.
+ *
+ * Yang dikunci di sini: halamannya benar-benar punya tujuan, dan alur setup
+ * yang dituju itu benar-benar memverifikasi kode.
  */
-it('memakai halaman setup milik paket, bukan salinan sendiri', function () {
-    // Alur tiga langkah (pilih tipe -> verifikasi -> simpan) milik paket.
-    // Disalin ke sini berarti setiap perbaikan verifikasi TOTP harus
-    // diterapkan dua kali, dan pasti ketinggal satu.
-    expect(is_subclass_of(
-        TwoFactorySetup::class,
-        MixCode\FilamentMulti2fa\Pages\TwoFactorySetup::class
-    ))->toBeTrue();
-});
-
-it('menampilkan Top Navigation di halaman setup 2FA', function () {
+it('menautkan bagian aplikasi autentikasi ke halaman setup', function (): void {
     $this->actingAs(User::factory()->create());
 
-    // Lewat HTTP, bukan Livewire::test(): yang terakhir hanya merender
-    // komponennya, tanpa layout halaman -- jadi topbar, breadcrumb, dan
-    // judul tidak akan pernah muncul di sana meski halamannya benar.
-    $html = $this->get(TwoFactorySetup::getUrl(panel: 'user'))->assertSuccessful()->getContent();
+    $html = Livewire::test(PasswordSecurityPage::class)
+        ->set('section', 'two-factor')
+        ->html();
 
-    // fi-topbar = Top Navigation panel. Kalau hilang, berarti halaman ini
-    // masih memakai layout.simple dari paket.
-    expect($html)->toContain('fi-topbar');
-
-    // Breadcrumb pun harus ikut tampil -- itu tujuan dikembalikan
-    // layout.simple ke layout.index.
-    expect($html)->toContain(__('Sign In dan Pemulihan'));
+    expect($html)->toContain(TwoFactorySetup::getUrl(panel: 'welcome'));
 });
 
-it('tidak memakai layout polos di halaman setup 2FA', function () {
-    $page = app(TwoFactorySetup::class);
+it('tidak memverifikasi kode di halaman Keamanan', function (): void {
+    $this->actingAs(User::factory()->create());
 
-    // layout.simple = tanpa topbar, tanpa breadcrumb, tanpa judul halaman.
-    expect($page->getLayout())->not->toContain('layout.simple')
-        ->and($page->getLayout())->toContain('layout.index');
+    $html = Livewire::test(PasswordSecurityPage::class)
+        ->set('section', 'two-factor')
+        ->html();
+
+    // Secret hanya tampil di halaman setup, dan hanya setelah QR dibuat.
+    // Tampilnya di sini berarti kode 6 digit bisa diaktifkan tanpa setup
+    // aplikasi autentikasi -- dan 2FA yang aktif begitu tidak bisa dipakai
+    // untuk masuk (secret-nya bukan base32, jadi tidak pernah bisa
+    // diverifikasi Google2FA).
+    expect($html)->not->toContain('prepareAuthenticator')
+        ->not->toContain('verifyAuthenticator');
 });
 
-it('kembali ke halaman Two Factor setelah setup selesai', function () {
-    Filament::setCurrentPanel(Filament::getPanel('user'));
-
-    // Paket mengembalikan ke redirectAfterVerifyUrl() miliknya, yang menulis
-    // ke URL panel. Itu benar untuk halaman login, tapi salah di sini:
-    // pengguna sedang mengatur keamanan dari Pengaturan.
-    expect(TwoFactor::getUrl(panel: 'user'))->toContain('/user/settings/password-security/two-factor');
-});
-
-it('menampilkan kode manual pada langkah verifikasi TOTP', function () {
+it('halaman setup memverifikasi kode TOTP sungguhan', function (): void {
     $user = User::factory()->create();
 
     $this->actingAs($user);
 
-    // Secret baru dibuat setelah tombol Setup ditekan -- bukan saat halaman
-    // dibuka. Field yang pakai default() akan tampil kosong di sini, karena
-    // nilainya sudah-dihitung sebelum secret ada.
-    $secret = $user->fresh()->two_factor_secret;
+    // Kode yang bukan 6 digit harus ditolak.
+    Livewire::test(TwoFactorySetup::class)
+        ->fillForm(['two_factor_type' => TwoFactorAuthType::Totp->value], 'setupForm')
+        ->call('setup')
+        ->assertSet('showVerifyTOTPForm', true);
+
+    // Dan kode 6 digit yang SALAH harus ditolak juga -- inilah yang
+    // membedakan verifikasi sungguhan dari sekadar "digits:6".
+    expect($user->fresh()->two_factor_secret)->not->toBeNull();
 
     Livewire::test(TwoFactorySetup::class)
-        ->set('data.two_factor_type', MixCode\FilamentMulti2fa\Enums\TwoFactorAuthType::Totp->value)
+        ->fillForm(['two_factor_type' => TwoFactorAuthType::Totp->value], 'setupForm')
         ->call('setup')
-        ->assertSet('showVerifyTOTPForm', true)
-        ->assertSee($secret);
+        ->fillForm(['otp' => '000000'], 'verifyTOTPForm')
+        ->call('verifyTOTP')
+        ->assertHasFormErrors(['otp'], 'verifyTOTPForm');
 });
 
-it('menampilkan QR code sebagai SVG, bukan teks data URI', function () {
+it('halaman setup menampilkan QR code sebagai SVG', function (): void {
     $user = User::factory()->create();
 
     $this->actingAs($user);
@@ -334,93 +300,7 @@ it('menampilkan QR code sebagai SVG, bukan teks data URI', function () {
     // Kalau hasilnya dibiarkan mentah, yang tampil adalah string data URI --
     // halaman terlihat tanpa QR, padahal tidak ada error sama sekali.
     Livewire::test(TwoFactorySetup::class)
-        ->set('data.two_factor_type', MixCode\FilamentMulti2fa\Enums\TwoFactorAuthType::Totp->value)
+        ->fillForm(['two_factor_type' => TwoFactorAuthType::Totp->value], 'setupForm')
         ->call('setup')
         ->assertSee('<svg', escape: false);
-});
-
-it('tidak menampilkan kode manual sebagai kotak yang bisa diedit', function () {
-    $user = User::factory()->create();
-
-    $this->actingAs($user);
-
-    // Kode manual lewat infolist (fi-in-text), bukan kotak input. Dulu ia
-    // TextInput readOnly, dan nilainya tetap kosong karena state form sudah
-    // terisi sebelum secret ada -- lihat HandlesTwoFactorAuthenticator.
-    //
-    // Yang dicek bukan "tidak ada input sama sekali": field OTP memang input,
-    // itu memang harus bisa diketik.
-    // Secret dibaca SEBELUM setup() dipanggil: method itu yang membuat secret
-    // baru, jadi membacanya sesudahnya bisa mendapat nilai yang berbeda dari
-    // yang dirender.
-    $secret = $user->fresh()->two_factor_secret;
-
-    $html = Livewire::test(TwoFactorySetup::class)
-        ->set('data.two_factor_type', MixCode\FilamentMulti2fa\Enums\TwoFactorAuthType::Totp->value)
-        ->call('setup')
-        ->html();
-
-    expect($html)->toContain('fi-in-text')->toContain($secret);
-});
-
-it('menampilkan tampilan yang sama di halaman Auth dan di Pengaturan', function () {
-    // Keduanya harus lewat trait yang sama. Kalau salah satu menulis QR-nya
-    // sendiri, keduanya akan terlihat berbeda tanpa ada yang menyadarikan.
-    $trait = 'App\\Filament\\Shared\\Concerns\\HandlesTwoFactorAuthenticator\\HandlesTwoFactorAuthenticator';
-
-    // class_uses_recursive, bukan class_uses: trait-nya dipakai oleh kelas
-    // dasar TwoFactorAuthenticatorPage, bukan langsung oleh kedua halaman.
-    expect(class_uses_recursive(AuthTwoFactorAuth::class))->toContain($trait)
-        ->and(class_uses_recursive(TwoFactorySetup::class))->toContain($trait);
-
-    // Dan keduanya memakai layout yang memuat Top Navigation.
-    expect(app(AuthTwoFactorAuth::class)->getLayout())->toContain('layout.index')
-        ->and(app(TwoFactorySetup::class)->getLayout())->toContain('layout.index');
-});
-
-it('merender halaman Auth 2FA dengan QR, Kode Manual, dan Top Navigation', function () {
-    $user = User::factory()->create();
-
-    $this->actingAs($user);
-
-    $secret = $user->fresh()->two_factor_secret;
-
-    // Halaman ini memakai alur paket: QR belum ada sebelum tipe dipilih,
-    // jadi test harus menjalankan langkahnya -- bukan hanya memuat halaman.
-    // Menilai QR saat halaman pertama dibuka akan selalu gagal.
-    $html = Livewire::test(AuthTwoFactorAuth::class)
-        ->set('data.two_factor_type', MixCode\FilamentMulti2fa\Enums\TwoFactorAuthType::Totp->value)
-        ->call('setup')
-        ->assertSet('showVerifyTOTPForm', true)
-        ->html();
-
-    expect($html)
-        ->toContain('fi-in-text')
-        ->toContain('<svg')
-        ->toContain(__('Kode Manual'))
-        ->toContain($secret);
-});
-
-it('menampilkan Top Navigation di halaman Auth 2FA', function () {
-    $this->actingAs(User::factory()->create());
-
-    // Lewat HTTP: Livewire::test() hanya merender komponennya, tanpa layout
-    // halaman, jadi topbar tidak akan pernah muncul di sana.
-    $this->get('/user/two-factor-auth')->assertSuccessful()->assertSee('fi-topbar');
-});
-
-it('menampilkan pemilih tipe 2FA di kedua halaman', function () {
-    $this->actingAs(User::factory()->create());
-
-    // Keduanya mewarisi alur paket, jadi Email / Authenticator App / None
-    // harus tersedia di kedua halaman -- termasuk di halaman Auth, supaya
-    // pengguna sendiri yang memutuskan memakai atau tidak memakai 2FA.
-    foreach (['/user/two-factor-auth', '/user/settings/password-security/two-factor/setup'] as $path) {
-        $html = $this->get($path)->assertSuccessful()->getContent();
-
-        expect($html)
-            ->toContain(\MixCode\FilamentMulti2fa\Enums\TwoFactorAuthType::Totp->value)
-            ->toContain(\MixCode\FilamentMulti2fa\Enums\TwoFactorAuthType::Email->value)
-            ->toContain(\MixCode\FilamentMulti2fa\Enums\TwoFactorAuthType::None->value);
-    }
 });

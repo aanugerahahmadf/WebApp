@@ -2,6 +2,7 @@
 
 namespace App\Livewire\User\CompleteProfileComponent;
 
+use App\Filament\User\Auth\SecurityQuestion\SecurityQuestion;
 use App\Forms\Components\BirthPlaceDatePicker\BirthPlaceDatePicker;
 use App\Forms\Components\CalendarPicker\CalendarPicker;
 use App\Models\User\User;
@@ -123,7 +124,7 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
             ->schema([
                 // ── Foto Profil ─────────────────────────────────────────────
                 Section::make(__('Foto Profil'))
-                    ->icon('heroicon-o-camera')
+                    ->icon('/images/icons/camera.svg')
                     ->schema([
                         FileUpload::make('avatar_url')
                             ->label(__(''))
@@ -140,7 +141,7 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
 
                 // ── Nama Lengkap ────────────────────────────────────────────
                 Section::make(__('Nama Lengkap'))
-                    ->icon('heroicon-o-user')
+                    ->icon('/images/icons/user.svg')
                     ->description(__('Nama sesuai dokumen identitas Anda.'))
                     ->schema([
                         TextInput::make('first_name')
@@ -169,13 +170,13 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
                             ->label(__('Nama Lengkap'))
                             ->disabled()
                             ->dehydrated(false)
-                            ->prefixIcon('heroicon-o-user')
+                            ->prefixIcon('/images/icons/user.svg')
                             ->helperText(__('Terisi otomatis dari Nama Depan, Tengah, dan Belakang.')),
                     ])->columns(1),
 
                 // ── Username ────────────────────────────────────────────────
                 Section::make(__('Username'))
-                    ->icon('heroicon-o-at-symbol')
+                    ->icon('/images/icons/at.svg')
                     ->schema([
                         TextInput::make('username')
                             ->label(__('Username'))
@@ -185,14 +186,14 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
                         TextInput::make('email')
                             ->label(__('Alamat Email'))
                             ->email()
-                            ->required()
-                            ->readOnly()
-                            ->helperText(__('Untuk mengubah email, hubungi dukungan.')),
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->helperText(__('Email dari akun Google Anda dan tidak dapat diubah.')),
                     ])->columns(1),
 
                 // ── Nomor WhatsApp ──────────────────────────────────────────
                 Section::make(__('Nomor WhatsApp'))
-                    ->icon('heroicon-o-chat-bubble-left-ellipsis')
+                    ->icon('/images/icons/chat_dots.svg')
                     ->description(__('Untuk notifikasi pembayaran via WhatsApp.'))
                     ->schema([
                         WhatsappField::group(required: true),
@@ -200,7 +201,7 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
 
                 // ── Identitas & Alamat ──────────────────────────────────────
                 Section::make(__('Identitas & Alamat'))
-                    ->icon('heroicon-o-shield-check')
+                    ->icon('/images/icons/shield_check.svg')
                     ->description(__('Pilih jenis identitas, scan dokumen, lalu lengkapi alamat.'))
                     ->schema([
                         Select::make('identity_type')
@@ -422,7 +423,7 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
 
                 // ── Data KYC ────────────────────────────────────────────────
                 Section::make(__('Data KYC'))
-                    ->icon('heroicon-o-user-group')
+                    ->icon('/images/icons/users.svg')
                     ->description(__('Dipakai untuk verifikasi identitas.'))
                     ->schema([
                         Select::make('gender')
@@ -512,7 +513,7 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
 
                 // ── Verifikasi Wajah ────────────────────────────────────────
                 Section::make(__('Verifikasi Wajah'))
-                    ->icon('heroicon-o-face-smile')
+                    ->icon('/images/icons/smile.svg')
                     ->description(__('Scan wajah Anda untuk verifikasi identitas.'))
                     ->schema([
                         FileUpload::make('face_scan_photo')
@@ -709,7 +710,8 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
                 ->success()
                 ->send();
 
-            $this->redirectRoute('filament.user.pages.home');
+            // Setelah profil lengkap, arahkan ke SecurityQuestion untuk memilih 2FA
+            $this->redirect(SecurityQuestion::getUrl());
         } catch (\Exception $e) {
             Notification::make()
                 ->title(__('Gagal menyimpan profil'))

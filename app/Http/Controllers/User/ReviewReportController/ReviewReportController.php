@@ -12,7 +12,15 @@ use Illuminate\Support\Facades\Auth;
 
 class ReviewReportController extends Controller
 {
-    protected string $panel = 'user';
+    /**
+     * Panel yang menyajikan halaman Messages.
+     *
+     * SATU RUANG URL (shopee-style): panel 'user' sudah dilebur ke panel
+     * 'welcome' di root, jadi nilai bakunya 'welcome'. Dibiarkan sebagai
+     * properti supaya subclass (Welcome/Admin) tetap bisa menimpanya tanpa
+     * menyentuh method-nya.
+     */
+    protected string $panel = 'welcome';
 
     /**
      * Laporkan sebuah ulasan langsung ke thread chat via form POST biasa
@@ -23,7 +31,7 @@ class ReviewReportController extends Controller
         $senderId = Auth::id() ?? app(GuestIdentity::class)->id();
 
         if ($senderId === null) {
-            return redirect()->route('filament.user.auth.login');
+            return redirect()->route('filament.welcome.auth.login');
         }
 
         $inbox = ChatService::getOrCreateInboxWithAdmin($senderId);
@@ -41,9 +49,10 @@ class ReviewReportController extends Controller
             $senderId
         );
 
-        $messagesPage = $this->panel === 'welcome'
-            ? \App\Filament\Welcome\Pages\MessagesPage\MessagesPage::class
-            : \App\Filament\User\Pages\MessagesPage\MessagesPage::class;
+        // Hanya SATU halaman Messages yang terdaftar sekarang: milik panel
+        // 'welcome' di root. Kelas User\MessagesPage tidak lagi punya route,
+        // jadi jangan pernah dipakai untuk getUrl() -- RouteNotFoundException.
+        $messagesPage = \App\Filament\Welcome\Pages\MessagesPage\MessagesPage::class;
 
         return redirect($messagesPage::getUrl(['id' => $inbox->getKey()]));
     }

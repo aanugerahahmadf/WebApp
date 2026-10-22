@@ -44,7 +44,7 @@ class EditPasswordComponent extends Component implements HasActions, HasForms
             ->schema([
                 Section::make(__('Perbarui Kata Sandi'))
                     ->aside()
-                    ->icon('heroicon-o-lock-closed')
+                    ->icon('/images/icons/lock.svg')
                     ->description(__('Pastikan akun Anda menggunakan kata sandi yang panjang dan acak agar tetap aman.'))
                     ->schema([
                         TextInput::make('current_password')
@@ -59,7 +59,9 @@ class EditPasswordComponent extends Component implements HasActions, HasForms
                             ->required()
                             ->rule(Password::default())
                             ->autocomplete('new-password')
-                            ->dehydrateStateUsing(fn ($state): string => Hash::make($state))
+                            // Password MENTAH — model User/Admin punya cast 'password' => 'hashed'
+                            // yang akan hash otomatis saat update. JANGAN Hash::make di sini
+                            // (dehydrateStateUsing) karena akan jadi double-hash.
                             ->live(debounce: 500)
                             ->same('passwordConfirmation')
                             ->revealable(),

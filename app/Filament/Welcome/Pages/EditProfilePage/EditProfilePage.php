@@ -4,6 +4,7 @@ namespace App\Filament\Welcome\Pages\EditProfilePage;
 
 use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\Welcome\Pages\Home\Home;
+use App\Support\AppIcon\AppIcon;
 use App\Livewire\Welcome\PersonalInfoComponent\PersonalInfoComponent;
 use Filament\Pages\Page;
 
@@ -13,7 +14,7 @@ class EditProfilePage extends Page
 
     protected static string $view = 'Welcome.pages.edit-profile.edit-profile';
 
-    protected static ?string $navigationIcon = 'heroicon-s-user-circle';
+    protected static ?string $navigationIcon = AppIcon::PROFILE;
 
     protected static bool $shouldRegisterNavigation = false;
 

@@ -1,5 +1,5 @@
 @php
-    $type  = $res['type'] ?? 'product';
+    $type  = $res['type'] ?? 'catalog';
     $data  = $res['data'] ?? [];
     $score = $res['similarity'] ?? 0;
     $pct   = number_format($score, 1);
@@ -96,7 +96,7 @@
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:2px;">
             @if($type === 'package' && $rating !== null)
                 <span style="display:flex;align-items:center;gap:2px;font-size:9px;color:#9ca3af;">
-                    <svg width="9" height="9" viewBox="0 0 24 24" style="fill:#facc15;flex-shrink:0;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    <x-filament::icon icon="/images/icons/star.svg" class="h-[9px] w-[9px] shrink-0 text-yellow-400" />
                     {{ $rating }}
                 </span>
             @else

@@ -652,7 +652,7 @@
                                         <x-filament::icon-button
                                             color="gray"
                                             icon-alias="tables::columns.collapse-button"
-                                            icon="heroicon-m-chevron-down"
+                                            icon="/images/icons/chevron_down.svg"
                                             x-on:click="isCollapsed = ! isCollapsed"
                                             class="mx-1 my-2 shrink-0"
                                             x-bind:class="{ 'rotate-180': isCollapsed }"

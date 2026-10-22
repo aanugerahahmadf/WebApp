@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'हुलाक कोड',
         'preview'                  => 'पूर्वावलोकन',
         'price'                    => 'मूल्य',
-        'product_id'               => 'उत्पादन आईडी',
+        'catalog_id'               => 'उत्पादन आईडी',
         'product_uid'              => 'उत्पादन UID',
         'product_uuid'             => 'उत्पादन UUID',
         'promo_code'               => 'प्रोमो कोड',

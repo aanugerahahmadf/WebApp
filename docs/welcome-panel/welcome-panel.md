@@ -1,11 +1,29 @@
 # Welcome Panel — Storefront Guide
 
-> Panel ID: `welcome` · Path prefix: `/welcome` · Auth guard: `web`
+> **CATATAN ARSITEKTUR (2026-10-21).** Halaman ini ditulis saat masih ada DUA
+> panel terpisah: `user` di `/user` dan `welcome` di `/welcome`. Sekarang
+> panel `user` sudah **dilebur** ke panel `welcome` di root, jadi:
+>
+> - hanya ada dua panel: `welcome` (path `/`) dan `admin` (path `/admin`)
+> - prefix nama route berubah dari `filament.user.*` ke `filament.welcome.*`
+> - bookmark lama dilayani redirect: `/user/*` -> root, `/login` -> `/signin`,
+>   `/register` -> `/signup`
+> - bottom nav HP dan chrome ikut memakai panel `welcome`
+>
+> Ringkasan terbaru ada di `AGENTS.md` -> bagian "SATU PANEL: 'user' DILEBUR KE
+> 'welcome'". Nama route dan URL yang disebut di bawah sudah disesuaikan;
+> bagian yang men_**describe** dua panel terpisah masih perlu dibaca sebagai
+> sejarah.
 
-The **Welcome panel** is the public-facing storefront of the Weeding Organizer CBIR application.
+> Panel ID: `welcome` — Path prefix: `/` (root) — Auth guard: `web`
+
+The **Welcome panel** is the public-facing storefront of the Wedding Flower Decorations CBIR application.
 It is built on [Filament v3](https://filamentphp.com/) and lives under `app/Filament/Welcome/`.
-Unlike the User panel (`/user`), the Welcome panel is **accessible to guests** — unauthenticated
+The panel is **accessible to guests** — unauthenticated
 visitors can browse the landing page, catalog, and product/package detail pages without logging in.
+Since the merge (2026-10-21) it ALSO carries the whole member area and the auth
+pages, so `/`, `/home`, `/signin`, `/signup`, `/auth`, `/messages`, `/orders`,
+dst. all live in this one panel.
 
 ---
 
@@ -51,15 +69,15 @@ there is no login page to redirect to. The Welcome panel replaces it with `Authe
 **Behaviour:**
 - Public pages (`/welcome/home`, `/welcome/products`, `/welcome/packages`, detail pages): **allow guests**.
 - Account pages (`/welcome/carts`, `/welcome/orders`, `/welcome/wishlists`, `/welcome/settings`, etc.):
-  **redirect guests to** `route('filament.user.auth.index')` — the auth landing page `/user/auth`, which offers
-  both Sign In and Continue With Google. Not the `/user/signin` form directly: a guest who only wants to
+  **redirect guests to** `route('filament.welcome.auth.index')` — the auth landing page `/auth`, which offers
+  both Sign In and Continue With Google. Not the `/signin` form directly: a guest who only wants to
   add to a cart should not be pushed past the Google door.
 - The `url.intended` session key is set before redirecting, so after login the user lands back
   on the page they were trying to reach.
 
 ```php
 // AuthenticateWelcome::LOGIN_ROUTE
-public const LOGIN_ROUTE = 'filament.user.auth.index';   // GET /user/auth
+public const LOGIN_ROUTE = 'filament.welcome.auth.index';   // GET /auth
 ```
 
 The same constant backs every guest redirect in the panel — `ProductResource`, `PackageResource`,
@@ -107,11 +125,11 @@ The checkout wizard pages (`/welcome/products/{id}/checkout`,
 The topbar rendered for **guests** shows:
 - Brand logo (left)
 - Theme switcher dropdown (right) — moved out of the user menu since guests have no user menu
-- **Masuk** button → `route('filament.user.auth.index')` (`/user/auth`: Sign In + Continue With Google)
+- **Masuk** button → `route('filament.welcome.auth.index')` (`/auth`: Sign In + Continue With Google)
 
 The topbar rendered for **signed-in customers** shows:
 - Brand logo (left)
-- **Beranda** button → `route('filament.user.pages.home')` (User panel dashboard)
+- **Beranda** button → `route('filament.welcome.pages.home')` (User panel dashboard)
 - No user menu (deliberately omitted)
 
 ### Navigation Groups

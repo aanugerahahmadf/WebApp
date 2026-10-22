@@ -23,7 +23,7 @@ class ReviewVoteController extends Controller
                 session()->put('url.intended', $prev);
             }
 
-            return redirect()->route('filament.user.auth.login');
+            return redirect()->route('filament.welcome.auth.login');
         }
 
         $userId = Auth::id();

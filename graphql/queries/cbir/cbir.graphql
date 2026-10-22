@@ -1,0 +1,44 @@
+# CBIR Query Definitions
+# Wedding Flower Decoration App - CBIR GraphQL Queries
+
+type Query {
+  # Get CBIR index statistics
+  cbirStats: CbirStats @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@stats")
+  
+  # Get CBIR search history for current user
+  cbirHistory(first: Int = 20): [CbirHistory!]! @paginate(defaultCount: 20) @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@history")
+  
+  # Get similar catalogs/packages from previous search
+  cbirSavedResults(searchId: ID!): [CbirResult!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@savedResults")
+}
+
+type CbirHistory {
+  id: ID!
+  userId: ID!
+  queryImageUrl: String!
+  resultsCount: Int!
+  topSimilarity: Float!
+  createdAt: String!
+}
+
+# Extended CBIR Result with catalog/package details
+type CbirResult {
+  type: String! # "catalog" or "package"
+  similarity: Float! # 0-100
+  score: Float! # 0-1
+  data: CbirResultData!
+}
+
+type CbirResultData {
+  id: ID!
+  name: String!
+  slug: String!
+  description: String
+  price: Float!
+  discountPrice: Float
+  finalPrice: Float @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@finalPrice")
+  imageUrl: String
+  category: String
+  categoryObj: Category @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@category")
+  isAvailable: Boolean! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@isAvailable")
+}

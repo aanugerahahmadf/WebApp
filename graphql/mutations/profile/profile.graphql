@@ -1,0 +1,77 @@
+# Profile Mutations
+# Wedding Flower Decoration App - Profile GraphQL Mutations
+
+input UpdateProfileInput {
+  name: String
+  phone: String
+  address: String
+  city: String
+  province: String
+  postalCode: String
+  dateOfBirth: String
+  gender: Gender
+  avatar: String
+  notificationEmail: Boolean
+  notificationSms: Boolean
+  notificationPush: Boolean
+  language: String
+  currency: String
+  timezone: String
+}
+
+input ChangePasswordInput {
+  currentPassword: String!
+  newPassword: String!
+  newPasswordConfirmation: String!
+}
+
+input UpdateAvatarInput {
+  avatar: String!
+  deleteCurrent: Boolean = false
+}
+
+input DeleteAccountInput {
+  password: String!
+  reason: String
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+type Mutation {
+  # Update Profile
+  updateProfile(input: UpdateProfileInput!): User @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ProfileResolver@update")
+  
+  # Change Password
+  changePassword(input: ChangePasswordInput!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ProfileResolver@changePassword")
+  
+  # Update Avatar
+  updateAvatar(input: UpdateAvatarInput!): User @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ProfileResolver@updateAvatar")
+  
+  # Delete Avatar
+  deleteAvatar: User @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ProfileResolver@deleteAvatar")
+  
+  # Delete Account
+  deleteAccount(input: DeleteAccountInput!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ProfileResolver@deleteAccount")
+  
+  # Update Notification Preferences
+  updateNotificationPreferences(
+    notificationEmail: Boolean
+    notificationSms: Boolean
+    notificationPush: Boolean
+  ): User @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ProfileResolver@updateNotifications")
+  
+  # Update Locale Preferences
+  updateLocalePreferences(
+    language: String
+    currency: String
+    timezone: String
+  ): User @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ProfileResolver@updateLocale")
+  
+  # Get Profile Completion
+  profileCompletion: Float @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ProfileResolver@completion")
+}

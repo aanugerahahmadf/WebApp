@@ -5,6 +5,7 @@ namespace App\Jobs\SendBotReply;
 use App\Models\Message\Message;
 use App\Models\User\User;
 use App\Support\Chat\BotReplyLocalizer\BotReplyLocalizer;
+use App\Support\ChatStaff\ChatStaff;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -129,7 +130,7 @@ class SendBotReply implements ShouldQueue
                 ]);
                 break;
 
-            // B. Context: Product/Package Discovery
+            // B. Context: Catalog/Package Discovery
             case $userMessage->meta && isset($userMessage->meta['type']):
                 $name = $userMessage->meta['name'];
                 $reply = __('Halo :userName, pilihan yang luar biasa! :name memang sedang menjadi tren dan sangat diminati. Admin kami sedang menyiapkan detail ketersediaan untuk tanggal acara Anda. Sambil menunggu, apakah :userName punya preferensi warna bunga tertentu untuk tema ini?', [
@@ -218,9 +219,10 @@ class SendBotReply implements ShouldQueue
             $reply .= "\n\nAgar kami dapat menyiapkan rekomendasi yang lebih tepat, silakan isi formulir kebutuhan acara melalui tombol di bawah ini. Setelah dikirim, ringkasannya dapat diunduh dalam bentuk PDF.";
         }
 
-        $admin = User::whereHas('roles', function ($q) {
-            $q->where('name', 'super_admin');
-        })->first();
+        // Bot membalas SEBAGAI staf. Identitasnya harus dari ChatStaff --
+        // `User::whereHas('roles', super_admin)` selalu null sejak role admin
+        // pindah ke tabel `admins`, dan akibatnya bot tidak pernah membalas.
+        $admin = ChatStaff::adminUser();
 
         if ($admin) {
             Message::create([

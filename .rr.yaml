@@ -1,0 +1,70 @@
+version: "3"
+# RoadRunner Configuration for gRPC Server
+# Wedding Flower Decoration App
+
+server:
+  command: "php worker.php"
+  relay: "pipes"
+  relay_timeout: "300s"
+
+# gRPC Server Configuration
+grpc:
+  listen: "tcp://0.0.0.0:50051"
+  # proto: ["proto/*.proto"]
+  
+  # Enable reflection for development
+  reflection: true
+  
+  # Maximum message size (100MB)
+  max_recv_msg_size: 104857600
+  max_send_msg_size: 104857600
+  
+  # Connection settings
+  keepalive:
+    enforcement_policy:
+      min_time: "10s"
+      permit_without_stream: true
+    server_parameters:
+      time: "30s"
+      timeout: "10s"
+  
+  # TLS configuration (optional for development)
+  # tls:
+  #   cert_file: ".rr/cert.pem"
+  #   key_file: ".rr/key.pem"
+
+# Worker pool configuration
+worker:
+  # Number of workers
+  num_workers: 4
+  
+  # Max jobs per worker before recycle
+  max_jobs: 1000
+  
+  # Worker timeout
+  timeout: "60s"
+  
+  # Memory limit per worker (MB)
+  memory_limit: 512
+  
+  # Environment variables passed to workers
+  env:
+    APP_ENV: "local"
+    APP_DEBUG: "true"
+
+# Logging
+logs:
+  mode: "development"
+  level: "debug"
+  encoding: "console"
+  output: "stdout"
+
+# Metrics (Prometheus)
+metrics:
+  address: "0.0.0.0:2112"
+  collect_interval: "10s"
+
+# Static files (for GraphQL Playground if needed)
+static:
+  # Enable static file serving
+  enabled: false

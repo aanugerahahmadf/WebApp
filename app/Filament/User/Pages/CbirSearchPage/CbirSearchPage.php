@@ -5,7 +5,7 @@ namespace App\Filament\User\Pages\CbirSearchPage;
 use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\User\Pages\Home\Home;
 use App\Models\Package\Package;
-use App\Models\Product\Product;
+use App\Models\Catalog\Catalog;
 use App\Support\AppPlatform\AppPlatform;
 use App\Services\CBIRService\CBIRService;
 use App\Support\PlatformContext\PlatformContext;
@@ -155,7 +155,7 @@ class CbirSearchPage extends Page implements HasForms
                 ->registerActions([
                     Forms\Components\Actions\Action::make('manualSearch')
                         ->label(__('Cari Sekarang'))
-                        ->icon('heroicon-m-arrow-up-tray')
+                        ->icon('/images/icons/upload.svg')
                         ->color('primary')
                         ->action(function ($state, Forms\Set $set, CBIRService $cbirService) {
                             if (! $state) {
@@ -385,7 +385,7 @@ session()->forget(['cbir_mixed_results', 'cbir_package_results_ids', 'cbir_searc
 
             $model = $type === 'package'
                 ? Package::with(['category'])->find($id)
-                : Product::with(['category'])->find($id);
+                : Catalog::with(['category'])->find($id);
 
             if (! $model) {
                 continue;

@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'စာတိုက်သင်္ကေတ',
         'preview'                  => 'စမ်းကြည့်သည်။',
         'price'                    => 'စျေးနှုန်း',
-        'product_id'               => 'ထုတ်ကုန် ID',
+        'catalog_id'               => 'ထုတ်ကုန် ID',
         'product_uid'              => 'ထုတ်ကုန် UID',
         'product_uuid'             => 'ထုတ်ကုန် UUID',
         'promo_code'               => 'ကြော်ငြာကုဒ်',

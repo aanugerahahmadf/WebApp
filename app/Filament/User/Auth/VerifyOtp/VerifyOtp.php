@@ -33,7 +33,7 @@ class VerifyOtp extends SimplePage
 
     public static function getUrl(array $parameters = []): string
     {
-        return route('filament.user.auth.verify-otp', $parameters);
+        return route('filament.welcome.auth.verify-otp', $parameters);
     }
 
     public function mount(): void
@@ -41,7 +41,7 @@ class VerifyOtp extends SimplePage
         $this->email = request()->query('email', '');
 
         if (blank($this->email)) {
-            $this->redirect(route('filament.user.auth.password-reset.request'));
+            $this->redirect(route('filament.welcome.auth.password-reset.request'));
         }
 
         $this->form->fill([
@@ -67,7 +67,7 @@ class VerifyOtp extends SimplePage
                 ->send();
 
             $this->redirect(URL::temporarySignedRoute(
-                'filament.user.auth.password-reset.reset',
+                'filament.welcome.auth.password-reset.reset',
                 now()->addMinutes(30),
                 [
                     'email' => $email,

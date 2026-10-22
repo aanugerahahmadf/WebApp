@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'koda postê',
         'preview'                  => 'pêşnerîn',
         'price'                    => 'biha',
-        'product_id'               => 'ID berhemê',
+        'catalog_id'               => 'ID berhemê',
         'product_uid'              => 'UID hilberê',
         'product_uuid'             => 'berhem UUID',
         'promo_code'               => 'koda promosyonê',

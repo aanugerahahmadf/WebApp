@@ -26,7 +26,7 @@
                 @foreach ($checks as [$label, $secured, $target])
                     <div class="flex items-center gap-3 rounded-xl border border-gray-200 p-4 dark:border-white/10">
                         <x-filament::icon
-                            :icon="$secured ? 'heroicon-o-check-circle' : 'heroicon-o-exclamation-circle'"
+                            :icon="$secured ? '/images/icons/check_circle.svg' : '/images/icons/alert.svg'"
                             class="h-5 w-5 shrink-0 {{ $secured ? 'text-success-600' : 'text-warning-500' }}"
                         />
 

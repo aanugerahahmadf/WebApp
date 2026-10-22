@@ -1,0 +1,137 @@
+[debug] [2026-09-02T12:51:44.081Z] ----------------------------------------------------------------------
+[debug] [2026-09-02T12:51:44.084Z] Command:       D:\Program Files\nodejs\node.exe C:\Users\ASUS TUF F15\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js init
+[debug] [2026-09-02T12:51:44.084Z] CLI Version:   15.28.2
+[debug] [2026-09-02T12:51:44.084Z] Platform:      win32
+[debug] [2026-09-02T12:51:44.085Z] Node Version:  v26.3.0
+[debug] [2026-09-02T12:51:44.085Z] Detected Agent: unknown
+[debug] [2026-09-02T12:51:44.085Z] Time:          Wed Sep 02 2026 19:51:44 GMT+0700 (Waktu Indonesia Barat)
+[debug] [2026-09-02T12:51:44.085Z] ----------------------------------------------------------------------
+[debug] 
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  D:\Weeding-Organizer-CBIR\Mobile-And-Backend
+
+Before we get started, keep in mind:
+
+  * You are initializing within an existing Firebase project directory
+
+[info] 
+=== Project Setup
+[info] 
+[info] First, let's associate this project directory with a Firebase project.
+[info] You can create multiple project aliases by running firebase use --add, 
+[info] 
+[debug] [2026-09-02T12:53:20.231Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-09-02T12:53:20.232Z] > authorizing via signed-in user (anugerahahmadf16@gmail.com)
+[debug] [2026-09-02T12:53:20.251Z] Checked if tokens are valid: false, expires at: 1788354282694
+[debug] [2026-09-02T12:53:20.251Z] Checked if tokens are valid: false, expires at: 1788354282694
+[debug] [2026-09-02T12:53:20.252Z] > refreshing access token with scopes: []
+[debug] [2026-09-02T12:53:20.255Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-09-02T12:53:20.255Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-09-02T12:53:20.429Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-09-02T12:53:20.429Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-09-02T12:53:20.444Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/wedding-decorasi-flower [none]
+[debug] [2026-09-02T12:53:21.162Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/wedding-decorasi-flower 403
+[debug] [2026-09-02T12:53:21.162Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/wedding-decorasi-flower {"error":{"code":403,"message":"The caller does not have permission","status":"PERMISSION_DENIED"}}
+[debug] [2026-09-02T12:53:21.163Z] Request to https://firebase.googleapis.com/v1beta1/projects/wedding-decorasi-flower had HTTP Error: 403, The caller does not have permission
+[debug] [2026-09-02T12:53:21.313Z] FirebaseError: Request to https://firebase.googleapis.com/v1beta1/projects/wedding-decorasi-flower had HTTP Error: 403, The caller does not have permission
+    at responseToError (C:\Users\ASUS TUF F15\AppData\Roaming\npm\node_modules\firebase-tools\lib\responseToError.js:53:12)
+    at RetryOperation._fn (C:\Users\ASUS TUF F15\AppData\Roaming\npm\node_modules\firebase-tools\lib\apiv2.js:415:77)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+[error] 
+[error] Error: Failed to get Firebase project wedding-decorasi-flower. Please make sure the project exists and your account has permission to access it.
+[debug] [2026-09-02T12:53:29.030Z] ----------------------------------------------------------------------
+[debug] [2026-09-02T12:53:29.032Z] Command:       D:\Program Files\nodejs\node.exe C:\Users\ASUS TUF F15\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js init
+[debug] [2026-09-02T12:53:29.032Z] CLI Version:   15.28.2
+[debug] [2026-09-02T12:53:29.032Z] Platform:      win32
+[debug] [2026-09-02T12:53:29.033Z] Node Version:  v26.3.0
+[debug] [2026-09-02T12:53:29.033Z] Detected Agent: unknown
+[debug] [2026-09-02T12:53:29.033Z] Time:          Wed Sep 02 2026 19:53:29 GMT+0700 (Waktu Indonesia Barat)
+[debug] [2026-09-02T12:53:29.033Z] ----------------------------------------------------------------------
+[debug] 
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  D:\Weeding-Organizer-CBIR\Mobile-And-Backend
+
+Before we get started, keep in mind:
+
+  * You are initializing within an existing Firebase project directory
+
+[info] 
+=== Project Setup
+[info] 
+[info] First, let's associate this project directory with a Firebase project.
+[info] You can create multiple project aliases by running firebase use --add, 
+[info] 
+[debug] [2026-09-02T12:53:39.249Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-09-02T12:53:39.249Z] > authorizing via signed-in user (anugerahahmadf16@gmail.com)
+[debug] [2026-09-02T12:53:39.266Z] Checked if tokens are valid: true, expires at: 1788357199429
+[debug] [2026-09-02T12:53:39.266Z] Checked if tokens are valid: true, expires at: 1788357199429
+[debug] [2026-09-02T12:53:39.268Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/wedding-decorasi-flower [none]
+[debug] [2026-09-02T12:53:39.777Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/wedding-decorasi-flower 403
+[debug] [2026-09-02T12:53:39.777Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/wedding-decorasi-flower {"error":{"code":403,"message":"The caller does not have permission","status":"PERMISSION_DENIED"}}
+[debug] [2026-09-02T12:53:39.778Z] Request to https://firebase.googleapis.com/v1beta1/projects/wedding-decorasi-flower had HTTP Error: 403, The caller does not have permission
+[debug] [2026-09-02T12:53:39.922Z] FirebaseError: Request to https://firebase.googleapis.com/v1beta1/projects/wedding-decorasi-flower had HTTP Error: 403, The caller does not have permission
+    at responseToError (C:\Users\ASUS TUF F15\AppData\Roaming\npm\node_modules\firebase-tools\lib\responseToError.js:53:12)
+    at RetryOperation._fn (C:\Users\ASUS TUF F15\AppData\Roaming\npm\node_modules\firebase-tools\lib\apiv2.js:415:77)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+[error] 
+[error] Error: Failed to get Firebase project wedding-decorasi-flower. Please make sure the project exists and your account has permission to access it.
+[debug] [2026-09-02T12:53:42.921Z] ----------------------------------------------------------------------
+[debug] [2026-09-02T12:53:42.923Z] Command:       D:\Program Files\nodejs\node.exe C:\Users\ASUS TUF F15\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js init
+[debug] [2026-09-02T12:53:42.924Z] CLI Version:   15.28.2
+[debug] [2026-09-02T12:53:42.924Z] Platform:      win32
+[debug] [2026-09-02T12:53:42.924Z] Node Version:  v26.3.0
+[debug] [2026-09-02T12:53:42.924Z] Detected Agent: unknown
+[debug] [2026-09-02T12:53:42.924Z] Time:          Wed Sep 02 2026 19:53:42 GMT+0700 (Waktu Indonesia Barat)
+[debug] [2026-09-02T12:53:42.924Z] ----------------------------------------------------------------------
+[debug] 
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  D:\Weeding-Organizer-CBIR\Mobile-And-Backend
+
+Before we get started, keep in mind:
+
+  * You are initializing within an existing Firebase project directory
+
+[info] 
+=== Project Setup
+[info] 
+[info] First, let's associate this project directory with a Firebase project.
+[info] You can create multiple project aliases by running firebase use --add, 
+[info] 
+[debug] [2026-09-02T12:53:50.193Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-09-02T12:53:50.194Z] > authorizing via signed-in user (anugerahahmadf16@gmail.com)
+[debug] [2026-09-02T12:53:50.211Z] Checked if tokens are valid: true, expires at: 1788357199429
+[debug] [2026-09-02T12:53:50.211Z] Checked if tokens are valid: true, expires at: 1788357199429
+[debug] [2026-09-02T12:53:50.212Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/wedding-decorasi-flower [none]
+[debug] [2026-09-02T12:53:50.677Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/wedding-decorasi-flower 403
+[debug] [2026-09-02T12:53:50.677Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/wedding-decorasi-flower {"error":{"code":403,"message":"The caller does not have permission","status":"PERMISSION_DENIED"}}
+[debug] [2026-09-02T12:53:50.678Z] Request to https://firebase.googleapis.com/v1beta1/projects/wedding-decorasi-flower had HTTP Error: 403, The caller does not have permission
+[debug] [2026-09-02T12:53:50.829Z] FirebaseError: Request to https://firebase.googleapis.com/v1beta1/projects/wedding-decorasi-flower had HTTP Error: 403, The caller does not have permission
+    at responseToError (C:\Users\ASUS TUF F15\AppData\Roaming\npm\node_modules\firebase-tools\lib\responseToError.js:53:12)
+    at RetryOperation._fn (C:\Users\ASUS TUF F15\AppData\Roaming\npm\node_modules\firebase-tools\lib\apiv2.js:415:77)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+[error] 
+[error] Error: Failed to get Firebase project wedding-decorasi-flower. Please make sure the project exists and your account has permission to access it.

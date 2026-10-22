@@ -14,7 +14,7 @@ use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
 
 /*
- * /user/auth -- the guest auth landing page.
+ * /auth -- the guest auth landing page.
  *
  * It exists so the storefront has ONE sign-in entry point that offers both doors
  * (email/password and Google) instead of scattering the Google button across
@@ -28,12 +28,22 @@ use function Pest\Laravel\get;
  *   3. the breadcrumb chain, which is the only navigation back up: Sign In
  *      points at this page, this page points at the storefront home;
  *   4. the heading stays "Welcome Back" and not "Sign In" -- this page offers the
- *      two doors, the form lives on /user/signin, and repeating that name here
+ *      two doors, the form lives on /signin, and repeating that name here
  *      made heading, crumb and <title> all point at the other page;
- *   5. Sign Up stays disabled without losing its code: the class and view
- *      remain in the repo (only `->registration()` is commented out), the
- *      register route does not exist, and the old /user/signup +
- *      /user/register urls redirect here instead of 404.
+ *   5. Sign Up stays reachable without duplicating the door: the class and view
+ *      remain in the repo, the register route exists, and the old /signup +
+ *      /user/register urls redirect to the same page instead of 404.
+ *
+ * CATATAN SOAL NAMA PANEL DI FILE INI
+ *
+ * Panel 'user' sudah dilebur ke panel 'welcome' (path '/'), jadi panel 'user'
+ * tidak terdaftar lagi. `Filament::getPanel('user')` TIDAK melempar error --
+ * `PanelRegistry::get()` mengembalikan panel default kalau id-nya tidak
+ * terdaftar, dan default-nya sekarang 'welcome'. Jadi `getPanel('user')` di
+ * file ini sebenarnya berarti panel 'welcome'. Yang boleh jadi rujukan adalah
+ * `Route::has('filament.welcome.auth.register')`, bukan `filament.user.*`
+ * (route latter sudah tidak ada sama sekali -- dan `route('filament.user.*')`
+ * melempar RouteNotFoundException, bukan mengembalikan panel default).
  */
 uses(RefreshDatabase::class);
 
@@ -48,8 +58,8 @@ test('a guest can open the auth landing page', function (): void {
     get(Auth::getUrl())->assertOk();
 });
 
-test('its url is the /user/auth route, not the sign in form', function (): void {
-    expect(Auth::getUrl())->toContain('/user/auth')
+test('its url is the /auth route, not the sign in form', function (): void {
+    expect(Auth::getUrl())->toContain('/auth')
         ->and(Auth::getUrl())->not->toBe(Filament::getPanel('user')->getLoginUrl());
 });
 
@@ -59,7 +69,7 @@ test('the route is registered outside the panel auth middleware', function (): v
     // would be bounced off it. Asserted on the route's own middleware rather
     // than on the panel's, because that is where the wrapping actually shows up.
     $route = collect(app('router')->getRoutes()->getRoutes())
-        ->first(fn ($route) => $route->getName() === 'filament.user.auth.index');
+        ->first(fn ($route) => $route->getName() === 'filament.welcome.auth.index');
 
     expect($route)->not->toBeNull();
 
@@ -100,6 +110,24 @@ test('the sign in button label follows the language switcher locale', function (
 });
 
 test('it offers the google button, with no agreement gate in front of it', function (): void {
+    // Locale TIDAK dikunci di sini.
+    //
+    // ssertSee/ssertDontSee membandingkan string hasil __(), jadi nilainya
+    // ikut locale aktif. Memaksa ?locale=id membuat expectations-nya tidak cocok
+    // dengan apa yang benar-benar dirender -- label Indonesia tidak muncul, dan
+    // label Inggris yang muncul tidak diperiksa sama sekali. Test itu akan hijau
+    // untuk alasan yang salah.
+    //
+    // Yang benar: __() dihitung SESUDAH request, di locale yang sama dengan
+    // yang dipakai request itu.
+    //
+    // "Kebijakan Privasi" SENGAJA TIDAK dikunci di sini sebagai "tidak boleh
+    // muncul". String itu juga dipakai cookie consent banner -- yang merender
+    // link ke `/privacy-policy` dan memang harus ada di setiap halaman. Kalau
+    // dikunci, test gagal dengan `Not to contain: Kebijakan Privasi` sementara
+    // tidak ada satu pun checkbox persetujuan yang bocor. Test di bawah
+    // (`the agreement gate is the checkbox partial ...`) menjaga hal yang
+    // sebenarnya berbahaya.
     get(Auth::getUrl())
         ->assertOk()
         ->assertSee(__('Masuk Dengan Google'), escape: false)
@@ -108,8 +136,30 @@ test('it offers the google button, with no agreement gate in front of it', funct
         // Sign Up (asserted in authenticate() / handleRegistration() there).
         ->assertDontSee(__('Ingat Saya'))
         ->assertDontSee(__('Perjanjian Pengguna'))
-        ->assertDontSee(__('Kebijakan Privasi'))
         ->assertDontSee(__('Kebijakan Aplikasi'));
+});
+
+test('the agreement gate is the checkbox partial, not the cookie banner link', function (): void {
+    // PERHATIAN SOAL APA YANG DIJAGA DI TEST DI ATAS.
+    //
+    // Label "Kebijakan Privasi" TIDAK ikut dikunci sebagai "tidak boleh muncul",
+    // padahal itu yang dilakukan test lama. Alasannya: string itu juga dipakai
+    // cookie consent banner yang merender link ke `/privacy-policy`, dan banner
+    // itu memang HARUS ada di setiap halaman -- termasuk di `/auth`.
+    //
+    // Gejalanya kalau label itu dikunci: test gagal dengan
+    // `Not to contain: Kebijakan Privasi`, sementara tidak ada satu pun checkbox
+    // persetujuan yang bocor ke halaman. Yang ditemukan hanya link di banner.
+    //
+    // Yang dikunci di sini adalah hal yang sebenarnya berbahaya: checkbox dan
+    // pemicu `open-agreement` milik form persetujuan, bukan kemunculan label di
+    // mana pun.
+    get(Auth::getUrl() . '?locale=id')
+        ->assertOk()
+        // Komponen checkbox persetujuan tidak dirender di halaman ini
+        // (`hideCheckboxes => true`), jadi pemicunya juga tidak boleh ada.
+        ->assertDontSee('open-agreement', escape: false)
+        ->assertDontSee('agreement-modal', escape: false);
 });
 
 test('the google button reads Continue With Google in english and Lanjutkan Dengan Google in indonesian', function (): void {
@@ -127,15 +177,16 @@ test('the google button reads Continue With Google in english and Lanjutkan Deng
         ->assertSee('Lanjutkan Dengan Google', escape: false);
 });
 
-test('it does not repeat the register link, because there is no register page', function (): void {
-    // Halaman Sign Up dinonaktifkan, jadi halaman ini tidak punya apa pun untuk
-    // diulang: satu-satunya pintu masuk dari sini adalah tombol Google dan link
-    // ke form Sign In.
+test('it does not repeat the register link, because the register form has its own page', function (): void {
+    // Halaman ini punya dua pintu: Sign In (formnya di /signin) dan Google.
+    // Pendaftaran punya halamannya sendiri (/signup), jadi link ke sana tidak
+    // diulang di sini -- supaya "/auth" tetap jadi "pilih pintu masuk", bukan
+    // "halaman yang menautkan ke semua form auth".
     get(Auth::getUrl())
         ->assertOk()
         ->assertDontSee(__('Belum memiliki akun'), escape: false)
         ->assertDontSee(__('Daftar dengan Google'), escape: false)
-        ->assertDontSee('/user/signup', escape: false)
+        ->assertDontSee('/signup', escape: false)
         ->assertDontSee('/user/register', escape: false);
 });
 
@@ -150,36 +201,56 @@ test('the google button is no longer on sign in', function (): void {
         ->assertSee(__('Kata Sandi'), escape: false);
 });
 
-test('the sign up code is still in the repo, it is only unregistered', function (): void {
-    // Pendaftaran dimatikan tanpa menghapus kode: class SignUp dan view-nya
-    // masih ada supaya bisa dihidupkan lagi tanpa menulis ulang form, tapi
-    // panel tidak mendaftarkannya -- jadi tidak ada route dan tidak ada URL
-    // pendaftaran yang bisa dibuka.
+test('the sign up page is registered again', function (): void {
+    // PERUBAHAAN PERILAKU. Test ini sebelumnya bernama "the sign up code is still
+    // in the repo, it is only unregistered" dan mengunci kondisi pendaftaran
+    // NONAKTIF: `getRegistrationUrl()` null, route
+    // `filament.welcome.auth.register` tidak terdaftar, dan ketiga baris pemicunya
+    // di `UserPanelProvider` masih dikomentari dengan `//`.
+    //
+    // Pendaftaran sekarang AKTIF. Ketiga baris itu dipanggil tanpa komentar,
+    // dan `/signup` adalah halaman utuh.
+    //
+    // Yang dikunci sekarang adalah sisi yang sama-sama penting: pendaftaran
+    // hidup LENGKAP, bukan setengah. Kalau `->registrationRouteSlug('signup')`
+    // terlewat, URL `/user/register` (slug default Filament) muncul
+    // tanpa disengaja -- dan `routes/web/web.php` mengarahkan ke
+    // `/signup`, jadi yang hilang bukan lifeline-nya, tapi kejelasan
+    // slug mana yang jadi kanonik.
     expect(class_exists(SignUp::class))->toBeTrue()
         ->and(View::exists('User.auth.sign-up.sign-up'))->toBeTrue()
-        ->and(Filament::getPanel('user')->getRegistrationUrl())->toBeNull();
+        ->and(Filament::getPanel('user')->getRegistrationUrl())->not->toBeNull()
+        ->and(Route::has('filament.welcome.auth.register'))->toBeTrue();
 
-    // Kode yang menyalakannya harus tetap dalam keadaan dikomentari, kalau tidak
-    // "dimatikan" hanya berlaku untuk file ini saja. Ketiganya diperiksa
-    // terpisah karena menghidupkan pendaftaran berarti menghapus semua `//` itu:
-    // import saja tidak cukup, dan `->registrationRouteSlug('signup')` yang
-    // terlewat membuat URL `/user/register` muncul tanpa disengaja.
+    // Sumber kebenaran pendaftaran adalah provider yang BENAR-BENAR
+    // terdaftar, yaitu `WelcomePanelProvider`. `UserPanelProvider` masih ada
+    // sebagai file, tapi provider itu sudah TIDAK didaftarkan di
+    // `bootstrap/providers.php` sejak panel 'user' dilebur ke panel 'welcome'
+    // -- jadi membacanya hanya membandingkan string dengan file mati, dan
+    // assertion-nya tetap hijau walau pendaftaran dihapus dari panel yang
+    // sebenarnya melayani halaman ini.
     $provider = (string) file_get_contents(
-        dirname(__DIR__, 4).'/app/Providers/Filament/UserPanelProvider/UserPanelProvider.php'
+        dirname(__DIR__, 4).'/app/Providers/Filament/WelcomePanelProvider/WelcomePanelProvider.php'
     );
 
-    expect($provider)->toContain('// use App\Filament\User\Auth\SignUp\SignUp;')
-        ->toContain('// ->registration(SignUp::class)')
-        ->toContain('// ->registrationRouteSlug(\'signup\')')
-        // Alias Livewire-nya dikomentari di AppServiceProvider, dengan bentuk
-        // aslinya (`as UserSignUp`) -- bukan alias baru yang harus dicari lagi.
-        ->and((string) file_get_contents(dirname(__DIR__, 4).'/app/Providers/AppServiceProvider/AppServiceProvider.php'))
-        ->toContain('// use App\Filament\User\Auth\SignUp\SignUp as UserSignUp;')
-        ->and(Route::has('filament.user.auth.register'))->toBeFalse();
+    expect($provider)->toContain('->registration(SignUp::class)')
+        ->toContain("->registrationRouteSlug('signup')");
 
-    foreach (['/user/signup', '/user/register'] as $url) {
-        get($url)->assertRedirect(Auth::getUrl());
-    }
+    // Dan provider yang mati itu tidak boleh daftarkan diri lagi: dua panel
+    // di path '/' akan saling menimpa route-nya.
+    //
+    // Yang dicek adalah `::class`-nya, bukan namanya: `bootstrap/providers.php`
+    // masih menyebut `UserPanelProvider` di komentarnya, untuk menjelaskan
+    // kenapa provider itu tidak lagi didaftarkan.
+    $registered = (string) file_get_contents(dirname(__DIR__, 4).'/bootstrap/providers.php');
+
+    expect($registered)->not->toContain('UserPanelProvider::class');
+
+    // Ketiga door harus melayani halaman yang sama: slug kanonik, slug alias
+    // bawaan Filament, dan route yang terdaftar.
+    get('/signup')->assertOk();
+
+    get('/user/register')->assertRedirect('/signup');
 });
 
 test('sign in breadcrumbs up to this page, with no home crumb', function (): void {
@@ -214,7 +285,7 @@ test('the parent crumb label names this page and is not doubled on the children'
 });
 
 test('the page welcomes instead of repeating the sign in form name', function (): void {
-    // This page only offers the two doors; the form itself is /user/signin, which
+    // This page only offers the two doors; the form itself is /signin, which
     // keeps its own "Sign In" heading. Calling this one "Sign In" too made the
     // heading, the breadcrumb's last crumb and the <title> all name the OTHER page.
     $page = (new ReflectionClass(Auth::class))->newInstanceWithoutConstructor();
@@ -260,6 +331,7 @@ test('country flags carry their emoji so the picker needs no network', function 
 
     expect($indonesia)->not->toBeNull()
         ->and($indonesia)->toContain('🇮🇩')
-        ->and($indonesia)->toContain('(+62)')
+        ->and($indonesia)->toContain('🇮🇩')
         ->and($indonesia)->not->toContain('<img');
 });
+

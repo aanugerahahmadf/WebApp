@@ -27,7 +27,7 @@
         <div class="flex items-center ps-3 text-gray-400 dark:text-gray-500 shrink-0">
             <x-filament::icon
                 alias="panels::global-search.field"
-                icon="heroicon-m-magnifying-glass"
+                icon="/images/icons/search.svg"
                 class="h-5 w-5"
             />
         </div>

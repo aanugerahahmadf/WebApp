@@ -4,7 +4,7 @@ namespace App\Http\Middleware\SetLocale;
 
 use App\Models\User\User;
 use App\Models\UserLanguage\UserLanguage;
-use App\Support\AppPlatform\AppPlatform;
+use App\Support\AppLocale\AppLocale;
 use Closure;
 use Filament\Facades\Filament;
 use Illuminate\Http\Request;
@@ -16,63 +16,18 @@ class SetLocale
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $locale = null;
-
-        // 1. Cek parameter request query/post 'locale' atau 'lang' terlebih dahulu
+        // 1-3. Parameter `?locale=`/`?lang=`, session, header Accept-Language.
         //
-        // NILAI HARUS DISARING lebih dulu. Branch 3 (Accept-Language) sudah
-        // memvalidasi terhadap daftar locale yang didukung, tapi branch 1 tidak.
-        // Sebelumnya `?locale=<apa saja>` langsung dipakai apa adanya --
-        // termasuk nilai yang tidak ada di switcher -- lalu nilai itu ikut
-        // tersimpan di `user_languages`. Akibatnya preferensi yang tersimpan tidak
-        // punya berkas terjemahan, dan setiap pembacaan berikutnya jatuh ke
-        // default Laravel. Query string adalah input pengguna, jadi harus
-        // diperlakukan sebagai input, bukan dipercaya.
-        $supportedLocales = array_keys(config('filament-language-switcher.locals', ['id' => [], 'en' => []]));
-
-        if ($request->has('locale')) {
-            $requested = (string) $request->input('locale');
-        } elseif ($request->has('lang')) {
-            $requested = (string) $request->input('lang');
-        } else {
-            $requested = null;
-        }
-
-        if ($requested !== null && in_array($requested, $supportedLocales, strict: true)) {
-            $locale = $requested;
-        }
-
-        // 2. Cek session jika session store aktif pada request ini
-        if (! $locale && $request->hasSession()) {
-            $sessionLocale = (string) session()->get('locale');
-            if ($sessionLocale) {
-                $locale = $sessionLocale;
-            }
-        }
-
-        // 3. Cek header Accept-Language dari client (sangat penting untuk API client mobile)
-        //    Diprioritaskan di atas preferensi DB user agar Flutter bisa mengirim bahasa yang dipilih
-        $acceptLanguage = $request->header('Accept-Language');
-        if (! $locale && $acceptLanguage) {
-            $langs = explode(',', $acceptLanguage);
-            $firstLang = trim($langs[0]);
-            $cleanLang = str_replace('-', '_', $firstLang);
-
-            $localsConfig = config('filament-language-switcher.locals', ['id' => [], 'en' => []]);
-            $supported = array_keys($localsConfig);
-
-            if (in_array($cleanLang, $supported)) {
-                $locale = $cleanLang;
-            } else {
-                $shortLang = explode('_', $cleanLang)[0];
-                foreach ($supported as $sup) {
-                    if ($sup === $shortLang || explode('_', $sup)[0] === $shortLang) {
-                        $locale = $sup;
-                        break;
-                    }
-                }
-            }
-        }
+        // Ketiganya dibaca dari `App\Support\AppLocale\AppLocale` -- satu
+        // sumber aturan yang juga dipakai halaman error. Halaman error
+        // TIDAK selalu melewati middleware ini (404 untuk URL yang tidak
+        // dikenal dilempar router sebelum middleware route jalan), jadi
+        // kalau aturannya ditulis dua kali, keduanya pasti akan berbeda
+        // pada kasus yang paling jarang diuji.
+        //
+        // Perilaku dan urutannya tidak berubah: query > session >
+        // Accept-Language.
+        $locale = AppLocale::detected($request);
 
         // 4. Cek autentikasi user di semua guards untuk mendapatkan preferensi bahasa dari database
         //    Hanya digunakan jika locale belum ditentukan dari param/session/header
@@ -131,15 +86,7 @@ class SetLocale
 
         // 5. Fallback Default jika belum terdeteksi
         if (! $locale) {
-            if (AppPlatform::isNativeMobile()) {
-                // The Capacitor shells ship an Indonesian-first bundle; don't
-                // let a system language other than the app default take over.
-                $locale = 'id';
-            } else {
-                $localsConfig = config('filament-language-switcher.locals', ['id' => [], 'en' => []]);
-                $supported = array_keys($localsConfig);
-                $locale = $request->getPreferredLanguage($supported ?: ['id', 'en']) ?: 'id';
-            }
+            $locale = AppLocale::fallback($request);
         }
 
         // 6. Terapkan locale ke sistem

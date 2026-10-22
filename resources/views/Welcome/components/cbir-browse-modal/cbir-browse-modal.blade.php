@@ -13,25 +13,25 @@
         $sources = [
             [
                 'id'    => 'internal',
-                'icon'  => 'heroicon-o-folder',
+                'icon'  => '/images/icons/folder.svg',
                 'label' => $isAndroid ? __('Buka Files Android') : __('Buka Files iOS'),
                 'pick'  => 'all',
             ],
             [
                 'id'    => 'photos',
-                'icon'  => 'heroicon-o-photo',
+                'icon'  => '/images/icons/photo.svg',
                 'label' => __('Buka Album Foto'),
                 'pick'  => 'image',
             ],
             [
                 'id'    => 'videos',
-                'icon'  => 'heroicon-o-video-camera',
+                'icon'  => '/images/icons/video.svg',
                 'label' => __('Buka Galeri Video'),
                 'pick'  => 'video',
             ],
             [
                 'id'    => 'cloud',
-                'icon'  => 'heroicon-o-cloud',
+                'icon'  => '/images/icons/cloud.svg',
                 'label' => $isAndroid ? __('Buka Google Drive') : __('Buka iCloud Drive'),
                 'pick'  => 'all',
             ],
@@ -59,25 +59,25 @@
         $sources = [
             [
                 'id'    => 'file-manager',
-                'icon'  => 'heroicon-o-folder',
+                'icon'  => '/images/icons/folder.svg',
                 'label' => $fileManagerLabel,
                 'pick'  => 'all',
             ],
             [
                 'id'    => 'photos',
-                'icon'  => 'heroicon-o-photo',
+                'icon'  => '/images/icons/photo.svg',
                 'label' => __('Buka Album Foto'),
                 'pick'  => 'image',
             ],
             [
                 'id'    => 'videos',
-                'icon'  => 'heroicon-o-video-camera',
+                'icon'  => '/images/icons/video.svg',
                 'label' => __('Buka Galeri Video'),
                 'pick'  => 'video',
             ],
             [
                 'id'    => 'cloud',
-                'icon'  => 'heroicon-o-cloud',
+                'icon'  => '/images/icons/cloud.svg',
                 'label' => $cloudLabel,
                 'pick'  => 'all',
             ],
@@ -259,6 +259,14 @@
         });
     "
     x-on:cbir-browse-open.window="openModal()"
+    {{--
+        Menu lampiran mengirim event ini untuk item "Photos & videos".
+        Berbeda dengan `cbir-browse-open` yang memunculkan modal jelajah
+        (file/folder/drive/cloud), event ini langsung membuka pemilih file
+        dengan filter image/* -- dan tanpa memunculkan modal lebih dulu,
+        karena pengguna sudah menyatakan niat mereka dengan memilih "Photos".
+    --}}
+    x-on:cbir-browse-pick-image.window="pickWeb('image')"
     x-on:keydown.escape.window="if (open) closeModal()"
     x-on:livewire:navigating.window="closeModal()"
 >
@@ -297,7 +305,7 @@
                         class="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-white/10 dark:hover:text-gray-200"
                         aria-label="{{ __('Tutup') }}"
                     >
-                        <x-filament::icon icon="heroicon-m-x-mark" class="h-5 w-5" />
+                        <x-filament::icon icon="/images/icons/x.svg" class="h-5 w-5" />
                     </button>
                 </div>
 

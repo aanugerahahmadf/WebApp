@@ -2,35 +2,19 @@
 
 namespace App\Filament\Admin\Resources\PaymentGatewayResource\Pages\ManagePaymentGateways;
 
-use App\Filament\Admin\Concerns\HasMobilePagination\HasMobilePagination;
-use App\Filament\Admin\Exports\PaymentGatewayExporter\PaymentGatewayExporter;
-use App\Filament\Admin\Pages\Home\Home;
+use App\Filament\Shared\Concerns\HasStandardActions\HasStandardActions;
 use App\Filament\Admin\Resources\PaymentGatewayResource\PaymentGatewayResource;
 use App\Filament\Concerns\HasDynamicBreadcrumbs;
-use Filament\Actions;
 use Filament\Resources\Pages\ManageRecords;
 
-class ManagePaymentGateways extends ManageRecords
+class ManagePaymentGateways extends \Filament\Resources\Pages\ManageRecords
 {
-    use HasMobilePagination;
+    use HasStandardActions;
+
     use HasDynamicBreadcrumbs;
+
+
     protected static string $resource = PaymentGatewayResource::class;
-
-    public function getTitle(): string
-    {
-        return static::$title ?? static::getResource()::getTitleCasePluralModelLabel();
-    }
-
-    protected function getHeaderActions(): array
-    {
-        return [
-            Actions\ExportAction::make()
-                ->exporter(PaymentGatewayExporter::class)
-                ->label(__('Ekspor Data'))
-                ->icon('heroicon-s-arrow-down-tray')
-                ->color('success'),
-        ];
-    }
 
     public function getBreadcrumbs(): array
     {

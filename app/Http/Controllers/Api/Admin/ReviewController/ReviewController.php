@@ -13,7 +13,7 @@ class ReviewController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $query = Review::with('user:id,full_name,email,avatar_url', 'package:id,name', 'product:id,name');
+            $query = Review::with('user:id,full_name,email,avatar_url', 'package:id,name', 'catalog:id,name');
             if ($request->filled('search')) {
                 $s = $request->search;
                 $query->where(function ($q) use ($s): void {
@@ -34,8 +34,8 @@ class ReviewController extends Controller
                 'user_name' => $r->user?->full_name,
                 'user_avatar' => $r->user?->avatar_url,
                 'package_id' => $r->package_id,
-                'product_id' => $r->product_id,
-                'item_name' => $r->package?->name ?? $r->product?->name,
+                'catalog_id' => $r->catalog_id,
+                'item_name' => $r->package?->name ?? $r->catalog?->name,
                 'rating' => $r->rating,
                 'comment' => $r->comment,
                 'created_at' => $r->created_at?->toISOString(),
@@ -60,7 +60,7 @@ class ReviewController extends Controller
     public function show(int $id): JsonResponse
     {
         try {
-            $review = Review::with('user:id,full_name,email', 'package:id,name', 'product:id,name')->findOrFail($id);
+            $review = Review::with('user:id,full_name,email', 'package:id,name', 'catalog:id,name')->findOrFail($id);
 
             return response()->json(['status' => 'success', 'data' => $review]);
         } catch (\Exception $e) {

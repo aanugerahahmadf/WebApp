@@ -2,46 +2,41 @@
 
 /*
  * =============================================================================
- * FILE INI DI NONAKTIFKAN SENGAJA -- kodenya TIDAK dihapus.
+ * FILE INI MASIH DI NONAKTIFKAN -- kodenya TIDAK dihapus.
  * =============================================================================
  *
- * Pendaftaran email/password sudah dimatikan, jadi tidak ada pengguna mana pun
- * yang bisa mencapai alur di file ini: `->registration(SignUp::class)` di
- * `UserPanelProvider` dikomentari, sehingga `filament.user.auth.register` tidak
- * terdaftar dan `/user/signup` redirect ke `/user/auth`.
+ * Pendaftaran email/password sekarang sudah HIDAK LAGI, tapi file ini tetap
+ * dibungkus komentar, dan alasannya BUKAN "pendaftaran dimatikan" lagi:
  *
- * Test di bawah memanggil `handleRegistration()` secara langsung lewat Livewire,
- * jadi secara teknis masih bisa dijalankan -- dan justru itu masalahnya: file
- * ini akan terlihat "hijau" padahal tidak ada alur nyata yang diujinya. Membiarkannya
- * aktif juga berisiko menjebak siapa pun yang menyalakan pendaftaran kembali tanpa
- * tahu bahwa test ini sudah tidaksinkron dengan form.
+ *   - Panggilannya ada di `WelcomePanelProvider` (panel 'user' dilebur ke
+ *     panel 'welcome' pada 2026-10-21), jadi `filament.welcome.auth.register`
+ *     terdaftar dan `/signup` adalah halaman utuh. Lihat
+ *     `tests/Feature/User/SignUpRestoredTest/SignUpRestoredTest.php`.
+ *   - Isi file ini memanggil `handleRegistration()` secara langsung lewat
+ *     Livewire, yaitu memanggil method halaman secara UNIT -- bukan alur yang
+ *     dipakai pengguna. Kalau form-nya berubah, file ini bisa tetap hijau
+ *     sambil tidak ada yang benar-benar tercakup.
+ *   - Alur yang dipakai pengguna sudah punya test sendiri:
+ *     `SignUpRestoredTest` (halaman, form, link, crumb, topbar),
+ *     `SignUpFlowTest` (setelah OTP: security question lalu 2FA), dan
+ *     `RenameSmokeTest` (nama class + route).
  *
- * Yang TIDAK ikut dimatikan, dan tetap menjaga keputusan "pendaftaran mati":
- *   - `tests/Feature/User/UserAuthLandingPageTest/UserAuthLandingPageTest.php`
- *     class SignUp masih ada di repo, route pendaftaran tetap hilang, dan slug
- *     lama (`/user/signup`, `/user/register`) redirect ke `/user/auth`.
- *   - `tests/Feature/Shared/RenameSmokeTest/RenameSmokeTest.php`
- *   - `tests/Feature/User/SignInBreadcrumbsTest/SignInBreadcrumbsTest.php`
- *   - `tests/Feature/Shared/BladeCommentLeakTest/BladeCommentLeakTest.php`
- *     markup Sign Up masih ada di partial social-buttons, hanya tidak dirender.
+ * Jadi file ini tidak dihidupkan: menghidupkannya hanya menambah test yang
+ * mengulang test yang sudah ada, dengan cara yang lebih rapuh.
  *
- * CARA MENGHIDUPKAN LAGI
+ * CARA MENGHIDUPKAN (kalau memang perlu -- baca dulu alasannya di atas):
  *   (1) Hapus baris pembuka blok komentar yang ada tepat di bawah bagian
  *       ini -- baris yang isinya hanya simbol pembuka komentar blok --
  *       supaya isi blok kembali menjadi kode.
- *   (2) Di `app/Providers/Filament/UserPanelProvider/UserPanelProvider.php`,
- *       hapus tanda `//` pada `use ...SignUp\SignUp;`,
- *       `->registration(SignUp::class)`, dan `->registrationRouteSlug('signup')`.
- *   (3) Di `app/Providers/AppServiceProvider/AppServiceProvider.php`, hapus tanda
- *       `//` pada import `as UserSignUp` dan pada
- *       `Livewire::component('app.filament.user.auth.sign-up', UserSignUp::class)`.
- *   (4) Di partial `resources/views/User/social-buttons/social-buttons/
- *       social-buttons.blade.php`, buka blok markup Sign Up dan set
- *       `$showAuthSwitchLink = true`.
- *   (5) Jalankan file ini untuk memastikan nama field form masih cocok.
+ *   (2) Cek nama field form di `app/Filament/User/Auth/SignUp/SignUp.php`
+ *       masih sama dengan yang dipakai di blok komentar. Form pendaftaran
+ *       sekarang juga memuat KYC (KTP/selfie/avatar) dan dirender di
+ *       `/complete-profile` -- bukan di halaman daftar.
+ *   (3) Jalankan file ini dan pastikan tidak ada assertion yang bentrok
+ *       dengan `SignUpRestoredTest`.
  *
  * Tidak ada satu baris kode yang dihapus di bawah ini -- semuanya dibungkus
- * komentar, persis seperti cara pendaftaran dimatikan di panel.
+ * komentar, persis seperti cara file ini dimatikan.
  */
 /*
  *
@@ -182,7 +177,7 @@
  *             'occupation' => 'Wiraswasta',
  *         ])
  *         ->call('save')
- *         ->assertRedirect(route('filament.user.pages.home'));
+ *         ->assertRedirect(route('filament.welcome.pages.home'));
  *
  *     $user->refresh();
  *
@@ -196,3 +191,4 @@
  *         ->and($user->liveness_completed)->toBeFalse();
  * });
  */
+

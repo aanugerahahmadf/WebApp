@@ -211,7 +211,7 @@ class MidtransService
 
     private function buildItemDetails($order, Transaction $transaction): array
     {
-        $name = $order->package?->name ?? $order->product?->name ?? ('Pesanan #'.$order->order_number);
+        $name = $order->package?->name ?? $order->catalog?->name ?? ('Pesanan #'.$order->order_number);
         $qty = max(1, (int) ($order->quantity ?? 1));
         $price = (int) round($transaction->total_amount / $qty);
 

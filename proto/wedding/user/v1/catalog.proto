@@ -1,0 +1,173 @@
+syntax = "proto3";
+
+package wedding.user.v1;
+
+option go_package = "github.com/wedding/user/v1;userv1";
+option php_namespace = "App\\Grpc\\User\\V1";
+option php_metadata_namespace = "App\\Grpc\\User\\V1\\GPBMetadata";
+
+import "wedding/user/v1/common.proto";
+import "wedding/user/v1/category.proto";
+import "wedding/user/v1/auth.proto";
+
+// Catalog Service
+service CatalogService {
+  rpc GetCatalog(GetCatalogRequest) returns (Catalog);
+  rpc GetCatalogBySlug(GetCatalogBySlugRequest) returns (Catalog);
+  rpc ListCatalogs(ListCatalogsRequest) returns (CatalogListResponse);
+  rpc GetFeaturedCatalogs(GetFeaturedCatalogsRequest) returns (CatalogListResponse);
+  rpc GetOnSaleCatalogs(GetOnSaleCatalogsRequest) returns (CatalogListResponse);
+  rpc GetCatalogsByCategory(GetCatalogsByCategoryRequest) returns (CatalogListResponse);
+  rpc GetRelatedCatalogs(GetRelatedCatalogsRequest) returns (CatalogListResponse);
+  rpc SearchCatalogs(SearchCatalogsRequest) returns (CatalogListResponse);
+  rpc GetCatalogTiers(GetCatalogTiersRequest) returns (CatalogTiersResponse);
+  rpc GetCatalogStats(GetCatalogStatsRequest) returns (CatalogStats);
+}
+
+message GetCatalogRequest {
+  string id = 1;
+}
+
+message GetCatalogBySlugRequest {
+  string slug = 1;
+}
+
+message ListCatalogsRequest {
+  PaginationRequest pagination = 1;
+  string category_id = 2;
+  string theme = 3;
+  double min_price = 4;
+  double max_price = 5;
+  string search = 6;
+  bool active = 7;
+  bool with_tier_count = 8;
+  string sort_by = 9;
+  SortDirection sort_direction = 10;
+}
+
+message CatalogListResponse {
+  repeated Catalog catalogs = 1;
+  PaginationResponse pagination = 2;
+}
+
+message GetFeaturedCatalogsRequest {
+  int32 limit = 1;
+}
+
+message GetOnSaleCatalogsRequest {
+  int32 limit = 1;
+}
+
+message GetCatalogsByCategoryRequest {
+  string category_id = 1;
+  int32 limit = 2;
+}
+
+message GetRelatedCatalogsRequest {
+  string catalog_id = 1;
+  int32 limit = 2;
+}
+
+message SearchCatalogsRequest {
+  string query = 1;
+  int32 limit = 2;
+}
+
+message GetCatalogTiersRequest {
+  string catalog_id = 1;
+}
+
+message GetCatalogStatsRequest {}
+
+message CatalogStats {
+  int32 total_catalogs = 1;
+  int32 active_catalogs = 2;
+  int32 featured_catalogs = 3;
+  int32 out_of_stock_catalogs = 4;
+  int32 low_stock_catalogs = 5;
+  double total_value = 6;
+  repeated CategoryCatalogCount by_category = 7;
+}
+
+message CategoryCatalogCount {
+  Category category = 1;
+  int32 count = 2;
+}
+
+message Catalog {
+  string id = 1;
+  string name = 2;
+  string slug = 3;
+  string description = 4;
+  double price = 5;
+  double discount_price = 6;
+  double final_price = 7;
+  int32 stock = 8;
+  bool is_active = 9;
+  bool is_featured = 10;
+  bool is_out_of_stock = 11;
+  string image_url = 12;
+  string video_url = 13;
+  repeated string features = 14;
+  string theme = 15;
+  string color = 16;
+  int32 min_capacity = 17;
+  int32 max_capacity = 18;
+  Category category = 19;
+  double average_rating = 20;
+  repeated Review reviews = 21;
+  repeated CatalogTier tiers = 22;
+  string created_at = 23;
+  string updated_at = 24;
+}
+
+message CatalogTier {
+  string id = 1;
+  string catalog_id = 2;
+  string name = 3;
+  string description = 4;
+  double price = 5;
+  double discount_price = 6;
+  double final_price = 7;
+  int32 stock = 8;
+  repeated string features = 9;
+  int32 sort_order = 10;
+  string image_url = 11;
+}
+
+message Review {
+  string id = 1;
+  string user_id = 2;
+  string catalog_id = 3;
+  string package_id = 4;
+  int32 rating = 5;
+  string title = 6;
+  string comment = 7;
+  repeated string photos = 8;
+  int32 helpful_count = 9;
+  bool is_anonymous = 10;
+  bool is_verified_purchase = 11;
+  ReviewStatus status = 12;
+  ReviewReply reply = 13;
+  string created_at = 14;
+  string updated_at = 15;
+}
+
+message ReviewReply {
+  string id = 1;
+  string review_id = 2;
+  string content = 3;
+  User created_by = 4;
+  string created_at = 5;
+}
+
+message CatalogTiersResponse {
+  repeated CatalogTier tiers = 1;
+  CatalogMeta meta = 2;
+}
+
+message CatalogMeta {
+  string catalog_id = 1;
+  string catalog_name = 2;
+  int32 total = 3;
+}

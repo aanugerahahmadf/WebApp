@@ -1,0 +1,272 @@
+syntax = "proto3";
+
+package wedding.user.v1;
+
+option go_package = "github.com/wedding/user/v1;userv1";
+option php_namespace = "App\\Grpc\\User\\V1";
+option php_metadata_namespace = "App\\Grpc\\User\\V1\\GPBMetadata";
+
+import "wedding/user/v1/common.proto";
+import "wedding/user/v1/auth.proto";
+import "wedding/user/v1/catalog.proto";
+import "wedding/user/v1/package.proto";
+import "wedding/user/v1/category.proto";
+
+// CBIR Service
+service CbirService {
+  // Search similar items using image (unary)
+  rpc SearchSimilar(SearchSimilarRequest) returns (CbirSearchResponse);
+  
+  // Search similar items using image (streaming for large images)
+  rpc SearchSimilarStream(stream SearchSimilarChunkRequest) returns (CbirSearchResponse);
+  
+  // Arithmetic search (combine two images)
+  rpc ArithmeticSearch(ArithmeticSearchRequest) returns (CbirSearchResponse);
+  
+  // Get available arithmetic operations
+  rpc GetArithmeticOps(GetArithmeticOpsRequest) returns (ArithmeticOpsResponse);
+  
+  // Get CBIR index statistics
+  rpc GetStats(GetCbirStatsRequest) returns (CbirStats);
+  
+  // Get CBIR search history
+  rpc GetHistory(GetCbirHistoryRequest) returns (CbirHistoryResponse);
+  
+  // Get saved CBIR results
+  rpc GetSavedResults(GetSavedCbirResultsRequest) returns (CbirSavedResultsResponse);
+  
+  // Save CBIR search to history
+  rpc SaveSearch(SaveCbirSearchRequest) returns (CbirHistory);
+  
+  // Delete CBIR search from history
+  rpc DeleteSearch(DeleteCbirSearchRequest) returns (DeleteCbirSearchResponse);
+  
+  // Clear CBIR history
+  rpc ClearHistory(ClearCbirHistoryRequest) returns (ClearCbirHistoryResponse);
+  
+  // Submit feedback on CBIR results
+  rpc SubmitFeedback(SubmitCbirFeedbackRequest) returns (SubmitCbirFeedbackResponse);
+  
+  // Admin: Rebuild CBIR index
+  rpc RebuildIndex(RebuildCbirIndexRequest) returns (CbirIndexResult);
+  
+  // Admin: Add image to CBIR index
+  rpc AddToIndex(AddToCbirIndexRequest) returns (CbirIndexResult);
+  
+  // Admin: Remove image from CBIR index
+  rpc RemoveFromIndex(RemoveFromCbirIndexRequest) returns (CbirIndexResult);
+  
+  // Health check
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+  
+  // Evaluate CBIR performance
+  rpc Evaluate(EvaluateRequest) returns (EvaluateResponse);
+}
+
+// Search Similar
+message SearchSimilarRequest {
+  bytes image = 1;
+  string mime_type = 2;
+}
+
+message SearchSimilarChunkRequest {
+  bytes chunk = 1;
+  int32 chunk_index = 2;
+  int32 total_chunks = 3;
+  string mime_type = 4;
+}
+
+message CbirSearchResponse {
+  bool success = 1;
+  string message = 2;
+  repeated CbirResult results = 3;
+  int32 total_results = 4;
+  double query_time_seconds = 5;
+}
+
+// Arithmetic Search
+message ArithmeticSearchRequest {
+  bytes image_1 = 1;
+  string mime_type_1 = 2;
+  bytes image_2 = 3;
+  string mime_type_2 = 4;
+  string operation = 5; // add, average, subtract, multiply, divide
+  repeated double weights = 6;
+}
+
+message GetArithmeticOpsRequest {}
+
+message ArithmeticOpsResponse {
+  repeated ArithmeticOp ops = 1;
+}
+
+message ArithmeticOp {
+  string name = 1;
+  string description = 2;
+  int32 min_images = 3;
+  int32 max_images = 4;
+  bool supports_weights = 5;
+}
+
+// Stats
+message GetCbirStatsRequest {}
+
+message CbirStats {
+  int32 total_images = 1;
+  int32 total_features = 2;
+  string database_size = 3;
+  string last_updated = 4;
+}
+
+// History
+message GetCbirHistoryRequest {
+  PaginationRequest pagination = 1;
+}
+
+message CbirHistoryResponse {
+  repeated CbirHistory history = 1;
+  PaginationResponse pagination = 2;
+}
+
+message CbirHistory {
+  string id = 1;
+  string user_id = 2;
+  string query_image_url = 3;
+  repeated CbirHistoryResult results = 4;
+  int32 results_count = 5;
+  double top_similarity = 6;
+  string created_at = 7;
+}
+
+message CbirHistoryResult {
+  string type = 1;
+  string item_id = 2;
+  double similarity = 3;
+  double score = 4;
+  CbirResultData item = 5;
+}
+
+message GetSavedCbirResultsRequest {
+  string search_id = 1;
+}
+
+message CbirSavedResultsResponse {
+  repeated CbirResult results = 1;
+}
+
+message SaveCbirSearchRequest {
+  string query_image_url = 1;
+  repeated CbirSearchResultItemInput results = 2;
+}
+
+message CbirSearchResultItemInput {
+  string type = 1;
+  string item_id = 2;
+  double similarity = 3;
+  double score = 4;
+}
+
+message DeleteCbirSearchRequest {
+  string search_id = 1;
+}
+
+message DeleteCbirSearchResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ClearCbirHistoryRequest {}
+
+message ClearCbirHistoryResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message SubmitCbirFeedbackRequest {
+  string search_id = 1;
+  string item_id = 2;
+  string item_type = 3;
+  bool is_relevant = 4;
+  string feedback = 5;
+}
+
+message SubmitCbirFeedbackResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Admin operations
+message RebuildCbirIndexRequest {}
+
+message AddToCbirIndexRequest {
+  string media_id = 1;
+  string image_url = 2;
+  string type = 3;
+  MetaData metadata = 4;
+}
+
+message RemoveFromCbirIndexRequest {
+  string media_id = 1;
+}
+
+message CbirIndexResult {
+  bool success = 1;
+  string message = 2;
+  int32 affected_count = 3;
+  double processing_time = 4;
+}
+
+// Health
+message HealthCheckRequest {}
+
+message HealthCheckResponse {
+  bool success = 1;
+  string message = 2;
+  CbirHealthData data = 3;
+}
+
+message CbirHealthData {
+  string mode = 1;
+  string server_status = 2;
+  string version = 3;
+  string method = 4;
+  string metric = 5;
+  repeated string capabilities = 6;
+}
+
+// Evaluate
+message EvaluateRequest {}
+
+message EvaluateResponse {
+  bool success = 1;
+  string message = 2;
+  repeated EvaluateMetric metrics = 3;
+}
+
+message EvaluateMetric {
+  string name = 1;
+  double value = 2;
+  string description = 3;
+}
+
+// Result types
+message CbirResult {
+  string type = 1;
+  double similarity = 2;
+  double score = 3;
+  CbirResultData data = 4;
+}
+
+message CbirResultData {
+  string id = 1;
+  string name = 2;
+  string slug = 3;
+  string description = 4;
+  double price = 5;
+  double discount_price = 6;
+  double final_price = 7;
+  string image_url = 8;
+  string category = 9;
+  Category category_obj = 10;
+  bool is_available = 11;
+}

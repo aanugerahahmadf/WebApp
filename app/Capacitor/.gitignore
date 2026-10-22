@@ -1,0 +1,3 @@
+# Output of `python generate-icons.py --preview`: contact sheet + .ico size
+# strip. Both are throwaway references for eyeballing the generated artwork.
+preview/

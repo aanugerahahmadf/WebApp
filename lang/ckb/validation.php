@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'پۆستاڵکۆد',
         'preview'                  => 'پێشبینیکردن',
         'price'                    => 'نرخ',
-        'product_id'               => 'ژمارەی بەرهەم',
+        'catalog_id'               => 'ژمارەی بەرهەم',
         'product_uid'              => 'UID بەرهەمەکە',
         'product_uuid'             => 'بەرهەم UUID',
         'promo_code'               => 'کۆدی پرۆمۆ',

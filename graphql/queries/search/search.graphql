@@ -1,0 +1,74 @@
+# Search Query Definitions
+# Wedding Flower Decoration App - Search GraphQL Queries
+
+type Query {
+  # Universal search across catalogs, packages, categories
+  search(
+    query: String!
+    type: SearchType = BOTH
+    first: Int = 20
+    categoryId: ID
+    minPrice: Float
+    maxPrice: Float
+  ): SearchResults @field(resolver: "App\\Http\\GraphQL\\Resolvers\\SearchResolver@index")
+  
+  # Search suggestions/autocomplete
+  searchSuggestions(query: String!, limit: Int = 5): [SearchSuggestion!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\SearchResolver@suggestions")
+  
+  # Popular search terms
+  popularSearches(limit: Int = 10): [PopularSearch!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\SearchResolver@popular")
+  
+  # Search filters/facets
+  searchFilters(query: String, categoryId: ID): SearchFilters @field(resolver: "App\\Http\\GraphQL\\Resolvers\\SearchResolver@filters")
+}
+
+type SearchResults {
+  catalogs: [Catalog!]!
+  packages: [Package!]!
+  categories: [Category!]!
+  totalCatalogs: Int!
+  totalPackages: Int!
+  query: String!
+  took: Float! # milliseconds
+}
+
+type SearchSuggestion {
+  text: String!
+  type: SearchSuggestionType!
+  count: Int!
+  imageUrl: String
+}
+
+enum SearchSuggestionType {
+  CATALOG
+  PACKAGE
+  CATEGORY
+  KEYWORD
+}
+
+type PopularSearch {
+  query: String!
+  count: Int!
+  trend: String! # "up", "down", "stable"
+}
+
+type SearchFilters {
+  categories: [CategoryFilter!]!
+  priceRange: PriceRange!
+  themes: [String!]!
+  colors: [String!]!
+  minCapacity: Int
+  maxCapacity: Int
+}
+
+type CategoryFilter {
+  category: Category!
+  count: Int!
+}
+
+type PriceRange {
+  min: Float!
+  max: Float!
+  minFound: Float!
+  maxFound: Float!
+}

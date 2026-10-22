@@ -1,24 +1,28 @@
 <?php
 
 namespace App\Livewire\Admin\Messages\Messages;
+use App\Services\CbirResultService\CbirResultService;
 
 use App\Enums\DiscountType\DiscountType;
 use App\Enums\Messages\MediaCollectionType\MediaCollectionType;
 use App\Enums\OrderPaymentStatus\OrderPaymentStatus;
 use App\Enums\OrderStatus\OrderStatus;
 use App\Filament\Admin\Pages\MessagesPage\MessagesPage;
-use App\Filament\User\Resources\PackageResource\PackageResource;
-use App\Filament\User\Resources\ProductResource\ProductResource;
+
+use App\Filament\Admin\Resources\CatalogResource\CatalogResource;
 use App\Jobs\SendBotReply\SendBotReply;
+use App\Livewire\Shared\Traits\CanSendRichMessages\CanSendRichMessages;
 use App\Livewire\Admin\Traits\CanMarkAsRead\CanMarkAsRead;
 use App\Livewire\Admin\Traits\CanValidateFiles\CanValidateFiles;
+use App\Livewire\Admin\Traits\ChatIdentity\ChatIdentity;
 use App\Livewire\Admin\Traits\HasPollInterval\HasPollInterval;
 use App\Models\Message\Message;
 use App\Models\Order\Order;
 use App\Models\Package\Package;
-use App\Models\Product\Product;
+use App\Models\Catalog\Catalog;
 use App\Models\Voucher\Voucher;
 use App\Support\AppPlatform\AppPlatform;
+use App\Support\ChatStaff\ChatStaff;
 use App\Services\CBIRService\CBIRService;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
@@ -39,14 +43,15 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\File;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
@@ -55,7 +60,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  */
 class Messages extends Component implements HasActions, HasForms
 {
-    use CanMarkAsRead, CanValidateFiles, HasPollInterval, InteractsWithActions, InteractsWithForms, WithPagination;
+    use CanMarkAsRead, CanSendRichMessages, CanValidateFiles, ChatIdentity, HasPollInterval, InteractsWithActions, InteractsWithForms, WithFileUploads, WithPagination;
 
     public $selectedConversation;
 
@@ -64,6 +69,20 @@ class Messages extends Component implements HasActions, HasForms
     public ?Collection $conversationMessages = null;
 
     public ?array $data = [];
+
+    /**
+     * Lampiran yang ditangkap di browser (kamera / audio / kontak).
+     *
+     * Sengaja terpisah dari field FileUpload `attachments`: field itu
+     * bergantung pada FilePond, dan di halaman Messages komponen FilePond
+     * tidak pernah selesai diinisialisasi -- jadi lampirannya tidak pernah
+     * sampai ke server. Tombol "Kirim Audio" tampak berhasil, tapi gelembung
+     * pesannya tidak pernah muncul.
+     *
+     * Diunggah lewat `$wire.upload()` dari jembatan di dalam view, lalu dikirim
+     * oleh sendPendingAttachment().
+     */
+    public ?TemporaryUploadedFile $pendingAttachment = null;
 
     public string $searchItem = '';
 
@@ -96,6 +115,9 @@ class Messages extends Component implements HasActions, HasForms
             return;
         }
 
+        // Identitas chat: users.id staf, BUKAN admins.id dari Auth::id().
+        $myId = $this->chatUserId();
+
         $latestId = $this->conversationMessages->pluck('id')->first();
 
         /** @var Builder $query */
@@ -113,15 +135,15 @@ class Messages extends Component implements HasActions, HasForms
         }
 
         // Re-fetch outgoing messages to get updated read_by status
-        $unreadOutgoingExists = $this->conversationMessages
-            ->where('user_id', auth()->id())
-            ->filter(fn ($msg) => empty($msg->read_by) || count(array_filter($msg->read_by, fn ($id) => $id !== auth()->id())) === 0)
+        $unreadOutgoingExists = $myId !== null && $this->conversationMessages
+            ->where('user_id', $myId)
+            ->filter(fn ($msg) => empty($msg->read_by) || count(array_filter($msg->read_by, fn ($id) => $id !== $myId)) === 0)
             ->isNotEmpty();
 
         if ($unreadOutgoingExists) {
-            $this->conversationMessages = $this->conversationMessages->map(function ($msg) {
-                $wasUnread = empty($msg->read_by) || count(array_filter($msg->read_by, fn ($id) => $id !== auth()->id())) === 0;
-                if ($wasUnread && $msg->user_id === auth()->id()) {
+            $this->conversationMessages = $this->conversationMessages->map(function ($msg) use ($myId) {
+                $wasUnread = empty($msg->read_by) || count(array_filter($msg->read_by, fn ($id) => $id !== $myId)) === 0;
+                if ($wasUnread && $msg->user_id === $myId) {
                     return Message::find($msg->id);
                 }
 
@@ -131,7 +153,6 @@ class Messages extends Component implements HasActions, HasForms
 
         // Check if any OTHER participant in this conversation is currently typing
         $inboxId = $this->selectedConversation->id;
-        $myId = auth()->id();
         $otherUserIds = collect($this->selectedConversation->user_ids)
             ->reject(fn ($id) => $id === $myId)
             ->values();
@@ -159,7 +180,7 @@ class Messages extends Component implements HasActions, HasForms
         }
 
         $inboxId = $this->selectedConversation->id;
-        $userId = auth()->id();
+        $userId = $this->chatUserId();
 
         // Keep the key alive for 5 seconds; the poll interval will pick it up
         Cache::put("typing_{$inboxId}_{$userId}", true, now()->addSeconds(5));
@@ -187,23 +208,52 @@ class Messages extends Component implements HasActions, HasForms
                 //     ->extraAttributes(['class' => 'messages-attachment-upload'])
                 //     ->live(),
                 Forms\Components\Actions::make([
-                    // Paperclip → cbir-browse-modal (file/folder/drive/cloud)
-                    // alpineClickHandler = murni client-side, zero Livewire network call
-                    Forms\Components\Actions\Action::make('show_hide_upload')
+                    // Satu tombol "+" untuk semua jenis lampiran. Menu-nya
+                    // dirender di Shared/components/attachment-menu, bukan di
+                    // sini, karena isinya cuma Alpine murni tanpa perlu tahu
+                    // apa pun tentang Livewire.
+                    //
+                    // `alpineClickHandler` = murni client-side, nol panggilan
+                    // jaringan Livewire -- menu harus muncul di bawah satu
+                    // frame, bukan setelah satu round-trip.
+                    Forms\Components\Actions\Action::make('toggle_attachment_menu')
                         ->hiddenLabel()
-                        ->icon('heroicon-o-plus-circle')
+                        ->icon('/images/icons/plus_circle.svg')
                         ->color('gray')
                         ->tooltip(__('Attach Files'))
-                        ->alpineClickHandler("window.dispatchEvent(new CustomEvent('cbir-browse-open'))"),
-                    // Camera → messages-camera-modal (kamera belakang/depan, video, galeri)
-                    // alpineClickHandler = murni client-side, zero Livewire network call
-                    Forms\Components\Actions\Action::make('toggle_camera')
-                        ->hiddenLabel()
-                        ->icon('heroicon-o-camera')
-                        ->color('gray')
-                        ->tooltip(__('Open Camera'))
-                        ->alpineClickHandler("window.dispatchEvent(new CustomEvent('messages-camera-open'))"),
+                        ->alpineClickHandler("window.dispatchEvent(new CustomEvent('messages-attach-menu-toggle'))")
+                        // PENTING: Filament menambahkan `wire:loading.attr="disabled"`
+                        // ke SETIAP <button> miliknya. Karena tombol ini tidak punya
+                        // wire:click, Livewire menganggapnya "target semua request",
+                        // jadi tombolnya nonaktif selama polling komponen (tiap 2-3
+                        // detik) -- praktis tidak pernah bisa diklik, dan menu
+                        // lampiran tidak pernah terbuka.
+                        //
+                        // Memberi nilai null membuat atribut itu tidak dirender,
+                        // sehingga tombolnya selalu bisa diklik.
+                        ->extraAttributes(['wire:loading.attr' => null]),
                 ]),
+                /*
+                 * Field lampiran yang sebenarnya. UI-nya disembunyikan lewat
+                 * class `messages-attachment-upload` (lihat
+                 * Shared/components/messages-camera-modal), tetapi FilePond-nya
+                 * HARUS tetap dirender: tombol "+" -> menu (Document, Photos &
+                 * videos, Camera, Rekam Video) mengisi FilePond ini, dan
+                 * sendMessage() membaca state `attachments` di bawah.
+                 *
+                 * Tanpa field ini, kamera sempat "menangkap" lalu membuang
+                 * hasilnya tanpa pesan error apa pun, karena injectFile()
+                 * tidak menemukan FilePond untuk diisi.
+                 */
+                Forms\Components\FileUpload::make('attachments')
+                    ->hiddenLabel()
+                    ->multiple()
+                    ->disk('public')
+                    ->directory('messages-attachments')
+                    ->maxFiles(config('messages.attachments.max_files'))
+                    ->maxSize(config('messages.attachments.max_file_size'))
+                    ->extraAttributes(['class' => 'messages-attachment-upload'])
+                    ->live(),
                 Forms\Components\TextInput::make('message')
                     ->live()
                     ->hiddenLabel()
@@ -212,30 +262,91 @@ class Messages extends Component implements HasActions, HasForms
             ])->statePath('data');
     }
 
+    /**
+     * Kirim pesan yang lampirannya baru saja diunggah dari browser.
+     *
+     * Dipanggil dari jembatan di dalam view, tepat setelah `$wire.upload()`
+     * selesai, supaya lampirannya sudah ada di server saat pesan dibuat.
+     */
+    public function sendPendingAttachment(string $tmpFilename): void
+    {
+        $this->pendingAttachment = TemporaryUploadedFile::createFromLivewire($tmpFilename);
+
+        $this->sendMessage();
+    }
     public function sendMessage(): void
     {
+        $chatUserId = $this->chatUserId();
+
+        if (! $chatUserId) {
+            Notification::make()
+                ->title(__('Chat belum siap'))
+                ->body(__('Akun chat belum tertaut ke staf. Jalankan php artisan admin:grant-storefront lalu muat ulang halaman ini.'))
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        /*
+         * getState() menyimpan lampiran ke disk `public` (lihat
+         * ->disk('public')->directory('messages-attachments') pada field
+         * `attachments`) dan mengembalikan PATH-nya, bukan objek file.
+         */
         $data = $this->form->getState();
-        $rawData = $this->form->getRawState();
+
+        // Lampiran yang ditangkap di browser (kamera / audio / kontak).
+        $pending = $this->pendingAttachment;
+        $this->pendingAttachment = null;
 
         try {
-            DB::transaction(function () use ($data, $rawData): void {
+            DB::transaction(function () use ($data, $pending, $chatUserId): void {
                 $newMessage = $this->selectedConversation->messages()->create([
                     'message' => $data['message'] ?? null,
-                    'user_id' => Auth::id(),
-                    'read_by' => [Auth::id()],
+                    'user_id' => $chatUserId,
+                    'read_by' => [$chatUserId],
                     'read_at' => [now()],
-                    'notified' => [Auth::id()],
+                    'notified' => [$chatUserId],
                 ]);
 
-                // Dispatch bot reply if user is not admin
-                if (! auth()->user()->hasRole('super_admin')) {
+                // Pengirim dari panel admin SELALU sisi staf (percakapan
+                // berjalan sebagai identitas belanja yang tertaut), jadi bot
+                // balasan otomatis tidak dipicu -- aturan lama "pengirim admin
+                // tidak memicu bot" tetap berlaku lewat isStaffMixed().
+                if (! ChatStaff::isStaffMixed(auth()->user())) {
                     SendBotReply::dispatch($newMessage->id)->delay(now()->addSeconds(5));
                 }
 
                 $this->conversationMessages->prepend($newMessage);
-                collect($rawData['attachments'] ?? [])->each(function ($attachment) use ($newMessage): void {
-                    $newMessage->addMedia($attachment)->usingFileName(Str::slug(config('messages.slug'), '_').'_'.Str::random(20).'.'.$attachment->extension())->toMediaCollection(MediaCollectionType::FILAMENT_MESSAGES->value);
-                });
+
+                /*
+                 * `attachments` berisi path relatif di disk `public` setelah
+                 * form di-dehydrate. addMedia() butuh file nyata, jadi path
+                 * itu diubah dulu menjadi path absolut. File sumber dihapus
+                 * setelah disalin ke media library supaya
+                 * storage/app/public/messages-attachments tidak menumpuk.
+                 */
+                $attachments = collect($data['attachments'] ?? [])
+                    ->filter(fn ($attachment) => is_string($attachment) && $attachment !== '');
+
+                if ($pending) {
+                    $attachments->push($pending->store('messages-attachments', 'public'));
+                }
+
+                $attachments->each(function (string $attachment) use ($newMessage): void {
+                        $path = Storage::disk('public')->path($attachment);
+
+                        if (! is_file($path)) {
+                            return;
+                        }
+
+                        $newMessage
+                            ->addMedia($path)
+                            ->usingFileName(Str::slug(config('messages.slug'), '_').'_'.Str::random(20).'.'.pathinfo($path, PATHINFO_EXTENSION))
+                            ->toMediaCollection(MediaCollectionType::FILAMENT_MESSAGES->value);
+
+                        @unlink($path);
+                    });
 
                 $this->form->fill();
 
@@ -245,6 +356,8 @@ class Messages extends Component implements HasActions, HasForms
                 $this->dispatch('refresh-inbox');
             });
         } catch (\Exception $exception) {
+            report($exception);
+
             Notification::make()
                 ->title(__('Something went wrong'))
                 ->body($exception->getMessage())
@@ -270,6 +383,94 @@ class Messages extends Component implements HasActions, HasForms
         return response()->download($media->getPath(), $media->file_name);
     }
 
+    /**
+     * Toggle emoji reaction.
+     *
+     * Bentuknya sama persis dengan App\Livewire\User\Messages\Messages\Messages
+     * karena keduanya menulis ke kolom meta yang sama pada tabel fm_messages:
+     * satu pengguna hanya boleh punya satu emoji per pesan. Menulis ulang
+     * bentuknya di sini (bukan memanggil method komponen User) disengaja --
+     * dua komponen Livewire tidak bisa saling memanggil, dan menyalin
+     * enumerator 15 baris lebih murah daripada menyatukan kedua panel jadi satu
+     * komponen.
+     */
+    public function toggleReaction(int $messageId, string $emoji): void
+    {
+        $message = $this->conversationMessages->firstWhere('id', $messageId);
+
+        if (! $message || ! $this->selectedConversation) {
+            return;
+        }
+
+        $meta = $message->meta ?? [];
+        $reactions = $meta['reactions'] ?? [];
+        $userIdStr = (string) $this->chatUserId();
+
+        $userReactions = collect($reactions)->where('user_id', $userIdStr)->values();
+        $existingIndex = $userReactions->search(fn ($r) => $r['emoji'] === $emoji);
+
+        if ($existingIndex !== false) {
+            $reactions = array_values(array_filter($reactions, fn ($r) => ! ($r['user_id'] === $userIdStr && $r['emoji'] === $emoji)));
+        } else {
+            $reactions = array_values(array_filter($reactions, fn ($r) => $r['user_id'] !== $userIdStr));
+            $reactions[] = ['user_id' => $userIdStr, 'emoji' => $emoji];
+        }
+
+        $meta['reactions'] = $reactions;
+        $message->meta = $meta;
+        $message->save();
+    }
+
+    /**
+     * Toggle star. Sama seperti toggleReaction: satu admin satu tanda, dan
+     * panel User melihat hasil yang sama karena meta-nya berbagi.
+     */
+    public function toggleStar(int $messageId): void
+    {
+        $message = $this->conversationMessages->firstWhere('id', $messageId);
+
+        if (! $message) {
+            return;
+        }
+
+        $meta = $message->meta ?? [];
+        $starredBy = $meta['starred_by'] ?? [];
+        $userIdStr = (string) $this->chatUserId();
+
+        if (in_array($userIdStr, $starredBy, true)) {
+            $starredBy = array_values(array_filter($starredBy, fn ($id) => $id !== $userIdStr));
+        } else {
+            $starredBy[] = $userIdStr;
+        }
+
+        $meta['starred_by'] = $starredBy;
+        $message->meta = $meta;
+        $message->save();
+    }
+
+    /**
+     * Hapus pesan secara permanen.
+     *
+     * Berbeda dari panel User yang punya dua mode ("untuk saya" dan "untuk
+     * semua"), panel admin hanya punya satu: administrator memang bekerja di
+     * satu sisi percakapan dengan pelanggan, jadi mengosongkan pesan dari kolom
+     * adalah tindakan yang wajar. Memakai hard delete supaya tidak pernah ada
+     * pesan yang hilang di layar admin tapi masih ada di layar user -- kondisi
+     * yang harus ditelusuri.
+     */
+    public function deleteMessage(int $messageId): void
+    {
+        $message = $this->conversationMessages->firstWhere('id', $messageId);
+
+        if (! $message || ! $this->selectedConversation) {
+            return;
+        }
+
+        $message->delete();
+
+        $this->conversationMessages = $this->conversationMessages->reject(fn ($m) => $m->id === $messageId)->values();
+    }
+
     public function validateMessage(): bool
     {
         $rawData = $this->form->getRawState();
@@ -282,7 +483,7 @@ class Messages extends Component implements HasActions, HasForms
 
     public function deleteConversation()
     {
-        if ($this->selectedConversation && in_array(Auth::id(), $this->selectedConversation->user_ids)) {
+        if ($this->selectedConversation && in_array($this->chatUserId(), $this->selectedConversation->user_ids)) {
             $this->selectedConversation->delete();
 
             Notification::make()
@@ -311,18 +512,18 @@ class Messages extends Component implements HasActions, HasForms
                         Forms\Components\TextInput::make('search')
                             ->label(__('Cari Visual'))
                             ->placeholder(__('Ketik, ambil foto, atau galeri...'))
-                            ->prefixIcon('heroicon-m-magnifying-glass')
+                            ->prefixIcon('/images/icons/search.svg')
                             ->prefixIconColor('gray')
                             ->live(debounce: 500)
                             ->afterStateUpdated(function (Component $livewire, $state, Forms\Set $set) {
                                 if (empty($state)) {
-                                    session()->forget(['cbir_mixed_results', 'cbir_product_results_ids', 'cbir_search_time', 'cbir_context']);
+                                    session()->forget(['cbir_mixed_results', 'cbir_catalog_results_ids', 'cbir_search_time', 'cbir_context']);
                                     $set('status_message', null);
 
                                     return;
                                 }
 
-                                $products = Product::query()
+                                $catalogs = Catalog::query()
                                     ->where('name', 'like', "%{$state}%")
                                     ->orWhere('description', 'like', "%{$state}%")
                                     ->orWhereHas('category', fn ($q) => $q->where('name', 'like', "%{$state}%"))
@@ -336,8 +537,8 @@ class Messages extends Component implements HasActions, HasForms
                                     ->limit(10)
                                     ->get();
 
-                                if ($products->isEmpty() && $packages->isEmpty()) {
-                                    session()->forget(['cbir_mixed_results', 'cbir_product_results_ids', 'cbir_search_time', 'cbir_context']);
+                                if ($catalogs->isEmpty() && $packages->isEmpty()) {
+                                    session()->forget(['cbir_mixed_results', 'cbir_catalog_results_ids', 'cbir_search_time', 'cbir_context']);
                                     $set('status_message', __('Tidak ada item yang cocok untuk pencarian teks.'));
 
                                     return;
@@ -345,9 +546,9 @@ class Messages extends Component implements HasActions, HasForms
 
                                 $mixedResults = [];
 
-                                foreach ($products as $model) {
+                                foreach ($catalogs as $model) {
                                     $mixedResults[] = [
-                                        'type' => 'product',
+                                        'type' => 'catalog',
                                         'similarity' => 100,
                                         'data' => array_merge($model->toArray(), [
                                             'image_url' => $model->image_url,
@@ -366,20 +567,20 @@ class Messages extends Component implements HasActions, HasForms
                                 }
 
                                 session()->put('cbir_mixed_results', $mixedResults);
-                                session()->put('cbir_product_results_ids', collect($mixedResults)->pluck('data.id')->all());
+                                session()->put('cbir_catalog_results_ids', collect($mixedResults)->pluck('data.id')->all());
                                 session()->put('cbir_search_time', 0);
-                                session()->put('cbir_context', 'product');
+                                session()->put('cbir_context', 'catalog');
 
                                 $set('status_message', __('Berhasil menemukan :count hasil teks!', ['count' => count($mixedResults)]));
                             })
                             ->suffixActions([
                                 Forms\Components\Actions\Action::make('toggle_camera_search')
-                                    ->icon('heroicon-o-camera')
+                                    ->icon('/images/icons/camera.svg')
                                     ->color('gray')
                                     ->tooltip(__('Ambil Foto'))
                                     ->action(fn (Forms\Set $set, Forms\Get $get) => $set('show_camera', ! $get('show_camera'))),
                                 Forms\Components\Actions\Action::make('toggle_gallery_search')
-                                    ->icon('heroicon-o-photo')
+                                    ->icon('/images/icons/photo.svg')
                                     ->color('gray')
                                     ->tooltip(__('Pilih Galeri'))
                                     ->action(fn (Forms\Set $set, Forms\Get $get) => $set('show_upload', ! $get('show_upload'))),
@@ -397,7 +598,7 @@ class Messages extends Component implements HasActions, HasForms
                             ->registerActions([
                                 Forms\Components\Actions\Action::make('manualSearch')
                                     ->label(__('Cari Sekarang'))
-                                    ->icon('heroicon-m-arrow-up-tray')
+                                    ->icon('/images/icons/upload.svg')
                                     ->color('primary')
                                     ->action(function ($state, Forms\Set $set, CBIRService $cbirService) {
                                         if (! $state) {
@@ -442,11 +643,11 @@ class Messages extends Component implements HasActions, HasForms
                                         $results = collect($results)->filter(fn ($r) => ($r['similarity'] ?? 0) > 0)->all();
 
                                         if (! empty($results)) {
-                                            $mixedResults = PackageResource::buildCbirMixedResults($results);
+                                            $mixedResults = CbirResultService::buildCbirMixedResults($results);
                                             session()->put('cbir_mixed_results', $mixedResults);
                                             $set('status_message', __('Berhasil menemukan :count hasil!', ['count' => count($mixedResults)]));
                                         } else {
-                                            session()->forget(['cbir_mixed_results', 'cbir_product_results_ids', 'cbir_search_time', 'cbir_context']);
+                                            session()->forget(['cbir_mixed_results', 'cbir_catalog_results_ids', 'cbir_search_time', 'cbir_context']);
                                             $set('status_message', __('Tidak ada item yang cocok.'));
                                         }
                                     }),
@@ -481,11 +682,11 @@ class Messages extends Component implements HasActions, HasForms
                                 $results = collect($results)->filter(fn ($r) => ($r['similarity'] ?? 0) > 0)->all();
 
                                 if (! empty($results)) {
-                                    $mixedResults = PackageResource::buildCbirMixedResults($results);
+                                    $mixedResults = CbirResultService::buildCbirMixedResults($results);
                                     session()->put('cbir_mixed_results', $mixedResults);
                                     $set('status_message', __('Berhasil menemukan :count hasil!', ['count' => count($mixedResults)]));
                                 } else {
-                                    session()->forget(['cbir_mixed_results', 'cbir_product_results_ids', 'cbir_search_time', 'cbir_context']);
+                                    session()->forget(['cbir_mixed_results', 'cbir_catalog_results_ids', 'cbir_search_time', 'cbir_context']);
                                     $set('status_message', __('Tidak ada item yang cocok.'));
                                 }
                             }),
@@ -524,11 +725,11 @@ class Messages extends Component implements HasActions, HasForms
                                 $results = collect($results)->filter(fn ($r) => ($r['similarity'] ?? 0) > 0)->all();
 
                                 if (! empty($results)) {
-                                    $mixedResults = PackageResource::buildCbirMixedResults($results);
+                                    $mixedResults = CbirResultService::buildCbirMixedResults($results);
                                     session()->put('cbir_mixed_results', $mixedResults);
                                     $set('status_message', __('Berhasil menemukan :count hasil!', ['count' => count($mixedResults)]));
                                 } else {
-                                    session()->forget(['cbir_mixed_results', 'cbir_product_results_ids', 'cbir_search_time', 'cbir_context']);
+                                    session()->forget(['cbir_mixed_results', 'cbir_catalog_results_ids', 'cbir_search_time', 'cbir_context']);
                                     $set('status_message', __('Item tidak ditemukan.'));
                                 }
                             }),
@@ -573,7 +774,7 @@ class Messages extends Component implements HasActions, HasForms
     //                 ];
     //             }
 
-    //             $item     = $order->package ?? $order->product;
+    //             $item     = $order->package ?? $order->catalog;
     //             $imageUrl = $item?->image_url ?? '';
     //             $itemName = $item?->name ?? '-';
     //             $woName   = '-';
@@ -650,7 +851,7 @@ class Messages extends Component implements HasActions, HasForms
                         DatePicker::make('booking_date')
                             ->label(__('Tanggal Acara'))
                             ->native(false)
-                            ->prefixIcon('heroicon-o-calendar'),
+                            ->prefixIcon('/images/icons/calendar.svg'),
                         Textarea::make('notes')
                             ->label(__('Catatan'))
                             ->rows(3)
@@ -682,7 +883,7 @@ class Messages extends Component implements HasActions, HasForms
 
     public function clearVisualSearch(): void
     {
-        session()->forget(['cbir_mixed_results', 'cbir_product_results_ids', 'cbir_search_time', 'cbir_context']);
+        session()->forget(['cbir_mixed_results', 'cbir_catalog_results_ids', 'cbir_search_time', 'cbir_context']);
         $this->dispatch('refresh_items');
         $this->dispatch('refresh_catalog');
     }
@@ -703,7 +904,7 @@ class Messages extends Component implements HasActions, HasForms
 
     public function selectNewItem(string $type, int $id, int $orderId): void
     {
-        $item = $type === 'package' ? Package::find($id) : Product::find($id);
+        $item = $type === 'package' ? Package::find($id) : Catalog::find($id);
         if (! $item) {
             return;
         }
@@ -732,7 +933,7 @@ class Messages extends Component implements HasActions, HasForms
                 $type = $arguments['type'] ?? 'package';
                 $itemId = $arguments['itemId'] ?? null;
                 $orderId = $arguments['orderId'] ?? null;
-                $item = $type === 'package' ? Package::find($itemId) : Product::find($itemId);
+                $item = $type === 'package' ? Package::find($itemId) : Catalog::find($itemId);
                 $order = Order::find($orderId);
 
                 if (! $item) {
@@ -752,7 +953,7 @@ class Messages extends Component implements HasActions, HasForms
                             .($item->image_url ? '<img src="'.$item->image_url.'" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">' : '')
                             .'<div class="flex-1 min-w-0">'
                             .'<p class="text-[10px] font-semibold mb-0.5 text-warning-600 dark:text-warning-400">'
-                            .($type === 'package' ? PackageResource::getModelLabel() : ProductResource::getModelLabel())
+                            .($type === 'package' ? __('Paket') : CatalogResource::getModelLabel())
                             .'</p>'
                             .'<p class="text-sm font-semibold text-gray-950 dark:text-white truncate">'.$item->name.'</p>'
                             .'<p class="text-xs font-semibold mt-0.5 text-primary-600 dark:text-primary-400">Rp '.number_format($finalPrice, 0, ',', '.').'</p>'
@@ -766,7 +967,7 @@ class Messages extends Component implements HasActions, HasForms
 
                     Forms\Components\Wizard::make([
                         Forms\Components\Wizard\Step::make(__('Detail Acara'))
-                            ->icon('heroicon-o-calendar-days')
+                            ->icon('/images/icons/calendar_days.svg')
                             ->schema([
                                 Section::make(__('Pilih Waktu & Kebutuhan'))
                                     ->schema([
@@ -776,7 +977,7 @@ class Messages extends Component implements HasActions, HasForms
                                             ->native(false)
                                             ->default($order?->booking_date)
                                             ->minDate(now())
-                                            ->prefixIcon('heroicon-o-calendar-days')
+                                            ->prefixIcon('/images/icons/calendar_days.svg')
                                             ->columnSpanFull(),
                                         Textarea::make('notes')
                                             ->label(__('Catatan Khusus / Alamat Lokasi'))
@@ -788,35 +989,37 @@ class Messages extends Component implements HasActions, HasForms
                             ]),
 
                         Forms\Components\Wizard\Step::make(__('Info Kontak'))
-                            ->icon('heroicon-o-user-circle')
+                            ->icon('/images/icons/user_circle.svg')
                             ->schema([
                                 Section::make(__('Verifikasi Data Anda'))
                                     ->schema([
                                         Forms\Components\TextInput::make('customer_name')
                                             ->label(__('Nama Lengkap'))
-                                            ->default(auth()->user()?->name)
+                                            ->default($order?->user?->full_name)
                                             ->required(),
                                         Forms\Components\TextInput::make('phone')
                                             ->label(__('Nomor WhatsApp'))
-                                            ->default(auth()->user()?->phone)
+                                            ->default($order?->user?->phone)
                                             ->tel()
                                             ->required(),
                                     ])->columns(2),
                             ]),
 
                         Forms\Components\Wizard\Step::make(__('Voucher & Diskon'))
-                            ->icon('heroicon-o-ticket')
+                            ->icon('/images/icons/ticket.svg')
                             ->schema([
                                 Section::make(__('Pilih Voucher Anda'))
                                     ->description(__('Gunakan voucher yang telah Anda klaim di menu Voucher.'))
-                                    ->icon('heroicon-o-ticket')
+                                    ->icon('/images/icons/ticket.svg')
                                     ->schema([
                                         Select::make('voucher_id')
                                             ->searchable()
                                             ->label(__('Voucher Tersedia'))
-                                            ->prefixIcon('heroicon-o-ticket')
-                                            ->options(function () use ($finalPrice) {
-                                                $user = auth()->user();
+                                            ->prefixIcon('/images/icons/ticket.svg')
+                                            ->options(function () use ($finalPrice, $order) {
+                                                // Voucher milik PEMILIK pesanan (pelanggan),
+                                                // bukan milik admin yang sedang bertindak.
+                                                $user = $order?->user;
                                                 if (! $user) {
                                                     return [];
                                                 }
@@ -861,8 +1064,8 @@ class Messages extends Component implements HasActions, HasForms
                                                 default => null,
                                             })
                                             ->hintIcon(fn (Forms\Get $get) => match (true) {
-                                                str_starts_with((string) $get('_voucher_info'), 'valid:') => 'heroicon-m-check-circle',
-                                                $get('_voucher_info') === 'invalid' => 'heroicon-m-x-circle',
+                                                str_starts_with((string) $get('_voucher_info'), 'valid:') => '/images/icons/check_circle.svg',
+                                                $get('_voucher_info') === 'invalid' => '/images/icons/x_circle.svg',
                                                 default => null,
                                             })
                                             ->hintColor(fn (Forms\Get $get) => str_starts_with((string) $get('_voucher_info'), 'valid:') ? 'success' : 'danger')
@@ -899,7 +1102,7 @@ class Messages extends Component implements HasActions, HasForms
                             ]),
 
                         Forms\Components\Wizard\Step::make(__('Konfirmasi'))
-                            ->icon('heroicon-o-check-badge')
+                            ->icon('/images/icons/check_badge.svg')
                             ->schema([
                                 Section::make(__('Ringkasan Pembayaran'))
                                     ->schema([
@@ -922,14 +1125,26 @@ class Messages extends Component implements HasActions, HasForms
                 ];
             })
             ->action(function (array $arguments, array $data) {
+                $chatUserId = $this->chatUserId();
                 $type = $arguments['type'] ?? 'package';
                 $itemId = $arguments['itemId'] ?? null;
                 $orderId = $arguments['orderId'] ?? null;
 
-                $item = $type === 'package' ? Package::find($itemId) : Product::find($itemId);
+                $item = $type === 'package' ? Package::find($itemId) : Catalog::find($itemId);
                 $order = Order::find($orderId);
 
-                if (! $item || ! $order || $order->user_id !== auth()->id()) {
+                // Admin mengganti pesanan ATAS NAMA pelanggan: yang diubah
+                // adalah data PEMILIK pesanan. Dulu di sini
+                // `$order->user_id !== auth()->id()` -- di panel admin
+                // `auth()->id()` adalah admins.id sehingga tidak pernah cocok
+                // dan wizard ini selalu buntu. Sekarang: pesanan harus milik
+                // peserta percakapan ini, dan identitas staf harus ada.
+                if (
+                    ! $item
+                    || ! $order
+                    || ! $chatUserId
+                    || ! in_array($order->user_id, $this->selectedConversation?->user_ids ?? [])
+                ) {
                     return;
                 }
 
@@ -942,8 +1157,8 @@ class Messages extends Component implements HasActions, HasForms
                 $finalPrice = max(0, $finalPrice - $voucherDiscount);
 
                 $updateData = $type === 'package'
-                    ? ['package_id' => $item->id, 'product_id' => null]
-                    : ['product_id' => $item->id, 'package_id' => null];
+                    ? ['package_id' => $item->id, 'catalog_id' => null]
+                    : ['catalog_id' => $item->id, 'package_id' => null];
 
                 $order->update(array_merge($updateData, [
                     'total_price' => $finalPrice,
@@ -951,12 +1166,14 @@ class Messages extends Component implements HasActions, HasForms
                     'notes' => $data['notes'],
                 ]));
 
-                if (! empty($data['phone']) && $data['phone'] !== auth()->user()->phone) {
-                    auth()->user()->update(['phone' => $data['phone']]);
+                $customer = $order->user;
+
+                if ($customer && ! empty($data['phone']) && $data['phone'] !== $customer->phone) {
+                    $customer->update(['phone' => $data['phone']]);
                 }
 
-                if (! empty($data['voucher_id'])) {
-                    auth()->user()->vouchers()->updateExistingPivot($data['voucher_id'], [
+                if ($customer && ! empty($data['voucher_id'])) {
+                    $customer->vouchers()->updateExistingPivot($data['voucher_id'], [
                         'order_id' => $order->id,
                         'used_at' => now(),
                     ]);
@@ -967,10 +1184,10 @@ class Messages extends Component implements HasActions, HasForms
                         'orderNumber' => $order->order_number,
                         'name' => $item->name,
                     ]),
-                    'user_id' => auth()->id(),
-                    'read_by' => [auth()->id()],
+                    'user_id' => $chatUserId,
+                    'read_by' => [$chatUserId],
                     'read_at' => [now()],
-                    'notified' => [auth()->id()],
+                    'notified' => [$chatUserId],
                     'meta' => [
                         'type' => $type,
                         'id' => $item->id,
@@ -978,8 +1195,8 @@ class Messages extends Component implements HasActions, HasForms
                         'price' => $finalPrice,
                         'image' => $item->image_url,
                         'url' => $type === 'package'
-                            ? PackageResource::getUrl()
-                            : ProductResource::getUrl(),
+                            ? CatalogResource::getUrl()
+                            : CatalogResource::getUrl(),
                         'is_order' => true,
                         'order_id' => $order->id,
                         'order_number' => $order->order_number,

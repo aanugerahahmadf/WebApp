@@ -16,12 +16,8 @@ use App\Http\Controllers\User\ReportPdfController\ReportPdfController;
 use App\Http\Controllers\User\ReviewReportController\ReviewReportController;
 use App\Http\Controllers\User\ReviewVoteController\ReviewVoteController;
 use App\Http\Controllers\User\SocialiteController\SocialiteController;
-use App\Http\Controllers\Welcome\ConsultationFormPdfController\ConsultationFormPdfController as WelcomeConsultationFormPdfController;
-use App\Http\Controllers\Welcome\InvoicePdfController\InvoicePdfController as WelcomeInvoicePdfController;
 use App\Http\Controllers\Welcome\LegalWebController\LegalWebController as WelcomeLegalWebController;
 use App\Http\Controllers\Welcome\ReportPdfController\ReportPdfController as WelcomeReportPdfController;
-use App\Http\Controllers\Welcome\ReviewReportController\ReviewReportController as WelcomeReviewReportController;
-use App\Http\Controllers\Welcome\ReviewVoteController\ReviewVoteController as WelcomeReviewVoteController;
 use App\Http\Middleware\SetLocale\SetLocale;
 use App\Http\Middleware\SuperAdmin\SuperAdmin;
 use Illuminate\Support\Facades\Route;
@@ -61,47 +57,72 @@ Route::get('/legal/terms', [WelcomeLegalWebController::class, 'terms'])->name('l
 Route::get('/legal/privacy', [WelcomeLegalWebController::class, 'privacy'])->name('legal.privacy');
 Route::get('/legal/help', [WelcomeLegalWebController::class, 'help'])->name('legal.help');
 
-// Alias ber-prefix /welcome untuk scope Welcome (tambahan, tidak menghapus yang lama).
-Route::get('/welcome/legal/terms', [WelcomeLegalWebController::class, 'terms'])->name('welcome.legal.terms');
-Route::get('/welcome/legal/privacy', [WelcomeLegalWebController::class, 'privacy'])->name('welcome.legal.privacy');
-Route::get('/welcome/legal/help', [WelcomeLegalWebController::class, 'help'])->name('welcome.legal.help');
+// Token CSRF terbaru, untuk pemulihan diam-diam di sisi browser.
+//
+// Token sesi berubah setiap kali user login (OTP/2FA memanggil
+// `regenerateToken()`), jadi tab yang sudah terbuka sebelum login masih
+// memegang token lama. Endpoint ini dipakai skrip
+// `Shared.components.livewire-page-expired` untuk mengambil token baru dan
+// mengulang request-nya sendiri -- tanpa memunculkan dialog "This page has
+// expired" dan tanpa memuat ulang halaman. GET, tanpa state, tanpa auth:
+// token CSRF memang tidak rahasia (ia sudah ada di <meta> setiap halaman).
+Route::get('/livewire/csrf-token', function () {
+    return response()->json(['token' => csrf_token()]);
+})->name('livewire.csrf-token');
 
-// The storefront is the 'welcome' Filament panel, and '/' is its front door.
-// The old marketing page that used to live here has been removed: guests browse
-// the landing page and the catalog, and anything account-shaped sends them to
-// the user panel's auth landing page (see AuthenticateWelcome).
-// '/' sadar-auth: semua yang login (termasuk super_admin, yang bisa
-// memakai Admin Panel maupun User Panel) -> home akun user;
-// tamu -> storefront welcome.
+// Alias ber-prefix /welcome DIHAPUS — tidak boleh ada URL 'welcome'.
+// Halaman legal yang sah ada di /legal/terms, /legal/privacy, /legal/help;
+// bookmark /welcome/legal/* jatuh ke catch-all LEGACY WELCOME di akhir file
+// ini dan mendarat di halaman yang sama.
+
+// The storefront is the 'welcome' Filament panel, and it lives at the ROOT
+// domain, shopee-style: /home, /messages, /flowerdecorationscatalog, dst --
+// satu ruang URL untuk tamu dan shopper yang sign in (akun tetap di /user/*,
+// seperti /account milik Shopee).
+// '/' sadar-auth: yang login di guard `web` -> home akun user (/user/home);
+// tamu -> storefront beranda (/home).
+//
+// Catatan: super admin TIDAK ikut diarahkan ke sini lewat shortcut. Admin
+// login di guard `admin` (tabel `admins`), jadi `auth()->check()` di sini
+// selalu false baginya -- dia dianggap tamu, seperti tamu mana pun. Itu
+// memang yang benar: panel admin punya pintunya sendiri di `/admin`, dan
+// admin yang juga butuh panel user memakai identitas belanja yang di-grant
+// (`php artisan admin:grant-storefront`), bukan akun admin-nya.
 Route::get('/', function () {
-    if (auth()->check()) {
-        return redirect('/user/home');
-    }
-
-    return redirect('/welcome/home');
+    // SATU RUANG URL (shopee-style): tidak ada lagi /user/* maupun /welcome/*.
+    // Tamu DAN shopper yang sudah sign in mendarat di storefront /home yang
+    // sama; pintu akun ada di topbar (dropdown tamu / user menu Filament).
+    return redirect('/home');
 })->middleware(SetLocale::class);
 
 Route::redirect('/admin/inbox', '/admin/inbox/messages');
 
 // -----------------------------------------------------------------------------
-// SHARED — alias URL lama halaman auth
-// Slug route auth berubah mengikuti penamaan class: `login` -> `signin`
-// (loginRouteSlug di UserPanelProvider & AdminPanelProvider). URL utamanya
-// sekarang `/user/signin`, `/admin/signin`. Bookmark & tautan lama tetap
-// dilayani redirect supaya tidak jadi 404. Nama route tidak berubah, jadi
-// route()/Filament::getLoginUrl() aman.
+// Alias URL katalog panel admin.
+//
+// Resource katalog memakai slug `catalogs` -> /admin/catalogs. Tapi URL lama
+// yang dipakai bookmark dan tautan lama adalah /admin/flowerdecorationscatalog
+// (slug yang sama dengan resource katalog di panel Welcome/User).
+//
+// Tanpa redirect di sini, bookmark itu berakhir 404 -- padahal halamannya
+// hanya pindah nama. Redirect memakai 302 supaya query param `?tab=` ikut
+// dibawa: /admin/flowerdecorationscatalog?tab=package harus tetap membuka tab
+// Paket, bukan kembali ke tab default.
 // -----------------------------------------------------------------------------
-Route::redirect('/user/login', '/user/signin');
-// Registrasi email/password DINONAKTIFKAN: `->registration()` tidak
-// dipanggil di UserPanelProvider, jadi route `filament.user.auth.register`
-// tidak terdaftar. Kode `App\Filament\User\Auth\SignUp\SignUp` beserta
-// view-nya SENGAJA TIDAK DIHAPUS -- hanya baris pemanggilnya yang dikomentari
-// (lihat "CARA MENGHIDUPKAN LAGI" di UserPanelProvider). Door `/user/signup`
-// dan `/user/register` dilayani redirect ke `/user/auth`, satu-satunya halaman
-// auth untuk tamu, karena pendaftaran sekarang hanya lewat tombol Google di
-// sana (SocialiteController membuat akun otomatis).
-Route::redirect('/user/register', '/user/auth');
-Route::redirect('/user/signup', '/user/auth');
+Route::get('/admin/flowerdecorationscatalog', fn (\Illuminate\Http\Request $request) => redirect('/admin/catalogs'.($request->getQueryString() ? '?'.$request->getQueryString() : '')));
+
+// -----------------------------------------------------------------------------
+// Alias URL auth LAMA — DIHAPUS, bukan dipindah.
+//
+// /signin, /signup, /auth sekarang adalah route PANEL itu sendiri (panel
+// 'welcome' di root). Redirect di URI yang sama di file ini akan MEMBLOKIR
+// route panel, karena web.php diregistrasi lebih dulu -- persis yang terjadi
+// saat merge: /signin berbalik 302 ke /user/signin yang sudah tidak ada.
+// Karena itu barisnya dihapus; tidak ada /user/* yang tersisa untuk
+// dialihkan selain bookmark lama di blok LEGACY USER paling bawah.
+//
+// Panel admin tetap di /admin/* tanpa perubahan.
+// -----------------------------------------------------------------------------
 Route::redirect('/admin/login', '/admin/signin');
 
 // -----------------------------------------------------------------------------
@@ -212,37 +233,26 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function ():
         ->middleware(SuperAdmin::class)
         ->where('file', '[A-Za-z0-9\-.]+\.(zip|xlsx|pdf)')
         ->name('data-exports.download');
+    Route::redirect('/website-customizer', '/admin/website-mobile-customizer');
 });
 
 // -----------------------------------------------------------------------------
-// WELCOME — cermin PDF di bawah prefix /welcome (middleware auth; cek di controller)
-// Memakai Welcome\*Controller agar scope Welcome lengkap & eksplisit.
-// URI & nama route USER di atas tetap dipertahankan; ini tambahan.
+// LAPORAN PDF (guest) — dulu /welcome/reports/{report}/pdf.
+//
+// Nama route `welcome.reports.pdf` DIPERTAHANKAN (blade & Livewire Messages
+// memanggilnya, dan test memakai nama ini), tapi URL-nya tidak lagi mengandung
+// segmen 'welcome': /reports/guest/{report}/pdf.
+//
+// /reports/{report}/pdf sudah dipakai route auth kanonik `user.reports.pdf`,
+// jadi segmen 'guest' memisahkan keduanya.
+//
+// SENGAJA di luar middleware auth, sama seperti sebelumnya: laporan bug bisa
+// dibuat TAMU lewat formulir di halaman Messages, dan tamu itu harus bisa
+// mengunduh PDF-nya. Kepemilikan dijaga di controller Welcome\ReportPdfController
+// lewat GuestIdentity: hanya pelapor (atau super_admin) yang boleh, selain itu 403.
 // -----------------------------------------------------------------------------
-Route::middleware(['auth'])->prefix('welcome')->name('welcome.')->group(function (): void {
-    Route::get('/invoice/{order}/pdf', [WelcomeInvoicePdfController::class, 'download'])
-        ->name('invoice.pdf');
-    Route::get('/messages/{inbox}/consultation-form.pdf', [WelcomeConsultationFormPdfController::class, 'download'])
-        ->name('messages.consultation-form.pdf');
-    Route::post('/reviews/{review}/helpful', [WelcomeReviewVoteController::class, 'toggle'])
-        ->name('reviews.vote');
-    Route::post('/reviews/{review}/report', [WelcomeReviewReportController::class, 'store'])
-        ->name('reviews.report');
-});
-
-// PDF laporan -- SENGAJA di luar middleware auth, dan tetap memakai prefix
-// serta name yang sama (welcome.*) supaya URL-nya tidak berubah.
-//
-// Panel Welcome melayani tamu, dan laporan bug bisa dibuat oleh tamu lewat
-// formulir di halaman Messages. Dengan auth, tamu yang melapor akan
-// mendarat di halaman login alih-alih menerima PDF-nya.
-//
-// Kepemilikan dijaga di controller Welcome\ReportPdfController lewat
-// GuestIdentity: hanya pelapor (atau super_admin) yang boleh, selain itu 403.
-Route::prefix('welcome')->name('welcome.')->group(function (): void {
-    Route::get('/reports/{report}/pdf', [WelcomeReportPdfController::class, 'download'])
-        ->name('reports.pdf');
-});
+Route::get('/reports/guest/{report}/pdf', [WelcomeReportPdfController::class, 'download'])
+    ->name('welcome.reports.pdf');
 
 // -----------------------------------------------------------------------------
 // COOKIE CONSENT — GDPR/ePrivacy compliant
@@ -266,3 +276,74 @@ Route::get('/captcha/image', function () {
         ->header('Content-Type', 'image/png')
         ->header('Cache-Control', 'no-cache, no-store, must-revalidate');
 })->name('captcha.image');
+
+// POST /welcome/logout: sama seperti /user/logout, tombol Sign Out dari
+// halaman lama masih mengirim ke sini. Route::redirect hanya melayani GET,
+// jadi tanpa handler eksplisit POST-nya berakhir 405.
+Route::any('/welcome/logout', function () {
+    auth()->logout();
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+
+    return redirect('/home');
+});
+
+// -----------------------------------------------------------------------------
+// LEGACY /welcome/* - bookmark lama dari saat panel 'welcome' masih
+// ber-prefix /welcome. Panel pindah ke path '/' (shopee-style), jadi semua
+// URL lama diarahkan ke padanannya di root: /welcome/home -> /home,
+// /welcome/flowerdecorationscatalog -> /flowerdecorationscatalog, dst.
+//
+// Didaftarkan di AKHIR file supaya route /welcome/* yang eksplisit dan
+// masih sah (welcome.legal.*, welcome.reports.pdf) tetap menang: redirect
+// ini hanya menyisakan yang tidak lagi punya penangan khusus.
+// Query string dipertahankan otomatis oleh Route::redirect.
+// -----------------------------------------------------------------------------
+Route::redirect('/welcome/{path}', '/{path}')
+    ->where('path', '.*');
+Route::redirect('/welcome', '/home');
+
+// -----------------------------------------------------------------------------
+// LEGACY /user/* — panel 'user' sudah DILEBUR ke panel 'welcome' di root
+// (shopee-style). TIDAK ADA lagi URL /user/* yang melayani halaman; kalau
+// masih ada bookmark, semuanya diarahkan PERMANEN ke padanannya di root:
+//
+//   /user/home      -> /home
+//   /user/signin    -> /signin       (halaman auth panel itu sendiri)
+//   /user/settings  -> /settings
+//   /user/o-t-p-verify -> /o-t-p-verify
+//
+// Didaftarkan paling akhir supaya tidak menabrak route panel di root.
+// Query string dipertahankan otomatis oleh Route::redirect.
+// -----------------------------------------------------------------------------
+// Alias lama di root: /login dan /register masih nongol di bookmark lama.
+// Tanpa baris ini keduanya 404 -- padahal /login adalah pintu yang paling
+// sering diketik orang. Dipaksa ke panel auth yang SAMA supaya tidak ada
+// dua halaman login yang hidup bersamaan.
+// Query string tetap ikut karena Route::redirect meneruskannya.
+Route::redirect('/login', '/signin');
+Route::redirect('/register', '/signup');
+
+// Alias /user/* yang TIDAK bisa ikut catch-all di bawah, karena padanannya
+// di root bernama berbeda (register -> signup, login -> signin). Tanpa ini
+// /user/register berakhir di /register yang 404.
+Route::redirect('/user/register', '/signup');
+Route::redirect('/user/login', '/signin');
+
+// POST /user/logout: tombol Sign Out di halaman lama masih mengirim ke sini.
+// Ditangani eksplisit karena Route::redirect hanya melayani GET; tanpa ini
+// tombol lama berakhir 404/405. CSRF tetap dicek (rute web), dan
+// App\Http\Middleware\VerifyCsrfToken memang mengecualikan user/logout, jadi
+// form lama dengan token basi tetap bisa logout -- bukan lubang baru, logout
+// tidak mengubah data apa pun.
+Route::any('/user/logout', function () {
+    auth()->logout();
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+
+    return redirect('/home');
+});
+
+Route::redirect('/user/{path}', '/{path}')
+    ->where('path', '.*');
+Route::redirect('/user', '/home');

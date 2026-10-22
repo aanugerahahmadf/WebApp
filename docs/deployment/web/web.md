@@ -1,6 +1,6 @@
 # Panduan Deployment Produksi Web
 
-Panduan ini mencakup proses membangun, mengkonfigurasi, dan men-deploy aplikasi Laravel Wedding Organizer CBIR untuk lingkungan produksi web.
+Panduan ini mencakup proses membangun, mengkonfigurasi, dan men-deploy aplikasi Laravel Wedding Flower Decorations CBIR untuk lingkungan produksi web.
 
 ---
 

@@ -168,15 +168,52 @@
 
                 if (videoTrack) {
                     const settings = videoTrack.getSettings();
+                    const label = (videoTrack.label || '').toLowerCase();
 
+                    /*
+                     * facingMode yang DIMINTA tidak selalu yang dipakai: di
+                     * laptop, browser tidak punya kamera belakang, jadi
+                     * permintaan 'environment' jatuh ke webcam depan.
+                     * facingMode sebenarnya dibaca dari track, label perangkat
+                     * dipakai sebagai cadangan.
+                     */
                     if (settings.facingMode) {
                         this.currentFacingMode = settings.facingMode;
-                        this.isBackCamera = settings.facingMode === 'environment';
                     } else {
-                        this.isBackCamera = this.currentFacingMode === 'environment';
+                        const frontPatterns = ['front', 'user', 'facetime', 'depan', 'selfie', 'integrated', 'true depth'];
+                        const backPatterns = ['back', 'rear', 'environment', 'belakang', 'world', 'wide', 'tricamera'];
+
+                        if (frontPatterns.some((pattern) => label.includes(pattern))) {
+                            this.currentFacingMode = 'user';
+                        } else if (backPatterns.some((pattern) => label.includes(pattern))) {
+                            this.currentFacingMode = 'environment';
+                        } else if (this.currentFacingMode === 'environment') {
+                            // Tidak ada facingMode dan label tidak memberi
+                            // petunjuk: perangkat dengan SATU kamera hampir
+                            // selalu punya webcam depan (laptop), jadi
+                            // pratinjunya harus dicerminkan.
+                            let cameras = [];
+
+                            try {
+                                cameras = (await navigator.mediaDevices.enumerateDevices())
+                                    .filter((device) => device.kind === 'videoinput');
+                            } catch (error) {
+                                cameras = [];
+                            }
+
+                            if (cameras.length === 1) {
+                                this.currentFacingMode = 'user';
+                            }
+                        }
                     }
 
-                    this.mirroredView = this.currentFacingMode === 'user';
+                    this.isBackCamera = this.currentFacingMode === 'environment';
+
+                    // KAMERA DEPAN SELALU DICERMINKAN, seperti WhatsApp. Flag
+                    // yang sama dengan chip Front/Back Camera, jadi labelnya
+                    // tidak mungkin bilang 'Front Camera' sementara
+                    // pratinjunya tidak dicerminkan.
+                    this.mirroredView = !this.isBackCamera;
 
                     if (settings.deviceId) {
                         this.selectedCameraId = settings.deviceId;
@@ -673,7 +710,7 @@
                         }">
                         <div class="flex flex-col items-center justify-center py-8 px-4">
                             <div class="mb-3 rounded-full p-3 bg-gray-100 dark:bg-white/10">
-                                <x-filament::icon icon="heroicon-o-camera" class="h-6 w-6 text-gray-500 dark:text-gray-200" />
+                                <x-filament::icon icon="/images/icons/camera.svg" class="h-6 w-6 text-gray-500 dark:text-gray-200" />
                             </div>
 
                             <p class="text-sm font-medium text-gray-900 dark:text-white">
@@ -694,34 +731,34 @@
                                 <div class="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-white/10">
                                     <h3 class="text-base font-semibold text-gray-950 dark:text-white">{{ __('Pilih Sumber') }}</h3>
                                     <button type="button" @click="sourceModalOpen = false" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
-                                        <x-filament::icon icon="heroicon-m-x-mark" class="h-5 w-5" />
+                                        <x-filament::icon icon="/images/icons/x.svg" class="h-5 w-5" />
                                     </button>
                                 </div>
                                 {{-- Body --}}
                                 <div class="space-y-1 px-4 py-3">
                                     <button type="button" @click="sourceModalOpen = false; captureMode = 'photo'; startCamera()" class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5">
                                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600 ring-1 ring-primary-600/10 dark:bg-primary-400/10 dark:text-primary-400">
-                                            <x-filament::icon icon="heroicon-o-camera" class="h-5 w-5" />
+                                            <x-filament::icon icon="/images/icons/camera.svg" class="h-5 w-5" />
                                         </span>
-                                        <span class="flex-1 text-left text-gray-700 dark:text-gray-200">{{ __('Kamera') }}</span>
+                                        <span class="flex-1 text-left text-gray-700 dark:text-gray-200">{{ __('Camera Photo') }}</span>
                                     </button>
                                     <button type="button" @click="sourceModalOpen = false; captureMode = 'video'; startCamera()" class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5">
                                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600 ring-1 ring-primary-600/10 dark:bg-primary-400/10 dark:text-primary-400">
-                                            <x-filament::icon icon="heroicon-o-video-camera" class="h-5 w-5" />
+                                            <x-filament::icon icon="/images/icons/video.svg" class="h-5 w-5" />
                                         </span>
-                                        <span class="flex-1 text-left text-gray-700 dark:text-gray-200">{{ __('Video') }}</span>
+                                        <span class="flex-1 text-left text-gray-700 dark:text-gray-200">{{ __('Camera Video') }}</span>
                                     </button>
                                     <button type="button" @click="sourceModalOpen = false; $refs.galleryInput.click()" class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5">
                                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600 ring-1 ring-primary-600/10 dark:bg-primary-400/10 dark:text-primary-400">
-                                            <x-filament::icon icon="heroicon-o-photo" class="h-5 w-5" />
+                                            <x-filament::icon icon="/images/icons/photo.svg" class="h-5 w-5" />
                                         </span>
-                                        <span class="flex-1 text-left text-gray-700 dark:text-gray-200">{{ __('Galeri') }}</span>
+                                        <span class="flex-1 text-left text-gray-700 dark:text-gray-200">{{ __('Pilih dari Galeri') }}</span>
                                     </button>
                                     <button type="button" @click="sourceModalOpen = false; $refs.fileInput.click()" class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/5">
                                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600 ring-1 ring-primary-600/10 dark:bg-primary-400/10 dark:text-primary-400">
-                                            <x-filament::icon icon="heroicon-o-folder" class="h-5 w-5" />
+                                            <x-filament::icon icon="/images/icons/folder.svg" class="h-5 w-5" />
                                         </span>
-                                        <span class="flex-1 text-left text-gray-700 dark:text-gray-200">{{ __('File') }}</span>
+                                        <span class="flex-1 text-left text-gray-700 dark:text-gray-200">{{ __('Pilih dari File') }}</span>
                                     </button>
                                     <div class="my-1 border-t border-gray-100 dark:border-white/10"></div>
                                     <button type="button" @click="sourceModalOpen = false" class="w-full rounded-lg px-3 py-2.5 text-center text-sm font-semibold text-danger-600 dark:text-danger-400">
@@ -771,7 +808,7 @@
                                     title="{{ $manualSearchAction->getLabel() }}"
                                 >
                                     <x-filament::icon
-                                        icon="heroicon-m-arrow-up-tray"
+                                        icon="/images/icons/upload.svg"
                                         class="h-5 w-5"
                                     />
                                 </button>
@@ -779,15 +816,15 @@
 
                             <!-- Preview button -->
                             <button type="button" @click.stop="handlePreviewClick()" class="flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="{{ __('View full size') }}">
-                                <x-filament::icon icon="heroicon-m-eye" class="h-5 w-5" />
+                                <x-filament::icon icon="/images/icons/eye.svg" class="h-5 w-5" />
                             </button>
                             <!-- Retake button -->
                             <button x-show="!isDisabled" type="button" @click.stop="startCamera()" class="flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="{{ __('Retake photo') }}">
-                                <x-filament::icon icon="heroicon-m-camera" class="h-5 w-5" />
+                                <x-filament::icon icon="/images/icons/camera.svg" class="h-5 w-5" />
                             </button>
                             <!-- Delete button -->
                             <button x-show="!isDisabled" type="button" @click.stop="clearPhoto()" class="flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-danger-500 hover:bg-danger-50 dark:hover:bg-danger-500/10 transition-colors" title="{{ __('Remove photo') }}">
-                                <x-filament::icon icon="heroicon-m-trash" class="h-5 w-5" />
+                                <x-filament::icon icon="/images/icons/trash.svg" class="h-5 w-5" />
                             </button>
                         </div>
 
@@ -802,7 +839,7 @@
         <template x-if="webcamError && !modalOpen">
             <div class="mt-2 rounded-lg bg-danger-50 dark:bg-danger-400/10 p-3 text-sm text-danger-600 dark:text-danger-400">
                 <div class="flex items-start gap-2">
-                    <x-filament::icon icon="heroicon-m-exclamation-circle" class="h-5 w-5 flex-shrink-0" />
+                    <x-filament::icon icon="/images/icons/alert.svg" class="h-5 w-5 flex-shrink-0" />
                     <span x-text="webcamError"></span>
                 </div>
             </div>
@@ -815,11 +852,11 @@
 
         <!-- Modal -->
         <template x-teleport="body">
-            <div x-cloak x-show="modalOpen" @click.self="closeModal()" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-gray-950/50 p-4" style="display: none;">
+            <div x-cloak x-show="modalOpen" @click.self="closeModal()" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-gray-950/50 p-2 sm:p-4" style="display: none;">
                 <div @click.stop x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" class="fi-glass-modal w-full max-w-xl rounded-xl bg-white dark:bg-gray-900 shadow-xl ring-1 ring-gray-950/5 dark:ring-white/10">
 
                     <!-- Modal header -->
-                    <div class="flex items-center justify-between border-b border-gray-200 dark:border-white/10 px-6 py-4">
+                    <div class="flex items-center justify-between border-b border-gray-200 dark:border-white/10 px-4 py-2.5 sm:px-6 sm:py-4">
                         {{-- Judul ikut mode: Kamera saat foto, Video saat rekam.
                              x-text menimpa isi Blade begitu Alpine inisialisasi,
                              jadi isi Blade tetap berguna untuk dua hal: fallback
@@ -832,37 +869,55 @@
                              jadi teks terjemahan tidak bisa memutus atribut. --}}
                         <h3
                             class="text-base font-semibold text-gray-950 dark:text-white"
-                            x-text="captureMode === 'video' ? @js(__('Video')) : @js(__('Kamera'))"
+                            x-text="captureMode === 'video' ? @js(__('Camera Video')) : @js(__('Camera Photo'))"
                         >
-                            {{ __('Kamera') }}
+                            {{ __('Camera Photo') }}
                         </h3>
+
+                        <div class="flex items-center gap-0.5 rounded-lg bg-gray-100 p-0.5 dark:bg-white/5">
+                            <button type="button" @click="switchCaptureMode('photo')" class="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium transition" :class="captureMode === 'photo' ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-800 dark:text-white' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'" title="{{ __('Camera Photo') }}">
+                                <x-filament::icon icon="/images/icons/camera.svg" class="h-4 w-4" />
+                                <span class="hidden sm:inline">{{ __('Camera Photo') }}</span>
+                            </button>
+                            <button type="button" @click="switchCaptureMode('video')" class="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium transition" :class="captureMode === 'video' ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-800 dark:text-white' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'" title="{{ __('Camera Video') }}">
+                                <x-filament::icon icon="/images/icons/video.svg" class="h-4 w-4" />
+                                <span class="hidden sm:inline">{{ __('Camera Video') }}</span>
+                            </button>
+                        </div>
+
                         <button type="button" @click="closeModal()" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
-                            <x-filament::icon icon="heroicon-m-x-mark" class="h-5 w-5" />
+                            <x-filament::icon icon="/images/icons/x.svg" class="h-5 w-5" />
                         </button>
                     </div>
 
                     <!-- Modal body -->
-                    <div class="p-6">
-                        <div class="relative rounded-lg overflow-hidden bg-gray-950 mb-4">
+                    <div class="p-3 sm:p-6">
+                        <div class="relative rounded-lg overflow-hidden bg-gray-950 mb-2 sm:mb-4">
 
-                            <!-- Video preview (camera active) -->
-                            <div x-show="webcamActive && !webcamError" class="x-cam-stage aspect-video flex items-center justify-center">
-                                <video x-ref="video" autoplay playsinline :style="mirroredView ? 'transform: scaleX(-1);' : ''" class="max-w-full max-h-[60vh] object-contain"></video>
+                            {{-- Pratinjau kamera.
+                                 max-height saja, TANPA aspect-ratio pada wadahnya:
+                                 lihat catatan di public/css/panel-glass.css. aspect-ratio
+                                 pada elemen block yang juga dibatasi max-height membuat
+                                 lebarnya dihitung ulang dari tinggi, sehingga pratinjau
+                                 menyusut jadi strip tipis di kiri dan tombol balik
+                                 kamera melayang di atas bidang hitam. --}}
+                            <div x-show="webcamActive && !webcamError" class="x-cam-stage flex items-center justify-center" style="max-height:55vh;">
+                                <video x-ref="video" autoplay playsinline :style="mirroredView ? 'transform: scaleX(-1);' : ''" class="x-cam-video block w-full max-w-full object-contain" style="max-height:55vh;"></video>
                             </div>
 
                             <!-- Photo preview (after capture) -->
-                            <div x-show="showingPreview && photoData && !webcamActive && !showingVideoPreview" class="x-cam-stage aspect-video flex items-center justify-center bg-gray-900">
-                                <img :src="getImageUrl(photoData)" class="max-w-full max-h-[60vh] object-contain" alt="Captured preview">
+                            <div x-show="showingPreview && photoData && !webcamActive && !showingVideoPreview" class="x-cam-stage flex items-center justify-center bg-gray-900" style="max-height:55vh;">
+                                <img :src="getImageUrl(photoData)" class="block w-full max-w-full object-contain" style="max-height:55vh;" alt="Captured preview">
                             </div>
 
                             <!-- Video preview (after recording) -->
-                            <div x-show="showingVideoPreview && recordedVideoUrl" class="x-cam-stage aspect-video flex items-center justify-center bg-gray-900">
-                                <video :src="recordedVideoUrl" class="max-w-full max-h-[60vh] object-contain" controls playsinline></video>
+                            <div x-show="showingVideoPreview && recordedVideoUrl" class="x-cam-stage flex items-center justify-center bg-gray-900" style="max-height:55vh;">
+                                <video :src="recordedVideoUrl" class="block w-full max-w-full object-contain" style="max-height:55vh;" controls playsinline></video>
                             </div>
 
                             <!-- Error display -->
-                            <div x-show="webcamError" class="x-cam-stage aspect-video bg-gray-900 flex flex-col items-center justify-center text-center p-6">
-                                <x-filament::icon icon="heroicon-o-exclamation-triangle" class="h-12 w-12 text-danger-500 mb-4" />
+                            <div x-show="webcamError" class="x-cam-stage bg-gray-900 flex flex-col items-center justify-center text-center p-4" style="max-height:38vh;">
+                                <x-filament::icon icon="/images/icons/warning.svg" class="h-12 w-12 text-danger-500 mb-4" />
                                 <span class="text-white text-lg font-medium" x-text="webcamError"></span>
 
                                 <x-filament::button color="primary" size="sm" class="mt-4" @click="webcamError = null; startCamera()">
@@ -872,8 +927,8 @@
 
                             <!-- Capture button overlay (photo mode) -->
                             <div x-show="webcamActive && !webcamError && !showingPreview && !showingVideoPreview && captureMode === 'photo'" class="absolute bottom-4 left-0 right-0 flex justify-center">
-                                <button type="button" @click="capturePhoto()" class="w-16 h-16 rounded-full bg-primary-600 hover:bg-primary-500 border-4 border-white flex items-center justify-center shadow-lg transition-colors" title="{{ __('Take Photo') }}">
-                                    <x-filament::icon icon="heroicon-s-camera" class="h-8 w-8 text-white" />
+                                <button type="button" @click="capturePhoto()" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-primary-600 hover:bg-primary-500 border-4 border-white flex items-center justify-center shadow-lg transition-colors" title="{{ __('Take Photo') }}">
+                                    <x-filament::icon icon="/images/icons/camera.svg" class="h-7 w-7 sm:h-8 sm:w-8 text-white" />
                                 </button>
                             </div>
 
@@ -882,7 +937,7 @@
                                 <button
                                     type="button"
                                     x-on:click="isRecording ? stopVideoRecording() : startVideoRecording()"
-                                    class="flex h-16 w-16 items-center justify-center rounded-full border-4 border-white shadow-lg transition-colors"
+                                    class="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full border-4 border-white shadow-lg transition-colors"
                                     :class="isRecording ? 'bg-danger-600 hover:bg-danger-500' : 'bg-primary-600 hover:bg-primary-500'"
                                     :title="isRecording ? '{{ __('Stop Recording') }}' : '{{ __('Start Recording') }}'"
                                 >
@@ -902,14 +957,14 @@
                             <!-- Mirror toggle -->
                             <div x-show="webcamActive && !webcamError && !showingPreview" class="absolute top-4 right-4">
                                 <button type="button" @click="toggleMirror()" class="w-10 h-10 rounded-full bg-gray-900/70 text-white flex items-center justify-center hover:bg-gray-900/90 transition-colors" :class="{ 'ring-2 ring-primary-500': mirroredView }" :title="mirroredView ? '{{ __('Disable mirror') }}' : '{{ __('Enable mirror') }}'">
-                                    <x-filament::icon icon="heroicon-o-arrows-right-left" class="h-5 w-5" />
+                                    <x-filament::icon icon="/images/icons/arrows_lr.svg" class="h-5 w-5" />
                                 </button>
                             </div>
 
                             <!-- Flip camera -->
                             <div x-show="webcamActive && !webcamError && !showingPreview && !showingVideoPreview" class="absolute top-4 left-4">
                                 <button type="button" @click="flipCamera()" class="w-10 h-10 rounded-full bg-gray-900/70 text-white flex items-center justify-center hover:bg-gray-900/90 transition-colors" title="{{ __('Switch Camera') }}">
-                                    <x-filament::icon icon="heroicon-o-arrow-path" class="h-5 w-5" />
+                                    <x-filament::icon icon="/images/icons/refresh.svg" class="h-5 w-5" />
                                 </button>
                             </div>
 

@@ -7,6 +7,7 @@ use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
+use App\Support\AppIcon\AppIcon;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
 
@@ -54,7 +55,7 @@ class LatestBookings extends BaseWidget
                         Tables\Columns\TextColumn::make('order_number')
                             ->weight(FontWeight::Bold)
                             ->size('sm')
-                            ->icon('heroicon-m-hashtag')
+                            ->icon(AppIcon::REFERENCE)
                             ->color('gray'),
                         Tables\Columns\Layout\Split::make([
                             Tables\Columns\TextColumn::make('total_text')
@@ -78,6 +79,6 @@ class LatestBookings extends BaseWidget
             ->paginated(false)
             ->emptyStateHeading(__('Belum ada pesanan'))
             ->emptyStateDescription(__('Mulai rencanakan pernikahan Anda sekarang.'))
-            ->emptyStateIcon('heroicon-s-shopping-bag');
+            ->emptyStateIcon('/images/icons/bag.svg');
     }
 }

@@ -78,7 +78,7 @@ class PersonalInfoComponent extends Component implements HasForms
             ->schema([
                 Section::make(__('Informasi Profil'))
                     ->aside()
-                    ->icon('heroicon-o-user-circle')
+                    ->icon('/images/icons/user_circle.svg')
                     ->description(__('Perbarui foto profil, nama, username, dan nomor WhatsApp Anda.'))
                     ->schema([
                         FileUpload::make('avatar_url')
@@ -124,7 +124,7 @@ class PersonalInfoComponent extends Component implements HasForms
                             ->label(__('Nama Lengkap'))
                             ->disabled()
                             ->dehydrated(false)
-                            ->prefixIcon('heroicon-o-user')
+                            ->prefixIcon('/images/icons/user.svg')
                             ->helperText(__('Terisi otomatis dari Nama Depan, Tengah, dan Belakang.'))
                             ->columnSpanFull(),
                         TextInput::make('username')
@@ -156,7 +156,7 @@ class PersonalInfoComponent extends Component implements HasForms
                                 ->suffixActions([
                                     Action::make('sendOtp')
                                         ->label(__('Kirim Kode OTP'))
-                                        ->icon('heroicon-o-paper-airplane')
+                                        ->icon('/images/icons/send.svg')
                                         ->action('sendOtp'),
                                 ])
                                 ->columnSpanFull(),

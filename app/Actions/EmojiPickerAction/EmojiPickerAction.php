@@ -40,7 +40,7 @@ class EmojiPickerAction extends Action
         parent::setUp();
 
         $this->label('Emoji');
-        $this->icon('heroicon-o-face-smile');
+        $this->icon('/images/icons/smile.svg');
         $this->extraAttributes(function () {
             return [
                 'class' => 'emoji-picker-button',

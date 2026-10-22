@@ -18,7 +18,7 @@
                         href="{{ $url }}"
                         tag="a"
                         download="QRIS_Payment.png"
-                        icon="heroicon-o-arrow-down-tray"
+                        icon="/images/icons/download.svg"
                         color="primary"
                         size="xl"
                         class="w-full sm:w-auto px-10 rounded-2xl shadow-lg transition-transform hover:scale-[1.02] active:scale-95 text-lg font-bold"
@@ -55,13 +55,13 @@
                     {{ $method->account_number ?? '-' }}
                 </span>
                 <span class="text-sm font-semibold text-gray-500 dark:text-gray-400 flex items-center justify-center sm:justify-start gap-2">
-                    <x-filament::icon icon="heroicon-m-user-circle" class="w-4 h-4" />
+                    <x-filament::icon icon="/images/icons/user_circle.svg" class="w-4 h-4" />
                     {{ $method->account_holder ?? '-' }}
                 </span>
             </div>
             
             <div class="pt-4 border-t border-primary-100 dark:border-primary-800/50 flex items-start gap-3">
-                <x-filament::icon icon="heroicon-o-information-circle" class="w-5 h-5 text-primary-500 shrink-0" />
+                <x-filament::icon icon="/images/icons/info.svg" class="w-5 h-5 text-primary-500 shrink-0" />
                 <span class="text-[11px] leading-relaxed text-primary-600/60 dark:text-primary-400/60 font-medium">
                     {{ __('Harap sertakan kode unik (jika ada) dan simpan bukti transfer untuk percepatan verifikasi.') }}
                 </span>

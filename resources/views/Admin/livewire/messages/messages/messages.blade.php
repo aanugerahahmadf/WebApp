@@ -1,9 +1,18 @@
 @php
     use App\Enums\Messages\MediaCollectionType\MediaCollectionType;
+    use App\Support\Chat\MessageBubble\MessageBubble;
 @endphp
 @props(['selectedConversation'])
 <!-- Right Section (Chat Box) -->
-<div class="w-full h-full bg-white rounded-xl dark:divide-white/10 dark:bg-gray-900 overflow-hidden flex flex-col min-h-0">
+{{--
+    x-data="messageBubble" di elemen paling luar: gelembung aksi pesan milik
+    satu panel chat, bukan satu per pesan, dan ia menerima event dari seluruh
+    baris pesan di bawahnya. Registrasi Alpine-nya ada di blade halaman
+    (Shared/components/message-bubble/message-bubble-script) supaya tidak ikut
+    di-render ulang oleh `wire:poll`.
+--}}
+<div x-data="messageBubble"
+    class="w-full h-full overflow-hidden flex flex-col min-h-0">
     @if ($selectedConversation)
         <!-- Chat Header : Start -->
         <div class="grid grid-cols-[var(--cols-default)] lg:grid-cols-[var(--cols-lg)] p-6"
@@ -11,7 +20,7 @@
             <div style="--col-span-default: 1 / -1;" class="col-[var(--col-span-default)]">
                 <div class="flex gap-4 items-center">
                     <x-filament::icon-button
-                        icon="heroicon-o-chevron-left"
+                        icon="/images/icons/chevron_left.svg"
                         color="gray"
                         size="md"
                         class="-ms-2"
@@ -47,7 +56,10 @@
             class="flex flex-col-reverse flex-1 min-h-0 p-2 sm:p-5 overflow-y-auto">
             @foreach ($conversationMessages as $index => $message)
                 @php
-                    $isMine = $message->user_id === auth()->id();
+                    // Identitas chat panel admin = users.id staf (ChatStaff),
+                    // bukan admins.id dari auth()->id().
+                    $chatUserId = $this->chatUserId();
+                    $isMine = $message->user_id === $chatUserId;
                     $hasMeta = $message->meta && isset($message->meta['type']);
                     $hasText = !empty($message->message);
                     $hasMedia = $message->getMedia(MediaCollectionType::FILAMENT_MESSAGES->value)?->count() > 0;
@@ -59,7 +71,7 @@
                     $displayMessage = str_replace(['\\r\\n', '\\n', '\\r'], ["\r\n", "\n", "\r"], $displayMessage);
                     if ($hasText && is_array($meta) && isset($meta['type'], $meta['name']) && !isset($meta['is_order'])) {
                         $displayMessage = __('Saya menanyakan tentang :itemType ini: :name', [
-                            'itemType' => __($meta['type'] === 'product' ? 'Produk' : 'Paket'),
+                            'itemType' => __($meta['type'] === 'catalog' ? 'Katalog' : 'Paket'),
                             'name' => $meta['name'],
                         ]);
                     }
@@ -67,12 +79,70 @@
 
                     $createdAt = \Carbon\Carbon::parse($message->created_at)->setTimezone(config('messages.timezone', 'app.timezone'));
                     $date = $createdAt->isToday() ? $createdAt->format('H:i') : $createdAt->format('d/m/y H:i');
-                    $isRead = !empty($message->read_by) && count(array_filter($message->read_by, fn($id) => $id !== auth()->id())) > 0;
+                    $isRead = !empty($message->read_by) && count(array_filter($message->read_by, fn($id) => $id !== $chatUserId)) > 0;
+
+                    // Reaksi + tandai, dibaca dari meta yang sama dengan panel
+                    // User: satu tabel pesan untuk dua panel, jadi formatnya
+                    // hanya boleh punya satu pembaca di satu tempat.
+                    $reactions = is_array($meta['reactions'] ?? null) ? $meta['reactions'] : [];
+                    $groupedReactions = collect($reactions)->groupBy('emoji');
+                    $myReactionEmojis = collect($reactions)->where('user_id', (string) $chatUserId)->pluck('emoji')->all();
+                    $isStarred = in_array((string) $chatUserId, array_map('strval', $meta['starred_by'] ?? []));
+
+                    /*
+                     * Payload gelembung aksi pesan.
+                     *
+                     * Admin tidak punya "hapus untuk saya" dan tidak punya aksi
+                     * balas/teruskan: panel ini hanya satu sisi percakapan dengan
+                     * pelanggan, jadi yang offered adalah reactions, salin,
+                     * tandai, dan hapus permanen. Gelembung untuk panel User
+                     * construida terpisah di blade-nya masing-masing, tapi aturan
+                     * perakitannya (ikon jadi HTML, argumen jadi JSON) sama
+                     * thanks MessageBubble.
+                     */
+                    $bubbleActions = [];
+
+                    if ($hasText) {
+                        $bubbleActions[] = MessageBubble::copyAction(
+                            'copy',
+                            __('Salin'),
+                            '/images/icons/clipboard.svg',
+                            $displayMessage,
+                        );
+                    }
+
+                    $bubbleActions[] = MessageBubble::wireAction(
+                        'star',
+                        $isStarred ? __('Batal Tandai') : __('Tandai'),
+                        $isStarred ? '/images/icons/star.svg' : '/images/icons/star.svg',
+                        'toggleStar',
+                        [(int) $message->id],
+                    );
+
+                    $bubbleActions[] = MessageBubble::wireAction(
+                        'delete_everyone',
+                        __('Hapus Pesan'),
+                        '/images/icons/trash.svg',
+                        'deleteMessage',
+                        [(int) $message->id],
+                        'danger',
+                    );
+
+                    $bubblePayload = MessageBubble::payload((int) $message->id, $bubbleActions);
                 @endphp
 
                 {{-- Message Row --}}
+                {{--
+                    data-msg-bubble menandai baris ini sebagai jangkar gelembung.
+                    data-msg-payload dibaca Alpine lewat JSON.parse, jadi
+                    atributnya dibungkus tanda kutip tunggal: isi JSON memakai tanda
+                    kutip ganda, dan @json sudah mengganti kutip tunggal di
+                    dalamnya jadi \u0027 sehingga aman di dalam atribut ini.
+                --}}
                 <div @class(['flex mb-3', 'justify-end' => $isMine, 'justify-start' => !$isMine])
-                     wire:key="{{ $message->id }}">
+                     wire:key="{{ $message->id }}"
+                     data-msg-bubble
+                     data-msg-payload='@json($bubblePayload)'>
 
                     {{-- Avatar (only for received messages) --}}
                     @if (!$isMine)
@@ -94,14 +164,18 @@
                         @endif
 
                         {{-- Card (if has meta) --}}
-                        @if ($hasMeta)
+                        {{-- `isset($meta['id'])`: pesan dengan meta[type] tapi tanpa
+                             id (mis. meta poll/stiker) tidak merujuk katalog atau
+                             paket, jadi blok gambar ini harus dilewati -- kalau
+                             tidak, halaman 500 karena $meta['id'] tidak ada. --}}
+                        @if ($hasMeta && isset($meta['id']))
                             @php
                                 $itemImage = $meta['image'] ?? null;
                                 if ($itemImage) {
                                     $itemImage = \App\Support\AppPlatform\AppPlatform::normalizeUrl($itemImage);
                                 }
                                 if (!$itemImage || str_contains($itemImage, 'placeholder') || str_contains((string) $itemImage, 'placeholders')) {
-                                    $modelClass = $meta['type'] === 'product' ? \App\Models\Product\Product::class : \App\Models\Package\Package::class;
+                                    $modelClass = $meta['type'] === 'catalog' ? \App\Models\Catalog\Catalog::class : \App\Models\Package\Package::class;
                                     $item = $modelClass::find($meta['id']);
                                     if ($item) {
                                         $freshImage = $item->image_url;
@@ -290,21 +364,66 @@
                                 'rounded-bl-sm text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-600' => !$isMine,
                             ]) style="{{ $bubbleStyle }}">
                                 @if ($hasText)
-                                    <p class="text-sm leading-relaxed">{!! nl2br(e($displayMessage)) !!}</p>
+                                    @if (isset($meta['sticker']))
+                                        <span class="block text-4xl leading-none">{{ $displayMessage }}</span>
+                                    @else
+                                        <p class="text-sm leading-relaxed">{!! nl2br(e($displayMessage)) !!}</p>
+                                    @endif
+                                @endif
+
+                                {{-- Kartu poll: pertanyaannya sudah jadi teks pesan,
+                                     jadi di sini cukup pilihan + jumlah suara. --}}
+                                @if (isset($meta['poll']) && !empty($meta['poll']['options']))
+                                    @php
+                                        $pollOptions = $meta['poll']['options'];
+                                        $myParticipantId = $this->chatParticipantId();
+                                        $pollTotalVotes = collect($pollOptions)->sum(fn ($option) => count($option['votes'] ?? []));
+                                    @endphp
+                                    <div class="mt-2 space-y-1.5">
+                                        @foreach ($pollOptions as $optionIndex => $option)
+                                            @php
+                                                $optionVotes = is_array($option['votes'] ?? null) ? $option['votes'] : [];
+                                                $optionVotesCount = count($optionVotes);
+                                                $isMyVote = $myParticipantId !== null && in_array((int) $myParticipantId, array_map('intval', $optionVotes), true);
+                                                $optionPercent = $pollTotalVotes > 0 ? (int) round($optionVotesCount / $pollTotalVotes * 100) : 0;
+                                            @endphp
+                                            <button type="button" wire:click="votePoll({{ $message->id }}, {{ $optionIndex }})"
+                                                @class([
+                                                    'relative w-full overflow-hidden rounded-lg border px-3 py-2 text-left text-sm transition-colors',
+                                                    'border-primary-500 bg-primary-50 dark:border-primary-400 dark:bg-danger-500/10' => $isMyVote,
+                                                    'border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-white/5' => ! $isMyVote,
+                                                ])>
+                                                <span class="absolute inset-y-0 left-0 bg-danger-500/10 dark:bg-primary-400/10" style="width: {{ $optionPercent }}%"></span>
+                                                <span class="relative flex items-center justify-between gap-2">
+                                                    <span class="truncate text-gray-900 dark:text-white">{{ $option['text'] }}</span>
+                                                    <span class="shrink-0 text-xs text-gray-500 dark:text-gray-400">{{ $optionVotesCount }}</span>
+                                                </span>
+                                            </button>
+                                        @endforeach
+                                    </div>
                                 @endif
 
                                 @if ($hasMedia)
                                     @foreach ($message->getMedia(MediaCollectionType::FILAMENT_MESSAGES->value) as $media)
-                                        @php $isImage = $this->validateImage($media->file_name); @endphp
+                                        @php
+                                            $mediaMime = $media->mime_type ?? '';
+                                            $isImage = str_starts_with($mediaMime, 'image/') || $this->validateImage($media->file_name);
+                                            $isAudio = str_starts_with($mediaMime, 'audio/');
+                                            $isVideo = str_starts_with($mediaMime, 'video/');
+                                        @endphp
                                         @if($isImage)
                                             <div class="mt-1 relative group">
                                                 <img src="{{ $media->getUrl() }}"
                                                      class="rounded-lg max-w-full h-auto cursor-pointer shadow-sm"
                                                      wire:click="downloadAttachment({{ $media->id }})" />
                                                 <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg pointer-events-none">
-                                                    <x-filament::icon icon="heroicon-o-arrow-down-tray" class="w-6 h-6 text-white" />
+                                                    <x-filament::icon icon="/images/icons/download.svg" class="w-6 h-6 text-white" />
                                                 </div>
                                             </div>
+                                        @elseif($isAudio)
+                                            <audio src="{{ $media->getUrl() }}" controls playsinline class="mt-1 w-full max-w-full"></audio>
+                                        @elseif($isVideo)
+                                            <video src="{{ $media->getUrl() }}" controls playsinline class="mt-1 max-w-full rounded-lg"></video>
                                         @else
                                             <div wire:click="downloadAttachment({{ $media->id }})"
                                                 @class([
@@ -313,10 +432,10 @@
                                                     'bg-primary-500 dark:bg-primary-400' => $isMine,
                                                 ])>
                                                 @php
-                                                    $icon = 'heroicon-o-document';
-                                                    if ($this->validateDocument($media->file_name)) $icon = 'heroicon-o-paper-clip';
-                                                    if ($this->validateVideo($media->file_name)) $icon = 'heroicon-o-video-camera';
-                                                    if ($this->validateAudio($media->file_name)) $icon = 'heroicon-o-speaker-wave';
+                                                    $icon = '/images/icons/document.svg';
+                                                    if ($this->validateDocument($media->file_name)) $icon = '/images/icons/paperclip.svg';
+                                                    if ($this->validateVideo($media->file_name)) $icon = '/images/icons/video.svg';
+                                                    if ($this->validateAudio($media->file_name)) $icon = '/images/icons/speaker.svg';
                                                 @endphp
                                                 <x-filament::icon icon="{{ $icon }}" class="w-4 h-4" />
                                                 <p class="text-sm truncate">{{ $media->file_name }}</p>
@@ -327,20 +446,45 @@
                             </div>
                         @endif
 
+                        {{-- Reactions --}}
+                        {{--
+                            Pill ini adalah tempat pengguna melihat reaksi yang
+                            sudah diketuk lewat gelembung. Tanpa baris ini, admin
+                            menekan emoji dan tidak ada yang berubah di layar, dan
+                            reaksi dari panel User terlihat hilang begitu panel
+                            Admin selesai polling.
+                        --}}
+                        @if ($groupedReactions->isNotEmpty())
+                            <div @class(['flex flex-wrap gap-1 mt-0.5 px-1', 'justify-end' => $isMine, 'justify-start' => !$isMine])>
+                                @foreach ($groupedReactions as $emoji => $reactedUsers)
+                                    @php
+                                        $count = $reactedUsers->count();
+                                        $isMyReaction = in_array($emoji, $myReactionEmojis, true);
+                                    @endphp
+                                    <button type="button" wire:click="toggleReaction({{ $message->id }}, '{{ $emoji }}')"
+                                        @class([
+                                            'rounded-full border px-2 py-0.5 text-xs font-semibold transition',
+                                            'bg-yellow-400/40 border-yellow-500 text-yellow-900 dark:text-yellow-100' => $isMyReaction,
+                                            'bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600' => !$isMyReaction,
+                                        ])>
+                                        {{ $emoji }} {{ $count }}
+                                    </button>
+                                @endforeach
+                            </div>
+                        @endif
+
                         {{-- Timestamp + read status --}}
                         <div @class(['flex items-center gap-1 mt-0.5 px-1', 'justify-end' => $isMine, 'justify-start' => !$isMine])>
+                            @if ($isStarred)
+                                <x-filament::icon icon="/images/icons/star.svg" class="w-3 h-3 text-amber-400" />
+                            @endif
                             <span class="text-[10px] text-gray-400 dark:text-gray-500">{{ $date }}</span>
                             @if ($isMine)
                                 @if ($isRead)
-                                    <svg class="w-3.5 h-3.5 text-blue-400" viewBox="0 0 24 24" fill="none">
-                                        <path d="M1.5 12.5l5 5L18 5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M6 12.5l5 5L22.5 5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
+                                    <x-filament::icon icon="/images/icons/chevron_double_right.svg" class="w-3.5 h-3.5 text-blue-400" />
                                     <span class="text-[9px] text-blue-400">{{ __('Dibaca') }}</span>
                                 @else
-                                    <svg class="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none">
-                                        <path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
+                                    <x-filament::icon icon="/images/icons/check.svg" class="w-3.5 h-3.5 text-gray-400" />
                                     <span class="text-[9px] text-gray-400">{{ __('Terkirim') }}</span>
                                 @endif
                             @endif
@@ -382,7 +526,6 @@
             @include('User.components.cbir-browse-modal.cbir-browse-modal', [
                 'isNative' => \App\Support\AppPlatform\AppPlatform::isAnyMobile(),
             ])
-            @include('User.components.messages-camera-modal.messages-camera-modal')
 
             {{-- Hidden file input for cbir-browse-modal (web) — inject files to FilePond attachment --}}
             <input
@@ -424,80 +567,102 @@
                     </div>
                 </div>
             @endif
-            <form wire:submit="sendMessage()" class="flex items-end justify-between w-full gap-4">
+            {{-- `x-on:submit` menutup menu lampiran sebelum pesan terkirim.
+                 Tanpa itu menu bisa tetap terbuka di atas gelembung pesan. --}}
+            <form wire:submit="sendMessage()"
+                x-on:submit="window.dispatchEvent(new CustomEvent('messages-attach-menu-close'))"
+                class="flex items-end justify-between w-full gap-4">
                 <div class="w-full max-h-96 overflow-y-auto p-1">
                     {{ $this->form }}
                 </div>
                 <div class="p-1">
                     <x-filament::button 
                         wire:click="sendMessage()" 
-                        icon="heroicon-o-paper-airplane"
+                        icon="/images/icons/send.svg"
                         wire:loading.attr="disabled"
+                        x-on:click="window.dispatchEvent(new CustomEvent('messages-attach-menu-close'))"
                         class="native-send-btn">
                     </x-filament::button>
                 </div>
             </form>
+            {{--
+                Menu lampiran ala WhatsApp, dipanggil oleh tombol "+" di baris
+                composer. Ada di sini, bukan di dalam <form>, karena hanya
+                wadah "Chat Input" yang punya `relative` -- itu yang membuat
+                menu ini menempel tepat di atas baris composer tanpa perlu
+                menghitung tingginya sendiri.
+            --}}
+            {{--
+                Jembatan modal -> komponen percakapan.
+
+                Modal (kamera/audio/kontak) dirender di level HALAMAN, jadi ada di
+                luar akar Livewire dan tidak bisa memanggil $wire. Ia
+                menembakkan event window `messages-send-pending`; jembatan di
+                bawah yang_wait_ sampai lampiran selesai terunggah, lalu
+                memanggil $wire.sendMessage().
+
+                Menunggu lampiran itu penting: FilePond mengunggah file lewat
+                protocol upload Livewire secara asinkron, jadi state
+                `data.attachments` baru terisi setelah upload selesai. Kalau
+                pesan dikirim lebih dulu, lampirannya hilang.
+            --}}
+            <span
+                x-data="{
+                    messagesUploadingAttachment: false,
+                    async messagesAttachFile(file) {
+                        if (!file || this.messagesUploadingAttachment) return;
+                        this.messagesUploadingAttachment = true;
+
+                        try {
+                            // Nama file temporary-nya ikut dikirim. Jadiandainya
+                            // state Livewire belum ter-update saat callback
+                            // dipanggil, file-nya tetap bisa ditemukan di
+                            // folder temporary Livewire.
+                            const tmpFilename = await new Promise((resolve, reject) => {
+                                $wire.upload('pendingAttachment', file, resolve, reject);
+                            });
+
+                            $wire.sendPendingAttachment(tmpFilename);
+                        } catch (e) {
+                            console.error('[messages] gagal mengunggah lampiran', e);
+                        } finally {
+                            this.messagesUploadingAttachment = false;
+                        }
+                    },
+
+                    messagesCreatePoll(question, options) {
+                        $wire.createPoll(question, options);
+                    },
+
+                    messagesSendSticker(sticker) {
+                        $wire.sendSticker(sticker);
+                    },
+                }"
+                x-on:messages-attach-file.window="messagesAttachFile($event.detail.file)"
+                x-on:messages-create-poll.window="messagesCreatePoll($event.detail.question, $event.detail.options)"
+                x-on:messages-send-sticker.window="messagesSendSticker($event.detail.sticker)"
+                class="hidden"
+                aria-hidden="true"></span>
+            @include('Shared.components.attachment-menu.attachment-menu')
+
             <x-filament-actions::modals />
         </div>
         <!-- Chat Input : End -->
 
-        <!-- Camera Modal : Start -->
-        <div id="camera-modal"
-            class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" style="display:none;">
-            <div class="fi-glass-modal bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden w-full max-w-md mx-4">
-                <!-- Modal Header -->
-                <div class="flex items-center justify-between px-5 py-4 border-b dark:border-gray-700">
-                    <h3 class="text-base font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-                        <x-filament::icon icon="heroicon-o-camera" class="w-5 h-5 text-primary-500" />
-                        {{ __('Take a Photo') }}
-                    </h3>
-                    <button id="close-camera-btn" type="button"
-                        class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-                        <x-filament::icon icon="heroicon-o-x-mark" class="w-5 h-5" />
-                    </button>
-                </div>
-                <!-- Video / Preview -->
-                <div class="relative bg-black">
-                    <video id="camera-video" autoplay playsinline
-                        class="w-full" style="max-height: 320px; object-fit: cover;"></video>
-                    <canvas id="camera-canvas" class="hidden w-full" style="max-height: 320px; object-fit: cover;"></canvas>
-                    <!-- Switch camera overlay button -->
-                    <button id="switch-camera-btn" type="button"
-                        class="absolute top-3 right-3 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition">
-                        <x-filament::icon icon="heroicon-o-arrow-path" class="w-5 h-5" />
-                    </button>
-                </div>
-                <!-- Controls -->
-                <div id="camera-controls-capture" class="flex items-center justify-center gap-4 p-5">
-                    <button id="capture-btn" type="button"
-                        class="w-16 h-16 bg-primary-600 hover:bg-primary-700 text-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105">
-                        <x-filament::icon icon="heroicon-o-camera" class="w-7 h-7" />
-                    </button>
-                </div>
-                <div id="camera-controls-preview" class="flex items-center justify-between gap-3 px-5 pb-5" style="display:none;">
-                    <button id="retake-btn" type="button"
-                        class="flex-1 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium transition">
-                        {{ __('Retake') }}
-                    </button>
-                    <button id="send-photo-btn" type="button"
-                        class="flex-1 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium transition">
-                        {{ __('Send Photo') }}
-                    </button>
-                </div>
-            </div>
-        </div>
-        <!-- Camera Modal : End -->
 
     @else
         <div class="flex flex-col items-center justify-center h-full p-3">
             <div class="p-3 mb-4 bg-gray-100 rounded-full dark:bg-gray-500/20">
-                <x-filament::icon icon="heroicon-o-x-mark" class="w-6 h-6 text-gray-500 dark:text-gray-400" />
+                <x-filament::icon icon="/images/icons/x.svg" class="w-6 h-6 text-gray-500 dark:text-gray-400" />
             </div>
             <p class="text-base text-center text-gray-600 dark:text-gray-400">
                 {{ __('No selected conversation') }}
             </p>
         </div>
     @endif
+
+    {{-- Satu panel gelembung untuk seluruh panel chat ini --}}
+    @include('Shared.components.message-bubble.message-bubble-panel')
 </div>
 @script
     <script>
@@ -517,97 +682,5 @@
 
 
 
-        let cameraStream = null;
-        let facingMode = 'user'; // 'user' = front, 'environment' = back
-
-        async function startCamera() {
-            if (cameraStream) {
-                cameraStream.getTracks().forEach(t => t.stop());
-            }
-            try {
-                cameraStream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: facingMode },
-                    audio: false
-                });
-                const video = document.getElementById('camera-video');
-                video.srcObject = cameraStream;
-
-                // Reset to live view
-                video.classList.remove('hidden');
-                document.getElementById('camera-canvas').classList.add('hidden');
-                document.getElementById('camera-controls-capture').classList.remove('hidden');
-                document.getElementById('camera-controls-preview').style.display = 'none';
-            } catch (err) {
-                alert('{{ __('Cannot access camera. Please allow camera permission.') }}');
-                closeCameraModal();
-            }
-        }
-
-        function closeCameraModal() {
-            if (cameraStream) {
-                cameraStream.getTracks().forEach(t => t.stop());
-                cameraStream = null;
-            }
-            document.getElementById('camera-modal').style.display = 'none';
-        }
-
-
-        window.addEventListener('open-camera', () => {
-            document.getElementById('camera-modal').style.display = 'flex';
-            facingMode = 'environment';
-            startCamera();
-        });
-
-        document.getElementById('close-camera-btn').addEventListener('click', closeCameraModal);
-
-        document.getElementById('switch-camera-btn').addEventListener('click', () => {
-            facingMode = facingMode === 'user' ? 'environment' : 'user';
-            startCamera();
-        });
-
-        document.getElementById('capture-btn').addEventListener('click', () => {
-            const video = document.getElementById('camera-video');
-            const canvas = document.getElementById('camera-canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
-
-            video.classList.add('hidden');
-            canvas.classList.remove('hidden');
-            document.getElementById('camera-controls-capture').classList.add('hidden');
-            document.getElementById('camera-controls-preview').style.display = 'flex';
-        });
-
-        document.getElementById('retake-btn').addEventListener('click', () => {
-            startCamera();
-        });
-
-        document.getElementById('send-photo-btn').addEventListener('click', async () => {
-            const canvas = document.getElementById('camera-canvas');
-            canvas.toBlob(async (blob) => {
-                const fileName = 'camera_' + Date.now() + '.jpg';
-                const file = new File([blob], fileName, { type: 'image/jpeg' });
-
-                // Use FilePond or native input — inject into a hidden file input
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(file);
-
-                // Find the Livewire file input for attachments
-                const fileInputs = document.querySelectorAll('input[type="file"]');
-                if (fileInputs.length > 0) {
-                    const fileInput = fileInputs[0];
-                    fileInput.files = dataTransfer.files;
-                    fileInput.dispatchEvent(new Event('change', { bubbles: true }));
-                    closeCameraModal();
-                } else {
-                    // Fallback: download the image
-                    const a = document.createElement('a');
-                    a.href = canvas.toDataURL('image/jpeg');
-                    a.download = fileName;
-                    a.click();
-                    closeCameraModal();
-                }
-            }, 'image/jpeg', 0.92);
-        });
     </script>
 @endscript

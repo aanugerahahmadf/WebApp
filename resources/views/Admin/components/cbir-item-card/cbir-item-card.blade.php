@@ -3,23 +3,23 @@
     $results = $allResults;
 
     $packages = [];
-    $products = [];
+    $catalogs = [];
 
     if (!empty($results)) {
         $packages = collect($results)->where('type', 'package')->values()->all();
-        $products = collect($results)->where('type', 'product')->values()->all();
+        $catalogs = collect($results)->where('type', 'catalog')->values()->all();
 
-        // Jika CBIR hanya return packages, load semua products sebagai fallback
-        if (empty($products)) {
-            foreach (\App\Models\Product\Product::where('is_active', true)->with('category')->get() as $prd) {
-                $products[] = ['type' => 'product', 'similarity' => 0, 'data' => array_merge($prd->toArray(), [
+        // Jika CBIR hanya return packages, load semua catalogs sebagai fallback
+        if (empty($catalogs)) {
+            foreach (\App\Models\Catalog\Catalog::where('is_active', true)->with('category')->get() as $prd) {
+                $catalogs[] = ['type' => 'catalog', 'similarity' => 0, 'data' => array_merge($prd->toArray(), [
                     'image_url' => $prd->image_url,
                     'category' => $prd->category?->toArray(),
                 ])];
             }
         }
 
-        // Jika CBIR hanya return products, load semua packages sebagai fallback
+        // Jika CBIR hanya return catalogs, load semua packages sebagai fallback
         if (empty($packages)) {
             foreach (\App\Models\Package\Package::with('category')->get() as $pkg) {
                 $packages[] = ['type' => 'package', 'similarity' => 0, 'data' => array_merge($pkg->toArray(), [
@@ -32,8 +32,8 @@
         foreach (\App\Models\Package\Package::with('category')->get() as $pkg) {
             $packages[] = ['type' => 'package', 'similarity' => 0, 'data' => array_merge($pkg->toArray(), ['image_url' => $pkg->image_url, 'category' => $pkg->category?->toArray()])];
         }
-        foreach (\App\Models\Product\Product::where('is_active', true)->with('category')->get() as $prd) {
-            $products[] = ['type' => 'product', 'similarity' => 0, 'data' => array_merge($prd->toArray(), ['image_url' => $prd->image_url, 'category' => $prd->category?->toArray()])];
+        foreach (\App\Models\Catalog\Catalog::where('is_active', true)->with('category')->get() as $prd) {
+            $catalogs[] = ['type' => 'catalog', 'similarity' => 0, 'data' => array_merge($prd->toArray(), ['image_url' => $prd->image_url, 'category' => $prd->category?->toArray()])];
         }
     }
 @endphp
@@ -48,7 +48,7 @@
         <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-1.5">
                 @if($topMatch && ($topMatch['similarity'] ?? 0) > 0)
-                    <x-filament::icon icon="heroicon-m-star" class="w-4 h-4" style="color:#facc15;" />
+                    <x-filament::icon icon="/images/icons/star.svg" class="w-4 h-4" style="color:#facc15;" />
                     <span class="text-xs font-black" style="color:#facc15;">{{ __('Hasil Terbaik') }}</span>
                     <span class="px-2 py-0.5 rounded-full text-[9px] font-black text-gray-900" style="background:#facc15;">
                         {{ number_format($topMatch['similarity'], 1) }}%
@@ -59,7 +59,7 @@
                 wire:click="clearVisualSearch"
                 color="danger"
                 size="xs"
-                icon="heroicon-m-arrow-path"
+                icon="/images/icons/refresh.svg"
                 class="rounded-lg font-bold"
             >
                 {{ __('Reset CBIR') }}
@@ -75,7 +75,7 @@
 
     {{-- Semua item digabung dalam satu grid --}}
     @php
-        $allItems = array_merge($packages, $products);
+        $allItems = array_merge($packages, $catalogs);
         usort($allItems, fn($a, $b) => ($b['similarity'] ?? 0) <=> ($a['similarity'] ?? 0));
     @endphp
 
@@ -116,7 +116,7 @@
             wire:click="clearVisualSearch"
             color="gray"
             size="sm"
-            icon="heroicon-m-arrow-path"
+            icon="/images/icons/refresh.svg"
             class="w-full rounded-xl font-bold"
         >
             {{ __('Tampilkan Semua') }}

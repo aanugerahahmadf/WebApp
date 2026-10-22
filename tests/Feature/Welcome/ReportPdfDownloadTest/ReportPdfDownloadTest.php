@@ -22,6 +22,7 @@ use App\Enums\ReportStatus\ReportStatus;
 use App\Models\Report\Report;
 use App\Services\GuestIdentity\GuestIdentity;
 use App\Models\User\User;
+use Illuminate\Support\Facades\Route;
 
 /*
  * Route
@@ -52,10 +53,15 @@ it('tidak memakai middleware auth untuk PDF laporan di panel Welcome', function 
     ))->toBeEmpty();
 });
 
-it('mempertahankan URL dan nama route yang sama', function (): void {
+it('mempertahankan nama route dan memakai URL hasil merge', function (): void {
     // Nama route tidak boleh berubah: blade Welcome memakai welcome.reports.pdf.
+    //
+    // URL-nya YANG berubah karena panel welcome pindah ke root: URL lama
+    // /welcome/reports/{id}/pdf bentrok dengan prefix panel admin, jadi
+    // PDF tamu sekarang di /reports/guest/{id}/pdf. Segmen 'guest' itu yang
+    // membedakannya dari /admin/reports/{id}/pdf.
     expect(route('welcome.reports.pdf', 1))
-        ->toContain('/welcome/reports/1/pdf');
+        ->toContain('/reports/guest/1/pdf');
 });
 
 /*
@@ -194,3 +200,60 @@ it('menampilkan tombol Unduh PDF di view Messages panel Welcome dan User', funct
     // nama route -- bukan URL hasilnya.
     expect($src)->toContain("route('{$routeName}', \$mySubmittedReport['id'])");
 })->with(['welcome', 'user']);
+
+/*
+ * Isi PDF
+ */
+
+
+
+it('tidak menampilkanInterpolasi PHP yang belumTerinterpolasi', function (): void {
+    // Jebakan: string kutip TUNGGAL tidak menginterpolasi, jadi
+    // 'Formulir Laporan #{$report->id}' tampil APA ADANYA di PDF.
+    // Gejalanya: PDF-nya "bagus", tapi header-nya berisi kode PHP.
+    $user = User::factory()->create();
+
+    $report = Report::create([
+        'user_id' => $user->id,
+        'category' => 'bug_report',
+        'reason' => 'Masalah login',
+        'description' => 'Detail',
+        'status' => ReportStatus::OPEN,
+    ]);
+
+    $response = $this->actingAs($user)->get(route('welcome.reports.pdf', $report));
+
+    $response->assertOk();
+
+    $text = implode(' ', array_column(pdfTextRows($response->getContent()), 3));
+
+    expect($text)
+        ->not->toContain('{$')
+        ->not->toContain('{{')
+        // Nomor laporan benar-benar terisi.
+        ->toContain('Formulir Laporan #'.$report->id);
+});
+
+it('menampilkan kategori dan tanggal dalam bentuk manusia', function (): void {
+    $user = User::factory()->create();
+
+    $report = Report::create([
+        'user_id' => $user->id,
+        'category' => 'bug_report',
+        'reason' => 'Masalah login',
+        'description' => 'Detail',
+        'status' => ReportStatus::OPEN,
+    ]);
+
+    $response = $this->actingAs($user)->get(route('welcome.reports.pdf', $report));
+
+    $response->assertOk();
+
+    $text = implode(' ', array_column(pdfTextRows($response->getContent()), 3));
+
+    // Slug mentah tidak boleh muncul...
+    expect($text)->not->toContain('bug_report');
+
+    // ...dan tidak ada "_" maupun "/" di teks dokumen.
+    expect($text)->not->toContain('_')->not->toContain('/');
+});

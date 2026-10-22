@@ -83,7 +83,7 @@ describe('Property 9: Missing Dependencies Are Fully Listed', function () {
 
     test('Web mode never reports missing dependencies', function () {
         // **Validates: Requirements 7.5**
-        // Web mode has no shell: the Laravel server is the whole product, so the
+        // Web mode has no shell: the Laravel server is the whole catalog, so the
         // returned array must always be empty.
         $validator = new PlatformDependencyValidator;
 

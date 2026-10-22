@@ -17,7 +17,7 @@ class CategoryController extends Controller
     {
         try {
             $type = $request->type;
-            $query = Category::withCount($type === 'product' ? 'categoryProducts' : 'categoryPackages');
+            $query = Category::withCount($type === 'catalog' ? 'categoryCatalogs' : 'categoryPackages');
 
             if ($request->filled('type')) {
                 $query->where('type', $request->type);
@@ -31,7 +31,7 @@ class CategoryController extends Controller
             $sortBy = $request->get('sort_by', 'name');
             $sortDirection = $request->get('sort_direction', 'asc');
 
-            $allowedSortFields = ['name', 'created_at', 'category_packages_count', 'category_products_count'];
+            $allowedSortFields = ['name', 'created_at', 'category_packages_count', 'category_catalogs_count'];
             if (! in_array($sortBy, $allowedSortFields)) {
                 $sortBy = 'name';
             }
@@ -78,13 +78,13 @@ class CategoryController extends Controller
     {
         try {
             $category = Category::findOrFail($id, ['*']);
-            if ($category->type === 'product') {
-                $category->load(['categoryProducts' => function ($query): void {
-                    $query->with(['vendor', 'reviews'])->limit(10);
-                }])->loadCount('categoryProducts');
+            if ($category->type === 'catalog') {
+                $category->load(['categoryCatalogs' => function ($query): void {
+                    $query->with(['reviews'])->limit(10);
+                }])->loadCount('categoryCatalogs');
             } else {
                 $category->load(['categoryPackages' => function ($query): void {
-                    $query->with(['vendor', 'reviews'])->limit(10);
+                    $query->with(['reviews'])->limit(10);
                 }])->loadCount('categoryPackages');
             }
 
@@ -115,7 +115,7 @@ class CategoryController extends Controller
     {
         try {
             $categories = Category::with(['categoryPackages' => function ($query) use ($request): void {
-                $query->with(['vendor', 'reviews'])
+                $query->with(['reviews'])
                     ->orderBy('price', 'asc')
                     ->limit($request->get('packages_per_category', 5));
             }])->withCount('categoryPackages')->get(['*']);

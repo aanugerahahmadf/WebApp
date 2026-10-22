@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'លេខ​កូដ​ប្រៃ​ស​ណី​យ',
         'preview'                  => 'ការមើលជាមុន',
         'price'                    => 'តម្លៃ',
-        'product_id'               => 'លេខសម្គាល់ផលិតផល',
+        'catalog_id'               => 'លេខសម្គាល់ផលិតផល',
         'product_uid'              => 'UID ផលិតផល',
         'product_uuid'             => 'UID ផលិតផល',
         'promo_code'               => 'តំ​ឡើង​សក្ដិ',

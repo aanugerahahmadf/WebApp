@@ -52,9 +52,9 @@ return [
     'Belum ada paket tersedia' => 'No packages available yet',
     'Tidak ada paket yang cocok dengan foto Anda. Silakan coba foto lain.' => 'No packages match your photo. Please try another photo.',
     'Temukan paket impianmu di sini!' => 'Find your dream package here!',
-    'Belum ada product tersedia' => 'No products available yet',
-    'Tidak ada product yang cocok dengan foto Anda. Silakan coba foto lain.' => 'No products match your photo. Please try another photo.',
-    'Temukan product impianmu di sini!' => 'Find your dream product here!',
+    'Belum ada catalog tersedia' => 'No catalogs available yet',
+    'Tidak ada catalog yang cocok dengan foto Anda. Silakan coba foto lain.' => 'No catalogs match your photo. Please try another photo.',
+    'Temukan catalog impianmu di sini!' => 'Find your dream catalog here!',
 
     // Actions
     'Tampilkan Semua' => 'Show All',
@@ -81,7 +81,7 @@ return [
     'Buka di Tab Baru' => 'Open in New Tab',
     'Lapor' => 'Report',
     'Paket' => 'Package',
-    'Produk' => 'Product',
+    'Produk' => 'Catalog',
     'Laporan berhasil dikirim' => 'Report sent successfully',
     'Anda akan diarahkan ke Messages untuk melanjutkan percakapan dengan admin dan bot.' => 'You will be redirected to Messages to continue the conversation with admin and bot.',
 
@@ -91,7 +91,7 @@ return [
 
     // Sections
     'Tentang Layanan Ini' => 'About This Service',
-    'Tentang Product Ini' => 'About This Product',
+    'Tentang Catalog Ini' => 'About This Catalog',
     'Fitur' => 'Features',
 
     // Buttons
@@ -114,13 +114,13 @@ return [
     // Review Modal
     'Tulis Ulasan' => 'Write Review',
     'Bagikan pengalaman Anda tentang paket ini.' => 'Share your experience about this package.',
-    'Bagikan pengalaman Anda tentang produk ini.' => 'Share your experience about this product.',
+    'Bagikan pengalaman Anda tentang produk ini.' => 'Share your experience about this catalog.',
     'Anda sudah menulis ulasan untuk paket ini.' => 'You have already written a review for this package.',
-    'Anda sudah menulis ulasan untuk produk ini.' => 'You have already written a review for this product.',
+    'Anda sudah menulis ulasan untuk produk ini.' => 'You have already written a review for this catalog.',
     'Terima kasih atas ulasan Anda!' => 'Thank you for your review!',
     'Ulasan' => 'Reviews',
     'Penilaian Paket' => 'Package Rating',
-    'Penilaian Produk' => 'Product Rating',
+    'Penilaian Produk' => 'Catalog Rating',
     'Tidak ada ulasan untuk filter ini.' => 'No reviews for this filter.',
     'Pengguna' => 'User',
 
@@ -144,7 +144,7 @@ return [
     'Voucher tidak valid' => 'Voucher is not valid',
     'Hanya voucher yang memenuhi syarat minimum belanja yang akan muncul di sini. Jika kosong, silakan ke menu Voucher untuk Klaim.' => 'Only vouchers meeting minimum purchase requirements will appear here. If empty, please go to Voucher menu to Claim.',
     'Harga Paket' => 'Package Price',
-    'Harga Produk' => 'Product Price',
+    'Harga Produk' => 'Catalog Price',
     'Diskon Voucher' => 'Voucher Discount',
     'Total Bayar' => 'Total Pay',
     'Metode Pembayaran' => 'Payment Method',
@@ -154,7 +154,7 @@ return [
     'Konfirmasi' => 'Confirmation',
     'Ringkasan Pembayaran' => 'Payment Summary',
     'Paket Dekorasi' => 'Decoration Package',
-    'Produk Bunga' => 'Flower Product',
+    'Produk Bunga' => 'Flower Catalog',
     'Total Harga' => 'Total Price',
 
     // Errors & Success
@@ -226,13 +226,14 @@ return [
     'Favorit Saya' => 'My Favorites',
     'Favorit Baru' => 'New Favorite',
     'Pilih Paket' => 'Select Package',
+    'Pilih Paket Dekorasi' => 'Select Package Decoration',
     'Tambah Favorit' => 'Add Favorite',
 
     // Review
     'Ulasan Saya' => 'My Reviews',
     'Pilih Layanan' => 'Select Service',
     'Layanan Paket' => 'Package Service',
-    'Informasi Studio' => 'Studio Information',
+    'Informasi Toko' => 'Store Information',
     'Judul Ulasan' => 'Review Title',
     'Komentar Anda' => 'Your Comment',
     'Foto Ulasan' => 'Review Photo',

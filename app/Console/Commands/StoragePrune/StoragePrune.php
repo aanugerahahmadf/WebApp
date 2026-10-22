@@ -59,6 +59,7 @@ class StoragePrune extends Command
         $freed += $this->pruneLogs($cutoff, $apply);
         $freed += $this->pruneLegacySingleLog($apply);
         $freed += $this->pruneTempFiles($cutoff, $apply);
+        $freed += $this->pruneMediaLibraryTemp($cutoff, $apply);
 
         if ($this->option('photos')) {
             $freed += $this->prunePhotos($apply);
@@ -196,6 +197,65 @@ class StoragePrune extends Command
         $this->components->twoColumnDetail(
             'Temp subprocess',
             $freed > 0 ? "{$deleted} file / ".$this->formatBytes($freed) : 'tidak ada'
+        );
+
+        return $freed;
+    }
+
+    /**
+     * Hapus file temp Media Library (storage/media-library/temp).
+     *
+     * Spatie Media Library menyimpan file upload sementara di sini saat
+     * conversion/responsive image generation berjalan. Jika upload gagal,
+     * dibatalkan, atau proses worker mati, folder sub-direktori (UUID acak)
+     * beserta isinya menjadi yatim dan tidak pernah dibersihkan otomatis.
+     *
+     * Kita hapus seluruh subtree yang umurnya > $cutoff.
+     */
+    protected function pruneMediaLibraryTemp($cutoff, bool $apply): int
+    {
+        $directory = storage_path('media-library/temp');
+        $freed = 0;
+        $deletedDirs = 0;
+
+        if (! File::isDirectory($directory)) {
+            $this->components->twoColumnDetail('MediaLibrary temp', 'folder tidak ada');
+
+            return 0;
+        }
+
+        $dirs = File::directories($directory);
+
+        // Iterasi subdirektori (setiap upload bikin folder UUID sendiri)
+        foreach ($dirs as $dir) {
+            $dirInfo = new \SplFileInfo($dir);
+            $mtime = $dirInfo->getMTime();
+
+            // Lewati folder yang baru saja disentuh (mungkin upload sedang berjalan)
+            if ($mtime > $cutoff->getTimestamp()) {
+                continue;
+            }
+
+            // Hitung total size folder
+            $dirSize = 0;
+            foreach (File::allFiles($dir) as $file) {
+                $dirSize += (int) $file->getSize();
+            }
+
+            if ($apply) {
+                File::deleteDirectory($dir);
+                $freed += $dirSize;
+                $deletedDirs++;
+            } else {
+                // Dry-run: akumulasi ukuran yang akan dibebaskan
+                $freed += $dirSize;
+                $deletedDirs++;
+            }
+        }
+
+        $this->components->twoColumnDetail(
+            'MediaLibrary temp',
+            $freed > 0 ? "{$deletedDirs} folder / ".$this->formatBytes($freed) : 'tidak ada'
         );
 
         return $freed;

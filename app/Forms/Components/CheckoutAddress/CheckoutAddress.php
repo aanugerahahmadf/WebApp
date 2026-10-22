@@ -7,7 +7,7 @@ use Filament\Forms\Components\Field;
 use Illuminate\Support\HtmlString;
 
 /**
- * Pemilih alamat acara di checkout (Produk & Paket), dengan GPS dan Google
+ * Pemilih alamat acara di checkout (Katalog & Paket), dengan GPS dan Google
  * Places.
  *
  * Menggantikan `Textarea::make('notes')` yang dulu jadi satu-satunya tempat

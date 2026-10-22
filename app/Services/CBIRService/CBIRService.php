@@ -3,7 +3,8 @@
 namespace App\Services\CBIRService;
 
 use App\Models\Package\Package;
-use App\Models\Product\Product;
+use App\Models\Catalog\Catalog;
+use App\Services\AiCoreGrpc\AiCoreGrpcClient;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
@@ -16,69 +17,39 @@ class CBIRService
 
     protected int $timeoutSeconds;
 
+    /** Klien gRPC dibuat lazy oleh grpcClient(). */
+    protected ?AiCoreGrpcClient $grpcClient = null;
+
     public function __construct()
     {
         $this->baseUrl = rtrim((string) config('services.ai_core_url', 'http://127.0.0.1:5000'), '/');
         $this->timeoutSeconds = (int) config('services.ai_core_timeout', 15);
     }
 
-    public function searchByImage($imageFile): array
+    public function searchByImage($imageFile, int $topK = 10): array
     {
         try {
             $fileHash = md5_file($imageFile->getRealPath());
-            $cacheKey = "cbir_search_v{$fileHash}";
+            $cacheVersion = Cache::get('cbir_cache_version', 0);
+            $cacheKey = "cbir_search_v{$cacheVersion}_{$topK}_{$fileHash}";
 
-            Log::info("CBIR Search initiated for file hash: {$fileHash}");
+            Log::info("CBIR Search initiated for file hash: {$fileHash}, topK: {$topK}");
 
-            return Cache::remember($cacheKey, now()->addMinutes(5), function () use ($imageFile) {
-                Log::info('CBIR Cache miss - calling AI Core API');
-                /** @var Response $response */
-                $response = Http::timeout($this->timeoutSeconds)
-                    ->retry(2, 300, throw: false)
-                    ->attach(
-                        'file', // Flask app.py expects 'file'
-                        file_get_contents($imageFile->getRealPath()),
-                        method_exists($imageFile, 'getClientOriginalName') ? $imageFile->getClientOriginalName() : $imageFile->getFilename()
-                    )->post("{$this->baseUrl}/api/search");
+            return Cache::remember($cacheKey, now()->addMinutes(5), function () use ($imageFile, $topK) {
+                // gRPC lebih dulu: AI Core sekarang dijalankan sebagai server
+                // gRPC (`python -m src.grpc.server`, :50052), dan Flask :5000
+                // tidak lagi mendengarkan. Kalau gRPC gagal (server mati,
+                // extension tidak ada), jalur HTTP lama tetap dipakai supaya
+                // perilaku sebelumnya tidak hilang.
+                $viaGrpc = $this->searchViaGrpc($imageFile, $topK);
 
-                if ($response->successful()) {
-                    $data = $response->json();
-                    if (! is_array($data)) {
-                        Log::warning('AI Core returned non-array JSON payload.');
-
-                        return $this->errorResponse(__('Format respons AI tidak valid.'));
-                    }
-
-                    $normalizedResults = collect($data['results'] ?? [])
-                        ->filter(fn ($row) => is_array($row) && isset($row['owner_id']))
-                        ->map(function (array $row): array {
-                            $score = (float) ($row['score'] ?? 0);
-                            $similarity = (float) ($row['similarity'] ?? ($score * 100));
-
-                            return [
-                                'owner_id' => (int) $row['owner_id'],
-                                'type' => (string) ($row['type'] ?? 'product'),
-                                'score' => $score,
-                                'similarity' => $similarity,
-                                'image_url' => $row['image_url'] ?? null,
-                                'vendor' => $row['vendor'] ?? null,
-                            ];
-                        })
-                        ->values()
-                        ->all();
-
-                    Log::info('AI Core responded successfully with '.count($normalizedResults).' normalized results.');
-
-                    return [
-                        'success' => true,
-                        'results' => $normalizedResults,
-                        'query_time_seconds' => (float) ($data['query_time_seconds'] ?? 0),
-                    ];
+                if ($viaGrpc !== null) {
+                    return $viaGrpc;
                 }
 
-                Log::error('AI Core search error: '.$response->body());
+                Log::info('CBIR Cache miss - calling AI Core HTTP API (gRPC tidak tersedia)');
 
-                return $this->errorResponse(__('Pencarian visual sedang gangguan. Coba lagi nanti.'));
+                return $this->searchViaHttp($imageFile, $topK);
             });
         } catch (\Exception $e) {
             Log::error('AI Core connection error: '.$e->getMessage());
@@ -87,40 +58,153 @@ class CBIRService
         }
     }
 
+    /**
+     * Pencarian lewat gRPC. `null` berarti "coba jalur HTTP".
+     *
+     * Kegagalan sengaja tidak dilempar ke pemanggil: `searchByImage()` sudah
+     * punya kontrak "selalu kembalikan array", dan HTTP masih bisa menjawab
+     * kalau AI Core dijalankan dalam mode Flask.
+     */
+    protected function searchViaGrpc($imageFile, int $topK): ?array
+    {
+        if (! (bool) config('services.ai_core_grpc_enabled', true) || ! AiCoreGrpcClient::isSupported()) {
+            return null;
+        }
+
+        try {
+            $response = $this->grpcClient()->search(
+                (string) file_get_contents($imageFile->getRealPath()),
+                $topK,
+            );
+
+            Log::info('AI Core gRPC responded with '.count($response['results']).' results.');
+
+            $response['success'] = true;
+
+            return $response;
+        } catch (\Throwable $e) {
+            Log::warning('AI Core gRPC failed, falling back to HTTP: '.$e->getMessage());
+
+            return null;
+        }
+    }
+
+    /**
+     * Jalur HTTP lama (Flask `POST /api/search`).
+     */
+    protected function searchViaHttp($imageFile, int $topK): array
+    {
+        /** @var Response $response */
+        $response = Http::timeout($this->timeoutSeconds)
+            ->retry(2, 300, throw: false)
+            ->attach(
+                'file', // Flask app.py expects 'file'
+                file_get_contents($imageFile->getRealPath()),
+                method_exists($imageFile, 'getClientOriginalName') ? $imageFile->getClientOriginalName() : $imageFile->getFilename()
+            )->post("{$this->baseUrl}/api/search", [
+                'top_k' => $topK,
+            ]);
+
+        if ($response->successful()) {
+            $data = $response->json();
+            if (! is_array($data)) {
+                Log::warning('AI Core returned non-array JSON payload.');
+
+                return $this->errorResponse(__('Format respons AI tidak valid.'));
+            }
+
+            $normalizedResults = collect($data['results'] ?? [])
+                ->filter(fn ($row) => is_array($row) && isset($row['owner_id']))
+                ->map(function (array $row): array {
+                    $score = (float) ($row['score'] ?? 0);
+                    $similarity = (float) ($row['similarity'] ?? ($score * 100));
+
+                    return [
+                        'owner_id' => (int) $row['owner_id'],
+                        'type' => (string) ($row['type'] ?? 'catalog'),
+                        'score' => $score,
+                        'similarity' => $similarity,
+                        'image_url' => $row['image_url'] ?? null,
+                    ];
+                })
+                ->values()
+                ->all();
+
+            Log::info('AI Core responded successfully with '.count($normalizedResults).' normalized results.');
+
+            return [
+                'success' => true,
+                'results' => $normalizedResults,
+                'query_time_seconds' => (float) ($data['query_time_seconds'] ?? 0),
+            ];
+        }
+
+        Log::error('AI Core search error: '.$response->body());
+
+        return $this->errorResponse(__('Pencarian visual sedang gangguan. Coba lagi nanti.'));
+    }
+
+    /**
+     * Klien gRPC dibuat lazy: kalau jalur gRPC dimatikan lewat env, tidak ada
+     * channel yang dibuka sama sekali.
+     */
+    protected function grpcClient(): AiCoreGrpcClient
+    {
+        return $this->grpcClient ??= app(AiCoreGrpcClient::class);
+    }
+
     public function indexMedia($media): bool
     {
         try {
             // `model_type` yang tersimpan di tabel media adalah ALIAS morph map
-            // ("App\Models\Product"), bukan FQCN ("App\Models\Product\Product").
-            // Kalau dicocokkan langsung ke Product::class, tidak akan pernah
-            // cocok dan semua media jatuh ke default -- akibatnya gambar paket
-            // terindeks sebagai tipe yang tidak dikenal, lalu `byImage()`
-            // mencarinya di tabel products dan membuangnya diam-diam.
-            //
+            // ("App\Models\Catalog"), bukan FQCN ("App\Models\Catalog\Catalog").
             // getMorphedModel() mengembalikan null kalau nilainya memang FQCN
             // (tidak di-alias), jadi fallback ke nilai aslinya aman.
             $modelClass = Relation::getMorphedModel($media->model_type) ?? $media->model_type;
 
             $type = match ($modelClass) {
                 Package::class => 'package',
-                Product::class => 'product',
+                Catalog::class => 'catalog',
                 default => 'unknown',
             };
 
-            // Capai model terkait (product/package) untuk mengambil vendor.
+            // Capai model terkait (catalog/package) untuk mengambil nama item.
             // Pakai $modelClass hasil resolusi morph map, bukan $media->model_type
             // langsung — yang latter berisi alias dan bukan nama kelas, sehingga
-            // pemanggilan statisnya gagal dan vendor/nama selalu kosong.
-            $vendorName = '';
+            // pemanggilan statisnya gagal dan nama selalu kosong.
             $itemName = '';
             try {
                 if (class_exists($modelClass)) {
-                    $model = $modelClass::with('vendor')->find($media->model_id);
-                    $vendorName = $model?->vendor?->store_name ?? '';
+                    $model = $modelClass::find($media->model_id);
                     $itemName = (string) ($model?->name ?? '');
                 }
             } catch (\Throwable $e) {
-                // abaikan bila relasi vendor tidak tersedia
+                // abaikan bila model tidak tersedia
+            }
+
+            // ─── gRPC terlebih dahulu ─────────────────────────────────────────
+            // Index media baru tidak boleh gagal hanya karena Flask :5000 mati.
+            // Kalau server gRPC menjawab sukses, HTTP tidak dipanggil lagi.
+            if (AiCoreGrpcClient::isSupported() && (bool) config('services.ai_core_grpc_enabled', true)) {
+                try {
+                    $grpcResult = $this->grpcClient()->addToIndex($media->getPath(), [
+                        'id' => $media->id,
+                        'type' => $type,
+                        'owner_id' => $media->model_id,
+                        'image_url' => $media->getUrl(),
+                        'name' => $itemName,
+                    ]);
+
+                    if ($grpcResult['success']) {
+                        Cache::increment('cbir_cache_version');
+
+                        return true;
+                    }
+
+                    Log::warning('AI Core gRPC addToIndex returned failure: '.($grpcResult['message'] ?? ''));
+                } catch (\Throwable $e) {
+                    Log::warning('AI Core gRPC addToIndex failed, falling back to HTTP: '.$e->getMessage());
+                }
             }
 
             $response = Http::timeout($this->timeoutSeconds)
@@ -132,7 +216,6 @@ class CBIRService
                         'type' => $type,
                         'owner_id' => $media->model_id,
                         'image_url' => $media->getUrl(),
-                        'vendor' => $vendorName,
                         'name' => $itemName,
                     ],
                 ]);
@@ -153,6 +236,19 @@ class CBIRService
 
     public function removeFromIndex($mediaId): bool
     {
+        // gRPC terlebih dahulu, HTTP sebagai cadangan.
+        if (AiCoreGrpcClient::isSupported() && (bool) config('services.ai_core_grpc_enabled', true)) {
+            try {
+                $result = $this->grpcClient()->removeFromIndex((int) $mediaId);
+
+                if ($result['success'] || $result['removed'] > 0) {
+                    return true;
+                }
+            } catch (\Throwable $e) {
+                Log::warning('AI Core gRPC removeFromIndex failed, falling back to HTTP: '.$e->getMessage());
+            }
+        }
+
         try {
             $response = Http::timeout($this->timeoutSeconds)
                 ->retry(2, 300, throw: false)
@@ -210,7 +306,7 @@ class CBIRService
                     ->map(function (array $row): array {
                         return [
                             'owner_id' => (int) $row['owner_id'],
-                            'type' => (string) ($row['type'] ?? 'product'),
+                            'type' => (string) ($row['type'] ?? 'catalog'),
                             'score' => (float) ($row['distance'] ?? 0),
                             'similarity' => (float) ($row['similarity'] ?? 0),
                             'image_url' => $row['image_url'] ?? null,

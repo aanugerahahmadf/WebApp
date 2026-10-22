@@ -1,0 +1,123 @@
+syntax = "proto3";
+
+package weddingapp.package;
+
+import "proto/auth.proto";
+import "proto/catalog.proto";
+
+option php_namespace = "App\\Grpc\\Package";
+option java_package = "com.weddingapp.package";
+option csharp_namespace = "WeddingApp.Package";
+option go_package = "github.com/weddingapp/grpc/package";
+
+service PackageService {
+  rpc GetPackage (GetPackageRequest) returns (PackageResponse);
+  rpc GetPackages (GetPackagesRequest) returns (PackagesResponse);
+  rpc GetPackageBySlug (GetPackageBySlugRequest) returns (PackageResponse);
+  rpc GetFeaturedPackages (GetFeaturedPackagesRequest) returns (PackagesResponse);
+  rpc GetOnSalePackages (GetOnSalePackagesRequest) returns (PackagesResponse);
+  rpc GetPackagesByCategory (GetPackagesByCategoryRequest) returns (PackagesResponse);
+  rpc GetPackagesByCapacity (GetPackagesByCapacityRequest) returns (PackagesResponse);
+  rpc GetRelatedPackages (GetRelatedPackagesRequest) returns (PackagesResponse);
+  rpc SearchPackages (SearchPackagesRequest) returns (PackagesResponse);
+}
+
+message GetPackageRequest {
+  int64 id = 1;
+}
+
+message GetPackagesRequest {
+  int32 page = 1;
+  int32 per_page = 2;
+  string sort_by = 3;
+  string sort_order = 4;
+  string search = 5;
+  int64 category_id = 6;
+  double min_price = 7;
+  double max_price = 8;
+  bool featured = 9;
+  bool on_sale = 10;
+  bool active = 11;
+}
+
+message GetPackageBySlugRequest {
+  string slug = 1;
+}
+
+message GetFeaturedPackagesRequest {
+  int32 limit = 1;
+}
+
+message GetOnSalePackagesRequest {
+  int32 limit = 1;
+}
+
+message GetPackagesByCategoryRequest {
+  int64 category_id = 1;
+  int32 page = 2;
+  int32 per_page = 3;
+}
+
+message GetPackagesByCapacityRequest {
+  int32 min_capacity = 1;
+  int32 max_capacity = 2;
+  int32 page = 3;
+  int32 per_page = 4;
+}
+
+message GetRelatedPackagesRequest {
+  int64 package_id = 1;
+  int32 limit = 2;
+}
+
+message SearchPackagesRequest {
+  string query = 1;
+  int32 page = 2;
+  int32 per_page = 3;
+  int64 category_id = 4;
+  double min_price = 5;
+  double max_price = 6;
+}
+
+message PackageResponse {
+  Package package = 1;
+}
+
+message PackagesResponse {
+  repeated Package packages = 1;
+  PaginationMeta pagination = 2;
+}
+
+message Package {
+  int64 id = 1;
+  string name = 2;
+  string slug = 3;
+  string description = 4;
+  double price = 5;
+  double discount_price = 6;
+  double final_price = 7;
+  bool is_active = 8;
+  bool is_featured = 9;
+  string image_url = 10;
+  repeated string features = 11;
+  string theme = 12;
+  string color = 13;
+  int32 min_capacity = 14;
+  int32 max_capacity = 15;
+  weddingapp.catalog.Category category = 16;
+  double average_rating = 17;
+  int32 review_count = 18;
+  string created_at = 19;
+  string updated_at = 20;
+}
+
+message PaginationMeta {
+  int32 current_page = 1;
+  int32 per_page = 2;
+  int32 total = 3;
+  int32 last_page = 4;
+  int32 from = 5;
+  int32 to = 6;
+  bool has_next_page = 7;
+  bool has_prev_page = 8;
+}

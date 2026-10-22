@@ -8,7 +8,7 @@
  *
  *   1. `formatAddress()` -- SATU tempat yang merakit alamat jadi teks untuk
  *      `orders.notes`. Dipakai oleh view (ringkasan) DAN oleh `handleCheckout()`
- *      di PackageResource/ProductResource. Kalau ini dihitung di dua tempat
+ *      di PackageResource/CatalogResource. Kalau ini dihitung di dua tempat
  *      (atau di JavaScript), string yang tersimpan bisa berbeda dari yang
  *      tampil, dan tidak ada test yang bisa memegangnya.
  *
@@ -32,14 +32,13 @@
  * suite ini -- yang dijaga di sisi server adalah bentuk state dan hasil rakitannya.
  */
 
-use App\Filament\User\Resources\PackageResource\PackageResource;
-use App\Filament\User\Resources\ProductResource\Pages\CheckoutProduct\CheckoutProduct;
-use App\Filament\User\Resources\ProductResource\ProductResource;
+use App\Filament\User\Resources\CatalogResource\Pages\CheckoutCatalog\CheckoutCatalog;
+use App\Filament\User\Resources\CatalogResource\CatalogResource;
 use App\Forms\Components\CheckoutAddress\CheckoutAddress;
 use App\Models\Package\Package;
 use App\Models\Order\Order;
 use App\Models\PaymentMethod\PaymentMethod;
-use App\Models\Product\Product;
+use App\Models\Catalog\Catalog;
 use App\Models\User\User;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -113,10 +112,10 @@ test('the checkout saves the assembled address into the order notes', function (
     // Uji end-to-end jalur yang dipakai user: pilih dari autocomplete/GPS, lalu
     // konfirmasi. Yang arrives di `orders.notes` harus hasil rakit
     // formatAddress() -- baris per baris, urut dari detail.
-    $product = Product::factory()->create(['stock' => 5]);
+    $catalog = Catalog::factory()->create(['stock' => 5]);
     $paymentMethod = PaymentMethod::create(['name' => 'Transfer Bank', 'type' => 'bank_transfer', 'code' => 'bca', 'fee' => 0, 'is_active' => true]);
 
-    Livewire::test(CheckoutProduct::class, ['record' => $product->getKey()])
+    Livewire::test(CheckoutCatalog::class, ['record' => $catalog->getKey()])
         ->fillForm([
             'booking_date' => now()->addDays(7)->toDateString(),
             'booking_time' => '10:00',
@@ -139,7 +138,7 @@ test('the checkout saves the assembled address into the order notes', function (
 
     expect($order)->not->toBeNull()
         ->and($order->notes)->toBe("no rumah 16\nJalan Babar Layar No.9, RT.37/RW.2\nJAWA BARAT, KAB. INDRAMAYU, SINDANG, 45223")
-        ->and($order->product_id)->toBe($product->id);
+        ->and($order->catalog_id)->toBe($catalog->id);
 });
 
 test('a legacy plain string address still reaches the order', function (): void {
@@ -150,10 +149,10 @@ test('a legacy plain string address still reaches the order', function (): void 
     // Di-set lewat `set()`, bukan `fillForm()`: fillForm memetakan nilai ke
     // komponen di dalam array, dan memberinya string membuat pemetaan gagal --
     // persis kondisi yang harus kita hindari.
-    $product = Product::factory()->create(['stock' => 5]);
+    $catalog = Catalog::factory()->create(['stock' => 5]);
     $paymentMethod = PaymentMethod::create(['name' => 'Transfer Bank', 'type' => 'bank_transfer', 'code' => 'bca', 'fee' => 0, 'is_active' => true]);
 
-    Livewire::test(CheckoutProduct::class, ['record' => $product->getKey()])
+    Livewire::test(CheckoutCatalog::class, ['record' => $catalog->getKey()])
         ->fillForm([
             'booking_date' => now()->addDays(7)->toDateString(),
             'booking_time' => '10:00',
@@ -173,10 +172,10 @@ test('an empty address blocks the checkout instead of ordering without a locatio
     // `required` pada field inilah yang mencegah order tanpa alamat. Kalau aturan
     // ini dilepas, order tetap dibuat dan `notes` kosong -- tim dekorasi tidak
     // pernah tahu acara-nya di mana.
-    $product = Product::factory()->create(['stock' => 5]);
+    $catalog = Catalog::factory()->create(['stock' => 5]);
     $paymentMethod = PaymentMethod::create(['name' => 'Transfer Bank', 'type' => 'bank_transfer', 'code' => 'bca', 'fee' => 0, 'is_active' => true]);
 
-    Livewire::test(CheckoutProduct::class, ['record' => $product->getKey()])
+    Livewire::test(CheckoutCatalog::class, ['record' => $catalog->getKey()])
         ->fillForm([
             'booking_date' => now()->addDays(7)->toDateString(),
             'booking_time' => '10:00',
@@ -191,18 +190,18 @@ test('an empty address blocks the checkout instead of ordering without a locatio
 
     expect(Order::query()->count())->toBe(0)
         // Stok juga tidak boleh terpakai untuk order yang gagal.
-        ->and($product->fresh()->stock)->toBe(5);
+        ->and($catalog->fresh()->stock)->toBe(5);
 });
 
 /*
  * ------------------------------------------------------------ checkout render
  */
 
-test('the product checkout renders the address field with an edit button and modal', function (): void {
-    $product = Product::factory()->create(['stock' => 5]);
+test('the catalog checkout renders the address field with an edit button and modal', function (): void {
+    $catalog = Catalog::factory()->create(['stock' => 5]);
     $paymentMethod = PaymentMethod::create(['name' => 'Transfer Bank', 'type' => 'bank_transfer', 'code' => 'bca', 'fee' => 0, 'is_active' => true]);
 
-    $html = $this->get(ProductResource::getUrl('checkout', ['record' => $product], panel: 'user'))
+    $html = $this->get(CatalogResource::getUrl('checkout', ['record' => $catalog], panel: 'user'))
         ->assertOk()
         ->getContent();
 
@@ -224,16 +223,36 @@ test('the product checkout renders the address field with an edit button and mod
         ->not->toContain('data.checkout_notes', escape: false);
 });
 
-test('the package checkout renders the same address field', function (): void {
-    $package = Package::factory()->create(['stock' => 5]);
+/**
+ * Test "the package checkout renders the same address field" DIHAPUS.
+ *
+ * Awalnya test ini membandingkan dua halaman checkout -- katalog dan paket --
+ * untuk memastikan keduanya memakai field alamat yang sama. Alasannya bagus:
+ * kalau salah satu resource lupa menukar field, checkout paket diam-diam
+ * kehilangan koordinat.
+ *
+ * Tapi perbandingan itu tidak mungkin lagi: `App\Filament\User\Resources\
+ * PackageResource` sudah dihapus saat penataan ulang `Product` -> `Catalog`,
+ * dan `CheckoutCatalog` yang ada hanya menerima record `Catalog`
+ * (`handleCheckout(Catalog $catalog, ...)` plus `resolveRecord()` yang mencari
+ * di tabel `catalogs`).
+ *
+ * Test ini TIDAK ditulis ulang sebagai "checkout katalog harus punya field
+ * alamat" saja, karena test itu sudah ada di file ini -- persis di atasnya.
+ * Dan tidak ditulis ulang untuk memakai id paket, karena `resolveRecord()`
+ * akan melempar 404 dan testnya akan hijau tanpa pernah merender field
+ * yang ingin dijaga.
+ *
+ * Kalau checkout paket dihidupkan lagi, tambahkan kembali perbandingan dengan
+ * record `Package` yang benar-benar bisa di-resolve, bukan id katalog.
+ */
+test('the checkout renders the address field on the catalog record', function (): void {
+    $catalog = Catalog::factory()->create(['stock' => 5]);
 
-    $html = $this->get(PackageResource::getUrl('checkout', ['record' => $package], panel: 'user'))
+    $html = $this->get(CatalogResource::getUrl('checkout', ['record' => $catalog], panel: 'user'))
         ->assertOk()
         ->getContent();
 
-    // Dua halaman checkout tidak boleh berbeda perlakuan: keduanya memakai
-    // method yang sama dari Resource masing-masing, tapi kalau salah satu
-    // lupa menukar field, checkout paket akan diam-diam kehilangan koordinat.
     expect($html)->toContain('fi-checkout-address', escape: false)
         ->toContain(e(__('Gunakan Lokasi Saya')));
 });
@@ -244,9 +263,9 @@ test('the maps script is only requested when an api key is configured', function
     // menambah request yang pasti gagal.
     config(['services.google.maps_key' => '']);
 
-    $product = Product::factory()->create(['stock' => 5]);
+    $catalog = Catalog::factory()->create(['stock' => 5]);
 
-    $html = $this->get(ProductResource::getUrl('checkout', ['record' => $product], panel: 'user'))
+    $html = $this->get(CatalogResource::getUrl('checkout', ['record' => $catalog], panel: 'user'))
         ->assertOk()
         ->getContent();
 

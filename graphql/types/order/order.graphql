@@ -1,0 +1,113 @@
+# Order Type Definitions
+# Wedding Flower Decoration App - Order GraphQL Types
+
+type Order @model(class: "App\\Models\\Order\\Order") {
+  id: ID!
+  orderNumber: String!
+  user: User! @belongsTo
+  package: Package @belongsTo
+  catalog: Catalog @belongsTo
+  totalPrice: Float!
+  status: String!
+  paymentStatus: String!
+  bookingDate: String
+  quantity: Int
+  notes: String
+  address: OrderAddress @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@address")
+  voucher: Voucher @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@voucher")
+  payment: OrderPayment @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@payment")
+  timeline: [OrderTimeline!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@timeline")
+  createdAt: String!
+  updatedAt: String!
+}
+
+type OrderAddress {
+  id: ID!
+  name: String!
+  phone: String!
+  address: String!
+  city: String!
+  province: String!
+  postalCode: String!
+  isDefault: Boolean!
+}
+
+type OrderPayment {
+  id: ID!
+  method: String!
+  status: String!
+  amount: Float!
+  paidAt: String
+  transactionId: String
+  proofUrl: String
+}
+
+type OrderTimeline {
+  id: ID!
+  orderId: ID!
+  status: String!
+  description: String!
+  metadata: JSON
+  createdAt: String!
+  createdBy: User
+}
+
+type OrderStats {
+  totalOrders: Int!
+  pendingOrders: Int!
+  confirmedOrders: Int!
+  processingOrders: Int!
+  shippedOrders: Int!
+  deliveredOrders: Int!
+  cancelledOrders: Int!
+  totalRevenue: Float!
+  pendingRevenue: Float!
+  thisMonthRevenue: Float!
+  averageOrderValue: Float!
+  byStatus: [OrderStatusCount!]!
+  byPaymentStatus: [OrderPaymentStatusCount!]!
+}
+
+type OrderStatusCount {
+  status: String!
+  count: Int!
+}
+
+type OrderPaymentStatusCount {
+  paymentStatus: String!
+  count: Int!
+}
+
+type Invoice {
+  id: ID!
+  order: Order!
+  invoiceNumber: String!
+  pdfUrl: String!
+  issuedAt: String!
+  dueAt: String!
+  status: String!
+}
+
+type RefundRequest {
+  id: ID!
+  order: Order!
+  reason: String!
+  amount: Float!
+  status: RefundStatus!
+  requestedAt: String!
+  processedAt: String
+}
+
+enum RefundStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PROCESSED
+}
+
+type PaymentResult {
+  success: Boolean!
+  order: Order
+  redirectUrl: String
+  message: String
+}

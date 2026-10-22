@@ -42,7 +42,7 @@ class OtpMail extends Mailable
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"></head>
-<body style="font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px;">
+<body style="font-family: 'Google Sans Flex', sans-serif; background: #f4f4f4; padding: 20px;">
 <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
 <table style="max-width:480px; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,0.08);">
 <tr><td style="padding:30px 24px 20px; text-align:center; background:linear-gradient(135deg,#6C63FF,#E040FB);">

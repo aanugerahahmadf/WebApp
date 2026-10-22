@@ -4,6 +4,7 @@ namespace App\Services\PlatformNotificationService;
 
 
 use App\Services\FirebaseService\FirebaseService;
+use App\Support\NotificationSound\NotificationSound;
 
 use App\Enums\RuntimePlatform\RuntimePlatform;
 use App\Events\NotificationBroadcast\NotificationBroadcast;
@@ -28,7 +29,7 @@ class PlatformNotificationService
      * requested through the browser Notification API by the client, and real
      * push to a device that is not in the foreground goes out over FCM.
      */
-    public static function send(User $user, string $title, string $body, ?string $actionUrl = null, ?string $actionLabel = null): void
+    public static function send(User $user, string $title, string $body, ?string $actionUrl = null, ?string $actionLabel = null, array $fcmData = []): void
     {
         // 1. Filament database notification (in-app inbox, every surface)
         $notification = FilamentNotification::make()
@@ -55,8 +56,10 @@ class PlatformNotificationService
             'created_at' => now()->toISOString(),
         ], $user->id));
 
-        // 3. FCM push notification (device not in the foreground)
-        static::sendFcmPush($user, $title, $body);
+        // 3. FCM push notification (device not in the foreground).
+        // $fcmData: data tipe + route untuk aplikasi HP -- tanpa ini,
+        // tap notifikasi di HP selalu jatuh ke daftar notifikasi umum.
+        static::sendFcmPush($user, $title, $body, $fcmData);
     }
 
     public static function sendFcmPush(User $user, string $title, string $body, array $data = []): void
@@ -66,7 +69,11 @@ class PlatformNotificationService
         }
         try {
             $firebase = app(FirebaseService::class);
-            $firebase->sendPushNotification($user->fcm_token, $title, $body, $data);
+            // Channel mengikuti toggle suara user: user yang mematikan suara
+            // via panel mendapat channel hening, ikut berlaku saat app tertutup.
+            $firebase->sendPushNotification($user->fcm_token, $title, $body, $data, [
+                'channel_id' => NotificationSound::channelIdFor($user),
+            ]);
         } catch (\Throwable $e) {
             Log::warning('FCM push skipped', ['error' => $e->getMessage(), 'user_id' => $user->id]);
         }
@@ -97,7 +104,9 @@ class PlatformNotificationService
             }
             try {
                 $result = $firebase->sendPushNotification($device->fcm_token, $title, $body, $data, [
-                    'channel_id' => 'security_notifications',
+                    // Sinkron dengan channel yang dibuat aplikasi (v2 = ber-suara);
+                    // preferensi suara user menentukan varian ber-suara/hening.
+                    'channel_id' => NotificationSound::channelIdFor($user, NotificationSound::SECURITY),
                 ]);
                 if ($result) {
                     $sentCount++;
@@ -115,7 +124,7 @@ class PlatformNotificationService
             Log::info('Fallback to legacy fcm_token', ['user_id' => $user->id]);
             try {
                 $firebase->sendPushNotification($user->fcm_token, $title, $body, $data, [
-                    'channel_id' => 'security_notifications',
+                    'channel_id' => NotificationSound::channelIdFor($user, NotificationSound::SECURITY),
                 ]);
             } catch (\Throwable $e) {
                 Log::warning('FCM push fallback failed', ['error' => $e->getMessage(), 'user_id' => $user->id]);

@@ -1,0 +1,111 @@
+syntax = "proto3";
+
+package wedding.user.v1;
+
+option go_package = "github.com/wedding/user/v1;userv1";
+option php_namespace = "App\\Grpc\\User\\V1";
+option php_metadata_namespace = "App\\Grpc\\User\\V1\\GPBMetadata";
+
+import "wedding/user/v1/common.proto";
+import "wedding/user/v1/auth.proto";
+import "wedding/user/v1/catalog.proto";
+import "wedding/user/v1/package.proto";
+import "wedding/user/v1/voucher.proto";
+
+// Cart Service
+service CartService {
+  rpc GetMyCart(GetMyCartRequest) returns (Cart);
+  rpc AddToCart(AddToCartRequest) returns (CartItem);
+  rpc UpdateCartItem(UpdateCartItemRequest) returns (CartItem);
+  rpc RemoveFromCart(RemoveFromCartRequest) returns (RemoveFromCartResponse);
+  rpc ClearCart(ClearCartRequest) returns (ClearCartResponse);
+  rpc ApplyVoucherToCart(ApplyVoucherToCartRequest) returns (Cart);
+  rpc RemoveVoucherFromCart(RemoveVoucherFromCartRequest) returns (Cart);
+  rpc SyncCart(SyncCartRequest) returns (Cart);
+  rpc EstimateShipping(EstimateShippingRequest) returns (ShippingEstimate);
+}
+
+message GetMyCartRequest {}
+
+message AddToCartRequest {
+  string catalog_id = 1;
+  string package_id = 2;
+  int32 quantity = 3;
+  MetaData options = 4;
+}
+
+message UpdateCartItemRequest {
+  string cart_item_id = 1;
+  int32 quantity = 2;
+  MetaData options = 3;
+}
+
+message RemoveFromCartRequest {
+  string cart_item_id = 1;
+}
+
+message ClearCartRequest {}
+
+message ApplyVoucherToCartRequest {
+  string code = 1;
+}
+
+message RemoveVoucherFromCartRequest {}
+
+message SyncCartRequest {
+  repeated SyncCartItemInput items = 1;
+}
+
+message EstimateShippingRequest {
+  string address_id = 1;
+}
+
+message Cart {
+  string id = 1;
+  User user = 2;
+  repeated CartItem items = 3;
+  double subtotal = 4;
+  double discount = 5;
+  Voucher voucher = 6;
+  double shipping_cost = 7;
+  double tax = 8;
+  double total = 9;
+  int32 item_count = 10;
+  string updated_at = 11;
+}
+
+message CartItem {
+  string id = 1;
+  User user = 2;
+  Catalog catalog = 3;
+  Package package = 4;
+  int32 quantity = 5;
+  double subtotal = 6;
+  MetaData options = 7;
+  string created_at = 8;
+  string updated_at = 9;
+}
+
+message ShippingEstimate {
+  double cost = 1;
+  int32 estimated_days = 2;
+  string method = 3;
+  bool available = 4;
+}
+
+message RemoveFromCartResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ClearCartResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message SyncCartItemInput {
+  string catalog_id = 1;
+  string package_id = 2;
+  int32 quantity = 3;
+  MetaData options = 4;
+}

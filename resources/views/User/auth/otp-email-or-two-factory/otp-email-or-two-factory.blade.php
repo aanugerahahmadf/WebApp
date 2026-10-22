@@ -20,7 +20,7 @@
         {{-- Logo / lencana brand, seperti di gambar acuan --}}
         <div class="flex size-14 items-center justify-center rounded-full bg-primary-600 text-white shadow-sm">
             <x-filament::icon
-                icon="heroicon-o-lock-closed"
+                icon="/images/icons/lock.svg"
                 class="size-7"
             />
         </div>
@@ -66,7 +66,7 @@
                 >
                     <span>{{ __('Opsi Lainnya') }}</span>
                     <x-filament::icon
-                        icon="heroicon-m-chevron-up"
+                        icon="/images/icons/chevron_up.svg"
                         class="size-4 transition-transform"
                         x-bind:class="open ? '' : 'rotate-180'"
                     />

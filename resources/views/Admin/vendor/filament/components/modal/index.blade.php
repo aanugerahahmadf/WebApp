@@ -248,7 +248,7 @@
                                 >
                                     <x-filament::icon-button
                                         color="gray"
-                                        icon="heroicon-o-x-mark"
+                                        icon="/images/icons/x.svg"
                                         icon-alias="modal.close-button"
                                         icon-size="lg"
                                         :label="__('filament::components/modal.actions.close.label')"

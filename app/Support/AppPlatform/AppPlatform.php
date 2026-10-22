@@ -183,23 +183,43 @@ class AppPlatform
      * hook MUST agree on the surface -- otherwise the same control gets
      * rendered twice (desktop app did exactly that) or nowhere at all.
      *
-     * The rule is "the topbar is the wrong home for them":
+     * THE RULE (satu aturan, berlaku untuk ketiga panel):
      *
-     *   - Phone and mobile browser: the topbar sheds its controls below
-     *     640px, so the sidebar owns them. This is the original behaviour.
-     *   - Desktop app: the topbar is not narrow, but the desktop app is not
-     *     the desktop website either. Its switchers live in its sidebar, so
-     *     a second copy in the topbar is only two buttons for one setting.
-     *   - Tablet and desktop website: the topbar has room, so it keeps them.
+     *   - Mobile responsive (browser HP Android/iOS) dan APLIKASI MOBILE
+     *     (Capacitor Android/iOS)  -> switcher di SIDEBAR (menu geser).
+     *   - APLIKASI DESKTOP (Electron) -> switcher di TOPBAR / HEADER.
+     *   - Tablet dan website desktop    -> switcher di TOPBAR (ruangannya cukup).
      *
-     * Deliberately NOT a width check: the desktop app window has no minimum
-     * width, so a breakpoint would put the controls back in the topbar as
-     * soon as somebody narrowed the window.
+     * Kenapa APLIKASI DESKTOP ikut ke topbar, bukan sidebar seperti
+     * sebelumnya:
+     *
+     *   1. Panel storefront (welcome/user) memakai `->topNavigation()`, dan
+     *      itu yang membuat sidebar-nya DITERJEMAHKAN ke luar layar di
+     *      layar lebar (`lg:-translate-x-full` di override view sidebar).
+     *      Sidebar aplikasi desktop praktis tidak terlihat.
+     *   2. Karena itu switcher yang ditaruh di sidebar akan TER-RENDER tapi
+     *      TIDAK TERLIHAT -- persis gejalanya: di aplikasi desktop topbar
+     *      tidak punya language switcher maupun theme switcher, padahal
+     *      switcher-nya "ada" di DOM.
+     *   3. Topbar aplikasi desktop justru tempat yang tepat: lebarnya
+     *      ample, dan topbar itu memang sudah jadi tempat pencarian global,
+     *      user menu, dan tombol kembali.
+     *
+     * Tablet tetap di topbar: tablet (iPad, tablet Android) punya ruang
+     * untuk barisan kontrol topbar, dan topbar-nya tidak menyingkir seperti
+     * di HP. Tablet yang berjalan di dalam shell Capacitor tetap terhitung
+     * aplikasi mobile -- lihat {@see static::isTablet()}, yang mengembalikan
+     * false untuk app shell.
+     *
+     * JANGAN pakai lebar layar (viewport) sebagai pengganti predikat ini.
+     * Jendela aplikasi desktop tidak punya minWidth, jadi aturan breakpoint
+     * akan mengembalikan switcher ke sidebar begitu jendelanya dikecilkan --
+     * persis kasus yang membuat switcher hilang dari topbar aplikasi desktop.
+     * Yang menentukan hanya PLATFORM.
      */
     public static function switchersBelongInSidebar(?Request $request = null): bool
     {
-        return (static::isAnyMobile($request) && ! static::isTablet($request))
-            || static::isDesktopApp($request);
+        return static::isAnyMobile($request) && ! static::isTablet($request);
     }
 
     /**
@@ -380,16 +400,59 @@ class AppPlatform
             return $url;
         }
 
+        return static::rewriteTo($url, request()->getSchemeAndHttpHost());
+    }
+
+    /**
+     * Pindahkan URL yang menunjuk host lokal ke origin yang diberikan.
+     *
+     * Dipisah dari {@see static::normalizeUrl()} supaya bisa diuji tanpa
+     * HTTP request sungguhan: normalizeUrl() berhenti lebih dulu di
+     * console, dan console-lah tempat test berjalan.
+     *
+     * Yang dipindahkan:
+     *
+     *   - URL RELATIF (`/storage/Catalogs/1.png`) -> absolut terhadap
+     *     origin target. Disk `public` sengaja dikonfigurasi dengan URL
+     *     relatif supaya file media tetap ketemu dari host mana pun
+     *     (panel lokal, IP LAN, tunnel). Pemanggil yang butuh URL absolut
+     *     -- blade dan, terutama, respons API yang dibaca aplikasi HP --
+     *     tidak boleh menerima `/storage/...` mentah, karena WebView dan
+     *     Dart akan memperlakukannya sebagai path lokal.
+     *
+     *   - URL ABSOLUT ke host lokal (termasuk host `app.url`, yaitu host
+     *     produksi) -> host-nya diganti jadi origin target. Tanpa ini,
+     *     kolom `avatar_url` yang berisi URL host produksi akan menggambar
+     *     avatar dari host yang tidak melayani file itu, dan di aplikasi
+     *     desktop (origin `http://127.0.0.1:8000`) avatarnya rusak.
+     *
+     * URL ke host LAIN (mis. pravatar.cc) dibiarkan apa adanya: file-nya
+     * memang bukan milik server ini.
+     */
+    public static function rewriteTo(string $url, string $targetRoot): string
+    {
+        //
+        // PENTING: `$parts` HARUS diisi sebelum dicek. Versi sebelumnya
+        // langsung menulis `isset($parts['host'], $parts['scheme'])` tanpa
+        // pernah memanggil parse_url() -- dan `isset()` atas variabel yang
+        // belum pernah ada selalu false. Akibatnya seluruh cabang host di
+        // bawah adalah KODE MATI: setiap URL absolut langsung dikembalikan
+        // apa adanya.
         $parts = parse_url($url);
 
-        if (! isset($parts['host'], $parts['scheme'])) {
-            return $url;
+        if ($parts === false || ! isset($parts['host'], $parts['scheme'])) {
+            return str_starts_with($url, '/')
+                ? rtrim($targetRoot, '/').$url
+                : $url;
         }
 
         $localHosts = array_values(array_unique(array_filter([
             '127.0.0.1',
             'localhost',
-            parse_url((string) env('APP_URL'), PHP_URL_HOST),
+            // `config('app.url')`, bukan `env('APP_URL')`: kalau config
+            // ter-cache, .env tidak dimuat lagi dan env() mengembalikan
+            // null -- sehingga host produksi tidak pernah ikut terdaftar.
+            parse_url((string) config('app.url'), PHP_URL_HOST),
             request()->getHost(),
         ])));
 
@@ -398,7 +461,6 @@ class AppPlatform
         }
 
         $sourceRoot = $parts['scheme'].'://'.$parts['host'].(isset($parts['port']) ? ':'.$parts['port'] : '');
-        $targetRoot = request()->getSchemeAndHttpHost();
 
         if ($sourceRoot === $targetRoot) {
             return $url;

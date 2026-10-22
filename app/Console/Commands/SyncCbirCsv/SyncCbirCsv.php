@@ -3,7 +3,7 @@
 namespace App\Console\Commands\SyncCbirCsv;
 
 use App\Models\Package\Package;
-use App\Models\Product\Product;
+use App\Models\Catalog\Catalog;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -15,7 +15,7 @@ class SyncCbirCsv extends Command
                             {--no-rebuild : Hanya export CSV, jangan rebuild index CBIR}
                             {--app-url= : Override APP_URL untuk image_url di dataset}';
 
-    protected $description = 'Sync database products & packages ke dataset CSV, lalu rebuild CBIR index';
+    protected $description = 'Sync database catalog & packages ke dataset CSV, lalu rebuild CBIR index';
 
     public function handle(): int
     {
@@ -46,16 +46,16 @@ class SyncCbirCsv extends Command
         }
 
         // Header — harus cocok dengan yang dibaca rebuild_index.py
-        fputcsv($handle, ['ID', 'Type', 'Name', 'Category', 'Price', 'Discount_Price', 'Organizer', 'Image_Path', 'Description']);
+        fputcsv($handle, ['ID', 'Type', 'Name', 'Category', 'Price', 'Discount_Price', 'Image_Path', 'Description']);
 
-        $productCount = 0;
+        $catalogCount = 0;
         $packageCount = 0;
         $skipped = 0;
 
-        // ── Products ──────────────────────────────────────────────────────────
-        $products = Product::with(['category', 'vendor'])->get();
-        foreach ($products as $product) {
-            $media = $product->getFirstMedia('product_image');
+        // ── Catalogs ──────────────────────────────────────────────────────────
+        $catalogs = Catalog::with(['category'])->get();
+        foreach ($catalogs as $catalog) {
+            $media = $catalog->getFirstMedia('catalog_image');
             if (! $media) {
                 $skipped++;
 
@@ -71,21 +71,20 @@ class SyncCbirCsv extends Command
             }
 
             fputcsv($handle, [
-                $product->id,
-                'product',
-                $product->name,
-                $product->category?->name ?? 'unknown',
-                $product->price,
-                $product->discount_price ?? '',
-                $product->vendor?->store_name ?? '',
+                $catalog->id,
+                'catalog',
+                $catalog->name,
+                $catalog->category?->name ?? 'unknown',
+                $catalog->price,
+                $catalog->discount_price ?? '',
                 $imagePath,
-                $product->description ?? '',
+                $catalog->description ?? '',
             ]);
-            $productCount++;
+            $catalogCount++;
         }
 
         // ── Packages ──────────────────────────────────────────────────────────
-        $packages = Package::with(['category', 'vendor'])->get();
+        $packages = Package::with(['category'])->get();
         foreach ($packages as $package) {
             $media = $package->getFirstMedia('package_image');
             if (! $media) {
@@ -109,7 +108,6 @@ class SyncCbirCsv extends Command
                 $package->category?->name ?? 'unknown',
                 $package->price,
                 $package->discount_price ?? '',
-                $package->vendor?->store_name ?? '',
                 $imagePath,
                 $package->description ?? '',
             ]);
@@ -118,7 +116,7 @@ class SyncCbirCsv extends Command
 
         fclose($handle);
 
-        $this->info("  ✅ Products  : {$productCount}");
+        $this->info("  ✅ Catalogs  : {$catalogCount}");
         $this->info("  ✅ Packages  : {$packageCount}");
         if ($skipped > 0) {
             $this->warn("  ⚠️  Diskip    : {$skipped} (media tidak ada)");

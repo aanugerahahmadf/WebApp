@@ -9,7 +9,7 @@
  *     try {
  *         $componentClass = app(ComponentRegistry::class)->getClass($snapshot['memo']['name']);
  *     } catch (ComponentNotFoundException) {
- *         throw new LivewireReleaseTokenMismatchException;   // → HTTP 419
+ *         throw new LivewireReleaseTokenMismatchException;   // â†’ HTTP 419
  *     }
  *
  * Pesan exception-nya sama dengan release token yang benar-benar berubah,
@@ -27,7 +27,7 @@ use Livewire\Features\SupportReleaseTokens\ReleaseToken;
 
 /*
  * Nama-nama ini diambil dari snapshot yang benar-benar ada di respons
- * /welcome/home. Kalau ada component baru yang ditambahkan ke halaman Home,
+ * /home. Kalau ada component baru yang ditambahkan ke halaman Home,
  * nama barunya perlu masuk daftar ini juga.
  */
 const HOME_COMPONENT_NAMES = [
@@ -50,7 +50,7 @@ afterEach(function (): void {
 
 it('bisa me-resolve semua nama component yang ada di halaman Home', function (string $name): void {
     // Kalau nama ini gagal di-resolve, ReleaseToken::verify() melempar
-    // LivewireReleaseTokenMismatchException → HTTP 419.
+    // LivewireReleaseTokenMismatchException â†’ HTTP 419.
     $class = app(ComponentRegistry::class)->getClass($name);
 
     expect($class)->toBeString()->not->toBeEmpty();

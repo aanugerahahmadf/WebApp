@@ -34,10 +34,7 @@
     x-on:keydown.escape.window="closeMenu()"
 >
     @if($isLoading)
-        <svg class="animate-spin w-[18px] h-[18px] text-primary-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
+        <x-filament::icon icon="/images/icons/refresh.svg" class="animate-spin w-[18px] h-[18px] text-primary-500" />
     @else
         {{-- Pemicu. Membuka dropdown, bukan langsung menjalankan apa pun:
              memilih sumber gambar adalah keputusan pengguna, dan tiap sumber
@@ -55,17 +52,18 @@
                    transition-all duration-150 active:scale-90 touch-manipulation
                    focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
         >
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
-            </svg>
+            <x-filament::icon icon="/images/icons/camera.svg" class="w-[18px] h-[18px]" />
         </button>
     @endif
 
-    {{-- Empat opsi. Foto Kamera Belakang dan Foto Depan digabung jadi satu
-         "Ambil Foto": viewfinder di dalam sudah punya tombol Switch Camera
+    {{-- Tiga opsi. Foto Kamera Belakang dan Foto Depan digabung jadi satu
+         "Camera Photo": viewfinder di dalam sudah punya tombol Switch Camera
          (flipCamera), dan di desktop sebuah <select> daftar kamera -- jadi
          dua item menu untuk satu kontrol yang sama tidak perlu.
+
+         Rekam video TIDAK ada di sini: modal viewfinder-nya sendiri sudah
+         punya toggle Camera Photo / Camera Video, jadi item video di dropdown
+         akan dobel dengan kontrol yang sama.
 
          Label diambil lewat __() dengan string Indonesia sebagai kunci, sama
          seperti switcher bahasa dan tema. Kuncinya sudah ada di id/en/ar
@@ -73,30 +71,20 @@
     @php
         $cbirMenuItems = [
             [
-                'label' => __('Kamera'),
-                'icon' => 'heroicon-o-camera',
+                'label' => __('Camera Photo'),
+                'icon' => '/images/icons/camera.svg',
                 'event' => 'cbir-open-webrtc-camera',
                 'detail' => (object) [],
             ],
             [
-                // Membuka modal yang SAMA dalam mode rekam, bukan file picker
-                // video bawaan sistem: yang ini menghasilkan file dari
-                // MediaRecorder dan langsung masuk ke alur CBIR lewat
-                // $wire.upload('cameraUpload', ...) di confirmVideo().
-                'label' => __('Rekam Video'),
-                'icon' => 'heroicon-o-video-camera',
-                'event' => 'cbir-open-webrtc-camera',
-                'detail' => ['mode' => 'video'],
-            ],
-            [
                 'label' => __('Pilih dari Galeri'),
-                'icon' => 'heroicon-o-photo',
+                'icon' => '/images/icons/photo.svg',
                 'event' => 'cbir-pick-gallery',
                 'detail' => (object) [],
             ],
             [
                 'label' => __('Pilih dari File'),
-                'icon' => 'heroicon-o-folder',
+                'icon' => '/images/icons/folder.svg',
                 'event' => 'cbir-pick-file',
                 'detail' => (object) [],
             ],

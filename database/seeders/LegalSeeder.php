@@ -17,7 +17,7 @@ class LegalSeeder extends Seeder
         $idContent = [
             ['heading' => 'PENDAHULUAN', 'body' => 'Selamat datang di platform Dekorasi Bunga Pernikahan. Sebelum menggunakan Situs ini atau membuat Akun, harap baca Syarat Layanan berikut dengan cermat untuk memahami hak dan kewajiban hukum Anda sehubungan dengan manajemen dekorasi kami.', 'is_italic' => false],
             ['heading' => 'AKUN DAN KEAMANAN', 'body' => 'Dekorasi Bunga Pernikahan berhak menolak akses ke Situs atau Layanan demi melindungi integritas jadwal layanan kami. Anda bertanggung jawab menjaga kerahasiaan kata sandi dan aktivitas akun. Setiap tindakan dalam akun dianggap sebagai persetujuan Anda.', 'is_italic' => true],
-            ['heading' => 'LAYANAN DAN TRANSAKSI', 'body' => 'Pemesanan product atau paket dianggap permanen setelah validasi Down Payment. Dashboard berfungsi sebagai bukti digital transaksional yang sah. Amandemen rincian pesanan hanya diizinkan melalui konfirmasi sistem selambat-lambatnya 30 hari sebelum hari acara.', 'is_italic' => false],
+            ['heading' => 'LAYANAN DAN TRANSAKSI', 'body' => 'Pemesanan catalog atau paket dianggap permanen setelah validasi Down Payment. Dashboard berfungsi sebagai bukti digital transaksional yang sah. Amandemen rincian pesanan hanya diizinkan melalui konfirmasi sistem selambat-lambatnya 30 hari sebelum hari acara.', 'is_italic' => false],
             ['heading' => 'PEMBATALAN & REFUND', 'body' => 'DP bersifat non-refundable karena penjadwalan tim eksklusif. Untuk Force Majeure (Bencana alam/pandemi), opsi penjadwalan ulang akan ditawarkan berdasarkan ketersediaan kalender internal kami dengan menjunjung tinggi asas kekeluargaan.', 'is_italic' => true],
             ['heading' => 'HAK CIPTA & PORTOFOLIO', 'body' => 'Dokumentasi dekorasi bunga adalah hak intelektual Dekorasi Bunga Pernikahan dan dapat digunakan sebagai portofolio resmi. Penggunaan aset digital kami secara komersial tanpa izin tertulis dilarang keras secara hukum.', 'is_italic' => false],
         ];
@@ -25,7 +25,7 @@ class LegalSeeder extends Seeder
         $enContent = [
             ['heading' => 'INTRODUCTION', 'body' => 'Welcome to the Wedding Flower Decorations platform. Before using this Site or creating an Account, please read the following Terms of Service carefully to understand your legal rights and obligations regarding our decoration management.', 'is_italic' => false],
             ['heading' => 'ACCOUNT AND SECURITY', 'body' => 'Wedding Flower Decorations reserves the right to deny access to the Site or Services to protect the integrity of our service schedule. You are responsible for maintaining the confidentiality of your password and account activities. Any action within the account is deemed as your approval.', 'is_italic' => true],
-            ['heading' => 'SERVICES AND TRANSACTIONS', 'body' => 'Product or package orders are considered permanent after Down Payment validation. The Dashboard serves as valid transactional digital evidence. Order detail amendments are only permitted through system confirmation no later than 30 days before the event day.', 'is_italic' => false],
+            ['heading' => 'SERVICES AND TRANSACTIONS', 'body' => 'Catalog or package orders are considered permanent after Down Payment validation. The Dashboard serves as valid transactional digital evidence. Order detail amendments are only permitted through system confirmation no later than 30 days before the event day.', 'is_italic' => false],
             ['heading' => 'CANCELLATION & REFUND', 'body' => 'DP is non-refundable due to exclusive team scheduling. For Force Majeure (natural disaster/pandemic), rescheduling options will be offered based on our internal calendar availability with the principle of family welfare.', 'is_italic' => true],
             ['heading' => 'COPYRIGHT & PORTFOLIO', 'body' => 'Flower decoration documentation is the intellectual property of Wedding Flower Decorations and may be used as an official portfolio. Commercial use of our digital assets without written permission is strictly prohibited by law.', 'is_italic' => false],
         ];
@@ -98,13 +98,13 @@ class LegalSeeder extends Seeder
         $this->command->info('--- Seeding About Page ---');
 
         $idAbout = [
-            'text' => 'Wedding Flowers Organizer adalah aplikasi pendamping pernikahan digital yang membantu Anda merencanakan, mengatur, dan mewujudkan dekorasi bunga pernikahan impian Anda. Kami menyediakan berbagai pilihan paket dekorasi, produk bunga, dan layanan konsultasi yang dapat disesuaikan dengan tema dan anggaran pernikahan Anda.',
-            'mission' => 'Misi kami adalah menjadi platform dekorasi bunga pernikahan terdepan di Indonesia yang menghubungkan pasangan dengan vendor dekorasi terpercaya, memberikan kemudahan dalam merencanakan dekorasi pernikahan, dan menciptakan pengalaman perencanaan pernikahan yang menyenangkan.',
+            'text' => 'Wedding Flower Decorations adalah aplikasi pendamping pernikahan milik studio dekorasi bunga kami sendiri. Aplikasi ini membantu Anda merencanakan, mengatur, dan mewujudkan dekorasi bunga pernikahan impian Anda secara langsung bersama tim dekorasi internal kami. Kami menyediakan berbagai pilihan paket dekorasi, produk bunga, dan layanan konsultasi yang dapat disesuaikan dengan tema dan anggaran pernikahan Anda.',
+            'mission' => 'Misi kami adalah menjadi studio dekorasi bunga pernikahan spesialis di Indonesia yang melayani setiap pasangan pengantin secara langsung dengan layanan dekorasi bunga berkualitas, memberikan kemudahan dalam merencanakan dekorasi pernikahan, dan menciptakan pengalaman perencanaan pernikahan yang menyenangkan.',
         ];
 
         $enAbout = [
-            'text' => 'Wedding Flowers Organizer is a digital wedding companion app that helps you plan, organize, and realize your dream wedding flower decoration. We provide various decoration package options, flower products, and consultation services customizable to your wedding theme and budget.',
-            'mission' => 'Our mission is to become the leading wedding flower decoration platform in Indonesia that connects couples with trusted decoration vendors, provides convenience in planning wedding decorations, and creates an enjoyable wedding planning experience.',
+            'text' => 'Wedding Flower Decorations is the digital wedding companion app of our own flower decoration studio. It helps you plan, organize, and realize your dream wedding flower decoration directly together with our in-house decoration team. We provide a range of decoration package options, flower catalogs, and consultation services that can be tailored to your wedding theme and budget.',
+            'mission' => 'Our mission is to become Indonesia\'s leading specialist wedding flower decoration studio that serves every couple directly with high-quality flower decoration services, provides convenience in planning wedding decorations, and creates an enjoyable wedding planning experience.',
         ];
 
         LegalPage::updateOrCreate(

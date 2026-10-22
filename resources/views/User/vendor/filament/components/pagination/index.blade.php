@@ -126,7 +126,7 @@
                 @if ($extremeLinks)
                     <x-filament::pagination.item
                         :aria-label="__('filament::components/pagination.actions.first.label')"
-                        :icon="$isRtl ? 'heroicon-m-chevron-double-right' : 'heroicon-m-chevron-double-left'"
+                        :icon="$isRtl ? '/images/icons/chevron_double_right.svg' : '/images/icons/chevron_double_left.svg'"
                         :icon-alias="$isRtl ? 'pagination.first-button.rtl' : 'pagination.first-button'"
                         rel="first"
                         :wire:click="'gotoPage(1, \'' . $paginator->getPageName() . '\')'"
@@ -136,7 +136,7 @@
 
                 <x-filament::pagination.item
                     :aria-label="__('filament::components/pagination.actions.previous.label')"
-                    :icon="$isRtl ? 'heroicon-m-chevron-right' : 'heroicon-m-chevron-left'"
+                    :icon="$isRtl ? '/images/icons/chevron_right.svg' : '/images/icons/chevron_left.svg'"
                     {{-- @deprecated Use `pagination.previous-button.rtl` instead of `pagination.previous-button` for RTL. --}}
                     :icon-alias="$isRtl ? ['pagination.previous-button.rtl', 'pagination.previous-button'] : 'pagination.previous-button'"
                     rel="prev"
@@ -166,7 +166,7 @@
             @if ($paginator->hasMorePages())
                 <x-filament::pagination.item
                     :aria-label="__('filament::components/pagination.actions.next.label')"
-                    :icon="$isRtl ? 'heroicon-m-chevron-left' : 'heroicon-m-chevron-right'"
+                    :icon="$isRtl ? '/images/icons/chevron_left.svg' : '/images/icons/chevron_right.svg'"
                     {{-- @deprecated Use `pagination.next-button.rtl` instead of `pagination.next-button` for RTL. --}}
                     :icon-alias="$isRtl ? ['pagination.next-button.rtl', 'pagination.next-button'] : 'pagination.next-button'"
                     rel="next"
@@ -177,7 +177,7 @@
                 @if ($extremeLinks)
                     <x-filament::pagination.item
                         :aria-label="__('filament::components/pagination.actions.last.label')"
-                        :icon="$isRtl ? 'heroicon-m-chevron-double-left' : 'heroicon-m-chevron-double-right'"
+                        :icon="$isRtl ? '/images/icons/chevron_double_left.svg' : '/images/icons/chevron_double_right.svg'"
                         :icon-alias="$isRtl ? 'pagination.last-button.rtl' : 'pagination.last-button'"
                         rel="last"
                         :wire:click="'gotoPage(' . $paginator->lastPage() . ', \'' . $paginator->getPageName() . '\')'"

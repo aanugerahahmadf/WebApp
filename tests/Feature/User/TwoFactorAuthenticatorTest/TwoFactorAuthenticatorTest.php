@@ -24,6 +24,7 @@ use App\Filament\User\Pages\SettingsPage\PasswordSecurityPage\PasswordSecurityPa
 use App\Filament\User\Pages\SettingsPage\PasswordSecurityPage\SignInAndRecovery\TwoFactorySetup\TwoFactorySetup;
 use App\Models\User\User;
 use Filament\Facades\Filament;
+use Illuminate\Support\Facades\Route;
 use MixCode\FilamentMulti2fa\Enums\TwoFactorAuthType;
 use MixCode\FilamentMulti2fa\Pages\OTPVerify;
 
@@ -45,8 +46,8 @@ it('mendaftarkan halaman setup dan verifikasi OTP di panel User saja', function 
     // staf, sehingga 2FA tidak relevan di sana.
     expect($routes)->toContain(TwoFactorySetup::getRouteName())
         ->and($routes)->toContain(OTPVerify::getRouteName())
-        ->and(TwoFactorySetup::getRouteName())->toStartWith('filament.user.')
-        ->and(OTPVerify::getRouteName())->toStartWith('filament.user.');
+        ->and(TwoFactorySetup::getRouteName())->toStartWith('filament.welcome.')
+        ->and(OTPVerify::getRouteName())->toStartWith('filament.welcome.');
 });
 
 it('tidak mendaftarkan halaman setup milik paket', function (): void {
@@ -57,7 +58,7 @@ it('tidak mendaftarkan halaman setup milik paket', function (): void {
     // menduplikasi dan menu "2FA Setup" muncul di user menu.
     $routes = collect(Route::getRoutes()->getRoutes())->map(fn ($r) => $r->getName());
 
-    expect($routes)->not->toContain('filament.user.pages.two-factory-setup');
+    expect($routes)->not->toContain('filament.welcome.pages.two-factory-setup');
 });
 
 it('membuka halaman setup untuk pengguna yang sudah login', function (): void {
@@ -101,7 +102,7 @@ it('minta kode OTP setelah 2FA aktif', function (): void {
     ]);
 
     $this->actingAs($user)
-        ->get('/user/home')
+        ->get('/home')
         ->assertRedirect(OTPVerify::getUrl());
 });
 
@@ -111,7 +112,7 @@ it('tidak meminta OTP kalau 2FA belum diaktifkan', function (): void {
     ]);
 
     $this->actingAs($user)
-        ->get('/user/home')
+        ->get('/home')
         ->assertOk();
 });
 
@@ -123,7 +124,7 @@ it('tidak meminta OTP lagi setelah kode terverifikasi di sesi yang sama', functi
 
     $this->actingAs($user)
         ->withSession(['2fa_passed' => true])
-        ->get('/user/home')
+        ->get('/home')
         ->assertOk();
 });
 

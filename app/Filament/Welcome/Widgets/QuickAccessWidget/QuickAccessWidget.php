@@ -2,13 +2,13 @@
 
 namespace App\Filament\Welcome\Widgets\QuickAccessWidget;
 
-use App\Filament\Welcome\Resources\PackageResource\PackageResource;
-use App\Filament\Welcome\Resources\ProductResource\ProductResource;
+use App\Filament\Welcome\Resources\CatalogResource\CatalogResource;
 use App\Filament\Welcome\Resources\ReviewResource\ReviewResource;
 use App\Filament\Welcome\Resources\VoucherResource\VoucherResource;
 use App\Filament\Welcome\Resources\WishlistResource\WishlistResource;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use App\Support\AppIcon\AppIcon;
 
 class QuickAccessWidget extends BaseWidget
 {
@@ -42,15 +42,15 @@ class QuickAccessWidget extends BaseWidget
     {
         return [
             Stat::make(__('Paket'), null)
-                ->icon('heroicon-m-cube')
+                ->icon(AppIcon::GIFT)
                 ->color('primary')
                 ->extraAttributes([
                     'class' => 'home-stat-card home-stat-action cursor-pointer hover:scale-105 transition-transform h-full',
                     'onclick' => "window.location.href='" . route('filament.welcome.resources.flowerdecorationspackagecatalog.index') . "'",
                 ]),
 
-            Stat::make(__('Produk'), null)
-                ->icon('heroicon-m-shopping-bag')
+            Stat::make(__('Katalog'), null)
+                ->icon(AppIcon::ORDER)
                 ->color('info')
                 ->extraAttributes([
                     'class' => 'home-stat-card home-stat-action cursor-pointer hover:scale-105 transition-transform h-full',
@@ -58,7 +58,7 @@ class QuickAccessWidget extends BaseWidget
                 ]),
 
             Stat::make(__('Ulasan'), null)
-                ->icon('heroicon-m-star')
+                ->icon('/images/icons/star.svg')
                 ->color('warning')
                 ->extraAttributes([
                     'class' => 'home-stat-card home-stat-action cursor-pointer hover:scale-105 transition-transform h-full',
@@ -66,7 +66,7 @@ class QuickAccessWidget extends BaseWidget
                 ]),
 
             Stat::make(__('Favorit'), null)
-                ->icon('heroicon-m-heart')
+                ->icon(AppIcon::WISHLIST)
                 ->color('danger')
                 ->extraAttributes([
                     'class' => 'home-stat-card home-stat-action cursor-pointer hover:scale-105 transition-transform h-full',
@@ -74,7 +74,7 @@ class QuickAccessWidget extends BaseWidget
                 ]),
 
             Stat::make(__('Voucher'), null)
-                ->icon('heroicon-m-ticket')
+                ->icon(AppIcon::VOUCHER)
                 ->color('success')
                 ->extraAttributes([
                     'class' => 'home-stat-card home-stat-action cursor-pointer hover:scale-105 transition-transform h-full',

@@ -1,0 +1,36 @@
+# Voucher Query Definitions
+# Wedding Flower Decoration App - Voucher GraphQL Queries
+
+type Query {
+  # Get available vouchers for current user
+  myVouchers(first: Int = 10): [Voucher!]! @paginate(defaultCount: 10)
+  
+  # Get voucher by code (for validation)
+  voucherByCode(code: String!): Voucher @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@byCode")
+  
+  # Admin: Get all vouchers
+  vouchers(
+    first: Int = 20
+    code: String @where(key: "code")
+    active: Boolean @where(key: "is_active")
+    isGlobal: Boolean @where(key: "is_global")
+  ): [Voucher!]! @paginate(defaultCount: 20) @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@all")
+  
+  # Get voucher usage statistics
+  voucherStats(voucherId: ID!): VoucherStats @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@stats")
+}
+
+type VoucherStats {
+  voucher: Voucher!
+  totalUses: Int!
+  remainingUses: Int!
+  usageByUser: [VoucherUserUsage!]!
+  revenueImpact: Float!
+}
+
+type VoucherUserUsage {
+  user: User!
+  usesCount: Int!
+  firstUsedAt: String!
+  lastUsedAt: String!
+}

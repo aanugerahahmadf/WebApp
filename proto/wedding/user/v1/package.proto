@@ -1,0 +1,124 @@
+syntax = "proto3";
+
+package wedding.user.v1;
+
+option go_package = "github.com/wedding/user/v1;userv1";
+option php_namespace = "App\\Grpc\\User\\V1";
+option php_metadata_namespace = "App\\Grpc\\User\\V1\\GPBMetadata";
+
+import "wedding/user/v1/common.proto";
+import "wedding/user/v1/category.proto";
+import "wedding/user/v1/catalog.proto";
+
+// Package Service
+service PackageService {
+  rpc GetPackage(GetPackageRequest) returns (Package);
+  rpc GetPackageBySlug(GetPackageBySlugRequest) returns (Package);
+  rpc ListPackages(ListPackagesRequest) returns (PackageListResponse);
+  rpc GetFeaturedPackages(GetFeaturedPackagesRequest) returns (PackageListResponse);
+  rpc GetOnSalePackages(GetOnSalePackagesRequest) returns (PackageListResponse);
+  rpc GetPackagesByCategory(GetPackagesByCategoryRequest) returns (PackageListResponse);
+  rpc GetPackagesByCapacity(GetPackagesByCapacityRequest) returns (PackageListResponse);
+  rpc GetRelatedPackages(GetRelatedPackagesRequest) returns (PackageListResponse);
+  rpc SearchPackages(SearchPackagesRequest) returns (PackageListResponse);
+  rpc GetPackageStats(GetPackageStatsRequest) returns (PackageStats);
+}
+
+message GetPackageRequest {
+  string id = 1;
+}
+
+message GetPackageBySlugRequest {
+  string slug = 1;
+}
+
+message ListPackagesRequest {
+  PaginationRequest pagination = 1;
+  string category_id = 2;
+  bool featured = 3;
+  double min_price = 4;
+  double max_price = 5;
+  bool active = 6;
+  string sort_by = 7;
+  SortDirection sort_direction = 8;
+}
+
+message PackageListResponse {
+  repeated Package packages = 1;
+  PaginationResponse pagination = 2;
+}
+
+message GetFeaturedPackagesRequest {
+  int32 limit = 1;
+}
+
+message GetOnSalePackagesRequest {
+  int32 limit = 1;
+}
+
+message GetPackagesByCategoryRequest {
+  string category_id = 1;
+  int32 limit = 2;
+}
+
+message GetPackagesByCapacityRequest {
+  int32 min_capacity = 1;
+  int32 max_capacity = 2;
+  int32 limit = 3;
+}
+
+message GetRelatedPackagesRequest {
+  string package_id = 1;
+  int32 limit = 2;
+}
+
+message SearchPackagesRequest {
+  string query = 1;
+  int32 limit = 2;
+}
+
+message GetPackageStatsRequest {}
+
+message PackageStats {
+  int32 total_packages = 1;
+  int32 active_packages = 2;
+  int32 featured_packages = 3;
+  int32 on_sale_packages = 4;
+  double total_value = 5;
+  repeated CategoryPackageCount by_category = 6;
+  repeated CapacityPackageCount by_capacity = 7;
+}
+
+message CategoryPackageCount {
+  Category category = 1;
+  int32 count = 2;
+}
+
+message CapacityPackageCount {
+  int32 min_capacity = 1;
+  int32 max_capacity = 2;
+  int32 count = 3;
+}
+
+message Package {
+  string id = 1;
+  string name = 2;
+  string slug = 3;
+  string description = 4;
+  double price = 5;
+  double discount_price = 6;
+  double final_price = 7;
+  bool is_active = 8;
+  bool is_featured = 9;
+  string image_url = 10;
+  repeated string features = 11;
+  string theme = 12;
+  string color = 13;
+  int32 min_capacity = 14;
+  int32 max_capacity = 15;
+  Category category = 16;
+  double average_rating = 17;
+  repeated Review reviews = 18;
+  string created_at = 19;
+  string updated_at = 20;
+}

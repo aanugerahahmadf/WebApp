@@ -1,0 +1,148 @@
+syntax = "proto3";
+
+package wedding.user.v1;
+
+option go_package = "github.com/wedding/user/v1;userv1";
+option php_namespace = "App\\Grpc\\User\\V1";
+option php_metadata_namespace = "App\\Grpc\\User\\V1\\GPBMetadata";
+
+import "wedding/user/v1/common.proto";
+
+// Auth Service
+service AuthService {
+  // Login with email and password
+  rpc Login(LoginRequest) returns (AuthResponse);
+  
+  // Register new user
+  rpc Register(RegisterRequest) returns (AuthResponse);
+  
+  // Logout current user
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+  
+  // Refresh access token
+  rpc RefreshToken(RefreshTokenRequest) returns (AuthResponse);
+  
+  // Request password reset
+  rpc ForgotPassword(ForgotPasswordRequest) returns (ForgotPasswordResponse);
+  
+  // Reset password with token
+  rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);
+  
+  // Verify email with token
+  rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse);
+  
+  // Resend verification email
+  rpc ResendVerification(ResendVerificationRequest) returns (ResendVerificationResponse);
+  
+  // Get current authenticated user
+  rpc Me(MeRequest) returns (User);
+}
+
+// Login Request/Response
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+  string device_token = 3;
+  string device_type = 4;
+  bool remember_me = 5;
+}
+
+message RegisterRequest {
+  string name = 1;
+  string email = 2;
+  string password = 3;
+  string password_confirmation = 4;
+  string phone = 5;
+  bool accept_terms = 6;
+  bool marketing_consent = 7;
+}
+
+message LogoutRequest {
+  string refresh_token = 1;
+}
+
+message LogoutResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+message ForgotPasswordRequest {
+  string email = 1;
+}
+
+message ForgotPasswordResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ResetPasswordRequest {
+  string token = 1;
+  string email = 2;
+  string password = 3;
+  string password_confirmation = 4;
+}
+
+message ResetPasswordResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message VerifyEmailRequest {
+  string token = 1;
+  string email = 2;
+}
+
+message VerifyEmailResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ResendVerificationRequest {
+  string email = 1;
+}
+
+message ResendVerificationResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message MeRequest {}
+
+message AuthResponse {
+  User user = 1;
+  string access_token = 2;
+  string token_type = 3;
+  int32 expires_in = 4;
+  string refresh_token = 5;
+  int32 refresh_expires_in = 6;
+}
+
+// User entity
+message User {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  string phone = 4;
+  string avatar = 5;
+  string email_verified_at = 6;
+  string address = 7;
+  string city = 8;
+  string province = 9;
+  string postal_code = 10;
+  string date_of_birth = 11;
+  Gender gender = 12;
+  bool notification_email = 13;
+  bool notification_sms = 14;
+  bool notification_push = 15;
+  string language = 16;
+  string currency = 17;
+  string timezone = 18;
+  repeated string roles = 19;
+  string created_at = 20;
+  string updated_at = 21;
+  double profile_completion = 22;
+}

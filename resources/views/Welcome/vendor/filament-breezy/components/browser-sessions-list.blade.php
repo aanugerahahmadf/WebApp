@@ -15,12 +15,12 @@
                                 <div>
                                     @if ($session->device['desktop'])
                                         <x-filament::icon
-                                            icon="heroicon-o-computer-desktop"
+                                            icon="/images/icons/computer_desktop.svg"
                                             class="w-8 h-8 text-gray-500 dark:text-gray-400"
                                         />
                                     @else
                                         <x-filament::icon
-                                            icon="heroicon-o-device-phone-mobile"
+                                            icon="/images/icons/mobile.svg"
                                             class="w-8 h-8 text-gray-500 dark:text-gray-400"
                                         />
                                     @endif

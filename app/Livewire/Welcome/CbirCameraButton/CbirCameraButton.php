@@ -3,7 +3,7 @@
 namespace App\Livewire\Welcome\CbirCameraButton;
 
 use App\Models\Package\Package;
-use App\Models\Product\Product;
+use App\Models\Catalog\Catalog;
 use App\Services\CBIRService\CBIRService;
 use emmanpbarrameda\FilamentTakePictureField\Forms\Components\TakePicture;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -247,7 +247,7 @@ class CbirCameraButton extends Component implements HasForms
 
             $model = $type === 'package'
                 ? Package::with(['category'])->find($id)
-                : Product::with(['category'])->find($id);
+                : Catalog::with(['category'])->find($id);
 
             if (! $model) {
                 continue;

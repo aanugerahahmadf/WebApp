@@ -7,10 +7,12 @@ use App\Models\Traits\LegacyMorphClass\LegacyMorphClass;
 use App\Models\Review\Review;
 use App\Models\User\User;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ReviewReply extends Model
 {
+    use HasFactory;
     use LegacyMorphClass;
     protected $fillable = [
         'review_id',

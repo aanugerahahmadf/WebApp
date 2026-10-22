@@ -1,0 +1,163 @@
+syntax = "proto3";
+
+package wedding.user.v1;
+
+option go_package = "github.com/wedding/user/v1;userv1";
+option php_namespace = "App\\Grpc\\User\\V1";
+option php_metadata_namespace = "App\\Grpc\\User\\V1\\GPBMetadata";
+
+import "wedding/user/v1/common.proto";
+import "wedding/user/v1/auth.proto";
+import "wedding/user/v1/catalog.proto";
+
+// Review Service
+service ReviewService {
+  rpc GetCatalogReviews(GetCatalogReviewsRequest) returns (ReviewListResponse);
+  rpc GetPackageReviews(GetPackageReviewsRequest) returns (ReviewListResponse);
+  rpc GetMyReviews(GetMyReviewsRequest) returns (ReviewListResponse);
+  rpc GetReview(GetReviewRequest) returns (Review);
+  rpc GetReviewStats(GetReviewStatsRequest) returns (ReviewStats);
+  rpc GetFeaturedReviews(GetFeaturedReviewsRequest) returns (ReviewListResponse);
+  rpc GetAllReviews(GetAllReviewsRequest) returns (ReviewListResponse);
+  rpc CreateReview(CreateReviewRequest) returns (Review);
+  rpc UpdateReview(UpdateReviewRequest) returns (Review);
+  rpc DeleteReview(DeleteReviewRequest) returns (DeleteReviewResponse);
+  rpc AddReviewPhoto(AddReviewPhotoRequest) returns (Review);
+  rpc RemoveReviewPhoto(RemoveReviewPhotoRequest) returns (Review);
+  rpc MarkReviewHelpful(MarkReviewHelpfulRequest) returns (Review);
+  rpc UnmarkReviewHelpful(UnmarkReviewHelpfulRequest) returns (Review);
+  rpc ModerateReview(ModerateReviewRequest) returns (Review);
+  rpc ReplyToReview(ReplyToReviewRequest) returns (Review);
+  rpc ReportReview(ReportReviewRequest) returns (ReviewReport);
+}
+
+message GetCatalogReviewsRequest {
+  string catalog_id = 1;
+  PaginationRequest pagination = 2;
+  int32 rating = 3;
+}
+
+message GetPackageReviewsRequest {
+  string package_id = 1;
+  PaginationRequest pagination = 2;
+  int32 rating = 3;
+}
+
+message GetMyReviewsRequest {
+  PaginationRequest pagination = 1;
+}
+
+message GetReviewRequest {
+  string id = 1;
+}
+
+message GetReviewStatsRequest {
+  string catalog_id = 1;
+  string package_id = 2;
+}
+
+message GetFeaturedReviewsRequest {
+  int32 limit = 1;
+}
+
+message GetAllReviewsRequest {
+  PaginationRequest pagination = 1;
+  string status = 2;
+  int32 rating = 3;
+}
+
+message CreateReviewRequest {
+  string catalog_id = 1;
+  string package_id = 2;
+  string order_id = 3;
+  int32 rating = 4;
+  string title = 5;
+  string comment = 6;
+  repeated string photos = 7;
+  bool is_anonymous = 8;
+}
+
+message UpdateReviewRequest {
+  string review_id = 1;
+  int32 rating = 2;
+  string title = 3;
+  string comment = 4;
+  repeated string photos = 5;
+  bool is_anonymous = 6;
+}
+
+message DeleteReviewRequest {
+  string review_id = 1;
+}
+
+message AddReviewPhotoRequest {
+  string review_id = 1;
+  string url = 2;
+  string caption = 3;
+}
+
+message RemoveReviewPhotoRequest {
+  string review_id = 1;
+  string photo_url = 2;
+}
+
+message MarkReviewHelpfulRequest {
+  string review_id = 1;
+}
+
+message UnmarkReviewHelpfulRequest {
+  string review_id = 1;
+}
+
+message ModerateReviewRequest {
+  string review_id = 1;
+  ReviewStatus status = 2;
+  string moderation_note = 3;
+}
+
+message ReplyToReviewRequest {
+  string review_id = 1;
+  string reply = 2;
+}
+
+message ReportReviewRequest {
+  string review_id = 1;
+  ReportReason reason = 2;
+  string description = 3;
+}
+
+message ReviewListResponse {
+  repeated Review reviews = 1;
+  PaginationResponse pagination = 2;
+}
+
+message ReviewStats {
+  int32 total_reviews = 1;
+  double average_rating = 2;
+  repeated RatingCount rating_distribution = 3;
+  int32 with_photos = 4;
+  int32 verified_purchases = 5;
+}
+
+message RatingCount {
+  int32 rating = 1;
+  int32 count = 2;
+  double percentage = 3;
+}
+
+message ReviewReport {
+  string id = 1;
+  Review review = 2;
+  User reporter = 3;
+  ReportReason reason = 4;
+  string description = 5;
+  ReportStatus status = 6;
+  string created_at = 7;
+  string reviewed_at = 8;
+  User reviewed_by = 9;
+}
+
+message DeleteReviewResponse {
+  bool success = 1;
+  string message = 2;
+}

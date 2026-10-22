@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'מיקוד',
         'preview'                  => 'תצוגה מקדימה',
         'price'                    => 'מחיר',
-        'product_id'               => 'מזהה מוצר',
+        'catalog_id'               => 'מזהה מוצר',
         'product_uid'              => 'UID של מוצר',
         'product_uuid'             => 'מוצר UUID',
         'promo_code'               => 'קוד קופון',

@@ -1,5 +1,6 @@
 {
     "$schema": "https://www.schemastore.org/package.json",
+    "name": "wedding-flowers-decorations",
     "private": true,
     "type": "module",
     "scripts": {
@@ -18,13 +19,9 @@
         "@tailwindcss/forms": "^0.5.11",
         "@tailwindcss/typography": "^0.5.19",
         "@tailwindcss/vite": "^4.0.0",
-        "axios": "^1.15.2",
         "concurrently": "^9.0.1",
         "cross-env": "^7.0.3",
-        "electron": "^42.3.3",
-        "laravel-echo": "^2.3.0",
         "laravel-vite-plugin": "^2.0.0",
-        "pusher-js": "^8.4.0",
         "tailwindcss": "^4.0.0",
         "vite": "^7.0.7"
     },
@@ -38,9 +35,13 @@
         "@google-cloud/translate": "^9.4.1",
         "@google-cloud/vision": "^5.3.6",
         "@popperjs/core": "^2.11.8",
+        "axios": "^1.15.2",
+        "electron": "^42.3.3",
         "emoji-js": "^3.9.0",
         "emoji-picker-element": "^1.29.1",
         "firebase": "^10.14.1",
+        "laravel-echo": "^2.3.0",
+        "pusher-js": "^8.4.0",
         "tesseract.js": "^7.0.0"
     }
 }

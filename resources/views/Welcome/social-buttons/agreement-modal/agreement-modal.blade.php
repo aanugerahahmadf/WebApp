@@ -66,7 +66,7 @@
                     <div class="flex items-center gap-2">
                         <template x-if="mode === 'wizard'">
                             <button @click="step = 1" class="text-gray-400 hover:text-primary-500 transition-colors">
-                                <x-heroicon-m-arrow-left class="w-6 h-6" />
+                                <img src="/images/icons/arrow_left.svg" class="w-6 h-6" />
                             </button>
                         </template>
                         <h2 class="text-xl font-bold text-primary-500">
@@ -113,7 +113,7 @@
                     <div class="flex items-center gap-2">
                         <template x-if="mode === 'wizard'">
                             <button @click="step = 2" class="text-gray-400 hover:text-primary-500 transition-colors">
-                                <x-heroicon-m-arrow-left class="w-6 h-6" />
+                                <img src="/images/icons/arrow_left.svg" class="w-6 h-6" />
                             </button>
                         </template>
                         <h2 class="text-xl font-bold text-primary-500">

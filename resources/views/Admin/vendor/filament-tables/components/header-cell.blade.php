@@ -63,7 +63,7 @@
                         default => 'tables::header-cell.sort-button',
                     }
                 "
-                :icon="$activelySorted && $sortDirection === 'asc' ? 'heroicon-m-chevron-up' : 'heroicon-m-chevron-down'"
+                :icon="$activelySorted && $sortDirection === 'asc' ? '/images/icons/chevron_up.svg' : '/images/icons/chevron_down.svg'"
                 @class([
                     'fi-ta-header-cell-sort-icon h-5 w-5 shrink-0 transition duration-75',
                     'text-gray-950 dark:text-white' => $activelySorted,

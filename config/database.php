@@ -35,7 +35,7 @@ return [
         'sqlite' => [
             'driver' => 'sqlite',
             'url' => env('DB_URL'),
-            'database' => env('DB_DATABASE', database_path('database.sqlite')),
+            'database' => env('DB_SQLITE_DATABASE', (env('DB_DATABASE') === ':memory:' || str_ends_with((string) env('DB_DATABASE'), '.sqlite')) ? env('DB_DATABASE') : database_path('database.sqlite')),
             'prefix' => '',
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
             'busy_timeout' => 5000,
@@ -113,6 +113,18 @@ return [
             'prefix_indexes' => true,
             // 'encrypt' => env('DB_ENCRYPT', 'yes'),
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
+        ],
+
+        'firebird' => [
+            'driver' => 'firebird',
+            'host' => env('FB_HOST', 'localhost'),
+            'port' => env('FB_PORT', '3050'),
+            'database' => env('FB_DATABASE', 'wedding_app.fdb'),
+            'username' => env('FB_USERNAME', 'SYSDBA'),
+            'password' => env('FB_PASSWORD', 'masterkey'),
+            'charset' => env('FB_CHARSET', 'UTF8'),
+            'prefix' => '',
+            'wait' => (bool) env('FB_WAIT', true),
         ],
 
     ],

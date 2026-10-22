@@ -49,7 +49,7 @@ class UsernameComponent extends Component implements HasForms
             ->schema([
                 Section::make(__('Username'))
                     ->aside()
-                    ->icon('heroicon-o-identification')
+                    ->icon('/images/icons/id_card.svg')
                     ->description(__('Perbarui username Anda'))
                     ->schema([
                         TextInput::make('username')

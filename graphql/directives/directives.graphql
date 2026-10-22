@@ -1,0 +1,108 @@
+# Custom Directives
+# Wedding Flower Decoration App - GraphQL Custom Directives
+
+"""
+Directs the executor to include this field or fragment only when the `if` argument is true.
+"""
+directive @include(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+
+"""
+Directs the executor to skip this field or fragment when the `if` argument is true.
+"""
+directive @skip(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+
+"""
+Marks an element of a GraphQL schema as no longer supported.
+"""
+directive @deprecated(reason: String = "No longer supported") on FIELD_DEFINITION | ENUM_VALUE | INPUT_FIELD_DEFINITION
+
+"""
+Exposes a URL for specifying the behavior of a custom directive.
+"""
+directive @specifiedBy(url: String!) on SCALAR
+
+# Custom Directives for Wedding App
+
+"""
+Restricts access to authenticated users only.
+Usage: @auth(roles: ["admin", "customer"])
+"""
+directive @auth(roles: [String!]) on FIELD_DEFINITION | OBJECT | INTERFACE
+
+"""
+Restricts access to users with specific roles.
+Usage: @role(roles: ["admin", "super_admin"])
+"""
+directive @role(roles: [String!]!) on FIELD_DEFINITION | OBJECT | INTERFACE
+
+"""
+Rate limits a field or mutation.
+Usage: @rateLimit(max: 100, window: "1m", key: "user_id")
+"""
+directive @rateLimit(max: Int!, window: String!, key: String) on FIELD_DEFINITION
+
+"""
+Caches the result of a field.
+Usage: @cache(ttl: 300, key: "user:{user_id}:profile")
+"""
+directive @cache(ttl: Int!, key: String) on FIELD_DEFINITION
+
+"""
+Validates input against a Laravel validation rule.
+Usage: @validate(rules: "required|email|max:255")
+"""
+directive @validate(rules: String!) on INPUT_FIELD_DEFINITION | ARGUMENT_DEFINITION
+
+"""
+Transforms the field value using a custom transformer.
+Usage: @transform(class: "App\\GraphQL\\Transformers\\UpperCaseTransformer")
+"""
+directive @transform(class: String!) on FIELD_DEFINITION
+
+"""
+Logs field access for audit purposes.
+Usage: @audit(action: "view_profile", resource: "user")
+"""
+directive @audit(action: String!, resource: String) on FIELD_DEFINITION
+
+"""
+Injects the current user into the resolver context.
+Usage: @injectUser
+"""
+directive @injectUser on FIELD_DEFINITION
+
+"""
+Checks if user owns the resource.
+Usage: @owns(resource: "order", idArg: "orderId")
+"""
+directive @owns(resource: String!, idArg: String!) on FIELD_DEFINITION
+
+"""
+Scopes query to current user's data.
+Usage: @scopeUser
+"""
+directive @scopeUser on FIELD_DEFINITION
+
+"""
+Formats date/time output.
+Usage: @dateFormat(format: "Y-m-d H:i:s", timezone: "Asia/Jakarta")
+"""
+directive @dateFormat(format: String!, timezone: String) on FIELD_DEFINITION
+
+"""
+Formats currency output.
+Usage: @currency(currency: "IDR", locale: "id_ID")
+"""
+directive @currency(currency: String!, locale: String) on FIELD_DEFINITION
+
+"""
+Sanitizes HTML output.
+Usage: @sanitize(tags: ["b", "i", "u"], attributes: [])
+"""
+directive @sanitize(tags: [String!], attributes: [String!]) on FIELD_DEFINITION
+
+"""
+Limits array/connection size.
+Usage: @limit(max: 50, default: 10)
+"""
+directive @limit(max: Int!, default: Int) on FIELD_DEFINITION | ARGUMENT_DEFINITION

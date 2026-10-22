@@ -7,7 +7,7 @@
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+            font-family: 'Google Sans Flex', sans-serif;
             background: #f8fafc;
             color: #1e293b;
             line-height: 1.7;
@@ -132,9 +132,30 @@
             <div class="contact">
                 <h2>{{ __('Kontak') }}</h2>
                 <ul class="contact-options">
-                    @foreach ($contactOptions as $label => $value)
-                        @if ($value)
-                            <li><strong>{{ $label }}:</strong> {{ $value }}</li>
+                    @foreach ($contactOptions as $key => $option)
+                        @php
+                            // Sama seperti view Welcome: `contact_options` bisa berisi
+                            // daftar objek, bukan peta label => nilai. Echo array
+                            // mentah membuat halaman 500 (htmlspecialchars).
+                            if (is_array($option)) {
+                                $contactLabel = $option['label'] ?? $option['name'] ?? (is_string($key) ? $key : '');
+                                $contactValue = $option['subLabel'] ?? $option['sub_label'] ?? $option['value'] ?? $option['subtitle'] ?? '';
+                                $contactUrl = $option['url'] ?? $option['href'] ?? null;
+                            } else {
+                                $contactLabel = is_string($key) ? $key : '';
+                                $contactValue = (string) $option;
+                                $contactUrl = null;
+                            }
+                        @endphp
+                        @if ($contactLabel !== '' || $contactValue !== '')
+                            <li>
+                                @if ($contactLabel !== '')<strong>{{ $contactLabel }}:</strong>@endif
+                                @if ($contactUrl)
+                                    <a href="{{ $contactUrl }}">{{ $contactValue !== '' ? $contactValue : $contactUrl }}</a>
+                                @else
+                                    {{ $contactValue }}
+                                @endif
+                            </li>
                         @endif
                     @endforeach
                 </ul>

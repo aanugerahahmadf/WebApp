@@ -3,6 +3,7 @@
 namespace App\Filament\Concerns;
 
 use App\Http\Responses\WelcomeLogoutResponse\WelcomeLogoutResponse;
+use App\Support\AppIcon\AppIcon;
 use Filament\Http\Responses\Auth\LogoutResponse;
 use Filament\Navigation\MenuItem;
 
@@ -47,10 +48,17 @@ trait RedirectsLogoutToWelcomeHome
     public const SIGN_OUT_LABEL = 'Sign Out';
 
     /**
-     * Ikon tombol SignOut, sama dengan default Filament supaya tidak berubah
-     * dari yang sekarang.
+     * Ikon tombol SignOut.
+     *
+     * Aset SVG berwarna, bukan Heroicon: item ini satu-satunya di user menu
+     * yang ikonnya masih monokrom, dan di daftar yang isinya sudah berwarna
+     * (profil, pengaturan, riwayat, ulasan, ...) satu-satunya yang polos
+     * terlihat seperti tidak sengaja.
+     *
+     * `AppIcon::SIGN_OUT` menunjuk file di `public/images/icons/`, dan
+     * Filament merender ikon yang mengandung `/` sebagai `<img>`.
      */
-    public const SIGN_OUT_ICON = 'heroicon-m-arrow-left-on-rectangle';
+    public const SIGN_OUT_ICON = AppIcon::SIGN_OUT;
 
     public function register(): void
     {

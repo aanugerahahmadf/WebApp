@@ -1,0 +1,32 @@
+I0526 00:26:57.281583   36688 load.go:31] Reloading schema and connectors...
+I0526 00:26:57.297846   36688 control.go:100] [projects/emulator/locations/emulator/services/wedding-decorasi-flower-service 7875] UpdateResources(): done
+Main schema: sources: schema\schema.gql [1992B] 
+Connector "example": sources: example\mutations.gql [1243B] example\queries.gql [1801B] 
+I0526 00:26:57.307015   36688 codegen.go:101] [connector "example" javascriptSdk] Generating sources into "D:\\Weeding-Organizer-CBIR\\Mobile-App\\src\\dataconnect-generated"
+I0526 00:26:57.320680   36688 collector.go:107] schema extensions wrote into "D:\\Weeding-Organizer-CBIR\\Mobile-App\\dataconnect\\.dataconnect\\schema"
+Generated sources: main\implicit.gql [1261B] main\input.gql [29168B] main\relation.gql [14318B] prelude.gql [84989B] main\query.gql [5099B] main\mutation.gql [13679B] 
+I0526 00:26:57.320680   36688 collector.go:107] connector "example" javascriptSdk wrote into "D:\\Weeding-Organizer-CBIR\\Mobile-App\\src\\dataconnect-generated"
+Generated sources: package.json [615B] README.md [41108B] .guides/setup.md [584B] index.d.ts [8426B] esm\index.esm.js [5289B] esm\package.json [17B] index.cjs.js [5833B] .guides/usage.md [1705B] .guides/config.json [236B] 
+I0526 00:26:57.320680   36688 installsdk.go:55] Package @dataconnect/generated is already installed. Skipping installation
+I0526 00:26:57.320680   36688 load.go:109] Finished reloading
+I0526 00:26:57.325909   36688 dev.go:104] Listening on address (HTTP + gRPC): 127.0.0.1:9399
+I0526 00:26:57.325909   36688 dev.go:104] Listening on address (HTTP + gRPC): [::1]:9399
+I0526 00:27:02.309511   36688 migrate.go:24] Running migration SQL:
+Step 1: CREATE EXTENSION IF NOT EXISTS "uuid-ossp"
+Step 2: CREATE TABLE "public"."movie" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "genre" text NULL, "image_url" text NOT NULL, "title" text NOT NULL, PRIMARY KEY ("id"))
+Step 3: CREATE TABLE "public"."user" ("id" text NOT NULL, "username" character varying(50) NOT NULL, PRIMARY KEY ("id"))
+Step 4: CREATE TABLE "public"."Reviews" ("movie_id" uuid NOT NULL, "user_id" text NOT NULL, "rating" integer NULL, "review_date" date NOT NULL, "review_text" text NULL, PRIMARY KEY ("movie_id", "user_id"), CONSTRAINT "Reviews_movie_id_fkey" FOREIGN KEY ("movie_id") REFERENCES "public"."movie" ("id") ON DELETE CASCADE, CONSTRAINT "Reviews_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."user" ("id") ON DELETE CASCADE)
+Step 5: CREATE INDEX "Reviews_movieId_idx" ON "public"."Reviews" ("movie_id")
+Step 6: CREATE INDEX "Reviews_userId_idx" ON "public"."Reviews" ("user_id")
+Step 7: CREATE TABLE "public"."movie_metadata" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "movie_id" uuid NOT NULL, "description" text NULL, "rating" double precision NULL, "release_year" integer NULL, PRIMARY KEY ("id"), CONSTRAINT "movie_metadata_movie_id_fkey" FOREIGN KEY ("movie_id") REFERENCES "public"."movie" ("id") ON DELETE CASCADE)
+Step 8: CREATE INDEX "movie_metadata_movieId_idx" ON "public"."movie_metadata" ("movie_id")
+Step 9: CREATE UNIQUE INDEX "movie_metadata_movieId_uidx" ON "public"."movie_metadata" ("movie_id")
+I0526 00:27:02.448847   36688 control.go:100] [projects/emulator/locations/emulator/services/wedding-decorasi-flower-service 0bfe] UpdateResources(): done
+Main schema: sources: schema\schema.gql [1992B] 
+Connector "example": sources: example\mutations.gql [1243B] example\queries.gql [1801B] 
+I0526 00:27:02.454301   36688 configure_emulator.go:21] ConfigureEmulator successed
+Request: service_id: "wedding-decorasi-flower-service"
+connection_string: "postgres://127.0.0.1:5433/wedding-decorasi-flower-database?sslmode=disable"
+database: "wedding-decorasi-flower-database"
+
+Response: 

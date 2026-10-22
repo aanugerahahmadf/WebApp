@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <style>
         @page { margin: 38px 42px; }
-        body { font-family: DejaVu Sans, sans-serif; color: #1f2937; font-size: 10.5px; line-height: 1.45; }
+        body { font-family: 'Google Sans Flex', sans-serif; color: #1f2937; font-size: 10.5px; line-height: 1.45; }
         .header { border-bottom: 3px solid #d4a017; padding-bottom: 14px; margin-bottom: 22px; }
         .brand { color: #a16207; font-size: 12px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; }
         h1 { font-size: 22px; margin: 5px 0 3px; color: #111827; }
@@ -19,7 +19,7 @@
 </head>
 <body>
     <div class="header">
-        <div class="brand">Wedding Organizer</div>
+        <div class="brand">Dekorasi Bunga Pernikahan</div>
         <h1>Formulir Kebutuhan Acara</h1>
         <div class="muted">Ringkasan konsultasi untuk {{ $inbox->inbox_title }}</div>
     </div>

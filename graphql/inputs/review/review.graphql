@@ -1,0 +1,68 @@
+# Review Input Types
+# Wedding Flower Decoration App - Review GraphQL Input Types
+
+input CreateReviewInput {
+  catalogId: ID
+  packageId: ID
+  orderId: ID!
+  rating: Int!
+  title: String
+  comment: String
+  photos: [String!]
+  isAnonymous: Boolean = false
+}
+
+input UpdateReviewInput {
+  rating: Int
+  title: String
+  comment: String
+  photos: [String!]
+  isAnonymous: Boolean
+}
+
+input ReviewPhotoInput {
+  url: String!
+  caption: String
+}
+
+input ReviewFilterInput {
+  catalogId: ID
+  packageId: ID
+  userId: ID
+  rating: Int
+  status: ReviewStatus
+  hasPhotos: Boolean
+  isVerifiedPurchase: Boolean
+  dateFrom: String
+  dateTo: String
+}
+
+input ModerateReviewInput {
+  status: ReviewStatus!
+  moderationNote: String
+}
+
+input ReplyToReviewInput {
+  reply: String!
+}
+
+input ReportReviewInput {
+  reason: ReportReason!
+  description: String
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  HIDDEN
+}
+
+enum ReportReason {
+  SPAM
+  INAPPROPRIATE
+  FAKE
+  OFFENSIVE
+  IRRELEVANT
+  OTHER
+}

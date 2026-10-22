@@ -36,10 +36,10 @@ enum ReportStatus: string implements HasColor, HasIcon, HasLabel
     public function getIcon(): ?string
     {
         return match ($this) {
-            self::OPEN => 'heroicon-m-flag',
-            self::IN_PROGRESS => 'heroicon-m-arrow-path',
-            self::RESOLVED => 'heroicon-m-check-circle',
-            self::REJECTED => 'heroicon-m-x-circle',
+            self::OPEN => '/images/icons/flag.svg',
+            self::IN_PROGRESS => '/images/icons/refresh.svg',
+            self::RESOLVED => '/images/icons/check_circle.svg',
+            self::REJECTED => '/images/icons/x_circle.svg',
         };
     }
 }

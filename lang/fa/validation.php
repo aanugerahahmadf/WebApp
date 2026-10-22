@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'کد پستی',
         'preview'                  => 'پیش نمایش',
         'price'                    => 'قیمت',
-        'product_id'               => 'شناسه محصول',
+        'catalog_id'               => 'شناسه محصول',
         'product_uid'              => 'UID محصول',
         'product_uuid'             => 'UUID محصول',
         'promo_code'               => 'کد تبلیغاتی',

@@ -1,0 +1,2280 @@
+/*
+ * PUBLIC/css/app-font.css -- DIHASILKAN scripts/generate-fonts.py.
+ * JANGAN edit tangan kecuali pengaturan umum (aturan `*`, optical-
+ * sizing) -- ulangin script untuk menyegarkan daftar @font-face.
+ *
+ * Sumber: assets/fonts/<Keluarga>/ (paket resmi Google Fonts),
+ * dipasang ke public/fonts/<Keluarga>/ oleh script yang sama.
+ * Semua keluarga TTF VARIABLE + SEMUA instansi statis dalam
+ * folder itu jadi pilihan di select font (searchable).
+ */
+
+/* Asap Sharp */
+@font-face {
+    font-family: 'Asap Sharp';
+    src: url("/fonts/Asap_Sharp/AsapSharp-Italic-VariableFont_wdth,wght.ttf") format("truetype-variations");
+    font-weight: 100 1000;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Asap Sharp';
+    src: url("/fonts/Asap_Sharp/AsapSharp-VariableFont_wdth,wght.ttf") format("truetype-variations");
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp Black */
+@font-face {
+    font-family: 'Asap Sharp Black';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp-Black.ttf") format("truetype-variations");
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp Black Italic */
+@font-face {
+    font-family: 'Asap Sharp Black Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp-BlackItalic.ttf") format("truetype-variations");
+    font-weight: 900;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp Bold */
+@font-face {
+    font-family: 'Asap Sharp Bold';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp-Bold.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp Bold Italic */
+@font-face {
+    font-family: 'Asap Sharp Bold Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp-BoldItalic.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp Condensed Black */
+@font-face {
+    font-family: 'Asap Sharp Condensed Black';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Condensed-Black.ttf") format("truetype-variations");
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp Condensed Black Italic */
+@font-face {
+    font-family: 'Asap Sharp Condensed Black Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Condensed-BlackItalic.ttf") format("truetype-variations");
+    font-weight: 900;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp Condensed Bold */
+@font-face {
+    font-family: 'Asap Sharp Condensed Bold';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Condensed-Bold.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp Condensed Bold Italic */
+@font-face {
+    font-family: 'Asap Sharp Condensed Bold Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Condensed-BoldItalic.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp Condensed ExtraBold */
+@font-face {
+    font-family: 'Asap Sharp Condensed ExtraBold';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Condensed-ExtraBold.ttf") format("truetype-variations");
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp Condensed ExtraBold Italic */
+@font-face {
+    font-family: 'Asap Sharp Condensed ExtraBold Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Condensed-ExtraBoldItalic.ttf") format("truetype-variations");
+    font-weight: 800;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp Condensed ExtraLight */
+@font-face {
+    font-family: 'Asap Sharp Condensed ExtraLight';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Condensed-ExtraLight.ttf") format("truetype-variations");
+    font-weight: 200;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp Condensed ExtraLight Italic */
+@font-face {
+    font-family: 'Asap Sharp Condensed ExtraLight Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Condensed-ExtraLightItalic.ttf") format("truetype-variations");
+    font-weight: 200;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp Condensed Italic */
+@font-face {
+    font-family: 'Asap Sharp Condensed Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Condensed-Italic.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp Condensed Light */
+@font-face {
+    font-family: 'Asap Sharp Condensed Light';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Condensed-Light.ttf") format("truetype-variations");
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp Condensed Light Italic */
+@font-face {
+    font-family: 'Asap Sharp Condensed Light Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Condensed-LightItalic.ttf") format("truetype-variations");
+    font-weight: 300;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp Condensed Medium */
+@font-face {
+    font-family: 'Asap Sharp Condensed Medium';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Condensed-Medium.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp Condensed Medium Italic */
+@font-face {
+    font-family: 'Asap Sharp Condensed Medium Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Condensed-MediumItalic.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp Condensed Regular */
+@font-face {
+    font-family: 'Asap Sharp Condensed Regular';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Condensed-Regular.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp Condensed SemiBold */
+@font-face {
+    font-family: 'Asap Sharp Condensed SemiBold';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Condensed-SemiBold.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp Condensed SemiBold Italic */
+@font-face {
+    font-family: 'Asap Sharp Condensed SemiBold Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Condensed-SemiBoldItalic.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp Condensed Thin */
+@font-face {
+    font-family: 'Asap Sharp Condensed Thin';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Condensed-Thin.ttf") format("truetype-variations");
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp Condensed Thin Italic */
+@font-face {
+    font-family: 'Asap Sharp Condensed Thin Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Condensed-ThinItalic.ttf") format("truetype-variations");
+    font-weight: 100;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp Expanded Black */
+@font-face {
+    font-family: 'Asap Sharp Expanded Black';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Expanded-Black.ttf") format("truetype-variations");
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp Expanded Black Italic */
+@font-face {
+    font-family: 'Asap Sharp Expanded Black Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Expanded-BlackItalic.ttf") format("truetype-variations");
+    font-weight: 900;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp Expanded Bold */
+@font-face {
+    font-family: 'Asap Sharp Expanded Bold';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Expanded-Bold.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp Expanded Bold Italic */
+@font-face {
+    font-family: 'Asap Sharp Expanded Bold Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Expanded-BoldItalic.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp Expanded ExtraBold */
+@font-face {
+    font-family: 'Asap Sharp Expanded ExtraBold';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Expanded-ExtraBold.ttf") format("truetype-variations");
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp Expanded ExtraBold Italic */
+@font-face {
+    font-family: 'Asap Sharp Expanded ExtraBold Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Expanded-ExtraBoldItalic.ttf") format("truetype-variations");
+    font-weight: 800;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp Expanded ExtraLight */
+@font-face {
+    font-family: 'Asap Sharp Expanded ExtraLight';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Expanded-ExtraLight.ttf") format("truetype-variations");
+    font-weight: 200;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp Expanded ExtraLight Italic */
+@font-face {
+    font-family: 'Asap Sharp Expanded ExtraLight Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Expanded-ExtraLightItalic.ttf") format("truetype-variations");
+    font-weight: 200;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp Expanded Italic */
+@font-face {
+    font-family: 'Asap Sharp Expanded Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Expanded-Italic.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp Expanded Light */
+@font-face {
+    font-family: 'Asap Sharp Expanded Light';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Expanded-Light.ttf") format("truetype-variations");
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp Expanded Light Italic */
+@font-face {
+    font-family: 'Asap Sharp Expanded Light Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Expanded-LightItalic.ttf") format("truetype-variations");
+    font-weight: 300;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp Expanded Medium */
+@font-face {
+    font-family: 'Asap Sharp Expanded Medium';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Expanded-Medium.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp Expanded Medium Italic */
+@font-face {
+    font-family: 'Asap Sharp Expanded Medium Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Expanded-MediumItalic.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp Expanded Regular */
+@font-face {
+    font-family: 'Asap Sharp Expanded Regular';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Expanded-Regular.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp Expanded SemiBold */
+@font-face {
+    font-family: 'Asap Sharp Expanded SemiBold';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Expanded-SemiBold.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp Expanded SemiBold Italic */
+@font-face {
+    font-family: 'Asap Sharp Expanded SemiBold Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Expanded-SemiBoldItalic.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp Expanded Thin */
+@font-face {
+    font-family: 'Asap Sharp Expanded Thin';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Expanded-Thin.ttf") format("truetype-variations");
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp Expanded Thin Italic */
+@font-face {
+    font-family: 'Asap Sharp Expanded Thin Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_Expanded-ThinItalic.ttf") format("truetype-variations");
+    font-weight: 100;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp ExtraBold */
+@font-face {
+    font-family: 'Asap Sharp ExtraBold';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp-ExtraBold.ttf") format("truetype-variations");
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp ExtraBold Italic */
+@font-face {
+    font-family: 'Asap Sharp ExtraBold Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp-ExtraBoldItalic.ttf") format("truetype-variations");
+    font-weight: 800;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp ExtraLight */
+@font-face {
+    font-family: 'Asap Sharp ExtraLight';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp-ExtraLight.ttf") format("truetype-variations");
+    font-weight: 200;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp ExtraLight Italic */
+@font-face {
+    font-family: 'Asap Sharp ExtraLight Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp-ExtraLightItalic.ttf") format("truetype-variations");
+    font-weight: 200;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp Italic */
+@font-face {
+    font-family: 'Asap Sharp Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp-Italic.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp Light */
+@font-face {
+    font-family: 'Asap Sharp Light';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp-Light.ttf") format("truetype-variations");
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp Light Italic */
+@font-face {
+    font-family: 'Asap Sharp Light Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp-LightItalic.ttf") format("truetype-variations");
+    font-weight: 300;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp Medium */
+@font-face {
+    font-family: 'Asap Sharp Medium';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp-Medium.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp Medium Italic */
+@font-face {
+    font-family: 'Asap Sharp Medium Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp-MediumItalic.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp Regular */
+@font-face {
+    font-family: 'Asap Sharp Regular';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp-Regular.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiBold */
+@font-face {
+    font-family: 'Asap Sharp SemiBold';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp-SemiBold.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiBold Italic */
+@font-face {
+    font-family: 'Asap Sharp SemiBold Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp-SemiBoldItalic.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiCondensed Black */
+@font-face {
+    font-family: 'Asap Sharp SemiCondensed Black';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiCondensed-Black.ttf") format("truetype-variations");
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiCondensed Black Italic */
+@font-face {
+    font-family: 'Asap Sharp SemiCondensed Black Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiCondensed-BlackItalic.ttf") format("truetype-variations");
+    font-weight: 900;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiCondensed Bold */
+@font-face {
+    font-family: 'Asap Sharp SemiCondensed Bold';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiCondensed-Bold.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiCondensed Bold Italic */
+@font-face {
+    font-family: 'Asap Sharp SemiCondensed Bold Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiCondensed-BoldItalic.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiCondensed ExtraBold */
+@font-face {
+    font-family: 'Asap Sharp SemiCondensed ExtraBold';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiCondensed-ExtraBold.ttf") format("truetype-variations");
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiCondensed ExtraBold Italic */
+@font-face {
+    font-family: 'Asap Sharp SemiCondensed ExtraBold Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiCondensed-ExtraBoldItalic.ttf") format("truetype-variations");
+    font-weight: 800;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiCondensed ExtraLight */
+@font-face {
+    font-family: 'Asap Sharp SemiCondensed ExtraLight';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiCondensed-ExtraLight.ttf") format("truetype-variations");
+    font-weight: 200;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiCondensed ExtraLight Italic */
+@font-face {
+    font-family: 'Asap Sharp SemiCondensed ExtraLight Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiCondensed-ExtraLightItalic.ttf") format("truetype-variations");
+    font-weight: 200;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiCondensed Italic */
+@font-face {
+    font-family: 'Asap Sharp SemiCondensed Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiCondensed-Italic.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiCondensed Light */
+@font-face {
+    font-family: 'Asap Sharp SemiCondensed Light';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiCondensed-Light.ttf") format("truetype-variations");
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiCondensed Light Italic */
+@font-face {
+    font-family: 'Asap Sharp SemiCondensed Light Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiCondensed-LightItalic.ttf") format("truetype-variations");
+    font-weight: 300;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiCondensed Medium */
+@font-face {
+    font-family: 'Asap Sharp SemiCondensed Medium';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiCondensed-Medium.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiCondensed Medium Italic */
+@font-face {
+    font-family: 'Asap Sharp SemiCondensed Medium Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiCondensed-MediumItalic.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiCondensed Regular */
+@font-face {
+    font-family: 'Asap Sharp SemiCondensed Regular';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiCondensed-Regular.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiCondensed SemiBold */
+@font-face {
+    font-family: 'Asap Sharp SemiCondensed SemiBold';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiCondensed-SemiBold.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiCondensed SemiBold Italic */
+@font-face {
+    font-family: 'Asap Sharp SemiCondensed SemiBold Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiCondensed-SemiBoldItalic.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiCondensed Thin */
+@font-face {
+    font-family: 'Asap Sharp SemiCondensed Thin';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiCondensed-Thin.ttf") format("truetype-variations");
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiCondensed Thin Italic */
+@font-face {
+    font-family: 'Asap Sharp SemiCondensed Thin Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiCondensed-ThinItalic.ttf") format("truetype-variations");
+    font-weight: 100;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiExpanded Black */
+@font-face {
+    font-family: 'Asap Sharp SemiExpanded Black';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiExpanded-Black.ttf") format("truetype-variations");
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiExpanded Black Italic */
+@font-face {
+    font-family: 'Asap Sharp SemiExpanded Black Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiExpanded-BlackItalic.ttf") format("truetype-variations");
+    font-weight: 900;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiExpanded Bold */
+@font-face {
+    font-family: 'Asap Sharp SemiExpanded Bold';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiExpanded-Bold.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiExpanded Bold Italic */
+@font-face {
+    font-family: 'Asap Sharp SemiExpanded Bold Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiExpanded-BoldItalic.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiExpanded ExtraBold */
+@font-face {
+    font-family: 'Asap Sharp SemiExpanded ExtraBold';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiExpanded-ExtraBold.ttf") format("truetype-variations");
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiExpanded ExtraBold Italic */
+@font-face {
+    font-family: 'Asap Sharp SemiExpanded ExtraBold Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiExpanded-ExtraBoldItalic.ttf") format("truetype-variations");
+    font-weight: 800;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiExpanded ExtraLight */
+@font-face {
+    font-family: 'Asap Sharp SemiExpanded ExtraLight';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiExpanded-ExtraLight.ttf") format("truetype-variations");
+    font-weight: 200;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiExpanded ExtraLight Italic */
+@font-face {
+    font-family: 'Asap Sharp SemiExpanded ExtraLight Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiExpanded-ExtraLightItalic.ttf") format("truetype-variations");
+    font-weight: 200;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiExpanded Italic */
+@font-face {
+    font-family: 'Asap Sharp SemiExpanded Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiExpanded-Italic.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiExpanded Light */
+@font-face {
+    font-family: 'Asap Sharp SemiExpanded Light';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiExpanded-Light.ttf") format("truetype-variations");
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiExpanded Light Italic */
+@font-face {
+    font-family: 'Asap Sharp SemiExpanded Light Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiExpanded-LightItalic.ttf") format("truetype-variations");
+    font-weight: 300;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiExpanded Medium */
+@font-face {
+    font-family: 'Asap Sharp SemiExpanded Medium';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiExpanded-Medium.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiExpanded Medium Italic */
+@font-face {
+    font-family: 'Asap Sharp SemiExpanded Medium Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiExpanded-MediumItalic.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiExpanded Regular */
+@font-face {
+    font-family: 'Asap Sharp SemiExpanded Regular';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiExpanded-Regular.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiExpanded SemiBold */
+@font-face {
+    font-family: 'Asap Sharp SemiExpanded SemiBold';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiExpanded-SemiBold.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiExpanded SemiBold Italic */
+@font-face {
+    font-family: 'Asap Sharp SemiExpanded SemiBold Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiExpanded-SemiBoldItalic.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiExpanded Thin */
+@font-face {
+    font-family: 'Asap Sharp SemiExpanded Thin';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiExpanded-Thin.ttf") format("truetype-variations");
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp SemiExpanded Thin Italic */
+@font-face {
+    font-family: 'Asap Sharp SemiExpanded Thin Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp_SemiExpanded-ThinItalic.ttf") format("truetype-variations");
+    font-weight: 100;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Asap Sharp Thin */
+@font-face {
+    font-family: 'Asap Sharp Thin';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp-Thin.ttf") format("truetype-variations");
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Asap Sharp Thin Italic */
+@font-face {
+    font-family: 'Asap Sharp Thin Italic';
+    src: url("/fonts/Asap_Sharp/static/AsapSharp-ThinItalic.ttf") format("truetype-variations");
+    font-weight: 100;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Google Sans */
+@font-face {
+    font-family: 'Google Sans';
+    src: url("/fonts/Google_Sans/GoogleSans-Italic-VariableFont_GRAD,opsz,wght.ttf") format("truetype-variations");
+    font-weight: 100 1000;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Google Sans';
+    src: url("/fonts/Google_Sans/GoogleSans-VariableFont_GRAD,opsz,wght.ttf") format("truetype-variations");
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans 17pt Bold */
+@font-face {
+    font-family: 'Google Sans 17pt Bold';
+    src: url("/fonts/Google_Sans/static/GoogleSans_17pt-Bold.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans 17pt Bold Italic */
+@font-face {
+    font-family: 'Google Sans 17pt Bold Italic';
+    src: url("/fonts/Google_Sans/static/GoogleSans_17pt-BoldItalic.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Google Sans 17pt Italic */
+@font-face {
+    font-family: 'Google Sans 17pt Italic';
+    src: url("/fonts/Google_Sans/static/GoogleSans_17pt-Italic.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Google Sans 17pt Medium */
+@font-face {
+    font-family: 'Google Sans 17pt Medium';
+    src: url("/fonts/Google_Sans/static/GoogleSans_17pt-Medium.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans 17pt Medium Italic */
+@font-face {
+    font-family: 'Google Sans 17pt Medium Italic';
+    src: url("/fonts/Google_Sans/static/GoogleSans_17pt-MediumItalic.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Google Sans 17pt Regular */
+@font-face {
+    font-family: 'Google Sans 17pt Regular';
+    src: url("/fonts/Google_Sans/static/GoogleSans_17pt-Regular.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans 17pt SemiBold */
+@font-face {
+    font-family: 'Google Sans 17pt SemiBold';
+    src: url("/fonts/Google_Sans/static/GoogleSans_17pt-SemiBold.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans 17pt SemiBold Italic */
+@font-face {
+    font-family: 'Google Sans 17pt SemiBold Italic';
+    src: url("/fonts/Google_Sans/static/GoogleSans_17pt-SemiBoldItalic.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Google Sans Bold */
+@font-face {
+    font-family: 'Google Sans Bold';
+    src: url("/fonts/Google_Sans/static/GoogleSans-Bold.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Bold Italic */
+@font-face {
+    font-family: 'Google Sans Bold Italic';
+    src: url("/fonts/Google_Sans/static/GoogleSans-BoldItalic.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Google Sans Flex */
+@font-face {
+    font-family: 'Google Sans Flex';
+    src: url("/fonts/Google_Sans_Flex/GoogleSansFlex-VariableFont_ROND,opsz,slnt,wdth,wght.ttf") format("truetype-variations");
+    font-stretch: 25% 151%;
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Google Sans Flex';
+    src: url("/fonts/Google_Sans_Flex/GoogleSansFlex-VariableFont_ROND,opsz,slnt,wdth,wght.ttf") format("truetype-variations");
+    font-stretch: 25% 151%;
+    font-weight: 100 1000;
+    font-style: oblique 0deg 10deg;
+    font-display: swap;
+}
+
+/* Google Sans Flex 120pt Black */
+@font-face {
+    font-family: 'Google Sans Flex 120pt Black';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_120pt-Black.ttf") format("truetype-variations");
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 120pt Bold */
+@font-face {
+    font-family: 'Google Sans Flex 120pt Bold';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_120pt-Bold.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 120pt ExtraBold */
+@font-face {
+    font-family: 'Google Sans Flex 120pt ExtraBold';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_120pt-ExtraBold.ttf") format("truetype-variations");
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 120pt ExtraLight */
+@font-face {
+    font-family: 'Google Sans Flex 120pt ExtraLight';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_120pt-ExtraLight.ttf") format("truetype-variations");
+    font-weight: 200;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 120pt Light */
+@font-face {
+    font-family: 'Google Sans Flex 120pt Light';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_120pt-Light.ttf") format("truetype-variations");
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 120pt Medium */
+@font-face {
+    font-family: 'Google Sans Flex 120pt Medium';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_120pt-Medium.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 120pt Regular */
+@font-face {
+    font-family: 'Google Sans Flex 120pt Regular';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_120pt-Regular.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 120pt SemiBold */
+@font-face {
+    font-family: 'Google Sans Flex 120pt SemiBold';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_120pt-SemiBold.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 120pt Thin */
+@font-face {
+    font-family: 'Google Sans Flex 120pt Thin';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_120pt-Thin.ttf") format("truetype-variations");
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 24pt Black */
+@font-face {
+    font-family: 'Google Sans Flex 24pt Black';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_24pt-Black.ttf") format("truetype-variations");
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 24pt Bold */
+@font-face {
+    font-family: 'Google Sans Flex 24pt Bold';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_24pt-Bold.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 24pt ExtraBold */
+@font-face {
+    font-family: 'Google Sans Flex 24pt ExtraBold';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_24pt-ExtraBold.ttf") format("truetype-variations");
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 24pt ExtraLight */
+@font-face {
+    font-family: 'Google Sans Flex 24pt ExtraLight';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_24pt-ExtraLight.ttf") format("truetype-variations");
+    font-weight: 200;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 24pt Light */
+@font-face {
+    font-family: 'Google Sans Flex 24pt Light';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_24pt-Light.ttf") format("truetype-variations");
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 24pt Medium */
+@font-face {
+    font-family: 'Google Sans Flex 24pt Medium';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_24pt-Medium.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 24pt Regular */
+@font-face {
+    font-family: 'Google Sans Flex 24pt Regular';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_24pt-Regular.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 24pt SemiBold */
+@font-face {
+    font-family: 'Google Sans Flex 24pt SemiBold';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_24pt-SemiBold.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 24pt Thin */
+@font-face {
+    font-family: 'Google Sans Flex 24pt Thin';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_24pt-Thin.ttf") format("truetype-variations");
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 36pt Black */
+@font-face {
+    font-family: 'Google Sans Flex 36pt Black';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_36pt-Black.ttf") format("truetype-variations");
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 36pt Bold */
+@font-face {
+    font-family: 'Google Sans Flex 36pt Bold';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_36pt-Bold.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 36pt ExtraBold */
+@font-face {
+    font-family: 'Google Sans Flex 36pt ExtraBold';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_36pt-ExtraBold.ttf") format("truetype-variations");
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 36pt ExtraLight */
+@font-face {
+    font-family: 'Google Sans Flex 36pt ExtraLight';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_36pt-ExtraLight.ttf") format("truetype-variations");
+    font-weight: 200;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 36pt Light */
+@font-face {
+    font-family: 'Google Sans Flex 36pt Light';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_36pt-Light.ttf") format("truetype-variations");
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 36pt Medium */
+@font-face {
+    font-family: 'Google Sans Flex 36pt Medium';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_36pt-Medium.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 36pt Regular */
+@font-face {
+    font-family: 'Google Sans Flex 36pt Regular';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_36pt-Regular.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 36pt SemiBold */
+@font-face {
+    font-family: 'Google Sans Flex 36pt SemiBold';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_36pt-SemiBold.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 36pt Thin */
+@font-face {
+    font-family: 'Google Sans Flex 36pt Thin';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_36pt-Thin.ttf") format("truetype-variations");
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 72pt Black */
+@font-face {
+    font-family: 'Google Sans Flex 72pt Black';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_72pt-Black.ttf") format("truetype-variations");
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 72pt Bold */
+@font-face {
+    font-family: 'Google Sans Flex 72pt Bold';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_72pt-Bold.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 72pt ExtraBold */
+@font-face {
+    font-family: 'Google Sans Flex 72pt ExtraBold';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_72pt-ExtraBold.ttf") format("truetype-variations");
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 72pt ExtraLight */
+@font-face {
+    font-family: 'Google Sans Flex 72pt ExtraLight';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_72pt-ExtraLight.ttf") format("truetype-variations");
+    font-weight: 200;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 72pt Light */
+@font-face {
+    font-family: 'Google Sans Flex 72pt Light';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_72pt-Light.ttf") format("truetype-variations");
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 72pt Medium */
+@font-face {
+    font-family: 'Google Sans Flex 72pt Medium';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_72pt-Medium.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 72pt Regular */
+@font-face {
+    font-family: 'Google Sans Flex 72pt Regular';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_72pt-Regular.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 72pt SemiBold */
+@font-face {
+    font-family: 'Google Sans Flex 72pt SemiBold';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_72pt-SemiBold.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 72pt Thin */
+@font-face {
+    font-family: 'Google Sans Flex 72pt Thin';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_72pt-Thin.ttf") format("truetype-variations");
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 9pt Black */
+@font-face {
+    font-family: 'Google Sans Flex 9pt Black';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_9pt-Black.ttf") format("truetype-variations");
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 9pt Bold */
+@font-face {
+    font-family: 'Google Sans Flex 9pt Bold';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_9pt-Bold.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 9pt ExtraBold */
+@font-face {
+    font-family: 'Google Sans Flex 9pt ExtraBold';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_9pt-ExtraBold.ttf") format("truetype-variations");
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 9pt ExtraLight */
+@font-face {
+    font-family: 'Google Sans Flex 9pt ExtraLight';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_9pt-ExtraLight.ttf") format("truetype-variations");
+    font-weight: 200;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 9pt Light */
+@font-face {
+    font-family: 'Google Sans Flex 9pt Light';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_9pt-Light.ttf") format("truetype-variations");
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 9pt Medium */
+@font-face {
+    font-family: 'Google Sans Flex 9pt Medium';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_9pt-Medium.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 9pt Regular */
+@font-face {
+    font-family: 'Google Sans Flex 9pt Regular';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_9pt-Regular.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 9pt SemiBold */
+@font-face {
+    font-family: 'Google Sans Flex 9pt SemiBold';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_9pt-SemiBold.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Flex 9pt Thin */
+@font-face {
+    font-family: 'Google Sans Flex 9pt Thin';
+    src: url("/fonts/Google_Sans_Flex/static/GoogleSansFlex_9pt-Thin.ttf") format("truetype-variations");
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Italic */
+@font-face {
+    font-family: 'Google Sans Italic';
+    src: url("/fonts/Google_Sans/static/GoogleSans-Italic.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Google Sans Medium */
+@font-face {
+    font-family: 'Google Sans Medium';
+    src: url("/fonts/Google_Sans/static/GoogleSans-Medium.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans Medium Italic */
+@font-face {
+    font-family: 'Google Sans Medium Italic';
+    src: url("/fonts/Google_Sans/static/GoogleSans-MediumItalic.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Google Sans Regular */
+@font-face {
+    font-family: 'Google Sans Regular';
+    src: url("/fonts/Google_Sans/static/GoogleSans-Regular.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans SemiBold */
+@font-face {
+    font-family: 'Google Sans SemiBold';
+    src: url("/fonts/Google_Sans/static/GoogleSans-SemiBold.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Google Sans SemiBold Italic */
+@font-face {
+    font-family: 'Google Sans SemiBold Italic';
+    src: url("/fonts/Google_Sans/static/GoogleSans-SemiBoldItalic.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Open Sans */
+@font-face {
+    font-family: 'Open Sans';
+    src: url("/fonts/Open_Sans/OpenSans-Italic-VariableFont_wdth,wght.ttf") format("truetype-variations");
+    font-weight: 100 1000;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Open Sans';
+    src: url("/fonts/Open_Sans/OpenSans-VariableFont_wdth,wght.ttf") format("truetype-variations");
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Open Sans Bold */
+@font-face {
+    font-family: 'Open Sans Bold';
+    src: url("/fonts/Open_Sans/static/OpenSans-Bold.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Open Sans Bold Italic */
+@font-face {
+    font-family: 'Open Sans Bold Italic';
+    src: url("/fonts/Open_Sans/static/OpenSans-BoldItalic.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Open Sans Condensed Bold */
+@font-face {
+    font-family: 'Open Sans Condensed Bold';
+    src: url("/fonts/Open_Sans/static/OpenSans_Condensed-Bold.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Open Sans Condensed Bold Italic */
+@font-face {
+    font-family: 'Open Sans Condensed Bold Italic';
+    src: url("/fonts/Open_Sans/static/OpenSans_Condensed-BoldItalic.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Open Sans Condensed ExtraBold */
+@font-face {
+    font-family: 'Open Sans Condensed ExtraBold';
+    src: url("/fonts/Open_Sans/static/OpenSans_Condensed-ExtraBold.ttf") format("truetype-variations");
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Open Sans Condensed ExtraBold Italic */
+@font-face {
+    font-family: 'Open Sans Condensed ExtraBold Italic';
+    src: url("/fonts/Open_Sans/static/OpenSans_Condensed-ExtraBoldItalic.ttf") format("truetype-variations");
+    font-weight: 800;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Open Sans Condensed Italic */
+@font-face {
+    font-family: 'Open Sans Condensed Italic';
+    src: url("/fonts/Open_Sans/static/OpenSans_Condensed-Italic.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Open Sans Condensed Light */
+@font-face {
+    font-family: 'Open Sans Condensed Light';
+    src: url("/fonts/Open_Sans/static/OpenSans_Condensed-Light.ttf") format("truetype-variations");
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Open Sans Condensed Light Italic */
+@font-face {
+    font-family: 'Open Sans Condensed Light Italic';
+    src: url("/fonts/Open_Sans/static/OpenSans_Condensed-LightItalic.ttf") format("truetype-variations");
+    font-weight: 300;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Open Sans Condensed Medium */
+@font-face {
+    font-family: 'Open Sans Condensed Medium';
+    src: url("/fonts/Open_Sans/static/OpenSans_Condensed-Medium.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Open Sans Condensed Medium Italic */
+@font-face {
+    font-family: 'Open Sans Condensed Medium Italic';
+    src: url("/fonts/Open_Sans/static/OpenSans_Condensed-MediumItalic.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Open Sans Condensed Regular */
+@font-face {
+    font-family: 'Open Sans Condensed Regular';
+    src: url("/fonts/Open_Sans/static/OpenSans_Condensed-Regular.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Open Sans Condensed SemiBold */
+@font-face {
+    font-family: 'Open Sans Condensed SemiBold';
+    src: url("/fonts/Open_Sans/static/OpenSans_Condensed-SemiBold.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Open Sans Condensed SemiBold Italic */
+@font-face {
+    font-family: 'Open Sans Condensed SemiBold Italic';
+    src: url("/fonts/Open_Sans/static/OpenSans_Condensed-SemiBoldItalic.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Open Sans ExtraBold */
+@font-face {
+    font-family: 'Open Sans ExtraBold';
+    src: url("/fonts/Open_Sans/static/OpenSans-ExtraBold.ttf") format("truetype-variations");
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Open Sans ExtraBold Italic */
+@font-face {
+    font-family: 'Open Sans ExtraBold Italic';
+    src: url("/fonts/Open_Sans/static/OpenSans-ExtraBoldItalic.ttf") format("truetype-variations");
+    font-weight: 800;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Open Sans Italic */
+@font-face {
+    font-family: 'Open Sans Italic';
+    src: url("/fonts/Open_Sans/static/OpenSans-Italic.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Open Sans Light */
+@font-face {
+    font-family: 'Open Sans Light';
+    src: url("/fonts/Open_Sans/static/OpenSans-Light.ttf") format("truetype-variations");
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Open Sans Light Italic */
+@font-face {
+    font-family: 'Open Sans Light Italic';
+    src: url("/fonts/Open_Sans/static/OpenSans-LightItalic.ttf") format("truetype-variations");
+    font-weight: 300;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Open Sans Medium */
+@font-face {
+    font-family: 'Open Sans Medium';
+    src: url("/fonts/Open_Sans/static/OpenSans-Medium.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Open Sans Medium Italic */
+@font-face {
+    font-family: 'Open Sans Medium Italic';
+    src: url("/fonts/Open_Sans/static/OpenSans-MediumItalic.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Open Sans Regular */
+@font-face {
+    font-family: 'Open Sans Regular';
+    src: url("/fonts/Open_Sans/static/OpenSans-Regular.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Open Sans SemiBold */
+@font-face {
+    font-family: 'Open Sans SemiBold';
+    src: url("/fonts/Open_Sans/static/OpenSans-SemiBold.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Open Sans SemiBold Italic */
+@font-face {
+    font-family: 'Open Sans SemiBold Italic';
+    src: url("/fonts/Open_Sans/static/OpenSans-SemiBoldItalic.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Open Sans SemiCondensed Bold */
+@font-face {
+    font-family: 'Open Sans SemiCondensed Bold';
+    src: url("/fonts/Open_Sans/static/OpenSans_SemiCondensed-Bold.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Open Sans SemiCondensed Bold Italic */
+@font-face {
+    font-family: 'Open Sans SemiCondensed Bold Italic';
+    src: url("/fonts/Open_Sans/static/OpenSans_SemiCondensed-BoldItalic.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Open Sans SemiCondensed ExtraBold */
+@font-face {
+    font-family: 'Open Sans SemiCondensed ExtraBold';
+    src: url("/fonts/Open_Sans/static/OpenSans_SemiCondensed-ExtraBold.ttf") format("truetype-variations");
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Open Sans SemiCondensed ExtraBold Italic */
+@font-face {
+    font-family: 'Open Sans SemiCondensed ExtraBold Italic';
+    src: url("/fonts/Open_Sans/static/OpenSans_SemiCondensed-ExtraBoldItalic.ttf") format("truetype-variations");
+    font-weight: 800;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Open Sans SemiCondensed Italic */
+@font-face {
+    font-family: 'Open Sans SemiCondensed Italic';
+    src: url("/fonts/Open_Sans/static/OpenSans_SemiCondensed-Italic.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Open Sans SemiCondensed Light */
+@font-face {
+    font-family: 'Open Sans SemiCondensed Light';
+    src: url("/fonts/Open_Sans/static/OpenSans_SemiCondensed-Light.ttf") format("truetype-variations");
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Open Sans SemiCondensed Light Italic */
+@font-face {
+    font-family: 'Open Sans SemiCondensed Light Italic';
+    src: url("/fonts/Open_Sans/static/OpenSans_SemiCondensed-LightItalic.ttf") format("truetype-variations");
+    font-weight: 300;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Open Sans SemiCondensed Medium */
+@font-face {
+    font-family: 'Open Sans SemiCondensed Medium';
+    src: url("/fonts/Open_Sans/static/OpenSans_SemiCondensed-Medium.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Open Sans SemiCondensed Medium Italic */
+@font-face {
+    font-family: 'Open Sans SemiCondensed Medium Italic';
+    src: url("/fonts/Open_Sans/static/OpenSans_SemiCondensed-MediumItalic.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Open Sans SemiCondensed Regular */
+@font-face {
+    font-family: 'Open Sans SemiCondensed Regular';
+    src: url("/fonts/Open_Sans/static/OpenSans_SemiCondensed-Regular.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Open Sans SemiCondensed SemiBold */
+@font-face {
+    font-family: 'Open Sans SemiCondensed SemiBold';
+    src: url("/fonts/Open_Sans/static/OpenSans_SemiCondensed-SemiBold.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Open Sans SemiCondensed SemiBold Italic */
+@font-face {
+    font-family: 'Open Sans SemiCondensed SemiBold Italic';
+    src: url("/fonts/Open_Sans/static/OpenSans_SemiCondensed-SemiBoldItalic.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Roboto */
+@font-face {
+    font-family: 'Roboto';
+    src: url("/fonts/Roboto/Roboto-Italic-VariableFont_wdth,wght.ttf") format("truetype-variations");
+    font-weight: 100 1000;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Roboto';
+    src: url("/fonts/Roboto/Roboto-VariableFont_wdth,wght.ttf") format("truetype-variations");
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto Black */
+@font-face {
+    font-family: 'Roboto Black';
+    src: url("/fonts/Roboto/static/Roboto-Black.ttf") format("truetype-variations");
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto Black Italic */
+@font-face {
+    font-family: 'Roboto Black Italic';
+    src: url("/fonts/Roboto/static/Roboto-BlackItalic.ttf") format("truetype-variations");
+    font-weight: 900;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Roboto Bold */
+@font-face {
+    font-family: 'Roboto Bold';
+    src: url("/fonts/Roboto/static/Roboto-Bold.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto Bold Italic */
+@font-face {
+    font-family: 'Roboto Bold Italic';
+    src: url("/fonts/Roboto/static/Roboto-BoldItalic.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Roboto Condensed Black */
+@font-face {
+    font-family: 'Roboto Condensed Black';
+    src: url("/fonts/Roboto/static/Roboto_Condensed-Black.ttf") format("truetype-variations");
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto Condensed Black Italic */
+@font-face {
+    font-family: 'Roboto Condensed Black Italic';
+    src: url("/fonts/Roboto/static/Roboto_Condensed-BlackItalic.ttf") format("truetype-variations");
+    font-weight: 900;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Roboto Condensed Bold */
+@font-face {
+    font-family: 'Roboto Condensed Bold';
+    src: url("/fonts/Roboto/static/Roboto_Condensed-Bold.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto Condensed Bold Italic */
+@font-face {
+    font-family: 'Roboto Condensed Bold Italic';
+    src: url("/fonts/Roboto/static/Roboto_Condensed-BoldItalic.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Roboto Condensed ExtraBold */
+@font-face {
+    font-family: 'Roboto Condensed ExtraBold';
+    src: url("/fonts/Roboto/static/Roboto_Condensed-ExtraBold.ttf") format("truetype-variations");
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto Condensed ExtraBold Italic */
+@font-face {
+    font-family: 'Roboto Condensed ExtraBold Italic';
+    src: url("/fonts/Roboto/static/Roboto_Condensed-ExtraBoldItalic.ttf") format("truetype-variations");
+    font-weight: 800;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Roboto Condensed ExtraLight */
+@font-face {
+    font-family: 'Roboto Condensed ExtraLight';
+    src: url("/fonts/Roboto/static/Roboto_Condensed-ExtraLight.ttf") format("truetype-variations");
+    font-weight: 200;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto Condensed ExtraLight Italic */
+@font-face {
+    font-family: 'Roboto Condensed ExtraLight Italic';
+    src: url("/fonts/Roboto/static/Roboto_Condensed-ExtraLightItalic.ttf") format("truetype-variations");
+    font-weight: 200;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Roboto Condensed Italic */
+@font-face {
+    font-family: 'Roboto Condensed Italic';
+    src: url("/fonts/Roboto/static/Roboto_Condensed-Italic.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Roboto Condensed Light */
+@font-face {
+    font-family: 'Roboto Condensed Light';
+    src: url("/fonts/Roboto/static/Roboto_Condensed-Light.ttf") format("truetype-variations");
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto Condensed Light Italic */
+@font-face {
+    font-family: 'Roboto Condensed Light Italic';
+    src: url("/fonts/Roboto/static/Roboto_Condensed-LightItalic.ttf") format("truetype-variations");
+    font-weight: 300;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Roboto Condensed Medium */
+@font-face {
+    font-family: 'Roboto Condensed Medium';
+    src: url("/fonts/Roboto/static/Roboto_Condensed-Medium.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto Condensed Medium Italic */
+@font-face {
+    font-family: 'Roboto Condensed Medium Italic';
+    src: url("/fonts/Roboto/static/Roboto_Condensed-MediumItalic.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Roboto Condensed Regular */
+@font-face {
+    font-family: 'Roboto Condensed Regular';
+    src: url("/fonts/Roboto/static/Roboto_Condensed-Regular.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto Condensed SemiBold */
+@font-face {
+    font-family: 'Roboto Condensed SemiBold';
+    src: url("/fonts/Roboto/static/Roboto_Condensed-SemiBold.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto Condensed SemiBold Italic */
+@font-face {
+    font-family: 'Roboto Condensed SemiBold Italic';
+    src: url("/fonts/Roboto/static/Roboto_Condensed-SemiBoldItalic.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Roboto Condensed Thin */
+@font-face {
+    font-family: 'Roboto Condensed Thin';
+    src: url("/fonts/Roboto/static/Roboto_Condensed-Thin.ttf") format("truetype-variations");
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto Condensed Thin Italic */
+@font-face {
+    font-family: 'Roboto Condensed Thin Italic';
+    src: url("/fonts/Roboto/static/Roboto_Condensed-ThinItalic.ttf") format("truetype-variations");
+    font-weight: 100;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Roboto ExtraBold */
+@font-face {
+    font-family: 'Roboto ExtraBold';
+    src: url("/fonts/Roboto/static/Roboto-ExtraBold.ttf") format("truetype-variations");
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto ExtraBold Italic */
+@font-face {
+    font-family: 'Roboto ExtraBold Italic';
+    src: url("/fonts/Roboto/static/Roboto-ExtraBoldItalic.ttf") format("truetype-variations");
+    font-weight: 800;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Roboto ExtraLight */
+@font-face {
+    font-family: 'Roboto ExtraLight';
+    src: url("/fonts/Roboto/static/Roboto-ExtraLight.ttf") format("truetype-variations");
+    font-weight: 200;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto ExtraLight Italic */
+@font-face {
+    font-family: 'Roboto ExtraLight Italic';
+    src: url("/fonts/Roboto/static/Roboto-ExtraLightItalic.ttf") format("truetype-variations");
+    font-weight: 200;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Roboto Italic */
+@font-face {
+    font-family: 'Roboto Italic';
+    src: url("/fonts/Roboto/static/Roboto-Italic.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Roboto Light */
+@font-face {
+    font-family: 'Roboto Light';
+    src: url("/fonts/Roboto/static/Roboto-Light.ttf") format("truetype-variations");
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto Light Italic */
+@font-face {
+    font-family: 'Roboto Light Italic';
+    src: url("/fonts/Roboto/static/Roboto-LightItalic.ttf") format("truetype-variations");
+    font-weight: 300;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Roboto Medium */
+@font-face {
+    font-family: 'Roboto Medium';
+    src: url("/fonts/Roboto/static/Roboto-Medium.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto Medium Italic */
+@font-face {
+    font-family: 'Roboto Medium Italic';
+    src: url("/fonts/Roboto/static/Roboto-MediumItalic.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Roboto Regular */
+@font-face {
+    font-family: 'Roboto Regular';
+    src: url("/fonts/Roboto/static/Roboto-Regular.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto SemiBold */
+@font-face {
+    font-family: 'Roboto SemiBold';
+    src: url("/fonts/Roboto/static/Roboto-SemiBold.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto SemiBold Italic */
+@font-face {
+    font-family: 'Roboto SemiBold Italic';
+    src: url("/fonts/Roboto/static/Roboto-SemiBoldItalic.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Roboto SemiCondensed Black */
+@font-face {
+    font-family: 'Roboto SemiCondensed Black';
+    src: url("/fonts/Roboto/static/Roboto_SemiCondensed-Black.ttf") format("truetype-variations");
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto SemiCondensed Black Italic */
+@font-face {
+    font-family: 'Roboto SemiCondensed Black Italic';
+    src: url("/fonts/Roboto/static/Roboto_SemiCondensed-BlackItalic.ttf") format("truetype-variations");
+    font-weight: 900;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Roboto SemiCondensed Bold */
+@font-face {
+    font-family: 'Roboto SemiCondensed Bold';
+    src: url("/fonts/Roboto/static/Roboto_SemiCondensed-Bold.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto SemiCondensed Bold Italic */
+@font-face {
+    font-family: 'Roboto SemiCondensed Bold Italic';
+    src: url("/fonts/Roboto/static/Roboto_SemiCondensed-BoldItalic.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Roboto SemiCondensed ExtraBold */
+@font-face {
+    font-family: 'Roboto SemiCondensed ExtraBold';
+    src: url("/fonts/Roboto/static/Roboto_SemiCondensed-ExtraBold.ttf") format("truetype-variations");
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto SemiCondensed ExtraBold Italic */
+@font-face {
+    font-family: 'Roboto SemiCondensed ExtraBold Italic';
+    src: url("/fonts/Roboto/static/Roboto_SemiCondensed-ExtraBoldItalic.ttf") format("truetype-variations");
+    font-weight: 800;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Roboto SemiCondensed ExtraLight */
+@font-face {
+    font-family: 'Roboto SemiCondensed ExtraLight';
+    src: url("/fonts/Roboto/static/Roboto_SemiCondensed-ExtraLight.ttf") format("truetype-variations");
+    font-weight: 200;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto SemiCondensed ExtraLight Italic */
+@font-face {
+    font-family: 'Roboto SemiCondensed ExtraLight Italic';
+    src: url("/fonts/Roboto/static/Roboto_SemiCondensed-ExtraLightItalic.ttf") format("truetype-variations");
+    font-weight: 200;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Roboto SemiCondensed Italic */
+@font-face {
+    font-family: 'Roboto SemiCondensed Italic';
+    src: url("/fonts/Roboto/static/Roboto_SemiCondensed-Italic.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Roboto SemiCondensed Light */
+@font-face {
+    font-family: 'Roboto SemiCondensed Light';
+    src: url("/fonts/Roboto/static/Roboto_SemiCondensed-Light.ttf") format("truetype-variations");
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto SemiCondensed Light Italic */
+@font-face {
+    font-family: 'Roboto SemiCondensed Light Italic';
+    src: url("/fonts/Roboto/static/Roboto_SemiCondensed-LightItalic.ttf") format("truetype-variations");
+    font-weight: 300;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Roboto SemiCondensed Medium */
+@font-face {
+    font-family: 'Roboto SemiCondensed Medium';
+    src: url("/fonts/Roboto/static/Roboto_SemiCondensed-Medium.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto SemiCondensed Medium Italic */
+@font-face {
+    font-family: 'Roboto SemiCondensed Medium Italic';
+    src: url("/fonts/Roboto/static/Roboto_SemiCondensed-MediumItalic.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Roboto SemiCondensed Regular */
+@font-face {
+    font-family: 'Roboto SemiCondensed Regular';
+    src: url("/fonts/Roboto/static/Roboto_SemiCondensed-Regular.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto SemiCondensed SemiBold */
+@font-face {
+    font-family: 'Roboto SemiCondensed SemiBold';
+    src: url("/fonts/Roboto/static/Roboto_SemiCondensed-SemiBold.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto SemiCondensed SemiBold Italic */
+@font-face {
+    font-family: 'Roboto SemiCondensed SemiBold Italic';
+    src: url("/fonts/Roboto/static/Roboto_SemiCondensed-SemiBoldItalic.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Roboto SemiCondensed Thin */
+@font-face {
+    font-family: 'Roboto SemiCondensed Thin';
+    src: url("/fonts/Roboto/static/Roboto_SemiCondensed-Thin.ttf") format("truetype-variations");
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto SemiCondensed Thin Italic */
+@font-face {
+    font-family: 'Roboto SemiCondensed Thin Italic';
+    src: url("/fonts/Roboto/static/Roboto_SemiCondensed-ThinItalic.ttf") format("truetype-variations");
+    font-weight: 100;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Roboto Thin */
+@font-face {
+    font-family: 'Roboto Thin';
+    src: url("/fonts/Roboto/static/Roboto-Thin.ttf") format("truetype-variations");
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Roboto Thin Italic */
+@font-face {
+    font-family: 'Roboto Thin Italic';
+    src: url("/fonts/Roboto/static/Roboto-ThinItalic.ttf") format("truetype-variations");
+    font-weight: 100;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Keluarga aktif -- `--app-font-family` ditulis `AppFont::styles()`
+ * per panel (storefront / admin). Halaman yang memuat CSS ini TANPA
+ * styles() (halaman error glass: tidak boleh query Setting) jatuh
+ * ke fallback default aplikasi. */
+*,
+::before,
+::after {
+    font-family: var(--app-font-family, 'Google Sans Flex'), sans-serif !important;
+}
+
+:root {
+    font-optical-sizing: auto;
+}

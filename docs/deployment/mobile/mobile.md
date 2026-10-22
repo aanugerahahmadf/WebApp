@@ -1,6 +1,6 @@
 # Panduan Deployment Aplikasi Mobile ke Toko Aplikasi
 
-Panduan ini mencakup proses membangun dan menerbitkan aplikasi Wedding Organizer
+Panduan ini mencakup proses membangun dan menerbitkan aplikasi Dekorasi Bunga Pernikahan
 CBIR untuk Android (Google Play Store) dan iOS (Apple App Store) menggunakan
 [Capacitor](https://capacitorjs.com).
 
@@ -253,8 +253,8 @@ sandi berarti Anda tidak dapat memperbarui aplikasi selamanya.
 
 ```bash
 keytool -genkey -v \
-  -keystore wedding-organizer-release.jks \
-  -alias wedding-organizer \
+  -keystore app-release-key.jks \
+  -alias app-key \
   -keyalg RSA \
   -keysize 2048 \
   -validity 10000
@@ -263,9 +263,9 @@ keytool -genkey -v \
 Buat `android/keystore.properties` (jangan di-commit):
 
 ```properties
-storeFile=/path/to/wedding-organizer-release.jks
+storeFile=/path/to/app-release-key.jks
 storePassword=your-keystore-password
-keyAlias=wedding-organizer
+keyAlias=app-key
 keyPassword=your-key-password
 ```
 

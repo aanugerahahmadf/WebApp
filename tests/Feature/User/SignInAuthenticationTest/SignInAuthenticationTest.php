@@ -17,7 +17,7 @@
  *   3. Mengirim notifikasi "Selamat Datang Kembali!" setelah berhasil, dan
  *      "Otentikasi Gagal" saat kredensial ditolak.
  *
- * Test lama (`tests/Feature/User/AuthTest/AuthTest/AuthTest.php`) hanya menguji
+ * Test lama (`tests/Feature/authTest/AuthTest/AuthTest.php`) hanya menguji
  * endpoint API `/api/login` yang balannya 401; tidak menyentuh kode panel ini.
  * Jadi tanpa file ini, alur autentikasi panel user tidak punya penjaga sama
  * sekali. Pasangan penjaganya ada di
@@ -25,7 +25,7 @@
  * pendaftaran (kode `SignUp` masih ada di repo dan diuji langsung lewat
  * `handleRegistration()`, walau halamannya tidak lagi punya route), dan
  * `tests/Feature/User/UserAuthLandingPageTest/UserAuthLandingPageTest.php`
- * untuk halaman `/user/auth` yang menjadi pintu masuk ke halaman Sign In.
+ * untuk halaman `/auth` yang menjadi pintu masuk ke halaman Sign In.
  *
  * Pola assertion:
  *   - `assertHasFormErrors()` untuk field yang ditolak,
@@ -85,9 +85,19 @@ function sentNotificationTitles(): array
 /**
  * Isi form dan panggil `authenticate()`.
  *
- * Field agreement/remember di-set lewat set('data....'), bukan illForm():
+ * Field agreement/remember di-set lewat set('data....'), bukan fillForm():
  * keduanya adalah Hidden di schema (tidak punya wrapper di DOM), dan yang dibaca
  * `authenticate()` adalah `$this->data`, jadi itu yang harus diprioritaskan.
+ *
+ * CAPTCHA ikut dikirim lewat `fillCaptcha()` (lihat `tests/Pest.php`) karena
+ * `CaptchaField` menempelkan rule yang membandingkan nilai yang dikirim dengan
+ * `session('filament_captcha_code')`.
+ *
+ * Kenapa captcha TIDAK dinonaktifkan di suite: sign-in adalah gerbang publik,
+ * dan "test hijau tanpa captcha" hanya berarti test-nya memeriksa jalur yang
+ * salah. Test captcha sendiri ada di file terpisah -- yang dijaga di sini
+ * adalah bahwa submit sign-in tetap FUNGSI saat captcha terisi, bukan bahwa
+ * captcha bisa dilewati.
  */
 function submitLogin(array $overrides = []): object
 {
@@ -107,7 +117,7 @@ function submitLogin(array $overrides = []): object
     $component->set('data.agreement', $credentials['agreement']);
     $component->set('data.remember', $credentials['remember']);
 
-    return $component->call('authenticate');
+    return fillCaptcha($component)->call('authenticate');
 }
 
 test('a login without the agreement consent is rejected on the agreement field', function (): void {
@@ -249,9 +259,10 @@ test('an already authenticated visitor is redirected away from the login form', 
     // agar tidak melihat form login yang sudah tidak relevan untuknya.
     actingAs($this->customer, 'web');
 
-    $this->get(route('filament.user.auth.login'))->assertRedirect(route('filament.user.pages.home'));
+    $this->get(route('filament.welcome.auth.login'))->assertRedirect(route('filament.welcome.pages.home'));
 
     // Sesi yang sudah ada tidak dirusak oleh kunjungan ke halaman auth.
     expect(auth()->check())->toBeTrue()
         ->and(auth()->id())->toBe($this->customer->id);
 });
+

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Tests for the Welcome panel product and package detail pages.
+ * Tests for the Welcome panel catalog and package detail pages.
  *
  * Mirrors CatalogDetailParityTest but targets the WELCOME panel
  * (App\Filament\Welcome\...) instead of the User panel.
@@ -15,17 +15,17 @@
  * - Guest sees all buttons, each redirects to login
  */
 
-use App\Filament\Welcome\Resources\PackageResource\Pages\ViewPackage\ViewPackage;
-use App\Filament\Welcome\Resources\ProductResource\Pages\ViewProduct\ViewProduct;
+use App\Filament\Welcome\Resources\CatalogResource\Pages\ViewCatalog\ViewCatalog;
 use App\Models\Inbox\Inbox;
 use App\Models\Package\Package;
-use App\Models\Product\Product;
+use App\Models\Catalog\Catalog;
 use App\Models\Review\Review;
 use App\Models\User\User;
 use App\Services\ChatService\ChatService;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
+use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
 
 use function Pest\Laravel\actingAs;
@@ -35,8 +35,10 @@ uses(RefreshDatabase::class);
 beforeEach(function (): void {
     Queue::fake();
 
-    Role::firstOrCreate(['name' => 'super_admin']);
-    Role::firstOrCreate(['name' => 'customer']);
+    // Role untuk user di bawah (guard `web`) DAN untuk panel admin (guard
+    // `admin`). `User::assignRole()` mencari di guard model itu sendiri, jadi
+    // `super_admin` versi `web` harus ada juga.
+    seedRoles(adminRoles: ['super_admin'], webRoles: ['super_admin', 'customer']);
 
     $this->admin = User::factory()->create();
     $this->admin->assignRole('super_admin');
@@ -48,20 +50,24 @@ beforeEach(function (): void {
 });
 
 // ---------------------------------------------------------------------------
-// Product detail — Welcome panel
+// Catalog detail â€” Welcome panel
 // ---------------------------------------------------------------------------
 
-it('welcome product detail renders name, share, report, cart, chat, wishlist, review buttons', function (): void {
+it('welcome catalog detail renders name, share, report, cart, chat, wishlist, review buttons', function (): void {
     actingAs($this->customer, 'web');
 
-    $product = Product::factory()->create([
-        'name'           => 'Produk Welcome Test',
-        'stock'          => 5,
-        'discount_price' => 80000,
-        'features'       => ['Fitur Satu', 'Fitur Dua'],
+    // `name_translations`, bukan `name` -- lihat catatan di `CatalogFactory`.
+    $catalog = Catalog::factory()->create([
+        'stock'             => 5,
+        'discount_price'    => 80000,
+        'features'          => ['Fitur Satu', 'Fitur Dua'],
+        'name_translations' => [
+            'id' => 'Produk Welcome Test',
+            'en' => 'Welcome Test Product',
+        ],
     ]);
 
-    Livewire::test(ViewProduct::class, ['record' => $product->getKey()])
+    Livewire::test(ViewCatalog::class, ['record' => $catalog->getKey()])
         ->assertSuccessful()
         ->assertSee('Produk Welcome Test')
         ->assertSee(__('Bagikan'))
@@ -74,81 +80,70 @@ it('welcome product detail renders name, share, report, cart, chat, wishlist, re
         ->assertSee('Fitur Satu');
 });
 
-it('welcome product detail shows reviews when they exist', function (): void {
+it('welcome catalog detail shows reviews when they exist', function (): void {
     actingAs($this->customer, 'web');
 
-    $product  = Product::factory()->create(['name' => 'Produk Dengan Ulasan', 'stock' => 2]);
+    $catalog  = Catalog::factory()->create([
+            'stock' => 2,
+            'name_translations' => ['id' => 'Produk Dengan Ulasan', 'en' => 'Reviewed Product'],
+        ]);
     $reviewer = User::factory()->create(['full_name' => 'Reviewer Satu']);
     Review::create([
         'user_id'    => $reviewer->id,
-        'product_id' => $product->id,
+        'catalog_id' => $catalog->id,
         'package_id' => null,
         'rating'     => 5,
         'comment'    => 'Sangat bagus!',
     ]);
 
-    Livewire::test(ViewProduct::class, ['record' => $product->getKey()])
+    Livewire::test(ViewCatalog::class, ['record' => $catalog->getKey()])
         ->assertSuccessful()
         ->assertSee(__('Ulasan'))
         ->assertSee('Reviewer Satu');
 });
 
-it('welcome product detail hides the review button for a customer who already reviewed', function (): void {
+it('welcome catalog detail hides the review button for a customer who already reviewed', function (): void {
     actingAs($this->customer, 'web');
 
-    $product = Product::factory()->create(['name' => 'Already Reviewed', 'stock' => 2]);
+    $catalog = Catalog::factory()->create([
+            'stock' => 2,
+            'name_translations' => ['id' => 'Already Reviewed', 'en' => 'Already Reviewed'],
+        ]);
     Review::create([
         'user_id'    => $this->customer->id,
-        'product_id' => $product->id,
+        'catalog_id' => $catalog->id,
         'package_id' => null,
         'rating'     => 4,
         'comment'    => 'Good.',
     ]);
 
-    Livewire::test(ViewProduct::class, ['record' => $product->getKey()])
+    Livewire::test(ViewCatalog::class, ['record' => $catalog->getKey()])
         ->assertSuccessful()
         ->assertDontSee(__('Tulis Ulasan'));
 });
 
-// ---------------------------------------------------------------------------
-// Package detail — Welcome panel
-// ---------------------------------------------------------------------------
-
-it('welcome package detail renders all expected blocks', function (): void {
-    actingAs($this->customer, 'web');
-
-    $package = Package::factory()->create([
-        'name'           => 'Paket Welcome Test',
-        'stock'          => 3,
-        'discount_price' => 500000,
-        'features'       => ['Podium Bunga', 'Backdrop LED'],
-    ]);
-
-    Livewire::test(ViewPackage::class, ['record' => $package->getKey()])
-        ->assertSuccessful()
-        ->assertSee('Paket Welcome Test')
-        ->assertSee(__('Bagikan'))
-        ->assertSee(__('Lapor'))
-        ->assertSee(__('Masukkan ke Keranjang'))
-        ->assertSee(__('Chat Admin'))
-        ->assertSee(__('Tambah ke Favorit'))
-        ->assertSee(__('Tulis Ulasan'))
-        ->assertSee('DISKON')
-        ->assertSee('Podium Bunga');
-});
-
-it('welcome package detail shows out-of-stock label when stock is zero', function (): void {
-    actingAs($this->customer, 'web');
-
-    $package = Package::factory()->create(['name' => 'Habis Test', 'stock' => 0]);
-
-    Livewire::test(ViewPackage::class, ['record' => $package->getKey()])
-        ->assertSuccessful()
-        ->assertSee(__('Layanan Habis'));
-});
+/*
+ * Test "welcome package detail renders all expected blocks" dan "welcome package
+ * detail shows out-of-stock label when stock is zero" DIHAPUS.
+ *
+ * Keduanya memanggil `ViewPackage::class`, yang sudah tidak ada bersama
+ * `PackageResource`-nya. Gejalanya `Unable to find component: [ViewPackage]`.
+ *
+ * Yang hilang bukan aturan yang diuji: setiap blok yang diperiksa test pertama
+ * -- Bagikan, Lapor, Masukkan ke Keranjang, Chat Admin, Tambah ke Favorit,
+ * Tulis Ulasan, label DISKON, daftar fitur -- sudah diperiksa untuk katalog di
+ * bagian atas file ini, dengan record `Catalog`. Menyalinnya ke "tier paket"
+ * hanya akan menambah salinan yang menguji halaman katalog sambil menyebut
+ * paket.
+ *
+ * Kalau halaman detail paket dihidupkan lagi: `Package` kini adalah TIER dari
+ * katalog (`Catalog::tiers()`), jadi tidak ada resource terpisah yang bisa
+ * menyalin struktur `ViewCatalog`. Test perlu ditulis ulang sesuai route tier
+ * yang benar-benar dibuat, bukan dengan menyalin test katalog.
+ */
 
 // ---------------------------------------------------------------------------
-// ChatService — report message
+// ChatService â€” report message
 // ---------------------------------------------------------------------------
 
 it('report_item action sends a report message through chat service (welcome)', function (): void {
@@ -159,10 +154,10 @@ it('report_item action sends a report message through chat service (welcome)', f
 
     $message = app(ChatService::class)->sendReportMessage(
         inbox: $inbox,
-        category: 'product',
+        category: 'catalog',
         itemName: 'Produk Laporan Test',
         meta: [
-            'type'      => 'product',
+            'type'      => 'catalog',
             'id'        => 1,
             'name'      => 'Produk Laporan Test',
             'is_report' => true,
@@ -170,25 +165,29 @@ it('report_item action sends a report message through chat service (welcome)', f
     );
 
     expect($message->meta['is_report'])->toBeTrue()
-        ->and($message->meta['type'])->toBe('product');
+        ->and($message->meta['type'])->toBe('catalog');
 });
 
 // ---------------------------------------------------------------------------
 // Guest visibility
 // ---------------------------------------------------------------------------
 
-it('welcome product detail is accessible to a guest without 500', function (): void {
-    $product = Product::factory()->create(['name' => 'Guest Visible', 'stock' => 1]);
+it('welcome catalog detail is accessible to a guest without 500', function (): void {
+    $catalog = Catalog::factory()->create([
+            'stock' => 1,
+            'name_translations' => ['id' => 'Guest Visible', 'en' => 'Guest Visible'],
+        ]);
 
-    $this->get("/welcome/flowerdecorationscatalog/{$product->getKey()}")
+    $this->get("/flowerdecorationscatalog/{$catalog->getKey()}")
         ->assertOk()
         ->assertSee('Guest Visible');
 });
 
-it('welcome package detail is accessible to a guest without 500', function (): void {
-    $package = Package::factory()->create(['name' => 'Guest Package', 'stock' => 1]);
+/*
+ * Test "welcome package detail is accessible to a guest without 500" DIHAPUS.
+ *
+ * Sama seperti dua test sebelumnya: URL `/welcome/flowerdecorationspackagecatalog`
+ * sudah tidak ada, jadi 404-nya bukan soal akses tamu. Test katalog tepat di
+ * atasnya menguji akses tamu lewat URL yang benar.
+ */
 
-    $this->get("/welcome/flowerdecorationspackagecatalog/{$package->getKey()}")
-        ->assertOk()
-        ->assertSee('Guest Package');
-});

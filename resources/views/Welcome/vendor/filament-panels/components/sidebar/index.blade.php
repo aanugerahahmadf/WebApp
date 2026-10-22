@@ -7,6 +7,84 @@
     $isRtl = __('filament-panels::layout.direction') === 'rtl';
 @endphp
 
+    {{--
+        OFFSET TOP: SIDEBAR DIBAWAH KAPSUL TOPBAR, BUKAN DI BELAKANGNYA.
+
+        MASALAH: kapsul topbar menutupi bagian atas sidebar.
+
+        Dua fakta yang bertemu di sini:
+
+          1. Kapsul topbar `position: fixed` (resources/css/Shared/Shared.css
+             blok 2), jadi keluar dari flow. Ruang kosongnya dikembalikan
+             lewat `padding-top` .fi-layout (blok 5).
+
+          2. Sidebar ini `fixed inset-y-0` + `h-screen`. `inset-y-0` berarti
+             top:0 -- dihitung dari PUNCAK LAYAR, dan `position: fixed` sama
+             sekali tidak memperhatikan `padding` leluhurnya. Sidebar tetap
+             mulai di y=0, PERSIS DI BAWAH kapsul, sementara kapsul punya
+             z-index 40 dan sidebar hanya 30. Baris paling atas sidebar
+             (header + logo + switcher) hilang di balik kapsul.
+
+        Kapan ini terlihat? Hanya ketika sidebar tampil sebagai KOLOM, bukan
+        sebagai drawer -- terutama APLIKASI DESKTOP, yang jendelanya tidak
+        punya minWidth sehingga bisa dikecilkan ke bawah 1024px, dan aturan
+        drawer-nya dikecualikan oleh :root:not(.native-desktop).
+
+        SOLUSINYA: `top` dan `height` geser sebesar var(--fi-capsule-stack) --
+        PERSIS nilai yang sama dengan `padding-top` .fi-layout. Angkanya satu
+        token di blok 1 Shared.css, jadi sidebar dijamin berhenti di garis
+        yang sama dengan kapsul. Inilah yang membuat header dan sidebar
+        SEIMBANG: keduanya mulai dari satu garis, bukan saling menindih.
+
+        Kenapa ditulis sebagai blok <style> di dalam view ini, bukan di CSS
+        panel:
+
+          - CSS tidak bisa menanyakan "apakah topbar-nya sedang ada". Di panel
+            tanpa chrome (Welcome/User di luar Home), topbar disembunyikan, dan
+            menggeser sidebar ke bawah hanya menyisakan ruang kosong di atasnya.
+            Blade bisa bertanya: filament()->hasTopbar().
+
+          - Offset HARUS bisa dibatalkan di mode drawer. Style inline tidak
+            bisa dikalahkan media query (kecuali !important, yang justru
+           berat karena ikut menimpa aturan panel lain). Blok <style>
+            di dalam view ini punya scope yang jelas: hanya saat sidebar ini
+            benar-benar dirender.
+
+        `@media (max-width: 1023px)` mengembalikan top/height ke 0/100%,
+        karena di bawah 1024px sidebar adalah drawer full-layar yang SENGAJA
+        menutupi kapsul -- tidak ada yang perlu dihindari di sana.
+    --}}
+    @if (filament()->hasTopbar())
+        <style>
+            .fi-panel-welcome .fi-sidebar,
+            .fi-panel-user .fi-sidebar,
+            .fi-panel-admin .fi-sidebar {
+                top: var(--fi-capsule-stack);
+                bottom: 0;
+
+                /* Dua UJUNG ATAS tumpul. Sidebar menyambung ke kapsul
+                   tepat di atasnya, jadi bentuknya harus terbaca sebagai
+                   satu kesimpulan dari header, bukan dua kotak yang
+                   kebetulan bersentuhan. Bawahnya tetap siku: sidebar
+                   menyambung ke tepi layar dan tepi bawah layar, jadi
+                   membulatkan bawahnya akan membuatnya terlihat melayang. */
+                border-top-left-radius: var(--fi-capsule-radius);
+                border-top-right-radius: var(--fi-capsule-radius);
+            }
+
+            @media (max-width: 1023px) {
+                :root:not(.native-desktop) .fi-panel-welcome .fi-sidebar,
+                :root:not(.native-desktop) .fi-panel-user .fi-sidebar,
+                :root:not(.native-desktop) .fi-panel-admin .fi-sidebar {
+                    top: 0;
+                    bottom: 0;
+                    border-top-left-radius: 0;
+                    border-top-right-radius: 0;
+                }
+            }
+        </style>
+    @endif
+
 {{-- format-ignore-start --}}
 <aside
     x-data="{}"
@@ -35,7 +113,7 @@
     @endif
     {{
         $attributes->class([
-            'fi-sidebar fixed inset-y-0 start-0 z-30 flex flex-col h-screen content-start bg-white transition-all dark:bg-gray-900 lg:z-0 lg:bg-transparent lg:shadow-none lg:ring-0 lg:transition-none dark:lg:bg-transparent',
+            'fi-sidebar fixed start-0 z-30 flex flex-col content-start bg-white transition-all dark:bg-gray-900 lg:z-0 lg:bg-transparent lg:shadow-none lg:ring-0 lg:transition-none dark:lg:bg-transparent',
             'lg:translate-x-0 rtl:lg:-translate-x-0' => ! (filament()->isSidebarCollapsibleOnDesktop() || filament()->isSidebarFullyCollapsibleOnDesktop() || filament()->hasTopNavigation()),
             'lg:-translate-x-full rtl:lg:translate-x-full' => filament()->hasTopNavigation(),
         ])
@@ -60,7 +138,7 @@
             @if (filament()->isSidebarCollapsibleOnDesktop())
                 <x-filament::icon-button
                     color="gray"
-                    :icon="$isRtl ? 'heroicon-o-chevron-left' : 'heroicon-o-chevron-right'"
+                    :icon="$isRtl ? '/images/icons/chevron_left.svg' : '/images/icons/chevron_right.svg'"
                     {{-- @deprecated Use `panels::sidebar.expand-button.rtl` instead of `panels::sidebar.expand-button` for RTL. --}}
                     :icon-alias="$isRtl ? ['panels::sidebar.expand-button.rtl', 'panels::sidebar.expand-button'] : 'panels::sidebar.expand-button'"
                     icon-size="lg"
@@ -76,7 +154,7 @@
             @if (filament()->isSidebarCollapsibleOnDesktop() || filament()->isSidebarFullyCollapsibleOnDesktop())
                 <x-filament::icon-button
                     color="gray"
-                    :icon="$isRtl ? 'heroicon-o-chevron-right' : 'heroicon-o-chevron-left'"
+                    :icon="$isRtl ? '/images/icons/chevron_right.svg' : '/images/icons/chevron_left.svg'"
                     {{-- @deprecated Use `panels::sidebar.collapse-button.rtl` instead of `panels::sidebar.collapse-button` for RTL. --}}
                     :icon-alias="$isRtl ? ['panels::sidebar.collapse-button.rtl', 'panels::sidebar.collapse-button'] : 'panels::sidebar.collapse-button'"
                     icon-size="lg"
@@ -92,7 +170,7 @@
             {{-- Mobile close button: always shown on small screens regardless of collapsible config --}}
             <x-filament::icon-button
                 color="gray"
-                icon="heroicon-o-x-mark"
+                icon="/images/icons/x.svg"
                 icon-alias="panels::sidebar.mobile-close-button"
                 icon-size="lg"
                 :label="__('filament-panels::layout.actions.sidebar.collapse.label')"
@@ -120,10 +198,13 @@
              Baris ini DI LUAR <nav> dengan sengaja: <nav> yang bisa di-scroll,
              dan logo tidak boleh ikut hilang saat daftar menu digulir.
 
-             Wrapper switcher (`ms-auto`) dirender tanpa syarat, jadi di tablet
-             dan website desktop -- tempat switcher tetap di topbar dan hook ini
-             mengembalikan string kosong -- logo tetap terdorong ke kiri dan
-             tidak ikut melebar.
+             Wrapper switcher (`ms-auto`) dirender tanpa syarat, jadi di tablet,
+             website desktop, dan APLIKASI DESKTOP -- tempat switcher tetap di
+             topbar dan hook ini mengembalikan string kosong -- logo tetap
+             terdorong ke kiri dan tidak ikut melebar.
+
+             Hook di sini HANYA untuk HP, mobile web, dan aplikasi mobile --
+             permukaan tempat switcher milik sidebar.
 
              Hook dipanggil di sini, bukan me-render view switcher langsung,
              supaya ketiga panel tetap memakai kode yang sama -- file ini

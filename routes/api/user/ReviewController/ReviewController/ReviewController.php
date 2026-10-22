@@ -11,10 +11,10 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/reviews/user/{userId}', [ReviewController::class, 'getUserPublicReviews']);
     Route::get('/reviews/user', [ReviewController::class, 'getUserReviews']);
     Route::get('/reviews/package/{id}/summary', [ReviewController::class, 'getPackageRatingSummary']);
-    Route::get('/reviews/product/{id}/summary', [ReviewController::class, 'getProductRatingSummary']);
+    Route::get('/reviews/catalog/{id}/summary', [ReviewController::class, 'getCatalogRatingSummary']);
     Route::get('/reviews/package/{packageId}', [ReviewController::class, 'getPackageReviews']);
-    Route::get('/reviews/product/{productId}', [ReviewController::class, 'getProductReviews']);
-    Route::get('/reviews/organizer/{id}', [ReviewController::class, 'getOrganizerReviews']);
+    Route::get('/reviews/catalog/{catalogId}', [ReviewController::class, 'getCatalogReviews']);
+    
     Route::post('/reviews/{id}/vote', [ReviewController::class, 'voteHelpful']);
     Route::post('/reviews/{id}/reply', [ReviewController::class, 'reply']);
     Route::delete('/reviews/{id}/reply/{replyId}', [ReviewController::class, 'deleteReply']);

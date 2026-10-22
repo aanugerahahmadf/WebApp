@@ -1,27 +1,27 @@
 <x-filament-panels::page>
     @php
         $passwordStrength = strlen($passwordData['password'] ?? '') >= 12 ? __('Kuat') : (strlen($passwordData['password'] ?? '') >= 8 ? __('Sedang') : __('Lemah'));
-        $currentSessionId = request()->session()->getId();
+        $currentSessionId = $this->currentSessionId();
     @endphp
 
     <div class="mx-auto max-w-4xl space-y-6">
         @if ($section === 'index')
-            <section><h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">{{ __('Sign In dan Pemulihan') }}</h2><div class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/10 dark:bg-gray-900">
+            <section><h2 class="mb-3 text-sm font-semibold tracking-wide text-gray-500">{{ __('Sign In dan Pemulihan') }}</h2><div class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/10 dark:bg-gray-900">
                 @foreach ([
-                    ['change-password', 'heroicon-o-lock-closed', __('Ubah Kata Sandi'), __('Perbarui kata sandi dan lindungi akun Anda.')],
-                    ['two-factor', 'heroicon-o-shield-check', __('Autentikasi Dua Faktor'), __('Atur WhatsApp, kode cadangan, dan perangkat tepercaya.')],
-                    ['saved-login', 'heroicon-o-bookmark', __('Sign In Tersimpan'), __('Kelola info Sign In yang tersimpan di perangkat.')],
+                    ['change-password', '/images/icons/lock.svg', __('Ubah Kata Sandi'), __('Perbarui kata sandi dan lindungi akun Anda.')],
+                    ['two-factor', '/images/icons/shield_check.svg', __('Autentikasi Dua Faktor'), __('Atur WhatsApp, kode cadangan, dan perangkat tepercaya.')],
+                    ['saved-login', '/images/icons/bookmark.svg', __('Sign In Tersimpan'), __('Kelola info Sign In yang tersimpan di perangkat.')],
                 ] as [$key, $icon, $label, $description])
-                    <a wire:navigate href="{{ \App\Filament\Welcome\Pages\SettingsPage\PasswordSecurityPage\PasswordSecurityPage::getUrl(['section' => $key], panel: 'welcome') }}" class="flex items-center gap-4 border-b border-gray-100 p-4 last:border-0 transition hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/5"><x-filament::icon :icon="$icon" class="h-6 w-6 text-primary-500" /><div class="min-w-0 flex-1"><p class="font-medium text-gray-950 dark:text-white">{{ $label }}</p><p class="text-sm text-gray-500">{{ $description }}</p></div><x-filament::icon icon="heroicon-o-chevron-right" class="h-5 w-5 text-gray-400" /></a>
+                    <a wire:navigate href="{{ \App\Filament\Welcome\Pages\SettingsPage\PasswordSecurityPage\PasswordSecurityPage::getUrl(['section' => $key], panel: 'welcome') }}" class="flex items-center gap-4 border-b border-gray-100 p-4 last:border-0 transition hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/5"><x-filament::icon :icon="$icon" class="h-6 w-6 text-primary-500" /><div class="min-w-0 flex-1"><p class="font-medium text-gray-950 dark:text-white">{{ $label }}</p><p class="text-sm text-gray-500">{{ $description }}</p></div><x-filament::icon icon="/images/icons/chevron_right.svg" class="h-5 w-5 text-gray-400" /></a>
                 @endforeach
             </div></section>
-            <section><h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">{{ __('Pemeriksaan Keamanan') }}</h2><div class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/10 dark:bg-gray-900">
+            <section><h2 class="mb-3 text-sm font-semibold tracking-wide text-gray-500">{{ __('Pemeriksaan Keamanan') }}</h2><div class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/10 dark:bg-gray-900">
                 @foreach ([
-                    ['sign-in-activity', 'heroicon-o-map-pin', __('Tempat Anda Sign In'), __('Lihat dan keluarkan sesi perangkat yang aktif.')],
-                    ['recent-emails', 'heroicon-o-envelope', __('Ubah Email'), __('Ganti email akun dengan verifikasi kode OTP.')],
-                    ['checkup', 'heroicon-o-shield-check', __('Pemeriksaan Keamanan'), __('Tinjau perlindungan penting untuk akun Anda.')],
+                    ['sign-in-activity', '/images/icons/map_pin.svg', __('Tempat Anda Sign In'), __('Lihat dan keluarkan sesi perangkat yang aktif.')],
+                    ['recent-emails', '/images/icons/envelope.svg', __('Ubah Email'), __('Ganti email akun dengan verifikasi kode OTP.')],
+                    ['checkup', '/images/icons/shield_check.svg', __('Pemeriksaan Keamanan'), __('Tinjau perlindungan penting untuk akun Anda.')],
                 ] as [$key, $icon, $label, $description])
-                    <a wire:navigate href="{{ \App\Filament\Welcome\Pages\SettingsPage\PasswordSecurityPage\PasswordSecurityPage::getUrl(['section' => $key], panel: 'welcome') }}" class="flex items-center gap-4 border-b border-gray-100 p-4 last:border-0 transition hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/5"><x-filament::icon :icon="$icon" class="h-6 w-6 text-primary-500" /><div class="min-w-0 flex-1"><p class="font-medium text-gray-950 dark:text-white">{{ $label }}</p><p class="text-sm text-gray-500">{{ $description }}</p></div><x-filament::icon icon="heroicon-o-chevron-right" class="h-5 w-5 text-gray-400" /></a>
+                    <a wire:navigate href="{{ \App\Filament\Welcome\Pages\SettingsPage\PasswordSecurityPage\PasswordSecurityPage::getUrl(['section' => $key], panel: 'welcome') }}" class="flex items-center gap-4 border-b border-gray-100 p-4 last:border-0 transition hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/5"><x-filament::icon :icon="$icon" class="h-6 w-6 text-primary-500" /><div class="min-w-0 flex-1"><p class="font-medium text-gray-950 dark:text-white">{{ $label }}</p><p class="text-sm text-gray-500">{{ $description }}</p></div><x-filament::icon icon="/images/icons/chevron_right.svg" class="h-5 w-5 text-gray-400" /></a>
                 @endforeach
             </div></section>
         @elseif ($section === 'change-password')
@@ -32,7 +32,7 @@
                     <x-filament::button tag="a" wire:navigate :href="\App\Filament\Welcome\Pages\SettingsPage\PasswordSecurityPage\PasswordSecurityPage::getUrl(panel: 'welcome')" color="gray">
                         {{ __('Batal') }}
                     </x-filament::button>
-                    <x-filament::button type="submit" icon="heroicon-m-lock-closed">
+                    <x-filament::button type="submit" icon="/images/icons/lock.svg">
                         {{ __('Ubah Kata Sandi') }}
                     </x-filament::button>
                 </div>
@@ -54,8 +54,11 @@
                     <div class="border-t border-gray-200 pt-6 dark:border-white/10">
                         <h2 class="text-base font-semibold text-gray-950 dark:text-white">{{ __('Aplikasi Autentikasi') }}</h2>
                         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ __('Dapatkan kode dari aplikasi seperti Duo Mobile atau Google Authenticator.') }}</p>
-                        <x-filament::button wire:click="prepareAuthenticator" class="mt-4">{{ __('Tambahkan Aplikasi Autentikasi') }}</x-filament::button>
-                        @if ($authenticatorSecret)<div class="mt-4 rounded-xl border border-dashed border-primary-300 p-4"><p class="text-sm font-medium">{{ __('Secret key') }}</p><x-filament::input value="{{ $authenticatorSecret }}" readonly class="mt-2 w-full" aria-label="{{ __('Secret key') }}" /><div class="mt-3 flex gap-2"><x-filament::input wire:model="authenticatorCode" inputmode="numeric" maxlength="6" placeholder="{{ __('Kode 6 digit') }}" class="flex-1" /><x-filament::button wire:click="verifyAuthenticator">{{ __('Verifikasi') }}</x-filament::button></div>@error('authenticatorCode')<p class="mt-1 text-xs text-danger-600">{{ $message }}</p>@enderror</div>@endif
+                        {{-- Setup TOTP punya halamannya sendiri: QR + verifikasi
+                             kode sungguhan. Secret TIDAK ditampilkan di sini --
+                             menampilkan secret tanpa verifikasi TOTP hanya
+                             menghasilkan 2FA yang aktif tapi tidak bisa dipakai. --}}
+                        <x-filament::button tag="a" wire:navigate :href="$this->authenticatorSetupUrl()" class="mt-4">{{ __('Tambahkan Aplikasi Autentikasi') }}</x-filament::button>
                     </div>
 
                     <div class="border-t border-gray-200 pt-6 dark:border-white/10">
@@ -76,11 +79,11 @@
 
                     <div class="mt-6 flex flex-wrap justify-end gap-3">
                         @if ($emailOtpSent)
-                            <x-filament::button type="button" wire:click="sendEmailChangeOtp" color="gray" icon="heroicon-m-arrow-path">
+                            <x-filament::button type="button" wire:click="sendEmailChangeOtp" color="gray" icon="/images/icons/refresh.svg">
                                 {{ __('Kirim Ulang OTP') }}
                             </x-filament::button>
                         @endif
-                        <x-filament::button type="submit" :icon="$emailOtpSent ? 'heroicon-m-check-circle' : 'heroicon-m-paper-airplane'">
+                        <x-filament::button type="submit" :icon="$emailOtpSent ? '/images/icons/check_circle.svg' : '/images/icons/send.svg'">
                             {{ $emailOtpSent ? __('Verifikasi OTP') : __('Kirim Kode OTP') }}
                         </x-filament::button>
                     </div>
@@ -106,7 +109,7 @@
                 <div class="space-y-3">
                     @foreach($checks as [$label, $secured, $target])
                         <div class="flex items-center gap-3 rounded-xl border border-gray-200 p-4 dark:border-white/10">
-                            <x-filament::icon :icon="$secured ? 'heroicon-o-check-circle' : 'heroicon-o-exclamation-circle'" class="h-5 w-5 shrink-0 {{ $secured ? 'text-success-600' : 'text-warning-500' }}" />
+                            <x-filament::icon :icon="$secured ? '/images/icons/check_circle.svg' : '/images/icons/alert.svg'" class="h-5 w-5 shrink-0 {{ $secured ? 'text-success-600' : 'text-warning-500' }}" />
                             <p class="min-w-0 flex-1 text-sm font-medium">{{ $label }}</p>
                             @if (! $secured)
                                 <x-filament::button tag="a" wire:navigate :href="\App\Filament\Welcome\Pages\SettingsPage\PasswordSecurityPage\PasswordSecurityPage::getUrl(['section' => $target], panel: 'welcome')" size="sm" color="primary" class="shrink-0">

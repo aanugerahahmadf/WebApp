@@ -43,7 +43,7 @@
                                 <p class="text-sm text-gray-500">{{ $description }}</p>
                             </div>
 
-                            <x-filament::icon icon="heroicon-o-chevron-right" class="h-5 w-5 text-gray-400" />
+                            <x-filament::icon icon="/images/icons/chevron_right.svg" class="h-5 w-5 text-gray-400" />
                         </a>
                     @endforeach
                 </div>

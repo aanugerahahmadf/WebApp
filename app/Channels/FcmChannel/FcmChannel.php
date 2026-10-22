@@ -3,6 +3,8 @@
 namespace App\Channels\FcmChannel;
 
 use App\Services\FirebaseService\FirebaseService;
+use App\Support\NotificationSound\NotificationSound;
+use App\Models\User\User;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
 
@@ -26,6 +28,13 @@ class FcmChannel
         $body = $data['body'] ?? '';
         $payload = $data['data'] ?? [];
 
-        $this->firebaseService->sendPushNotification($token, $title, $body, $payload);
+        // Channel mengikuti toggle suara user (ber-suara / hening) --
+        // notifiable non-User (mis. model lain) jatuh ke default ber-suara.
+        $androidConfig = [];
+        if ($notifiable instanceof User) {
+            $androidConfig['channel_id'] = NotificationSound::channelIdFor($notifiable);
+        }
+
+        $this->firebaseService->sendPushNotification($token, $title, $body, $payload, $androidConfig);
     }
 }

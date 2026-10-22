@@ -1,0 +1,90 @@
+# Auth Mutations
+# Wedding Flower Decoration App - Authentication GraphQL Mutations
+
+input LoginInput {
+  email: String!
+  password: String!
+  rememberMe: Boolean = false
+  deviceToken: String
+  deviceType: String
+}
+
+input RegisterInput {
+  name: String!
+  email: String!
+  password: String!
+  passwordConfirmation: String!
+  phone: String
+  acceptTerms: Boolean! = true
+  marketingConsent: Boolean = false
+}
+
+input ForgotPasswordInput {
+  email: String!
+}
+
+input ResetPasswordInput {
+  token: String!
+  email: String!
+  password: String!
+  passwordConfirmation: String!
+}
+
+input VerifyEmailInput {
+  token: String!
+  email: String!
+}
+
+input ResendVerificationInput {
+  email: String!
+}
+
+type Mutation {
+  # User Login
+  login(input: LoginInput!): AuthPayload @field(resolver: "App\\Http\\GraphQL\\Resolvers\\AuthResolver@login")
+  
+  # User Registration
+  register(input: RegisterInput!): AuthPayload @field(resolver: "App\\Http\\GraphQL\\Resolvers\\AuthResolver@register")
+  
+  # User Logout
+  logout: Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\AuthResolver@logout")
+  
+  # Refresh Access Token
+  refreshToken: AuthPayload @field(resolver: "App\\Http\\GraphQL\\Resolvers\\AuthResolver@refreshToken")
+  
+  # Forgot Password
+  forgotPassword(input: ForgotPasswordInput!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\AuthResolver@forgotPassword")
+  
+  # Reset Password
+  resetPassword(input: ResetPasswordInput!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\AuthResolver@resetPassword")
+  
+  # Verify Email
+  verifyEmail(input: VerifyEmailInput!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\AuthResolver@verifyEmail")
+  
+  # Resend Verification Email
+  resendVerification(input: ResendVerificationInput!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\AuthResolver@resendVerification")
+  
+  # Social Login (Google, Facebook, Apple)
+  socialLogin(provider: SocialProvider!, token: String!): AuthPayload @field(resolver: "App\\Http\\GraphQL\\Resolvers\\AuthResolver@socialLogin")
+  
+  # Link Social Account
+  linkSocialAccount(provider: SocialProvider!, token: String!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\AuthResolver@linkSocialAccount")
+  
+  # Unlink Social Account
+  unlinkSocialAccount(provider: SocialProvider!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\AuthResolver@unlinkSocialAccount")
+}
+
+enum SocialProvider {
+  GOOGLE
+  FACEBOOK
+  APPLE
+}
+
+type AuthPayload {
+  user: User!
+  token: String!
+  tokenType: String!
+  expiresIn: Int!
+  refreshToken: String
+  refreshExpiresIn: Int
+}

@@ -6,15 +6,29 @@
     $needsName = $this->isChatGuest() && $this->needsName();
 @endphp
 
+{{--
+    Latar panel INBOX sengaja transparan, bukan `bg-white dark:bg-gray-900
+    rounded-xl` seperti sebelumnya.
+
+    Alasannya: halaman Messages sudah dibebas dari kartu halaman Filament
+    (`<x-filament-panels::page>` dibuang), jadi yang tersisa untuk "kartu" hanyalah
+    elemen ini -- dan bentuknya persis yang sedang dihapus: satu blok gelap
+    besar dengan sudut membulat mengapung di tengah panel. Latar panelnya sendiri
+    sudah menyediakan warna yang benar; lapisan kedua hanya menambah garis tepi
+    yang tidak diminta siapa pun.
+
+    Yang TIDAK ikut disentuh: kartu-kartu di DALAM (kartu	status kuning, kartu
+    kategori, baris percakapan). Itu isi halaman, bukan wadahnya.
+--}}
 <div wire:poll.visible.{{ $pollInterval }}="loadConversations"
-    class="w-full h-full overflow-y-auto bg-white rounded-xl dark:bg-gray-900">
+    class="w-full h-full overflow-y-auto">
     <div class="mx-auto flex w-full max-w-2xl flex-col gap-4 p-4 sm:p-6">
 
         {{-- Status card --}}
         <div class="flex items-center gap-4 rounded-2xl p-4 text-white shadow-lg"
             style="background: linear-gradient(135deg, rgb(var(--primary-500)), rgb(var(--primary-700)));">
             <span class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-white/20">
-                <x-filament::icon icon="heroicon-o-lifebuoy" class="h-7 w-7 text-white" />
+                <x-filament::icon icon="/images/icons/lifebuoy.svg" class="h-7 w-7 text-white" />
             </span>
             <div class="min-w-0">
                 <p class="font-bold leading-tight">{{ __('Selamat Datang di Customer Service!') }}</p>
@@ -26,7 +40,7 @@
         </div>
 
         {{-- Search --}}
-        <x-filament::input.wrapper prefix-icon="heroicon-o-magnifying-glass" class="w-full">
+        <x-filament::input.wrapper prefix-icon="/images/icons/search.svg" class="w-full">
             <x-filament::input type="text" wire:model.live.debounce.300ms="search"
                 placeholder="{{ __('Cari percakapan...') }}" class="w-full" />
         </x-filament::input.wrapper>
@@ -36,7 +50,7 @@
             <x-filament::section
                 :heading="__('Sebelum memulai, silakan beri tahu kami nama Anda')"
                 :description="__('Nama ini akan ditampilkan kepada tim CS agar mereka tahu bagaimana memanggil Anda.')"
-                icon="heroicon-o-user-circle"
+                icon="/images/icons/user_circle.svg"
                 icon-color="warning"
             >
                 <form
@@ -116,7 +130,7 @@
                             </a>
 
                             <div class="absolute right-2 top-2">
-                                <x-filament::icon-button icon="heroicon-o-trash" color="danger" size="xs"
+                                <x-filament::icon-button icon="/images/icons/trash.svg" color="danger" size="xs"
                                     tooltip="{{ __('Delete') }}"
                                     wire:click.stop="deleteConversation({{ $conversation->id }})"
                                     wire:confirm="{{ __('Are you sure you want to delete this conversation?') }}" />
@@ -146,7 +160,7 @@
                         <span
                             class="block truncate text-sm text-gray-500 dark:text-gray-400">{{ $action['subtitle'] }}</span>
                     </span>
-                    <x-filament::icon icon="heroicon-o-chevron-right" class="h-5 w-5 text-gray-400" />
+                    <x-filament::icon icon="/images/icons/chevron_right.svg" class="h-5 w-5 text-gray-400" />
                 </button>
             @endforeach
         </div>

@@ -14,7 +14,7 @@
                     {{ __('Batal') }}
                 </x-filament::button>
 
-                <x-filament::button type="submit" icon="heroicon-m-lock-closed">
+                <x-filament::button type="submit" icon="/images/icons/lock.svg">
                     {{ __('Ubah Kata Sandi') }}
                 </x-filament::button>
             </div>

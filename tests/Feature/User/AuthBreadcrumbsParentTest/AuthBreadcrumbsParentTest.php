@@ -141,36 +141,48 @@ test('a just signed out visitor gets the storefront home as a one shot parent', 
 
 test('an origin inside the sign in page is reported as the sign in form', function (): void {
     // Misal tamu menekan tombol kembali dari halaman OTP ke form login.
-    expect(arrivingFrom('http://localhost/user/signin')->parentCrumb())
-        ->toBe(['url' => route('filament.user.auth.login'), 'label' => __('Sign In')]);
+    expect(arrivingFrom('http://localhost/signin')->parentCrumb())
+        ->toBe(['url' => route('filament.welcome.auth.login'), 'label' => __('Sign In')]);
 });
 
-test('an origin inside the retired sign up page never points at a missing route', function (): void {
-    // Sign Up DIHILANGKAN dari panel User: ->registration() dibuang dari
-    // UserPanelProvider (jadi route `filament.user.auth.register` hilang),
-    // SignIn::registerAction() di->hidden(), dan page class SignUp beserta
-    // view serta alias Livewire-nya ikut dihapus.
+test('an origin inside the sign up page points at the sign up form', function (): void {
+    // PERUBAHAAN PERILAKU. Test ini sebelumnya bernama "an origin inside the
+    // retired sign up page never points at a missing route" dan mengunci kondisi
+    // pendaftaran NONAKTIF: route `filament.welcome.auth.register` tidak terdaftar,
+    // dan crumb Sign Up dihapus dari `HasAuthBreadcrumbs` supaya tidak pernah
+    // menunjuk route yang hilang.
     //
-    // Test versi lama memanggil route('filament.user.auth.register') dan
-    // mengharapkan label "Sign Up". Dua-duanya sudah tidak berlaku: crumb
-    // itu tidak punya tujuan nyata, dan memanggil route() yang hilang akan
-    // melempar RouteNotFoundException -- yang di produksi berarti halaman auth
-    // 500 untuk tamu yang datang dengan referer /user/signup.
+    // Pendaftaran sekarang AKTIF lagi -- `UserPanelProvider` memanggil
+    // `->registration(SignUp::class)` dan `->registrationRouteSlug('signup')`.
+    // Ketiga kondisi lama sudah tidak berlaku:
     //
-    // Yang dikunci sekarang: untuk tamu tidak ada parent crumb sama sekali
-    // (cabang Sign Up sudah dihapus dari trait), dan route yang hilang itu
-    // memang tidak terdaftar -- supaya test ini gagal kalau Sign Up suatu
-    // saat dikembalikan tanpa cabangnya ikut dihidupkan lagi.
-    expect(arrivingFrom('http://localhost/user/signup')->parentCrumb())->toBeNull();
+    //   - route-nya terdaftar lagi, jadi `Route::has(...)` bernilai true,
+    //   - `HasAuthBreadcrumbs::retiredRegisterPaths()` tidak lagi membuang
+    //     `/signup` sebagai path retired, dan
+    //   - crumb "Sign Up" kembali jadi parent yang nyata untuk tamu yang datang
+    //     dari halaman itu.
+    //
+    // Yang dikunci sekarang adalah kebalikannya dari test lama: crumb-nya harus
+    // menunjuk route yang MEMANG ADA. Kalau pendaftaran dimatikan lagi tanpa
+    // cabangnya ikut dihapus dari trait, test ini gagal -- dan itu justru
+    // keadaannya yang tidak boleh terjadi (halaman auth 500 untuk tamu yang
+    // datang dengan referer `/signup`).
+    expect(Route::has('filament.welcome.auth.register'))->toBeTrue();
 
-    expect(Route::has('filament.user.auth.register'))->toBeFalse();
+    expect(arrivingFrom('http://localhost/signup')->parentCrumb())
+        ->toBe(['url' => route('filament.welcome.auth.register'), 'label' => __('Sign Up')]);
 
-    // Untuk user yang sudah login, referer /user/signup tidak crash dan
-    // jatuh ke cabang "/user/ + sudah login" -- label "Kembali", bukan "Sign Up".
+    // Untuk user yang sudah login, referer /signup tidak crash. Crumb-nya
+    // tetap "Sign Up" (bukan "Kembali"), karena `HasAuthBreadcrumbs` mengenali
+    // path itu lewat cabang Sign Up yang sekarang hidup lagi -- sama seperti
+    // untuk tamu.
+    //
+    // Ini bukan hal yang harus dijaga sebagai perbedaan: yang dijaga adalah
+    // crumb-nya tidak pernah menunjuk route yang hilang.
     actingAs($this->customer, 'web');
 
-    expect(arrivingFrom('http://localhost/user/signup')->parentCrumb())
-        ->toBe(['url' => 'http://localhost/user/signup', 'label' => __('Kembali')]);
+    expect(arrivingFrom('http://localhost/signup')->parentCrumb())
+        ->toBe(['url' => route('filament.welcome.auth.register'), 'label' => __('Sign Up')]);
 });
 
 test('each step of the password reset flow is labelled with its own page', function (string $origin, string $labelKey): void {
@@ -197,7 +209,7 @@ test('each step of the password reset flow is labelled with its own page', funct
 test('the otp verification step is labelled as such', function (): void {
     // Dua URL jadi satu label: `verify-otp` (slug lama) dan
     // `password-reset/verify` (slug yang sekarang dipakai route
-    // filament.user.auth.verify-otp). Keduanya dilayani VerifyOtp, jadi
+    // filament.welcome.auth.verify-otp). Keduanya dilayani VerifyOtp, jadi
     // pengguna dari salah satu harus kembali ke langkah yang sama.
     foreach ([
         'http://localhost/user/verify-otp',
@@ -226,9 +238,9 @@ test('an origin equal to the page being shown is not treated as a parent', funct
 });
 
 test('the complete profile step is labelled as such', function (): void {
-    expect(arrivingFrom('http://localhost/user/complete-profile')->parentCrumb())
+    expect(arrivingFrom('http://localhost/complete-profile')->parentCrumb())
         ->toBe([
-            'url' => route('filament.user.pages.complete-profile'),
+            'url' => route('filament.welcome.pages.complete-profile'),
             'label' => __('Lengkapi Profil Anda'),
         ]);
 });
@@ -236,7 +248,7 @@ test('the complete profile step is labelled as such', function (): void {
 test('the email verification prompt is labelled as such', function (): void {
     expect(arrivingFrom('http://localhost/user/email-verification')->parentCrumb())
         ->toBe([
-            'url' => route('filament.user.auth.email-verification.prompt'),
+            'url' => route('filament.welcome.auth.email-verification.prompt'),
             'label' => __('Verifikasi Email Anda'),
         ]);
 });
@@ -245,7 +257,7 @@ test('a welcome page origin becomes a generic back crumb', function (): void {
     // Tamu hanya diarahkan ke storefront, dan labelnya jujur: "Kembali".
     // URL asalnya dipertahankan supaya pengguna kembali ke halaman yang sedang
     // dilihat, bukan ke dashboard.
-    $origin = 'http://localhost/welcome/flowerdecorationscatalog/4';
+    $origin = 'http://localhost/flowerdecorationscatalog/4';
 
     expect(arrivingFrom($origin)->parentCrumb())
         ->toBe(['url' => $origin, 'label' => __('Kembali')]);
@@ -255,7 +267,7 @@ test('a user panel page is only a valid origin for a signed in visitor', functio
     // Untuk tamu, halaman /user/* butuh auth sehingga tidak bisa jadi "asal
     // klik" yang bermakna; untuk user yang sudah login, URL itu dipakai apa
     // adanya.
-    $origin = 'http://localhost/user/wishlists';
+    $origin = 'http://localhost/wishlists';
 
     expect(arrivingFrom($origin)->parentCrumb())->toBeNull();
 
@@ -288,3 +300,4 @@ test('the storefront home crumb is the same destination the landing page uses', 
     // panel Welcome, bukan ke home panel user (yang butuh auth).
     expect(route('filament.welcome.pages.home'))->toBe(WelcomeHome::getUrl(panel: 'welcome'));
 });
+

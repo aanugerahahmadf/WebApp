@@ -76,13 +76,14 @@ require __DIR__.'/user/AuthController/AuthController/AuthController.php';
 require __DIR__.'/user/AppSettingsController/AppSettingsController/AppSettingsController.php';
 require __DIR__.'/user/CBIRController/CBIRController/CBIRController.php';
 require __DIR__.'/user/CategoryController/CategoryController/CategoryController.php';
-require __DIR__.'/user/PackageController/PackageController/PackageController.php';
-require __DIR__.'/user/ProductController/ProductController/ProductController.php';
+// Packages are no longer browsable: they only exist as tiers inside a catalog
+// and are read through `/api/catalog/{id}/tiers`.
+require __DIR__.'/user/CatalogController/CatalogController/CatalogController.php';
 require __DIR__.'/user/SearchController/SearchController/SearchController.php';
 require __DIR__.'/user/CartController/CartController/CartController.php';
 require __DIR__.'/user/WishlistController/WishlistController/WishlistController.php';
 require __DIR__.'/user/OrderController/OrderController/OrderController.php';
-require __DIR__.'/user/VendorController/VendorController/VendorController.php';
+
 require __DIR__.'/user/VoucherController/VoucherController/VoucherController.php';
 require __DIR__.'/user/NotificationController/NotificationController/NotificationController.php';
 require __DIR__.'/user/ReviewController/ReviewController/ReviewController.php';
@@ -108,13 +109,35 @@ require __DIR__.'/user/FonnteWebhookController/FonnteWebhookController/FonnteWeb
 require __DIR__.'/user/BriVaWebhookController/BriVaWebhookController/BriVaWebhookController.php';
 require __DIR__.'/user/PaymentWebhookController/PaymentWebhookController/PaymentWebhookController.php';
 
+/*
+|--------------------------------------------------------------------------
+| Admin API
+|--------------------------------------------------------------------------
+|
+| Di dalam `auth:sanctum`, jadi token yang dipakai adalah token Sanctum --
+| token milik tabel `users`. Middleware SuperAdmin kemudian menolak apa pun
+| yang bukan `App\Models\Admin\Admin`, jadi setelah tabel `admins` dipisah
+| dari `users`, SELURUH group di bawah membalas 403 untuk token Sanctum.
+|
+| Itu disengaja, bukan sisa pekerjaan: model `Admin` tidak punya
+| `HasApiTokens`, jadi ia tidak pernah bisa menerbitkan token, dan tidak ada
+| bearer token yang bisa membuka panel admin. Kalau suatu saat butuh akses
+| dari luar (cron, integrasi, CLI), jalankan lewat guard `admin` --
+| jangan dengan sengaja memberi role admin ke akun belanja.
+|
+| Aplikasi Flutter tidak memanggil prefix ini; frontend admin memakai
+| Filament di server, bukan endpoint ini.
+|
+*/
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::prefix('admin')->middleware(SuperAdmin::class)->group(function (): void {
         require __DIR__.'/admin/SearchController/SearchController/SearchController.php';
         require __DIR__.'/admin/HomeController/HomeController/HomeController.php';
         require __DIR__.'/admin/UserController/UserController/UserController.php';
+        // Admin still manages tier definitions (name + description + price),
+        // but they are always read through a catalog.
         require __DIR__.'/admin/PackageController/PackageController/PackageController.php';
-        require __DIR__.'/admin/ProductController/ProductController/ProductController.php';
+        require __DIR__.'/admin/CatalogController/CatalogController/CatalogController.php';
         require __DIR__.'/admin/CategoryController/CategoryController/CategoryController.php';
         require __DIR__.'/admin/OrderController/OrderController/OrderController.php';
         require __DIR__.'/admin/TransactionController/TransactionController/TransactionController.php';

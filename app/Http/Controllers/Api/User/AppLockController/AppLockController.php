@@ -16,6 +16,7 @@ class AppLockController extends Controller
 {
     /**
      * GET /profile/app-lock — Get current user's app lock settings.
+     * Returns full status including whether lock is enabled and expired.
      */
     public function show(): JsonResponse
     {
@@ -24,13 +25,35 @@ class AppLockController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data' => [
-                'fingerprint_enabled' => $user->app_lock_fingerprint_enabled,
-                'face_enabled' => $user->app_lock_face_enabled,
-                'face_enrolled' => $user->app_lock_face_enrolled,
+            'data' => array_merge($user->getAppLockStatus(), [
                 'face_enrolled_at' => $user->app_lock_face_enrolled_at?->toIso8601String(),
-                'pin_enabled' => $user->app_lock_pin_enabled,
+            ]),
+        ]);
+    }
+
+    /**
+     * GET /profile/app-lock/status — Quick check if app lock screen should be shown.
+     * Used by the mobile app on cold start / resume to decide whether to lock.
+     */
+    public function status(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        $timeout = $request->integer('timeout_minutes', 5);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'lock_required' => $user->isAppLockEnabled() && $user->isAppLockExpired($timeout),
+                'lock_enabled' => $user->isAppLockEnabled(),
+                'methods' => array_filter([
+                    $user->app_lock_fingerprint_enabled ? 'fingerprint' : null,
+                    $user->app_lock_face_enabled ? 'face' : null,
+                    $user->app_lock_pin_enabled ? 'pin' : null,
+                ]),
                 'last_unlock_at' => $user->app_lock_last_unlock_at?->toIso8601String(),
+                'timeout_minutes' => $timeout,
             ],
         ]);
     }
@@ -39,6 +62,8 @@ class AppLockController extends Controller
      * PUT /profile/app-lock — Update app lock settings.
      *
      * Accepts: fingerprint_enabled, face_enabled, pin_enabled
+     * When disabling face, also clears enrollment data.
+     * When disabling PIN, also clears the stored hash.
      */
     public function update(Request $request): JsonResponse
     {
@@ -56,18 +81,24 @@ class AppLockController extends Controller
             $validated['app_lock_pin_hash'] = null;
         }
 
+        // When disabling face, also clear enrollment data.
+        if (isset($validated['face_enabled']) && ! $validated['face_enabled']) {
+            // Delete the stored face reference file
+            if ($user->app_lock_face_reference && Storage::disk('public')->exists($user->app_lock_face_reference)) {
+                Storage::disk('public')->delete($user->app_lock_face_reference);
+            }
+            $validated['app_lock_face_enrolled'] = false;
+            $validated['app_lock_face_reference'] = null;
+            $validated['app_lock_face_enrolled_at'] = null;
+        }
+
         $user->fill($validated);
         $user->save();
 
         return response()->json([
             'status' => 'success',
             'message' => __('Pengaturan kunci aplikasi diperbarui'),
-            'data' => [
-                'fingerprint_enabled' => $user->app_lock_fingerprint_enabled,
-                'face_enabled' => $user->app_lock_face_enabled,
-                'face_enrolled' => $user->app_lock_face_enrolled,
-                'pin_enabled' => $user->app_lock_pin_enabled,
-            ],
+            'data' => $user->getAppLockStatus(),
         ]);
     }
 
@@ -217,6 +248,11 @@ class AppLockController extends Controller
             ], 422);
         }
 
+        // Delete old face reference file if exists
+        if ($user->app_lock_face_reference && Storage::disk('public')->exists($user->app_lock_face_reference)) {
+            Storage::disk('public')->delete($user->app_lock_face_reference);
+        }
+
         // Save enrolled face photo
         $filename = 'app_lock_face_'.$user->id.'_'.time().'.jpg';
         $relativePath = 'app_lock/faces/'.$filename;
@@ -309,6 +345,11 @@ class AppLockController extends Controller
     public function adminReset(Request $request, string $id): JsonResponse
     {
         $user = User::findOrFail($id);
+
+        // Delete the stored face reference file
+        if ($user->app_lock_face_reference && Storage::disk('public')->exists($user->app_lock_face_reference)) {
+            Storage::disk('public')->delete($user->app_lock_face_reference);
+        }
 
         $user->app_lock_fingerprint_enabled = false;
         $user->app_lock_face_enabled = false;

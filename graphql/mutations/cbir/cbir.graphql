@@ -1,0 +1,72 @@
+# CBIR Mutations
+# Wedding Flower Decoration App - CBIR GraphQL Mutations
+# Note: Actual image search uses REST API /api/cbir/search for multipart upload
+
+input SaveCbirSearchInput {
+  queryImageUrl: String!
+  results: [CbirSearchResultItemInput!]!
+}
+
+input CbirSearchResultItemInput {
+  type: String!
+  itemId: ID!
+  similarity: Float!
+  score: Float!
+}
+
+input CbirFeedbackInput {
+  searchId: ID!
+  itemId: ID!
+  itemType: String!
+  isRelevant: Boolean!
+  feedback: String
+}
+
+type Mutation {
+  # Save CBIR search to history
+  saveCbirSearch(input: SaveCbirSearchInput!): CbirHistory @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@saveSearch")
+  
+  # Delete CBIR search from history
+  deleteCbirSearch(searchId: ID!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@deleteSearch")
+  
+  # Clear CBIR history
+  clearCbirHistory: Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@clearHistory")
+  
+  # Submit feedback on CBIR results
+  submitCbirFeedback(input: CbirFeedbackInput!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@submitFeedback")
+  
+  # Admin: Rebuild CBIR index
+  rebuildCbirIndex: CbirIndexResult @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@rebuildIndex")
+  
+  # Admin: Add image to CBIR index
+  addToCbirIndex(mediaId: ID!, imageUrl: String!, type: String!, metadata: JSON): CbirIndexResult @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@addToIndex")
+  
+  # Admin: Remove image from CBIR index
+  removeFromCbirIndex(mediaId: ID!): CbirIndexResult @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@removeFromIndex")
+}
+
+type CbirIndexResult {
+  success: Boolean!
+  message: String!
+  affectedCount: Int!
+  processingTime: Float!
+}
+
+# Extended CBIR History with results
+type CbirHistory {
+  id: ID!
+  userId: ID!
+  queryImageUrl: String!
+  results: [CbirHistoryResult!]!
+  resultsCount: Int!
+  topSimilarity: Float!
+  createdAt: String!
+}
+
+type CbirHistoryResult {
+  type: String!
+  itemId: ID!
+  similarity: Float!
+  score: Float!
+  item: CbirResultData!
+}

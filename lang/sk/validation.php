@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'poštové smerovacie číslo',
         'preview'                  => 'Náhľad',
         'price'                    => 'cena',
-        'product_id'               => 'identifikačné číslo produktu',
+        'catalog_id'               => 'identifikačné číslo produktu',
         'product_uid'              => 'UID produktu',
         'product_uuid'             => 'UUID produktu',
         'promo_code'               => 'propagačný kód',

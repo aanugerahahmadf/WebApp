@@ -9,12 +9,12 @@ use App\Models\History\History;
 use App\Models\Order\Order;
 use App\Models\Package\Package;
 use App\Models\PrivacyPolicy\PrivacyPolicy;
-use App\Models\Product\Product;
+use App\Models\Catalog\Catalog;
 use App\Models\Review\Review;
 use App\Models\TermsOfService\TermsOfService;
 use App\Models\Transaction\Transaction;
 use App\Models\User\User;
-use App\Models\Vendor\Vendor;
+
 use App\Models\Voucher\Voucher;
 use App\Models\WeddingDecorationPolicy\WeddingDecorationPolicy;
 use App\Services\CBIRService\CBIRService;
@@ -41,7 +41,7 @@ class SearchController extends Controller
             })
             ->get();
 
-        $products = Product::with(['media', 'category'])
+        $catalogs = Catalog::with(['media', 'category'])
             ->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
                     ->orWhere('description', 'like', "%{$query}%");
@@ -151,20 +151,11 @@ class SearchController extends Controller
                 ->get()
             : collect();
 
-        $vendors = Vendor::where('is_active', true)
-            ->where(function ($q) use ($query) {
-                $q->where('store_name', 'like', "%{$query}%")
-                    ->orWhere('store_description', 'like', "%{$query}%");
-            })
-            ->where(fn ($q) => $q->has('packages')->orHas('products'))
-            ->withCount(['packages', 'products'])
-            ->get();
-
         return response()->json([
             'status' => 'success',
             'data' => [
                 'packages' => $packages,
-                'products' => $products,
+                'catalogs' => $catalogs,
                 'categories' => $categories,
                 'vouchers' => $vouchers,
                 'orders' => $orders,
@@ -174,7 +165,6 @@ class SearchController extends Controller
                 'helps' => $helps,
                 'wedding_policy' => $weddingPolicy,
                 'histories' => $histories,
-                'vendors' => $vendors,
             ],
         ]);
     }
@@ -195,7 +185,7 @@ class SearchController extends Controller
             })
             ->get();
 
-        $products = Product::with(['media', 'category'])
+        $catalogs = Catalog::with(['media', 'category'])
             ->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
                     ->orWhere('description', 'like', "%{$query}%");
@@ -337,20 +327,11 @@ class SearchController extends Controller
             'user' => $t->user ? ['id' => $t->user->id, 'name' => $t->user->name, 'email' => $t->user->email] : null,
         ]);
 
-        $vendors = Vendor::where('is_active', true)
-            ->where(function ($q) use ($query) {
-                $q->where('store_name', 'like', "%{$query}%")
-                    ->orWhere('store_description', 'like', "%{$query}%");
-            })
-            ->where(fn ($q) => $q->has('packages')->orHas('products'))
-            ->withCount(['packages', 'products'])
-            ->get();
-
         return response()->json([
             'status' => 'success',
             'data' => [
                 'packages' => $packages,
-                'products' => $products,
+                'catalogs' => $catalogs,
                 'categories' => $categories,
                 'vouchers' => $vouchers,
                 'orders' => $orders,
@@ -362,7 +343,6 @@ class SearchController extends Controller
                 'histories' => $histories,
                 'users' => $users,
                 'transactions' => $transactions,
-                'vendors' => $vendors,
             ],
         ]);
     }
@@ -389,7 +369,7 @@ class SearchController extends Controller
         $missingModels = [];
 
         foreach ($results as $r) {
-            $type = $r['type'] ?? 'product';
+            $type = $r['type'] ?? 'catalog';
             $id = $r['owner_id'] ?? null;
 
             if (! $id) {
@@ -403,7 +383,7 @@ class SearchController extends Controller
 
             $model = $type === 'package'
                 ? Package::with(['category', 'media'])->find($id)
-                : Product::with(['category', 'media'])->find($id);
+                : Catalog::with(['category', 'media'])->find($id);
 
             if (! $model) {
                 // AI Core mengembalikan hit yang entah kenapa tidak ada lagi di
@@ -427,7 +407,7 @@ class SearchController extends Controller
         }
 
         // Indeks CBIR sudah tidak sinkron dengan database: AI Core mengembalikan
-        // hit, tapi tidak satu pun ada di tabel products/packages. Tanpa guard ini
+        // hit, tapi tidak satu pun ada di tabel catalogs/packages. Tanpa guard ini
         // endpoint balas 200 + array kosong, sehingga kelihatan seperti "tidak ada
         // hasil mirip" padahal katalognya sendiri yang bermasalah.
         if ($results !== [] && $mixedResults === []) {

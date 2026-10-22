@@ -1,0 +1,204 @@
+syntax = "proto3";
+
+package wedding.user.v1;
+
+option go_package = "github.com/wedding/user/v1;userv1";
+option php_namespace = "App\\Grpc\\User\\V1";
+option php_metadata_namespace = "App\\Grpc\\User\\V1\\GPBMetadata";
+
+import "wedding/user/v1/common.proto";
+import "wedding/user/v1/auth.proto";
+import "wedding/user/v1/catalog.proto";
+import "wedding/user/v1/package.proto";
+import "wedding/user/v1/category.proto";
+
+// Voucher Service
+service VoucherService {
+  rpc GetMyVouchers(GetMyVouchersRequest) returns (VoucherListResponse);
+  rpc GetVoucherByCode(GetVoucherByCodeRequest) returns (Voucher);
+  rpc ListVouchers(ListVouchersRequest) returns (VoucherListResponse);
+  rpc GetVoucherStats(GetVoucherStatsRequest) returns (VoucherStats);
+  rpc ValidateVoucher(ValidateVoucherRequest) returns (VoucherValidation);
+  rpc CreateVoucher(CreateVoucherRequest) returns (Voucher);
+  rpc UpdateVoucher(UpdateVoucherRequest) returns (Voucher);
+  rpc DeleteVoucher(DeleteVoucherRequest) returns (DeleteVoucherResponse);
+  rpc ToggleVoucherStatus(ToggleVoucherStatusRequest) returns (Voucher);
+  rpc BulkCreateVouchers(BulkCreateVouchersRequest) returns (VoucherListResponse);
+  rpc ExportVoucherCodes(ExportVoucherCodesRequest) returns (VoucherExport);
+}
+
+message GetMyVouchersRequest {
+  PaginationRequest pagination = 1;
+}
+
+message GetVoucherByCodeRequest {
+  string code = 1;
+}
+
+message ListVouchersRequest {
+  PaginationRequest pagination = 1;
+  string code = 2;
+  bool active = 3;
+  bool is_global = 4;
+}
+
+message GetVoucherStatsRequest {
+  string voucher_id = 1;
+}
+
+message ValidateVoucherRequest {
+  string code = 1;
+  double cart_total = 2;
+  repeated ValidateVoucherItemInput items = 3;
+}
+
+message CreateVoucherRequest {
+  string name = 1;
+  string code = 2;
+  string description = 3;
+  double discount_amount = 4;
+  DiscountType discount_type = 5;
+  double min_purchase = 6;
+  double max_discount = 7;
+  int32 usage_limit = 8;
+  int32 usage_limit_per_user = 9;
+  string valid_from = 10;
+  string valid_until = 11;
+  bool is_global = 12;
+  repeated string applicable_catalogs = 13;
+  repeated string applicable_packages = 14;
+  repeated string applicable_categories = 15;
+  repeated string excluded_catalogs = 16;
+  repeated string excluded_packages = 17;
+  repeated string excluded_categories = 18;
+  repeated string user_ids = 19;
+}
+
+message UpdateVoucherRequest {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  double discount_amount = 4;
+  DiscountType discount_type = 5;
+  double min_purchase = 6;
+  double max_discount = 7;
+  int32 usage_limit = 8;
+  int32 usage_limit_per_user = 9;
+  string valid_from = 10;
+  string valid_until = 11;
+  bool is_active = 12;
+  bool is_global = 13;
+  repeated string applicable_catalogs = 14;
+  repeated string applicable_packages = 15;
+  repeated string applicable_categories = 16;
+  repeated string excluded_catalogs = 17;
+  repeated string excluded_packages = 18;
+  repeated string excluded_categories = 19;
+  repeated string user_ids = 20;
+}
+
+message DeleteVoucherRequest {
+  string id = 1;
+}
+
+message ToggleVoucherStatusRequest {
+  string id = 1;
+}
+
+message BulkCreateVouchersRequest {
+  string prefix = 1;
+  int32 count = 2;
+  double discount_amount = 3;
+  DiscountType discount_type = 4;
+  double min_purchase = 5;
+  double max_discount = 6;
+  int32 usage_limit = 7;
+  int32 usage_limit_per_user = 8;
+  string valid_from = 9;
+  string valid_until = 10;
+  int32 length = 11;
+}
+
+message ExportVoucherCodesRequest {
+  string voucher_id = 1;
+}
+
+message VoucherListResponse {
+  repeated Voucher vouchers = 1;
+  PaginationResponse pagination = 2;
+}
+
+message Voucher {
+  string id = 1;
+  string name = 2;
+  string code = 3;
+  string description = 4;
+  bool is_active = 5;
+  bool is_global = 6;
+  int32 max_uses = 7;
+  int32 uses_count = 8;
+  string expires_at = 9;
+  double discount_amount = 10;
+  DiscountType discount_type = 11;
+  double min_purchase = 12;
+  double max_discount = 13;
+  repeated Catalog applicable_catalogs = 14;
+  repeated Package applicable_packages = 15;
+  repeated Category applicable_categories = 16;
+  repeated Catalog excluded_catalogs = 17;
+  repeated Package excluded_packages = 18;
+  repeated Category excluded_categories = 19;
+  repeated User users = 20;
+  string created_at = 21;
+  string updated_at = 22;
+}
+
+message VoucherValidation {
+  bool valid = 1;
+  Voucher voucher = 2;
+  double discount = 3;
+  string message = 4;
+  repeated ValidatedItem applied_items = 5;
+}
+
+message ValidatedItem {
+  string id = 1;
+  string type = 2;
+  double original_price = 3;
+  double discounted_price = 4;
+  double discount = 5;
+}
+
+message VoucherStats {
+  Voucher voucher = 1;
+  int32 total_uses = 2;
+  int32 remaining_uses = 3;
+  repeated VoucherUserUsage usage_by_user = 4;
+  double revenue_impact = 5;
+}
+
+message VoucherUserUsage {
+  User user = 1;
+  int32 uses_count = 2;
+  string first_used_at = 3;
+  string last_used_at = 4;
+}
+
+message VoucherExport {
+  Voucher voucher = 1;
+  repeated string codes = 2;
+  string csv_url = 3;
+  string exported_at = 4;
+}
+
+message DeleteVoucherResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ValidateVoucherItemInput {
+  string id = 1;
+  string type = 2;
+  int32 quantity = 3;
+  double price = 4;
+}

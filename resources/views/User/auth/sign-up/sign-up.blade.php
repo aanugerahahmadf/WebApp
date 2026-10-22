@@ -126,6 +126,26 @@
         <x-filament-panels::form id="form" wire:submit="register">
             {{ $this->form }}
         </x-filament-panels::form>
+
+        {{--
+            Pintu masuk, pasangannya dengan blok "Belum memiliki akun?" di
+            sign-in.blade.php. Dua halaman form harus saling menunjuk: tanpa
+            ini orang yang salah klik "Sign Up" tidak punya jalan keluar
+            selain mengetik URL.
+
+            URL diambil dari PANEL: `SignIn::getUrl()` tidak bisa dipakai --
+            SignIn extends `Filament\Pages\Auth\Login`, yang tidak punya
+            helper getUrl() statis, jadi memanggilnya jatuh ke __callStatic dan
+            melempar BadMethodCallException.
+        --}}
+        @if ($signInUrl = \Filament\Facades\Filament::getPanel('welcome')->getLoginUrl())
+            <p class="mt-4 w-full text-center text-sm text-gray-500 dark:text-gray-400">
+                {{ __('Sudah memiliki akun?') }}
+                <x-filament::link :href="$signInUrl" class="font-semibold">
+                    {{ __('Sign In') }}
+                </x-filament::link>
+            </p>
+        @endif
     </div>
 
     {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::AUTH_REGISTER_FORM_AFTER, scopes: $this->getRenderHookScopes()) }}

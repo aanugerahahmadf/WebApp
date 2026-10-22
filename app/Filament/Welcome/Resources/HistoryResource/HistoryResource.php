@@ -2,9 +2,11 @@
 
 namespace App\Filament\Welcome\Resources\HistoryResource;
 
+use App\Filament\Welcome\Resources\CatalogResource\CatalogResource;
 use App\Filament\Welcome\Resources\HistoryResource\Pages\ListHistories\ListHistories;
-use App\Filament\Welcome\Resources\PackageResource\PackageResource;
+
 use App\Models\History\History;
+use App\Support\AppIcon\AppIcon;
 use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Infolists\Components\Grid;
@@ -27,7 +29,7 @@ class HistoryResource extends Resource
 
     protected static ?int $navigationSort = 5;
 
-    protected static ?string $navigationIcon = 'heroicon-s-clock';
+    protected static ?string $navigationIcon = AppIcon::HISTORY;
 
     public static function getGloballySearchableAttributes(): array
     {
@@ -95,15 +97,15 @@ class HistoryResource extends Resource
             ->paginated(false)
             ->emptyStateHeading(__('Belum ada histori transaksi'))
             ->emptyStateDescription(__('Temukan layanan pernikahan impianmu dan mulai transaksi pertama hari ini!'))
-            ->emptyStateIcon('heroicon-s-clock')
+            ->emptyStateIcon('/images/icons/clock.svg')
             ->emptyStateActions([
                 Tables\Actions\Action::make('explore')
                     ->label(__('Cari Layanan'))
-                    ->url(PackageResource::getUrl())
+                    ->url(CatalogResource::getUrl())
                     ->button()
                     ->color('primary')
                     ->size('lg')
-                    ->icon('heroicon-m-sparkles'),
+                    ->icon('/images/icons/sparkles.svg'),
             ])
             ->actionsAlignment('center')
             ->defaultSort('created_at', 'desc')
@@ -128,8 +130,8 @@ class HistoryResource extends Resource
                                 default => 'gray'
                             })
                             ->icon(fn ($record) => match ($record->type) {
-                                'order' => 'heroicon-m-shopping-bag',
-                                default => 'heroicon-m-clock'
+                                'order' => '/images/icons/bag.svg',
+                                default => '/images/icons/clock.svg'
                             }),
 
                         Tables\Columns\TextColumn::make('status')
@@ -205,7 +207,7 @@ class HistoryResource extends Resource
             ], layout: FiltersLayout::AboveContentCollapsible)
             ->filtersTriggerAction(
                 fn (Tables\Actions\Action $action) => $action
-                    ->icon('heroicon-m-funnel')
+                    ->icon('/images/icons/filter.svg')
                     ->label(__('Filter'))
                     ->color(fn ($livewire) => count($livewire->getTable()->getFilterIndicators()) > 0 ? 'primary' : 'gray')
                     ->badge(fn ($livewire) => count($livewire->getTable()->getFilterIndicators()) > 0 ? count($livewire->getTable()->getFilterIndicators()) : null)
@@ -216,7 +218,7 @@ class HistoryResource extends Resource
                     ->button()
                     ->size('sm')
                     ->extraAttributes(['class' => 'flex-1 justify-center rounded-lg shadow-sm font-bold'])
-                    ->icon('heroicon-m-magnifying-glass')
+                    ->icon('/images/icons/search.svg')
                     ->slideOver()
                     ->modalWidth('xl')
                     ->modalHeading(__('Rincian Transaksi')),
@@ -226,7 +228,7 @@ class HistoryResource extends Resource
                     ->size('sm')
                     ->extraAttributes(['class' => 'flex-1 justify-center rounded-lg shadow-sm font-bold'])
                     ->color('danger')
-                    ->icon('heroicon-m-trash'),
+                    ->icon('/images/icons/trash.svg'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

@@ -27,6 +27,28 @@
     --color-zinc-900: #171717;
     --color-zinc-950: #0a0a0a;
 
+    /*
+     * Warna brand panel dijembatungkan ke token Tailwind, supaya kelas
+     * `text-primary-600`, `bg-danger-50`, `focus:ring-primary-500`, dan
+     * sejenisnya ikut warna Filament -- bukan warna default Tailwind, dan
+     * tidak perlu ditimpa per-file.
+     */
+    --color-primary-50: rgb(var(--primary-50, 254 249 195));
+    --color-primary-100: rgb(var(--primary-100, 254 243 169));
+    --color-primary-200: rgb(var(--primary-200, 254 230 106));
+    --color-primary-300: rgb(var(--primary-300, 253 224 71));
+    --color-primary-400: rgb(var(--primary-400, 250 204 21));
+    --color-primary-500: rgb(var(--primary-500, 250 204 21));
+    --color-primary-600: rgb(var(--primary-600, 234 179 8));
+    --color-primary-700: rgb(var(--primary-700, 202 138 4));
+    --color-danger-50: rgb(var(--danger-50, 254 242 242));
+    --color-danger-100: rgb(var(--danger-100, 254 226 226));
+    --color-danger-300: rgb(var(--danger-300, 252 165 165));
+    --color-danger-400: rgb(var(--danger-400, 248 113 113));
+    --color-danger-500: rgb(var(--danger-500, 220 38 38));
+    --color-danger-600: rgb(var(--danger-600, 185 28 28));
+    --color-danger-700: rgb(var(--danger-700, 153 27 27));
+
     --color-accent: var(--color-neutral-800);
     --color-accent-content: var(--color-neutral-800);
     --color-accent-foreground: var(--color-white);
@@ -411,10 +433,31 @@
 
 /* 1023px, not 1024px: matches config('app-platform.mobile_nav.breakpoint') and
  * the same @media in Shared/Shared.css, Shared/Mobile.css and Admin.css, so the
- * drawer, the bottom bar and the card tables all switch over on the same pixel. */
+ * drawer, the bottom bar and the card tables all switch over on the same pixel.
+ *
+ * SEMUA selector di blok ini diawali `:root:not(.native-desktop)`.
+ *
+ * Alasannya sama persis dengan blok Global Search di Shared/Shared.css:
+ * jendela aplikasi desktop (Electron) tidak punya `minWidth`, jadi bisa
+ * dikecilkan ke lebar apa saja termasuk di bawah 1024px. Tanpa guard itu,
+ * sidebar desktop app ikut memakai versi mobile -- `width: 100vw` --
+ * dan menutupi seluruh layar, padahal yang diminta untuk laptop/aplikasi
+ * desktop adalah ukuran sidebar BAWAAN Filament (`var(--sidebar-width)`).
+ *
+ * `@media` SAJA tidak cukup untuk membedakannya dari laptop biasa, sebab
+ * keduanya bisa punya lebar yang sama. Yang membedakan bukan lebarnya,
+ * tapi tempat aplikasi berjalan: kelas `.native-desktop` dipasang ke
+ * <html> oleh User/Welcome.components.platform-runtime-script (registered
+ * di HEAD_START oleh PlatformSupportServiceProvider), jadi sudah ada
+ * sebelum sidebar dirender -- kalau skripnya baru jalan di akhir <body>,
+ * sidebar akan sempat melebar penuh lalu menyusut sendiri di depan mata.
+ *
+ * Di sisi lain: 1024px ke atas tidak pernah cocok dengan `@media` di
+ * bawah, jadi laptop dan desktop website otomatis aman tanpa tambahan.
+ */
 @media (max-width: 1023px) {
     /* Sidebar drawer welcome panel: full width, slide-in from left */
-    .fi-panel-welcome .fi-sidebar {
+    :root:not(.native-desktop) .fi-panel-welcome .fi-sidebar {
         width: 100vw !important;
         max-width: 100vw !important;
         --tw-translate-x: -100% !important;
@@ -424,14 +467,14 @@
     }
 
 
-    .fi-panel-welcome .fi-sidebar.fi-sidebar-open {
+    :root:not(.native-desktop) .fi-panel-welcome .fi-sidebar.fi-sidebar-open {
         --tw-translate-x: 0 !important;
         transform: translateX(0) !important;
     }
 
 
     /* Overlay welcome panel */
-    .fi-panel-welcome .fi-sidebar-close-overlay {
+    :root:not(.native-desktop) .fi-panel-welcome .fi-sidebar-close-overlay {
         z-index: 35 !important;
     }
 
@@ -443,14 +486,14 @@
      * Note: overflow:visible is removed here because the topbar now uses
      * position:fixed which is immune to ancestor overflow values.
      */
-    .fi-panel-welcome .fi-layout {
+    :root:not(.native-desktop) .fi-panel-welcome .fi-layout {
         overflow-x: visible !important;
     }
 
 
     /* Remove horizontal margins from navigation items (welcome panel) */
-    .fi-panel-welcome .fi-sidebar-nav-item > a,
-.fi-panel-welcome .fi-sidebar-group {
+    :root:not(.native-desktop) .fi-panel-welcome .fi-sidebar-nav-item > a,
+:root:not(.native-desktop) .fi-panel-welcome .fi-sidebar-group {
         margin-left: 0 !important;
         margin-right: 0 !important;
         border-radius: 0 !important;
@@ -458,7 +501,7 @@
 
 
     /* Make navigation group headers full width (welcome panel) */
-    .fi-panel-welcome .fi-sidebar-group-button {
+    :root:not(.native-desktop) .fi-panel-welcome .fi-sidebar-group-button {
         padding-left: 1.5rem !important;
         padding-right: 1.5rem !important;
         width: 100% !important;
@@ -466,13 +509,13 @@
 
 
     /* Active item full width (welcome panel) */
-    .fi-panel-welcome .fi-sidebar-nav-item > a.fi-active {
+    :root:not(.native-desktop) .fi-panel-welcome .fi-sidebar-nav-item > a.fi-active {
         border-radius: 0 !important;
     }
 
 
     /* Show close button in sidebar header on mobile (welcome panel) */
-    .fi-panel-welcome .fi-sidebar-header .fi-sidebar-mobile-close-btn {
+    :root:not(.native-desktop) .fi-panel-welcome .fi-sidebar-header .fi-sidebar-mobile-close-btn {
         display: flex !important;
     }
 }
@@ -692,4 +735,118 @@
         padding-top: 1.5rem !important;
         padding-bottom: 1.5rem !important;
     }
+}
+
+
+/*
+ * MESSAGES — PENUH KE TEPI, TANPA KARTU HALAMAN
+ *
+ * Halaman Messages tidak lagi dibungkus `<x-filament-panels::page>`; yang
+ * tersisa dari pembungkus itu hanya bungkus `.fi-main` milik layout panel:
+ *
+ *   .fi-main   px-4 md:px-6 lg:px-8      padding horizontal
+ *              mx-auto max-w-full        dari getMaxContentWidth() = Full
+ *
+ * Padding horizontal itulah yang membuat halaman ini terasa seperti "halaman di
+ * dalam aplikasi" -- ada lapisan putih/lengkung di sekeliling chat. Di sini
+ * padding itu dibuang HANYA kalau halaman memang halaman Messages, dibedakan
+ * lewat `:has(#messages-container)`.
+ *
+ * Kenapa `:has()` dan bukan kelas baru di body? Karena body panel dipakai
+ * bersama semua halaman lain, dan menambahkan kelas per-halaman berarti
+ * menyuntikkannya ke layout -- satu tempat lagi yang harus selalu benar.
+ * `:has()` menilai dari isi, jadi halaman Home/Settings/Katalog tidak pernah
+ * tersentuh tanpa perlu selectors tambahan.
+ *
+ * Topbar TIDAK ikut dibuang: `.fi-main` tidak menyimpan ruang untuk topbar
+ * yang position: fixed, jadi `rect.top` di messages-page-fit.blade.php sudah
+ * memuat tingginya dan tinggi chat tetap dihitung dari sana.
+ *
+ * Baris breadcrumb tetap ada (keputusan: kartu dibuang, navigasi tidak), jadi
+ * ada padding atas yang wajar supaya tidak menempel ke topbar.
+ */
+
+.fi-panel-welcome .messages-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+    padding-top: 0.75rem;
+}
+
+
+
+.fi-panel-welcome:has(#messages-container) .fi-main {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+
+/*
+ *
+
+
+KEPALA HALAMAN MESSAGES -- label + breadcrumb
+ *
+ * Dipisah dari `.messages-page` supaya dua hal bisa diatur terpisah:
+ * `.messages-page yang memiliki tinggi (flex column, isi panel),
+ * sedangkan blok ini hanya baris di atasnya.
+ *
+ * Kenapa tidak menempel tinggi ke `.messages-page`: saat keyboard HP terbuka,
+ * tinggi `.messages-container` menyusut. Kalau kepala ikut menyusut,
+ * breadcrumb tergencet setiap kali pengguna mulai mengetik -- dan justru di
+ * HP-lah breadcrumb ini paling dibutuhkan.
+ *
+ * Padding horizontal ada di sini, bukan di `.fi-main`, karena padding
+ * `.fi-main` sudah dibuang supaya halaman penuh. Memberi padding pada kepala
+ * sendiri membuat teksnya tidak menempel ke tepi layar, sementara gelembung pesan tetap menempel penuh.
+ */
+
+.fi-panel-welcome .messages-page-head {
+    display: flex;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    margin-bottom: 0.75rem;
+    padding-inline: 1rem;
+}
+
+
+
+.fi-panel-welcome .messages-page-crumbs-row {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 1rem;
+    justify-content: space-between;
+    min-width: 0;
+}
+
+.fi-panel-welcome .messages-page-crumbs {
+    min-width: 0;
+    overflow: hidden;
+}
+
+/*
+ * Di HP breadcrumb bisa panjang (Home > Reports > Super Admin). Yang dipotong
+ * adalah butir terakhir saja, karena itu yang sedang dibaca; butir sebelumnya
+ * dibiarkan utuh sebagai konteks asal.
+ */
+
+.fi-panel-welcome .messages-page-crumbs .fi-breadcrumbs-list {
+    flex-wrap: nowrap;
+    overflow: hidden;
+}
+
+.fi-panel-welcome .messages-page-crumbs .fi-breadcrumbs-item {
+    flex-shrink: 0;
+    min-width: 0;
+}
+
+.fi-panel-welcome .messages-page-crumbs .fi-breadcrumbs-item:last-child {
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }

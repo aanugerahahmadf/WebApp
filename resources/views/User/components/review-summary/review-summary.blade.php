@@ -21,7 +21,7 @@
             </div>
             <div class="flex items-center gap-1" aria-label="{{ __('Rating rata-rata') }}">
                 @for ($star = 1; $star <= 5; $star++)
-                    <x-filament::icon icon="heroicon-s-star" @class(['h-5 w-5', 'text-amber-400' => $star <= round($average), 'text-gray-300 dark:text-gray-600' => $star > round($average)]) />
+                    <x-filament::icon icon="/images/icons/star.svg" @class(['h-5 w-5', 'text-amber-400' => $star <= round($average), 'text-gray-300 dark:text-gray-600' => $star > round($average)]) />
                 @endfor
             </div>
             <span class="text-sm text-gray-500 dark:text-gray-400">{{ trans_choice(':count penilaian|:count penilaian', $total, ['count' => $total]) }}</span>
@@ -46,7 +46,7 @@
                 >
                     @if ($isRating)
                         @for ($star = 0; $star < (int) $label; $star++)
-                            <x-filament::icon icon="heroicon-s-star" class="h-4 w-4 text-amber-400" />
+                            <x-filament::icon icon="/images/icons/star.svg" class="h-4 w-4 text-amber-400" />
                         @endfor
                     @else
                         {{ $label }}

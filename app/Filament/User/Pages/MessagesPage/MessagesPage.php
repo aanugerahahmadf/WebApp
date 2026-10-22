@@ -5,11 +5,12 @@ namespace App\Filament\User\Pages\MessagesPage;
 use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\User\Pages\Home\Home;
 use App\Filament\User\Pages\SettingsPage\SettingsPage;
-use App\Filament\User\Resources\PackageResource\PackageResource;
-use App\Filament\User\Resources\ProductResource\ProductResource;
+
+use App\Filament\User\Resources\CatalogResource\CatalogResource;
 use App\Models\Inbox\Inbox;
 use App\Models\Package\Package;
-use App\Models\Product\Product;
+use App\Models\Catalog\Catalog;
+use App\Support\AppIcon\AppIcon;
 use Filament\Actions\Action;
 use Filament\Pages\Page;
 use Filament\Support\Enums\MaxWidth;
@@ -26,7 +27,7 @@ class MessagesPage extends Page
 
     protected static string $view = 'User.pages.messages.messages';
 
-    protected static ?string $activeNavigationIcon = 'heroicon-s-chat-bubble-left-right';
+    protected static ?string $activeNavigationIcon = AppIcon::MESSAGES;
 
     protected static ?int $navigationSort = 1;
 
@@ -110,6 +111,19 @@ class MessagesPage extends Page
             : null;
     }
 
+    /**
+     * Crumb parent TIDAK mengikuti halaman asal klik.
+     *
+     * Header chat sudah punya tombol panah ke Inbox, jadi navigasi balik tidak
+     * bergantung pada breadcrumb. Tanpa opt-out ini, crumb kedua hanya berisi
+     * halaman yang kebetulan diklik sebelum membuka Messages -- dan terlihat
+     * seperti bagian dari riwayat percakapan padahal tidak ada hubungannya.
+     */
+    protected function followsReferrerInBreadcrumb(): bool
+    {
+        return false;
+    }
+
     public function getTitle(): string
     {
         return __(config('messages.navigation.navigation_label', 'Messages'));
@@ -136,7 +150,7 @@ class MessagesPage extends Page
             return true;
         }
 
-        // Keep heading visible on mobile (â‰¤ 1023px) because the layout is single-column
+        // Keep heading visible on mobile (≤ 1023px) because the layout is single-column
         // and the user needs context. On desktop the topnav already shows the page name.
         return request()->header('X-Filament-Mobile', false) || (
             isset($_SERVER['HTTP_USER_AGENT']) &&
@@ -158,7 +172,7 @@ class MessagesPage extends Page
         return [
             Action::make('backToSettings')
                 ->label(__('Kembali ke Pengaturan'))
-                ->icon('heroicon-m-arrow-left')
+                ->icon('/images/icons/arrow_left.svg')
                 ->color('gray')
                 ->url($settingsUrl),
         ];
@@ -178,12 +192,22 @@ class MessagesPage extends Page
         ];
 
         if ($origin = $this->resolveOriginItem()) {
-            $resource = $origin['type'] === 'product' ? ProductResource::class : PackageResource::class;
+            // Packages are tiers now, so every browsable origin resolves to the catalog.
+            $resource = CatalogResource::class;
             $breadcrumbs[$resource::getUrl('index')] = $resource::getNavigationLabel();
             $breadcrumbs[$resource::getUrl('view', ['record' => $origin['item']])] = $origin['item']->name;
         }
 
-        $breadcrumbs[static::getUrl()] = __('Inbox');
+        /*
+         * Label NAVIGASI, bukan `__('Inbox')`.
+         *
+         * `lang/id.json` punya entri `"Inbox": "Kotak Masuk"` -- arti generik
+         * kata "inbox" (kotak surat), bukan nama halaman pesan. Dipakai apa
+         * adanya, breadcrumb dan sidebar akan punya dua nama berbeda untuk satu
+         * tujuan. `getNavigationLabel()` juga menyatukan sumber kebenarannya
+         * dengan item sidebar.
+         */
+        $breadcrumbs[static::getUrl()] = static::getNavigationLabel();
 
         if ($this->selectedConversation) {
             $breadcrumbs[] = $this->selectedConversation->inbox_title ?: __('Pesan');
@@ -196,7 +220,7 @@ class MessagesPage extends Page
      * Lacak item katalog asal percakapan dari kartu konteks / laporan item
      * terbaru (meta type + id). Kartu pesanan (is_order) hanya jadi cadangan.
      *
-     * @return array{type: string, item: Package|Product}|null
+     * @return array{type: string, item: Package|Catalog}|null
      */
     protected function resolveOriginItem(): ?array
     {
@@ -213,12 +237,12 @@ class MessagesPage extends Page
         foreach ($messages as $message) {
             $meta = $message->meta ?? [];
 
-            if (! in_array($meta['type'] ?? null, ['package', 'product'], true) || empty($meta['id'])) {
+            if (! in_array($meta['type'] ?? null, ['package', 'catalog'], true) || empty($meta['id'])) {
                 continue;
             }
 
-            $item = $meta['type'] === 'product'
-                ? Product::query()->find($meta['id'])
+            $item = $meta['type'] === 'catalog'
+                ? Catalog::query()->find($meta['id'])
                 : Package::query()->find($meta['id']);
 
             if (! $item) {

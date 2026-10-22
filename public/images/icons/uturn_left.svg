@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7DD3FC"/>
+      <stop offset="1" stop-color="#0EA5E9"/>
+    </linearGradient>
+    <filter id="sh" x="-40%" y="-40%" width="180%" height="190%">
+      <feDropShadow dx="0" dy="20" stdDeviation="18" flood-color="#0C4A6E" flood-opacity="0.42"/>
+    </filter>
+  </defs>
+  <style>
+    @keyframes ikon-terbang { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1.2%); } }
+    .ikon { animation: ikon-terbang 3.6s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { .ikon { animation: none; } }
+  </style>
+  <g class="ikon" fill="url(#g1)" filter="url(#sh)"><path d="M280-297q-8 0-15-2.5t-13-8.5L148-412q-11-11-11-28t11-28q11-11 28-11t28 11l36 36v-168q0-100 70-170t170-70q100 0 170 70t70 170v440q0 17-11.5 28.5T680-120q-17 0-28.5-11.5T640-160v-440q0-66-47-113t-113-47q-66 0-113 47t-47 113v168l36-36q11-11 28-11t28 11q11 11 11 28t-11 28L308-308q-6 6-13 8.5t-15 2.5Z"/></g>
+</svg>

@@ -6,7 +6,7 @@ use App\Enums\DiscountType\DiscountType;
 use App\Http\Controllers\Controller;
 use App\Models\Discount\Discount;
 use App\Models\Package\Package;
-use App\Models\Product\Product;
+use App\Models\Catalog\Catalog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -19,7 +19,7 @@ class DiscountController extends Controller
 
             if ($request->filled('search')) {
                 $s = $request->search;
-                $query->whereHasMorph('discountable', [Package::class, Product::class], function ($q) use ($s) {
+                $query->whereHasMorph('discountable', [Package::class, Catalog::class], function ($q) use ($s) {
                     $q->where('name', 'like', "%{$s}%");
                 });
             }
@@ -82,7 +82,7 @@ class DiscountController extends Controller
             // Validate polymorphic relation
             if (! empty($validated['discountable_type']) && ! empty($validated['discountable_id'])) {
                 $modelClass = $validated['discountable_type'];
-                if (! in_array($modelClass, [Package::class, Product::class])) {
+                if (! in_array($modelClass, [Package::class, Catalog::class])) {
                     return response()->json(['status' => 'error', 'message' => __('Tipe item tidak valid')], 422);
                 }
                 $modelClass::findOrFail($validated['discountable_id']);

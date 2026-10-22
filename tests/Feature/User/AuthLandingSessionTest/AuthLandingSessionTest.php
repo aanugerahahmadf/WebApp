@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Sesi dan guard pada `/user/auth` (halaman auth landing untuk tamu).
+ * Sesi dan guard pada `/auth` (halaman auth landing untuk tamu).
  *
  * Dua hal yang dijaga di sini, keduanya mudah lolos karena halamannya tetap 200:
  *
@@ -15,9 +15,9 @@
  *
  *   2. Halaman auth harus terbuka untuk tamu dan TERTUTUP untuk pengguna yang
  *      sudah login. Yang menutupnya adalah `Auth::mount()` (redirect ke
- *      `/user/home`), bukan middleware panel: route-nya didaftarkan lewat
+ *      `/home`), bukan middleware panel: route-nya didaftarkan lewat
  *      `->routes()` sehingga tidak terbungkus `authMiddleware`. Kalau
- *      `mount()` dihapus, `/user/auth` terbuka untuk semua orang -- termasuk
+ *      `mount()` dihapus, `/auth` terbuka untuk semua orang -- termasuk
  *      sesi yang sudah login, yang di sana tidak punya gunanya.
  */
 
@@ -39,7 +39,7 @@ beforeEach(function (): void {
 
 test('a guest keeps the intended url untouched while visiting the auth landing page', function (): void {
     // Alur nyata: tamu menekan Add to Cart di katalog -> middleware
-    // AuthenticateWelcome menyimpan tujuan -> tamu diarahkan ke /user/auth ->
+    // AuthenticateWelcome menyimpan tujuan -> tamu diarahkan ke /auth ->
     // login -> harus kembali ke detail produk, bukan ke beranda.
     $intended = '/welcome/flowerdecorationspackagecatalog/5';
 
@@ -101,7 +101,7 @@ test('a signed in visitor keeps their session while being redirected', function 
 });
 
 test('the sign in form is reachable for a guest, so the landing page is not a dead end', function (): void {
-    // Tombol pertama di /user/auth mengarah ke sini. Kalau form menolak tamu,
+    // Tombol pertama di /auth mengarah ke sini. Kalau form menolak tamu,
     // halaman auth tidak berguna lagi -- dan tidak ada test lain yang akan
     // sampai ke sana lewat UI.
     $this->get(Auth::getUrl())->assertOk();
@@ -114,7 +114,7 @@ test('the landing page is outside the panel auth middleware', function (): void 
     // `->pages()`). Kalau registrannya diubah, tamu justru dialihkan dan test
     // ini gagal -- itu memang sinyal yang benar untuk memperbaiki.
     $route = collect(app('router')->getRoutes()->getRoutes())
-        ->first(fn ($route): bool => $route->getName() === 'filament.user.auth.index');
+        ->first(fn ($route): bool => $route->getName() === 'filament.welcome.auth.index');
 
     expect($route)->not->toBeNull()
         ->and($route->gatherMiddleware())
@@ -122,3 +122,4 @@ test('the landing page is outside the panel auth middleware', function (): void 
         ->and($route->gatherMiddleware())
         ->not->toContain(\App\Http\Middleware\EnsureProfileComplete\EnsureProfileComplete::class);
 });
+

@@ -55,7 +55,7 @@ class BrowserSessionsComponent extends Component implements HasActions, HasForms
                 Forms\Components\Section::make(__('Sesi Browser'))
                     ->description(__('Kelola dan keluar dari sesi aktif Anda di browser dan perangkat lain.'))
                     ->aside()
-                    ->icon('heroicon-s-computer-desktop')
+                    ->icon('/images/icons/computer_desktop.svg')
                     ->schema([
                         Forms\Components\ViewField::make('browserSessions')
                             ->label(__('Sesi Browser'))

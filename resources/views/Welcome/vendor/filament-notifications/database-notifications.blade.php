@@ -7,6 +7,23 @@
     @if ($pollingInterval = $this->getPollingInterval())
         wire:poll.{{ $pollingInterval }}
     @endif
+    x-data="{
+        currentUnread: {{ (int) $unreadNotificationsCount }},
+        init() {
+            $watch('currentUnread', (newVal, oldVal) => {
+                if (oldVal !== undefined && newVal > oldVal) {
+                    window.playNotificationSound?.();
+                }
+            });
+        }
+    }"
+    x-effect="
+        const count = {{ (int) $unreadNotificationsCount }};
+        if (currentUnread !== undefined && count > currentUnread) {
+            window.playNotificationSound?.();
+        }
+        currentUnread = count;
+    "
     class="flex"
 >
     @if ($trigger = $this->getTrigger())

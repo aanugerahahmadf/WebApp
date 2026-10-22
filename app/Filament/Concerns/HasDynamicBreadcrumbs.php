@@ -2,29 +2,98 @@
 
 namespace App\Filament\Concerns;
 
+use App\Support\StorefrontUrls\StorefrontUrls;
+use App\Support\TopNavigation\TopNavigation;
+use Filament\Facades\Filament;
+
 /**
  * Breadcrumb dinamis untuk semua halaman Filament (Admin / User / Welcome).
  *
  * Parent crumb mengikuti halaman asal klik (`url()->previous()` +
  * `url.intended`), bukan hardcode Home. Tanpa asal valid, hanya trail
- * halaman saat ini yang tampil — Home tidak pernah jadi default.
+ * halaman saat ini yang tampil.
+ *
+ * PENGECUALIAN untuk panel Welcome dan User: crumb 'Beranda' selalu
+ * ditambahkan di depan, bukan hanya saat asal kliknya kebetulan Home.
+ *
+ * Alasannya, ketiga panel itu memakai prefix ini sebagai penanda posisi:
+ * Home selalu jadi crumb pertama, bukan cuma kalau halaman itu kebetulan dibuka
+ * dari Home. Kalau Home cuma muncul sebagai "default kalau ada referrer", maka
+ * membuka /settings lewat URL langsung -- atau lewat tombol refresh, atau dari
+ * hasil pencarian -- menjatuhkan pengguna di halaman tanpa penanda posisi.
+ *
+ * Panel Admin TIDAK ikut aturan ini: chrome-nya tetap di semua halaman, jadi
+ * tidak butuh lifeline breadcrumb dan perilakunya tidak berubah.
  */
 trait HasDynamicBreadcrumbs
 {
     /**
-     * Kembalikan crumb parent sebagai [url => label] atau [] bila tidak ada
-     * asal valid. Pakai spread di getBreadcrumbs():
+     * Kembalikan crumb parent sebagai [url => label], diawali crumb 'Beranda'
+     * untuk panel yang chrome-nya hanya di Home.
+     *
+     * Pakai spread di getBreadcrumbs():
      * `[...$this->breadcrumbParentCrumb(), $this->getTitle()]`.
      */
     protected function breadcrumbParentCrumb(): array
     {
-        $parent = $this->resolveBreadcrumbParent();
+        $crumbs = [];
 
-        if ($parent === null) {
-            return [];
+        if ($this->shouldLeadWithHome()) {
+            $homeUrl = TopNavigation::homeUrl();
+
+            if ($homeUrl !== null) {
+                $crumbs[$homeUrl] = __('Beranda');
+            }
         }
 
-        return [$parent['url'] => $parent['label']];
+        // Halaman yang punya navigasi sendiri opt-out lewat
+        // followsReferrerInBreadcrumb() -- lihat method-nya untuk alasannya.
+        $parent = $this->followsReferrerInBreadcrumb()
+            ? $this->resolveBreadcrumbParent()
+            : null;
+
+        if ($parent !== null) {
+            // Kunci arraynya URL, jadi parent yang kebetulan Home menimpa
+            // crumb Home di atas -- bukan menduplikasi. Labelnya juga sama
+            // ('Beranda'), jadi hasilnya tetap satu crumb, bukan dua.
+            $crumbs[$parent['url']] = $parent['label'];
+        }
+
+        return $crumbs;
+    }
+
+    /**
+     * Apakah crumb parent boleh mengikuti halaman asal klik (`url()->previous()`).
+     *
+     * Bawaannya ya, dan itu yang membuat trail breadcrumb berguna: membuka
+     * Pengaturan dari dalam Messages menghasilkan "Beranda > Pesan > Pengaturan".
+     *
+     * FALSE untuk halaman yang sudah punya tombol kembali sendiri. Messages
+     * adalah salah satunya: header chatnya sudah punya panah ke Inbox, jadi
+     * crumb "Reviews" yang muncul hanya karena pengguna kebetulan membuka
+     * Reviews sebelumnya tidak menambah informasi -- dia hanya membingungkan,
+     * karena terlihat seperti bagian dari riwayat percakapan padahal tidak
+     * ada hubungannya sama sekali.
+     */
+    protected function followsReferrerInBreadcrumb(): bool
+    {
+        return true;
+    }
+
+    /**
+     * crumb 'Beranda' di depan untuk panel Welcome/User, KECUALI saat halaman
+     * yang sedang dirender itu sendiri Home -- di sana trail 'Beranda' hanya
+     * mengulang judul yang sudah ada di heading.
+     *
+     * ATURANNYA TIDAK DITULIS ULANG DI SINI: pertanyaannya "apakah crumb
+     * Beranda perlu" sama persis dengan "apakah panel ini sedang menampilkan
+     * chrome", jadi kedua trait yang membuat breadcrumb --
+     * HasDynamicBreadcrumbs di sini dan HasAuthBreadcrumbs untuk halaman auth
+     * layout simple -- bertanya ke TopNavigation yang sama.
+     */
+    protected function shouldLeadWithHome(): bool
+    {
+        return TopNavigation::needsHomeBreadcrumb();
     }
 
     /**
@@ -92,6 +161,72 @@ trait HasDynamicBreadcrumbs
         return null;
     }
 
+    /**
+     * Label halaman panel (resource/page Filament) untuk sebuah path.
+     *
+     * Kenapa harus dicari dari class-nya, bukan dari slug: fallback lama
+     * membentuk label dengan `ucwords(str_replace('-', ' ', $slug))`, jadi
+     * breadcrumb menampilkan "Website Mobile Customizer" (slug) di panel
+     * berbahasa Indonesia, dan "Tipografi" (tidak diterjemahkan) di panel
+     * berbahasa Inggris. Dua-duanya bahasa yang salah di layar yang sudah
+     * diterjemahkan.
+     *
+     * Hanya path yang PERSIS sama dengan slug yang diambil. Sub-halaman
+     * (`/create`, `/{record}/edit`) sengaja dibiarkan jatuh ke aturan lama:
+     * aksi CRUD bukan halaman asal yang bermakna untuk breadcrumb.
+     */
+    protected function resolvePanelBreadcrumbLabel(string $path): ?string
+    {
+        if (! class_exists(Filament::class)) {
+            return null;
+        }
+
+        $panel = Filament::getCurrentPanel();
+
+        if ($panel === null) {
+            return null;
+        }
+
+        $panelPath = trim($panel->getPath(), '/');
+        $relative = trim($path, '/');
+
+        if ($panelPath !== '') {
+            if ($relative !== $panelPath && ! str_starts_with($relative, $panelPath.'/')) {
+                return null;
+            }
+
+            $relative = trim(substr($relative, strlen($panelPath)), '/');
+        }
+
+        if ($relative === '') {
+            return null;
+        }
+
+        $classes = [...$panel->getResources(), ...$panel->getPages()];
+
+        foreach ($classes as $class) {
+            if (! is_string($class) || ! class_exists($class)) {
+                continue;
+            }
+
+            try {
+                if (trim((string) $class::getSlug(), '/') !== $relative) {
+                    continue;
+                }
+
+                $label = (string) $class::getNavigationLabel();
+            } catch (\Throwable) {
+                continue;
+            }
+
+            if ($label !== '') {
+                return $label;
+            }
+        }
+
+        return null;
+    }
+
     protected function resolveBreadcrumbLabelForPath(string $path): ?string
     {
         if (str_contains($path, '/login')) {
@@ -122,6 +257,13 @@ trait HasDynamicBreadcrumbs
             return __('Atur Ulang Kata Sandi');
         }
 
+        // Halaman panel (resource/page Filament): label aslinya, bukan slug.
+        $panelLabel = $this->resolvePanelBreadcrumbLabel($path);
+
+        if ($panelLabel !== null) {
+            return $panelLabel;
+        }
+
         $segments = array_values(array_filter(explode('/', trim($path, '/'))));
         $last = end($segments);
 
@@ -146,7 +288,7 @@ trait HasDynamicBreadcrumbs
             'histories' => 'Riwayat',
             'orders' => 'Pesanan',
             'packages' => 'Paket',
-            'products' => 'Produk',
+            'catalogs' => 'Katalog',
             'reviews' => 'Ulasan',
             'vouchers' => 'Voucher',
             'edit-profile' => 'Edit Profil',
@@ -173,7 +315,15 @@ trait HasDynamicBreadcrumbs
 
     protected function isInternalBreadcrumbUrl(string $url): bool
     {
-        if (str_contains($url, '/admin') || str_contains($url, '/user/') || str_contains($url, '/welcome')) {
+        if (str_contains($url, '/admin') || str_contains($url, '/user/')) {
+            return true;
+        }
+
+        // URL storefront: panel welcome sekarang di path '/' (shopee-style),
+        // jadi /home, /messages, /flowerdecorationscatalog, dst. tidak lagi
+        // bisa dibedakan lewat penanda '/welcome'. StorefrontUrls mengenali
+        // URL root yang baru SEKALIGUS URL legacy /welcome/*.
+        if (StorefrontUrls::isStorefrontUrl($url)) {
             return true;
         }
 

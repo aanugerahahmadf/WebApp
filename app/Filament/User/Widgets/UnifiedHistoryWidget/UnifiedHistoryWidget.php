@@ -7,6 +7,7 @@ use Filament\Facades\Filament;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
+use App\Support\AppIcon\AppIcon;
 use Illuminate\Contracts\Support\Htmlable;
 
 class UnifiedHistoryWidget extends BaseWidget
@@ -35,7 +36,7 @@ class UnifiedHistoryWidget extends BaseWidget
                     ->label(__('ID Transaksi'))
                     ->weight('bold')
                     ->color('gray')
-                    ->icon('heroicon-m-shopping-bag')
+                    ->icon(AppIcon::ORDER)
                     ->iconColor('info'),
                 Tables\Columns\TextColumn::make('type')
                     ->label(__('Tipe'))
@@ -78,14 +79,14 @@ class UnifiedHistoryWidget extends BaseWidget
             ->actions([
                 Tables\Actions\Action::make('details')
                     ->label(__('Lihat'))
-                    ->icon('heroicon-m-eye')
+                    ->icon(AppIcon::HELP)
                     ->button()
                     ->size('xs')
                     ->color('gray')
                     ->url(function ($record) {
                         return $record->order_id
-                            ? route('filament.user.resources.orders.view', ['record' => $record->order_id])
-                            : route('filament.user.resources.orders.index');
+                            ? route('filament.welcome.resources.orders.view', ['record' => $record->order_id])
+                            : route('filament.welcome.resources.orders.index');
                     }),
             ]);
     }

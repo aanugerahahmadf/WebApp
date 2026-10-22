@@ -1,0 +1,63 @@
+# Catalog Mutations (Admin only)
+# Wedding Flower Decoration App - Catalog GraphQL Mutations
+
+# Note: These mutations require admin authentication
+# They are defined here for the admin panel
+
+input CreateCatalogInput {
+  name: String!
+  slug: String!
+  description: String
+  price: Float!
+  discountPrice: Float
+  stock: Int! = 0
+  isActive: Boolean! = true
+  isFeatured: Boolean! = false
+  imageUrl: String
+  videoUrl: String
+  features: [String!]
+  theme: String
+  color: String
+  minCapacity: Int
+  maxCapacity: Int
+  categoryId: ID!
+}
+
+input UpdateCatalogInput {
+  name: String
+  slug: String
+  description: String
+  price: Float
+  discountPrice: Float
+  stock: Int
+  isActive: Boolean
+  isFeatured: Boolean
+  imageUrl: String
+  videoUrl: String
+  features: [String!]
+  theme: String
+  color: String
+  minCapacity: Int
+  maxCapacity: Int
+  categoryId: ID
+}
+
+type Mutation {
+  # Admin: Create Catalog
+  createCatalog(input: CreateCatalogInput!): Catalog @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CatalogResolver@create")
+
+  # Admin: Update Catalog
+  updateCatalog(id: ID!, input: UpdateCatalogInput!): Catalog @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CatalogResolver@update")
+
+  # Admin: Delete Catalog
+  deleteCatalog(id: ID!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CatalogResolver@delete")
+
+  # Admin: Toggle Featured
+  toggleCatalogFeatured(id: ID!): Catalog @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CatalogResolver@toggleFeatured")
+
+  # Admin: Update Stock
+  updateCatalogStock(id: ID!, quantity: Int!): Catalog @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CatalogResolver@updateStock")
+
+  # Admin: Bulk Update Catalogs
+  bulkUpdateCatalogs(ids: [ID!]!, input: UpdateCatalogInput!): [Catalog!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CatalogResolver@bulkUpdate")
+}

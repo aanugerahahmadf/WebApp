@@ -1,0 +1,27 @@
+# Wishlist Type Definitions
+# Wedding Flower Decoration App - Wishlist GraphQL Types
+
+type Wishlist @model(class: "App\\Models\\Wishlist\\Wishlist") {
+  id: ID!
+  user: User @belongsTo
+  catalog: Catalog @belongsTo
+  package: Package @belongsTo
+  createdAt: String!
+}
+
+type WishlistAction {
+  wishlist: Wishlist
+  action: WishlistActionType!
+  message: String!
+}
+
+type WishlistShare {
+  shareToken: String!
+  shareUrl: String!
+  expiresAt: String!
+}
+
+enum WishlistActionType {
+  ADDED
+  REMOVED
+}

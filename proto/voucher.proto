@@ -1,0 +1,253 @@
+syntax = "proto3";
+
+package weddingapp.voucher;
+
+import "proto/auth.proto";
+import "proto/catalog.proto";
+import "proto/package.proto";
+
+option php_namespace = "App\\Grpc\\Voucher";
+option java_package = "com.weddingapp.voucher";
+option csharp_namespace = "WeddingApp.Voucher";
+option go_package = "github.com/weddingapp/grpc/voucher";
+
+service VoucherService {
+  rpc ValidateVoucher (ValidateVoucherRequest) returns (ValidateVoucherResponse);
+  rpc GetVoucher (GetVoucherRequest) returns (VoucherResponse);
+  rpc GetVouchers (GetVouchersRequest) returns (VouchersResponse);
+  rpc GetMyVouchers (GetMyVouchersRequest) returns (VouchersResponse);
+  rpc GetVoucherStats (GetVoucherStatsRequest) returns (VoucherStatsResponse);
+  rpc CreateVoucher (CreateVoucherRequest) returns (VoucherResponse);
+  rpc UpdateVoucher (UpdateVoucherRequest) returns (VoucherResponse);
+  rpc DeleteVoucher (DeleteVoucherRequest) returns (DeleteVoucherResponse);
+  rpc ToggleVoucherStatus (ToggleVoucherStatusRequest) returns (VoucherResponse);
+  rpc BulkCreateVouchers (BulkCreateVouchersRequest) returns (BulkCreateVouchersResponse);
+  rpc ExportVoucherCodes (ExportVoucherCodesRequest) returns (ExportVoucherCodesResponse);
+}
+
+message ValidateVoucherRequest {
+  string access_token = 1;
+  string code = 2;
+  double cart_total = 3;
+  repeated ValidateVoucherItem items = 4;
+}
+
+message ValidateVoucherItem {
+  int64 id = 1;
+  string type = 2; // "catalog" or "package"
+  int32 quantity = 3;
+  double price = 4;
+}
+
+message GetVoucherRequest {
+  string access_token = 1;
+  int64 id = 2;
+}
+
+message GetVouchersRequest {
+  string access_token = 1;
+  int32 page = 2;
+  int32 per_page = 3;
+  string code = 4;
+  bool active = 5;
+  bool is_global = 6;
+}
+
+message GetMyVouchersRequest {
+  string access_token = 1;
+  int32 page = 2;
+  int32 per_page = 3;
+}
+
+message GetVoucherStatsRequest {
+  string access_token = 1;
+  int64 voucher_id = 2;
+}
+
+message CreateVoucherRequest {
+  string access_token = 1;
+  string name = 2;
+  string code = 3;
+  string description = 4;
+  double discount_amount = 5;
+  DiscountType discount_type = 6;
+  double min_purchase = 7;
+  double max_discount = 8;
+  int32 usage_limit = 9;
+  int32 usage_limit_per_user = 10;
+  string valid_from = 11;
+  string valid_until = 12;
+  bool is_global = 13;
+  repeated int64 applicable_catalogs = 14;
+  repeated int64 applicable_packages = 15;
+  repeated int64 applicable_categories = 16;
+  repeated int64 excluded_catalogs = 17;
+  repeated int64 excluded_packages = 18;
+  repeated int64 excluded_categories = 19;
+  repeated int64 user_ids = 20;
+}
+
+message UpdateVoucherRequest {
+  string access_token = 1;
+  int64 id = 2;
+  string name = 3;
+  string description = 4;
+  double discount_amount = 5;
+  DiscountType discount_type = 6;
+  double min_purchase = 7;
+  double max_discount = 8;
+  int32 usage_limit = 9;
+  int32 usage_limit_per_user = 10;
+  string valid_from = 11;
+  string valid_until = 12;
+  bool is_active = 13;
+  bool is_global = 14;
+  repeated int64 applicable_catalogs = 15;
+  repeated int64 applicable_packages = 16;
+  repeated int64 applicable_categories = 17;
+  repeated int64 excluded_catalogs = 18;
+  repeated int64 excluded_packages = 19;
+  repeated int64 excluded_categories = 20;
+  repeated int64 user_ids = 21;
+}
+
+message DeleteVoucherRequest {
+  string access_token = 1;
+  int64 id = 2;
+}
+
+message ToggleVoucherStatusRequest {
+  string access_token = 1;
+  int64 id = 2;
+}
+
+message BulkCreateVouchersRequest {
+  string access_token = 1;
+  string prefix = 2;
+  int32 count = 3;
+  double discount_amount = 4;
+  DiscountType discount_type = 5;
+  double min_purchase = 6;
+  double max_discount = 7;
+  int32 usage_limit = 8;
+  int32 usage_limit_per_user = 9;
+  string valid_from = 10;
+  string valid_until = 11;
+  int32 length = 12;
+}
+
+message ExportVoucherCodesRequest {
+  string access_token = 1;
+  int64 voucher_id = 2;
+}
+
+message ValidateVoucherResponse {
+  bool valid = 1;
+  Voucher voucher = 2;
+  double discount = 3;
+  string message = 4;
+  repeated ValidatedItem applied_items = 5;
+}
+
+message ValidatedItem {
+  int64 id = 1;
+  string type = 2;
+  double original_price = 3;
+  double discounted_price = 4;
+  double discount = 5;
+}
+
+message VoucherResponse {
+  Voucher voucher = 1;
+  string message = 2;
+}
+
+message VouchersResponse {
+  repeated Voucher vouchers = 1;
+  PaginationMeta pagination = 2;
+}
+
+message VoucherStatsResponse {
+  VoucherStats stats = 1;
+}
+
+message DeleteVoucherResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message BulkCreateVouchersResponse {
+  repeated Voucher vouchers = 1;
+}
+
+message ExportVoucherCodesResponse {
+  Voucher voucher = 1;
+  repeated string codes = 2;
+  string csv_url = 3;
+  string exported_at = 4;
+}
+
+message Voucher {
+  int64 id = 1;
+  string name = 2;
+  string code = 3;
+  string description = 4;
+  bool is_active = 5;
+  bool is_global = 6;
+  int32 max_uses = 7;
+  int32 uses_count = 8;
+  string expires_at = 9;
+  double discount_amount = 10;
+  DiscountType discount_type = 11;
+  double min_purchase = 12;
+  double max_discount = 13;
+  repeated weddingapp.catalog.Catalog applicable_catalogs = 14;
+  repeated weddingapp.package.Package applicable_packages = 15;
+  repeated weddingapp.catalog.Category applicable_categories = 16;
+  repeated weddingapp.catalog.Catalog excluded_catalogs = 17;
+  repeated weddingapp.package.Package excluded_packages = 18;
+  repeated weddingapp.catalog.Category excluded_categories = 19;
+  repeated User users = 20;
+  string created_at = 21;
+  string updated_at = 22;
+}
+
+message VoucherStats {
+  Voucher voucher = 1;
+  int32 total_uses = 2;
+  int32 remaining_uses = 3;
+  repeated VoucherUserUsage usage_by_user = 4;
+  double revenue_impact = 5;
+}
+
+message VoucherUserUsage {
+  User user = 1;
+  int32 uses_count = 2;
+  string first_used_at = 3;
+  string last_used_at = 4;
+}
+
+message User {
+  int64 id = 1;
+  string name = 2;
+  string email = 3;
+  string avatar = 4;
+}
+
+enum DiscountType {
+  DISCOUNT_TYPE_UNSPECIFIED = 0;
+  PERCENTAGE = 1;
+  FIXED_AMOUNT = 2;
+  FREE_SHIPPING = 3;
+}
+
+message PaginationMeta {
+  int32 current_page = 1;
+  int32 per_page = 2;
+  int32 total = 3;
+  int32 last_page = 4;
+  int32 from = 5;
+  int32 to = 6;
+  bool has_next_page = 7;
+  bool has_prev_page = 8;
+}

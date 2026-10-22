@@ -5,7 +5,7 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-    font-family: DejaVu Sans, Arial, sans-serif;
+    font-family: 'Google Sans Flex', sans-serif;
     font-size: 12px;
     color: #333;
     background: #fff;
@@ -100,10 +100,10 @@ $os = $order->status instanceof OrderStatus
 $osLabel = $os?->getLabel() ?? (string) $order->status;
 
 // Item
-$item     = $order->package ?? $order->product;
+$item     = $order->package ?? $order->catalog;
 $itemType = $order->package_id
-    ? \App\Filament\Welcome\Resources\PackageResource\PackageResource::getModelLabel()
-    : \App\Filament\Welcome\Resources\ProductResource\ProductResource::getModelLabel();
+    ? __('Paket')
+    : \App\Filament\Welcome\Resources\CatalogResource\CatalogResource::getModelLabel();
 $itemName = $item?->name ?? '-';
 $itemCat  = $item?->category?->name ?? '-';
 $weddingFlowersDecorasi = '-';
@@ -133,8 +133,7 @@ if (file_exists($logoPath)) {
 // Gambar item — resize 70x70 dengan GD, deteksi MIME dari konten file
 $imgSrc = null;
 if ($item) {
-    $col   = $order->package_id ? 'package_image' : 'product_image';
-    $media = $item->getFirstMedia($col);
+    $media = $item->getFirstMedia($order->package_id ? 'package_image' : 'catalog_image');
     if ($media && file_exists($media->getPath())) {
         try {
             $path  = $media->getPath();

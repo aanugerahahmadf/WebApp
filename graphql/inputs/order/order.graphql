@@ -1,0 +1,67 @@
+# Order Input Types
+# Wedding Flower Decoration App - Order GraphQL Input Types
+
+input CreateOrderInput {
+  catalogId: ID
+  packageId: ID
+  quantity: Int! = 1
+  bookingDate: String
+  notes: String
+  addressId: ID!
+  voucherCode: String
+  paymentMethod: PaymentMethod! = MIDTRANS
+  customOptions: JSON
+}
+
+input UpdateOrderInput {
+  status: OrderStatus
+  paymentStatus: PaymentStatus
+  notes: String
+  trackingNumber: String
+  estimatedDelivery: String
+}
+
+input CancelOrderInput {
+  reason: String!
+  reasonDetail: String
+}
+
+input OrderItemCustomOptions {
+  selectedFeatures: [String!]
+  deliveryDate: String
+  notes: String
+  specialInstructions: String
+}
+
+input RefundRequestInput {
+  orderId: ID!
+  reason: String!
+  amount: Float
+  evidencePhotos: [String!]
+}
+
+enum PaymentMethod {
+  MIDTRANS
+  BANK_TRANSFER
+  CASH_ON_DELIVERY
+  E_WALLET
+  CREDIT_CARD
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}

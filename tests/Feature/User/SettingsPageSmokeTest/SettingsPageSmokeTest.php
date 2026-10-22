@@ -1,6 +1,6 @@
 <?php
 
-use App\Filament\User\Pages\SettingsPage\PasswordSecurityPage\PasswordSecurityPage;
+use App\Filament\Welcome\Pages\SettingsPage\PasswordSecurityPage\PasswordSecurityPage;
 use App\Models\Help\Help;
 use App\Models\PrivacyPolicy\PrivacyPolicy;
 use App\Models\TermsOfService\TermsOfService;
@@ -13,21 +13,21 @@ uses(RefreshDatabase::class);
 it('renders settings page without error', function () {
     $user = User::factory()->create();
 
-    $response = $this->actingAs($user)->get('/user/settings');
+    $response = $this->actingAs($user)->get('/settings');
 
     $response->assertStatus(200);
 
     $html = $response->getContent();
 
     $this->assertStringContainsString('notification-settings-component', $html, 'notification component not rendered');
-    $this->assertStringContainsString('/user/messages', $html, 'Lapor link to messages not found');
+    $this->assertStringContainsString('/messages', $html, 'Lapor link to messages not found');
 
     // Form ubah kata sandi tidak lagi inline di halaman ini: yang tampil adalah
     // kartu "security-settings-component" yang menautkan ke halaman security
-    // (/user/settings/password-security) sebagai tempat mengubah kata sandi,
+    // (/settings/password-security) sebagai tempat mengubah kata sandi,
     // sesi, dan 2FA. Assert against both so the entry point can't disappear
     // silently -- the old `edit-password-component` markup is gone for good.
-    $securityUrl = PasswordSecurityPage::getUrl(panel: 'user');
+    $securityUrl = PasswordSecurityPage::getUrl(panel: 'welcome');
 
     $this->assertStringContainsString('security-settings-component', $html, 'security component not rendered');
     $this->assertStringContainsString($securityUrl, $html, 'password security page not linked from settings');
@@ -49,7 +49,7 @@ it('renders help center without error', function () {
 
     $user = User::factory()->create();
 
-    $response = $this->actingAs($user)->get('/user/help-center');
+    $response = $this->actingAs($user)->get('/help-center');
 
     $response->assertStatus(200);
 
@@ -75,22 +75,23 @@ it('renders privacy terms hub and linked pages without error', function () {
 
     $user = User::factory()->create();
 
-    $hub = $this->actingAs($user)->get('/user/privacy-terms');
+    $hub = $this->actingAs($user)->get('/privacy-terms');
     $hub->assertStatus(200);
     $hubHtml = $hub->getContent();
-    $this->assertStringContainsString('/user/privacy-policy', $hubHtml, 'privacy link not on hub');
-    $this->assertStringContainsString('/user/terms-of-service', $hubHtml, 'terms link not on hub');
-    $this->assertStringContainsString('/user/wedding-policy', $hubHtml, 'wedding link not on hub');
+    $this->assertStringContainsString('/privacy-policy', $hubHtml, 'privacy link not on hub');
+    $this->assertStringContainsString('/terms-of-service', $hubHtml, 'terms link not on hub');
+    $this->assertStringContainsString('/wedding-policy', $hubHtml, 'wedding link not on hub');
 
-    $privacy = $this->actingAs($user)->get('/user/privacy-policy');
+    $privacy = $this->actingAs($user)->get('/privacy-policy');
     $privacy->assertStatus(200);
     $this->assertStringContainsString('Kami menjaga data Anda.', $privacy->getContent(), 'privacy content missing');
 
-    $terms = $this->actingAs($user)->get('/user/terms-of-service');
+    $terms = $this->actingAs($user)->get('/terms-of-service');
     $terms->assertStatus(200);
     $this->assertStringContainsString('Ikuti aturan layanan.', $terms->getContent(), 'terms content missing');
 
-    $wedding = $this->actingAs($user)->get('/user/wedding-policy');
+    $wedding = $this->actingAs($user)->get('/wedding-policy');
     $wedding->assertStatus(200);
     $this->assertStringContainsString('Kebijakan dekorasi pernikahan.', $wedding->getContent(), 'wedding content missing');
 });
+

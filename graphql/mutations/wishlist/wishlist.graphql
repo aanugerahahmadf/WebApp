@@ -1,0 +1,58 @@
+# Wishlist Mutations
+# Wedding Flower Decoration App - Wishlist GraphQL Mutations
+
+input ToggleWishlistInput {
+  catalogId: ID
+  packageId: ID
+}
+
+type Mutation {
+  # Toggle wishlist (add if not exists, remove if exists)
+  toggleWishlist(input: ToggleWishlistInput!): WishlistAction @field(resolver: "App\\Http\\GraphQL\\Resolvers\\WishlistResolver@toggle")
+  
+  # Add to wishlist explicitly
+  addToWishlist(input: ToggleWishlistInput!): Wishlist @field(resolver: "App\\Http\\GraphQL\\Resolvers\\WishlistResolver@add")
+  
+  # Remove from wishlist
+  removeFromWishlist(wishlistId: ID!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\WishlistResolver@remove")
+  
+  # Clear entire wishlist
+  clearWishlist: Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\WishlistResolver@clear")
+  
+  # Get current user's wishlist
+  myWishlist(first: Int = 50): [Wishlist!]! @paginate(defaultCount: 50) @field(resolver: "App\\Http\\GraphQL\\Resolvers\\WishlistResolver@myWishlist")
+  
+  # Check if item is in wishlist
+  isInWishlist(catalogId: ID, packageId: ID): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\WishlistResolver@isInWishlist")
+  
+  # Move wishlist item to cart
+  moveToCart(wishlistId: ID!, quantity: Int = 1): CartItem @field(resolver: "App\\Http\\GraphQL\\Resolvers\\WishlistResolver@moveToCart")
+  
+  # Share wishlist
+  shareWishlist: WishlistShare @field(resolver: "App\\Http\\GraphQL\\Resolvers\\WishlistResolver@share")
+}
+
+type WishlistAction {
+  wishlist: Wishlist
+  action: WishlistActionType!
+  message: String!
+}
+
+enum WishlistActionType {
+  ADDED
+  REMOVED
+}
+
+type Wishlist {
+  id: ID!
+  user: User @belongsTo
+  catalog: Catalog @belongsTo
+  package: Package @belongsTo
+  createdAt: String!
+}
+
+type WishlistShare {
+  shareToken: String!
+  shareUrl: String!
+  expiresAt: String!
+}

@@ -13,14 +13,14 @@ class CartController extends Controller
     {
         $locale = app()->getLocale();
         $items = Cart::where('user_id', $request->user()->id)
-            ->with(['product', 'package'])
+            ->with(['catalog', 'package'])
             ->latest()
             ->get();
 
         $items->transform(function ($item) use ($locale) {
-            if ($item->product) {
-                $item->product->name = $item->product->trans('name', $locale);
-                $item->product->description = $item->product->trans('description', $locale);
+            if ($item->catalog) {
+                $item->catalog->name = $item->catalog->trans('name', $locale);
+                $item->catalog->description = $item->catalog->trans('description', $locale);
             }
             if ($item->package) {
                 $item->package->name = $item->package->trans('name', $locale);
@@ -38,7 +38,7 @@ class CartController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'product_id' => 'nullable|exists:products,id',
+            'catalog_id' => 'nullable|exists:catalogs,id',
             'package_id' => 'nullable|exists:packages,id',
             'quantity' => 'required|integer|min:1',
         ]);
@@ -46,12 +46,12 @@ class CartController extends Controller
         $validated['user_id'] = $request->user()->id;
 
         // ── Stock validation ──
-        if (isset($validated['product_id'])) {
-            $product = \App\Models\Product\Product::find($validated['product_id']);
-            if ($product && $product->stock < $validated['quantity']) {
+        if (isset($validated['catalog_id'])) {
+            $catalog = \App\Models\Catalog\Catalog::find($validated['catalog_id']);
+            if ($catalog && $catalog->stock < $validated['quantity']) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Stok produk tidak mencukupi. Stok tersedia: ' . $product->stock,
+                    'message' => 'Stok katalog tidak mencukupi. Stok tersedia: ' . $catalog->stock,
                 ], 422);
             }
         }
@@ -67,8 +67,8 @@ class CartController extends Controller
 
         $existing = Cart::where('user_id', $request->user()->id)
             ->where(function ($q) use ($validated) {
-                if (isset($validated['product_id'])) {
-                    $q->where('product_id', $validated['product_id']);
+                if (isset($validated['catalog_id'])) {
+                    $q->where('catalog_id', $validated['catalog_id']);
                 }
                 if (isset($validated['package_id'])) {
                     $q->where('package_id', $validated['package_id']);
@@ -79,15 +79,15 @@ class CartController extends Controller
 
         if ($existing) {
             $existing->increment('quantity', $validated['quantity']);
-            $item = $existing->fresh()->load(['product', 'package']);
+            $item = $existing->fresh()->load(['catalog', 'package']);
         } else {
             $item = Cart::create($validated);
-            $item->load(['product', 'package']);
+            $item->load(['catalog', 'package']);
         }
 
-        if ($item->product) {
-            $item->product->name = $item->product->trans('name', $locale);
-            $item->product->description = $item->product->trans('description', $locale);
+        if ($item->catalog) {
+            $item->catalog->name = $item->catalog->trans('name', $locale);
+            $item->catalog->description = $item->catalog->trans('description', $locale);
         }
         if ($item->package) {
             $item->package->name = $item->package->trans('name', $locale);
@@ -108,7 +108,7 @@ class CartController extends Controller
         $validated = $request->validate(['quantity' => 'required|integer|min:1']);
 
         // ── Stock validation ──
-        $item = $cart->product ?? $cart->package;
+        $item = $cart->catalog ?? $cart->package;
         if ($item && $item->stock < $validated['quantity']) {
             return response()->json([
                 'status' => 'error',
@@ -118,11 +118,11 @@ class CartController extends Controller
 
         $cart->update($validated);
 
-        $item = $cart->fresh()->load(['product', 'package']);
+        $item = $cart->fresh()->load(['catalog', 'package']);
 
-        if ($item->product) {
-            $item->product->name = $item->product->trans('name', $locale);
-            $item->product->description = $item->product->trans('description', $locale);
+        if ($item->catalog) {
+            $item->catalog->name = $item->catalog->trans('name', $locale);
+            $item->catalog->description = $item->catalog->trans('description', $locale);
         }
         if ($item->package) {
             $item->package->name = $item->package->trans('name', $locale);

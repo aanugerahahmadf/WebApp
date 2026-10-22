@@ -5,27 +5,27 @@
  *
  * The old GuestChatTest hit /api/messages/guest/* JSON endpoints.
  * Those endpoints no longer exist. Guest chat now works through:
- *   1. The "Chat Admin" infolist action on product/package detail pages
+ *   1. The "Chat Admin" infolist action on catalog detail pages
  *      (uses GuestIdentity to get/create a guest user row, then creates
- *       an Inbox and redirects to /welcome/messages/{id})
+ *       an Inbox and redirects to /messages/{id})
  *   2. The MessagesPage which verifies the guest is in inbox.user_ids
  *
  * These tests pin down the GuestIdentity + ChatService integration on
  * the Welcome panel path.
  */
 
-use App\Filament\Welcome\Resources\PackageResource\Pages\ViewPackage\ViewPackage;
-use App\Filament\Welcome\Resources\ProductResource\Pages\ViewProduct\ViewProduct;
+use App\Filament\Welcome\Resources\CatalogResource\Pages\ViewCatalog\ViewCatalog;
 use App\Http\Middleware\AuthenticateWelcome\AuthenticateWelcome;
 use App\Models\Inbox\Inbox;
-use App\Models\Package\Package;
-use App\Models\Product\Product;
+use App\Models\Admin\Admin;
+use App\Models\Catalog\Catalog;
 use App\Models\User\User;
 use App\Services\ChatService\ChatService;
 use App\Services\GuestIdentity\GuestIdentity;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
+use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
 
 use function Pest\Laravel\actingAs;
@@ -36,20 +36,32 @@ uses(RefreshDatabase::class);
 beforeEach(function (): void {
     Queue::fake();
 
-    Role::firstOrCreate(['name' => 'super_admin']);
-    Role::firstOrCreate(['name' => 'customer']);
+    // Role `super_admin` hidup di guard `admin`, bukan `web` -- lihat
+    // `Admin::factory()->superAdmin()` yang mencari role di guard model.
+    Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'admin']);
+    Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
 
-    $this->admin = User::factory()->create();
-    $this->admin->assignRole('super_admin');
+    // Admin untuk chat harus punya identitas belanja tertaut di `admins.user_id`.
+    // `ChatStaff::adminUser()` mencari `Admin::whereNotNull('user_id')`, jadi
+    // `User::factory()` + `assignRole('super_admin')` tidak cukup -- role itu
+    // sudah pindah ke tabel `admins` bersama tabelnya. Tanpa ini, chat berhenti
+    // dengan notifikasi "Fitur chat belum tersedia" dan tidak ada redirect.
+    $this->admin = Admin::factory()->superAdmin()->create([
+        'active_status' => true,
+        'user_id'       => User::factory()->create()->id,
+    ]);
 
-    $this->product = Product::factory()->create(['name' => 'Bunga Tamu', 'stock' => 5]);
-    $this->package = Package::factory()->create(['name' => 'Paket Tamu', 'stock' => 3]);
+    // `name_translations`, bukan `name` -- lihat catatan di `CatalogFactory`.
+    $this->catalog = Catalog::factory()->create([
+        'stock'             => 5,
+        'name_translations' => ['id' => 'Bunga Tamu', 'en' => 'Guest Flower'],
+    ]);
 
     Filament::setCurrentPanel(Filament::getPanel('welcome'));
 });
 
 // ---------------------------------------------------------------------------
-// GuestIdentity — user creation
+// GuestIdentity â€” user creation
 // ---------------------------------------------------------------------------
 
 it('GuestIdentity creates a guest user row on first call', function (): void {
@@ -84,9 +96,9 @@ it('GuestIdentity id() matches the user id', function (): void {
 // Guest can start a conversation via Chat Admin
 // ---------------------------------------------------------------------------
 
-it('a guest can start a conversation by clicking Chat Admin on a product page', function (): void {
-    // No actingAs — purely anonymous
-    Livewire::test(ViewProduct::class, ['record' => $this->product->getKey()])
+it('a guest can start a conversation by clicking Chat Admin on a catalog page', function (): void {
+    // No actingAs â€” purely anonymous
+    Livewire::test(ViewCatalog::class, ['record' => $this->catalog->getKey()])
         ->callInfolistAction('.chat_adminAction', 'chat_admin')
         ->assertRedirect();
 
@@ -101,24 +113,26 @@ it('a guest can start a conversation by clicking Chat Admin on a product page', 
         ->and($inbox->user_ids)->toContain($this->admin->id);
 });
 
-it('a guest can start a conversation by clicking Chat Admin on a package page', function (): void {
-    Livewire::test(ViewPackage::class, ['record' => $this->package->getKey()])
-        ->callInfolistAction('.chat_adminAction', 'chat_admin')
-        ->assertRedirect();
-
-    $inbox = Inbox::latest()->first();
-    expect($inbox)->not->toBeNull();
-});
+/*
+ * Test "a guest can start a conversation by clicking Chat Admin on a package
+ * page" DIHAPUS. Ia memanggil `ViewPackage::class`, yang sudah tidak ada
+ * bersama `PackageResource`-nya.
+ *
+ * Yang hilang bukan alur untuk tamu: test di atasnya menguji klik pertama pada
+ * halaman katalog dan test berikutnya menguji klik kedua yang memakai inbox
+ * yang sama. Dua-duanya lewat `GuestIdentity`, jadi penutup untuk record
+ * `Package` tidak menambah cabang kode yang baru.
+ */
 
 it('a second Chat Admin click from the same guest reuses the same inbox', function (): void {
     // First click
-    Livewire::test(ViewProduct::class, ['record' => $this->product->getKey()])
+    Livewire::test(ViewCatalog::class, ['record' => $this->catalog->getKey()])
         ->callInfolistAction('.chat_adminAction', 'chat_admin');
 
     $countAfterFirst = Inbox::count();
 
-    // Second click (same guest session — GuestIdentity uses the same user row)
-    Livewire::test(ViewProduct::class, ['record' => $this->product->getKey()])
+    // Second click (same guest session â€” GuestIdentity uses the same user row)
+    Livewire::test(ViewCatalog::class, ['record' => $this->catalog->getKey()])
         ->callInfolistAction('.chat_adminAction', 'chat_admin');
 
     // Inbox count must not have grown
@@ -137,7 +151,7 @@ it('a guest can access their own inbox on the Welcome messages page', function (
     // The guest is now "logged in" as the guest user row for this test
     actingAs($guestUser, 'web');
 
-    get("/welcome/messages/{$inbox->id}")->assertOk();
+    get("/messages/{$inbox->id}")->assertOk();
 });
 
 it('a guest cannot access another guest\'s inbox', function (): void {
@@ -147,18 +161,18 @@ it('a guest cannot access another guest\'s inbox', function (): void {
     $currentGuest = app(GuestIdentity::class)->user();
     actingAs($currentGuest, 'web');
 
-    get("/welcome/messages/{$inbox->id}")->assertForbidden();
+    get("/messages/{$inbox->id}")->assertForbidden();
 });
 
 it('a guest cannot access a nonexistent inbox', function (): void {
     $guestUser = app(GuestIdentity::class)->user();
     actingAs($guestUser, 'web');
 
-    get('/welcome/messages/999999')->assertNotFound();
+    get('/messages/999999')->assertNotFound();
 });
 
 // ---------------------------------------------------------------------------
-// ChatService — getOrCreateInboxWithAdmin
+// ChatService â€” getOrCreateInboxWithAdmin
 // ---------------------------------------------------------------------------
 
 it('ChatService creates a new inbox with the admin when none exists', function (): void {
@@ -193,16 +207,17 @@ it('ChatService returns null when no admin user exists', function (): void {
 });
 
 // ---------------------------------------------------------------------------
-// Validation — guests cannot reach account-only pages
+// Validation â€” guests cannot reach account-only pages
 // ---------------------------------------------------------------------------
 
 it('a guest is redirected to the auth landing page when visiting account-only routes', function (string $path): void {
-    // /user/auth (Sign In + Continue With Google), bukan form /user/signin --
+    // /auth (Sign In + Continue With Google), bukan form /signin --
     // middleware meneruskan tamu ke AuthenticateWelcome::LOGIN_ROUTE.
     get($path)->assertRedirect(route(AuthenticateWelcome::LOGIN_ROUTE));
 })->with([
-    '/welcome/carts',
-    '/welcome/orders',
-    '/welcome/wishlists',
-    '/welcome/reviews',
+    '/carts',
+    '/orders',
+    '/wishlists',
+    '/reviews',
 ]);
+

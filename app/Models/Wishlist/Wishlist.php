@@ -5,10 +5,11 @@ use App\Models\Traits\LegacyMorphClass\LegacyMorphClass;
 
 
 use App\Models\Package\Package;
-use App\Models\Product\Product;
+use App\Models\Catalog\Catalog;
 use App\Models\User\User;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
@@ -56,12 +57,13 @@ use Illuminate\Support\Carbon;
  */
 class Wishlist extends Model
 {
+    use HasFactory;
     use LegacyMorphClass;
     /** @var Builder */
     protected $fillable = [
         'user_id',
         'package_id',
-        'product_id',
+        'catalog_id',
     ];
 
     public function user()
@@ -74,8 +76,8 @@ class Wishlist extends Model
         return $this->belongsTo(Package::class);
     }
 
-    public function product()
+    public function catalog()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Catalog::class, 'catalog_id');
     }
 }

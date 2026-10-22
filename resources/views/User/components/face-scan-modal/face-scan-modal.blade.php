@@ -662,7 +662,7 @@
                         class="relative -m-1.5 flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 outline-none transition duration-75 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-white/5 dark:hover:text-gray-300"
                         aria-label="{{ __('Tutup') }}"
                     >
-                        <x-filament::icon icon="heroicon-m-x-mark" class="h-5 w-5" />
+                        <x-filament::icon icon="/images/icons/x.svg" class="h-5 w-5" />
                     </button>
                 </div>
 
@@ -716,10 +716,7 @@
                         class="absolute inset-0 flex items-center justify-center bg-gray-900/60"
                         style="display:none;"
                     >
-                        <svg class="h-8 w-8 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                        </svg>
+                        <x-filament::icon icon="/images/icons/refresh.svg" class="h-8 w-8 animate-spin text-white" />
                     </div>
 
                     {{-- Kamera gagal: tampilkan alasannya, jangan muter terus --}}
@@ -769,7 +766,7 @@
                         class="flex h-11 shrink-0 items-center gap-1.5 rounded-full px-4 text-xs font-semibold transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
                         :aria-label="cameras[0]?.label || 'Kamera Kiri'"
                     >
-                        <x-filament::icon icon="heroicon-m-arrow-left" class="h-4 w-4" />
+                        <x-filament::icon icon="/images/icons/arrow_left.svg" class="h-4 w-4" />
                         <span>{{ __('Kiri') }}</span>
                     </button>
 
@@ -788,7 +785,7 @@
                         :aria-label="cameras[cameras.length - 1]?.label || 'Kamera Kanan'"
                     >
                         <span>{{ __('Kanan') }}</span>
-                        <x-filament::icon icon="heroicon-m-arrow-right" class="h-4 w-4" />
+                        <x-filament::icon icon="/images/icons/arrow_right.svg" class="h-4 w-4" />
                     </button>
 
                     {{-- Pas verifikasi ditolak, coach sedang mencoba lagi sendiri.
@@ -797,10 +794,7 @@
                     <template x-if="photoTaken && verifyFailed">
                         <div class="flex w-full items-center justify-center gap-3 px-4">
                             <div class="flex items-center gap-2 rounded-lg bg-amber-50 px-4 py-2.5 text-sm text-amber-800 ring-1 ring-amber-200 dark:bg-amber-900/20 dark:text-amber-200 dark:ring-amber-800">
-                                <svg class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                                </svg>
+                                <x-filament::icon icon="/images/icons/refresh.svg" class="h-4 w-4 animate-spin" />
                                 <span>{{ __('AI mencoba lagi otomatis...') }}</span>
                             </div>
                         </div>
@@ -830,10 +824,7 @@
                     <template x-if="aiEnabled && (aiState === 'uploading' || aiState === 'verifying')">
                         <div class="flex w-full items-center justify-center gap-3">
                             <div class="flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2.5 text-sm text-gray-700 dark:bg-white/10 dark:text-gray-200">
-                                <svg class="h-4 w-4 animate-spin text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                                </svg>
+                                <x-filament::icon icon="/images/icons/refresh.svg" class="h-4 w-4 animate-spin text-primary-600" />
                                 <span x-text="aiState === 'uploading' ? {{ json_encode(__('Mengunggah foto...')) }} : {{ json_encode(__('Memverifikasi dengan AI...')) }}"></span>
                             </div>
                         </div>
@@ -844,7 +835,7 @@
                         <div class="flex w-full flex-col gap-3">
                             <div class="rounded-lg bg-emerald-50 p-3 text-center ring-1 ring-emerald-200 dark:bg-emerald-900/20 dark:ring-emerald-800">
                                 <div class="flex items-center justify-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
-                                    <x-filament::icon icon="heroicon-m-check-circle" class="h-5 w-5 text-emerald-500" />
+                                    <x-filament::icon icon="/images/icons/check_circle.svg" class="h-5 w-5 text-emerald-500" />
                                     <span x-text="{{ json_encode(__('Wajah cocok: ')) }} + (aiResult?.similarity != null ? Number(aiResult.similarity).toFixed(1) + '%' : {{ json_encode(__('Terverifikasi')) }})"></span>
                                 </div>
                                 <p class="mt-1 text-xs text-emerald-600 dark:text-emerald-400" x-text="aiResult?.message || ''"></p>
@@ -889,7 +880,7 @@
                         <div class="flex w-full flex-col gap-3">
                             <div class="rounded-lg bg-red-50 p-3 text-center ring-1 ring-red-200 dark:bg-red-900/20 dark:ring-red-800">
                                 <div class="flex items-center justify-center gap-2 text-sm font-semibold text-red-700 dark:text-red-300">
-                                    <x-filament::icon icon="heroicon-m-x-circle" class="h-5 w-5 text-red-500" />
+                                    <x-filament::icon icon="/images/icons/x_circle.svg" class="h-5 w-5 text-red-500" />
                                     <span x-text="aiResult?.reason === 'NO_KTP'
                                         ? {{ json_encode(__('Perlu foto KTP')) }}
                                         : (['UPLOAD_FAILED', 'UNAVAILABLE'].includes(aiResult?.reason) ? {{ json_encode(__('Verifikasi gagal')) }} : {{ json_encode(__('Wajah tidak cocok')) }})"></span>

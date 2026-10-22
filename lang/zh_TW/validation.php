@@ -234,7 +234,7 @@ return [
         'postal_code'              => '郵政編碼',
         'preview'                  => '預覽',
         'price'                    => '價格',
-        'product_id'               => '產品編號',
+        'catalog_id'               => '產品編號',
         'product_uid'              => '產品UID',
         'product_uuid'             => '產品UUID',
         'promo_code'               => '促銷代碼',

@@ -118,7 +118,7 @@
                                     <button @click="open = !open" type="button"
                                         class="flex items-center gap-1 text-sm font-bold text-gray-950 dark:text-white hover:opacity-70 transition">
                                         <span x-text="months[focusedMonth]"></span>
-                                        <x-heroicon-m-chevron-down class="w-4 h-4 opacity-50" />
+                                        <img src="/images/icons/chevron_down.svg" class="w-4 h-4 opacity-50" />
                                     </button>
 
                                     <div x-show="open" @click.away="open = false" x-transition

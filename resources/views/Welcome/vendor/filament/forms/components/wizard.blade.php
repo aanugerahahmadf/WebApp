@@ -173,7 +173,7 @@
 
                         <x-filament::icon
                             :alias="filled($completedIcon) ? null : 'forms::components.wizard.completed-step'"
-                            :icon="$completedIcon ?? 'heroicon-o-check'"
+                            :icon="$completedIcon ?? '/images/icons/check.svg'"
                             x-cloak="x-cloak"
                             x-show="getStepIndex(step) > {{ $loop->index }}"
                             class="fi-fo-wizard-header-step-icon h-6 w-6 text-white"

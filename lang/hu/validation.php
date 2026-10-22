@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'irányítószám',
         'preview'                  => 'előnézet',
         'price'                    => 'ár',
-        'product_id'               => 'termék azonosító',
+        'catalog_id'               => 'termék azonosító',
         'product_uid'              => 'termék UID',
         'product_uuid'             => 'termék UUID',
         'promo_code'               => 'promóciós kód',

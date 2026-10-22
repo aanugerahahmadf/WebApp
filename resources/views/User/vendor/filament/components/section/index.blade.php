@@ -146,7 +146,7 @@
                 @if ($collapsible)
                     <x-filament::icon-button
                         color="gray"
-                        icon="heroicon-m-chevron-down"
+                        icon="/images/icons/chevron_down.svg"
                         icon-alias="section.collapse-button"
                         x-on:click.stop="isCollapsed = ! isCollapsed"
                         x-bind:class="{ 'rotate-180': ! isCollapsed }"

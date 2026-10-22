@@ -38,7 +38,7 @@ class WelcomeLogoutResponse extends \Filament\Http\Responses\Auth\LogoutResponse
      * Fallback kalau panel Welcome belum bisa di-resolve (mis. route belum
      * termuat). URL ini juga yang dipakai test sebagai nilai balik.
      */
-    public const FALLBACK_URL = '/welcome/home';
+    public const FALLBACK_URL = '/home';
 
     public function toResponse($request): RedirectResponse
     {

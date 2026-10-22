@@ -6,9 +6,9 @@
 --}}
 @php
     $themeOptions = [
-        'light' => 'heroicon-m-sun',
-        'dark' => 'heroicon-m-moon',
-        'system' => 'heroicon-m-computer-desktop',
+        'light' => '/images/icons/sun.svg',
+        'dark' => '/images/icons/moon.svg',
+        'system' => '/images/icons/computer_desktop.svg',
     ];
 @endphp
 

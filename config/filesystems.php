@@ -38,10 +38,32 @@ return [
             'report' => false,
         ],
 
+        /*
+         * URL disk publik harus RELATIF ('/storage'), bukan `APP_URL/storage`.
+         *
+         * `APP_URL` dipakai ulang oleh tunnel script untuk menulis domain
+         * trycloudflare yang sedang hidup, jadi isinya berubah-ubah: begitu
+         * tunnel dimatikan, `APP_URL` masih menunjuk domain yang sudah mati.
+         *
+         * Dulu `'url' => env('APP_URL').'/storage'` jadi bom waktu: setiap URL
+         * media di-absolukan ke domain tunnel yang mati, sehingga panel admin di
+         * 127.0.0.1:8000 menampilkan Broken Image di kolom Foto. Yang gagal bukan
+         * file-nya (storage/app/public berisi 2106 file, junction public/storage
+         * juga ada) -- hanya hostnya yang salah.
+         *
+         * Media library dan asset() sama-sama bisa/training URL relatif, jadi
+         * browser mencarinya relative terhadap origin yang sedang melayani
+         * request: 127.0.0.1:8000 untuk panel lokal, IP LAN untuk HP, domain
+         * tunnel untuk akses luar. Satu konfigurasi, benar di semua tempat.
+         *
+         * Untuk pemanggil yang butuh URL absolut (blade, respons API ke aplikasi
+         * HP), `AppPlatform::normalizeUrl()` sudah mengubah URL relatif
+         * `/storage/...` menjadi absolut terhadap origin request sekarang.
+         */
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => env('APP_URL', 'http://localhost').'/storage',
+            'url' => env('MEDIA_URL', '/storage'),
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
@@ -75,11 +97,13 @@ return [
         ],
 
         // Disk gabungan: simpan lokal dulu, lalu sync ke Firebase di background
-        // Pakai untuk upload user (Packages, Products, review-photos)
+        // Pakai untuk upload user (Packages, Catalogs, review-photos)
+        // Sama seperti disk `public`: URL relatif, bukan APP_URL/storage.
+        // Lihat catatan panjang di disk `public` di atas untuk alasannya.
         'public_firebase' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => env('APP_URL', 'http://localhost').'/storage',
+            'url' => env('MEDIA_URL', '/storage'),
             'visibility' => 'public',
             'throw' => false,
             'report' => false,

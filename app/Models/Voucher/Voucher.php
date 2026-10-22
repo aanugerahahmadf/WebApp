@@ -9,6 +9,7 @@ use App\Models\User\User;
 
 use App\Traits\HasTranslations\HasTranslations;
 use App\Enums\DiscountType\DiscountType;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
@@ -34,10 +35,15 @@ use Illuminate\Support\Carbon;
  */
 class Voucher extends Model
 {
+    use HasFactory;
     use LegacyMorphClass;
     use HasTranslations;
 
-    protected array $translatable = ['description'];
+    // `name` ikut translatable supaya grid katalog voucher (admin & user) ikut
+    // berubah saat language switcher berganti -- sebelumnya name hanya disimpan
+    // sebagai teks mentah (mis. "Welcome Discount", "Gold Member") dan tidak
+    // pernah ikut diterjemahkan, sehingga voucher tidak bereaksi pada switcher.
+    protected array $translatable = ['name', 'description'];
 
     protected $with = ['discount'];
 
@@ -51,6 +57,7 @@ class Voucher extends Model
         'name',
         'code',
         'description',
+        'name_translations',
         'description_translations',
         'discount_id',
         'expires_at',
@@ -64,8 +71,14 @@ class Voucher extends Model
         'expires_at' => 'datetime',
         'is_active' => 'boolean',
         'is_global' => 'boolean',
+        'name_translations' => 'json',
         'description_translations' => 'json',
     ];
+
+    public function getNameAttribute($value): ?string
+    {
+        return $this->trans('name') ?? $value;
+    }
 
     public function getDescriptionAttribute($value): ?string
     {

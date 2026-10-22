@@ -8,7 +8,7 @@
  * penutup komentar Blade. Blade TIDAK mendukung komentar bersarang: penutup yang
  * tertulis di dalam teks komentar langsung menutup komentar lebih awal, lalu
  * seluruh sisa paragraf bocor ke HTML dan tampil sebagai teks besar di bawah
- * form -- terlihat di /user/signin dan /user/auth.
+ * form -- terlihat di /signin dan /auth.
  *
  * Yang diperiksa dua lapis, karena sumber dan akibatnya bisa lolos terpisah:
  *
@@ -25,7 +25,7 @@
  *      penanda agar penyebabnya terlihat saat diff dibaca.
  *
  * Kenapa test terpisah, bukan assertion tambahan di test auth yang sudah
- * ada: partial yang bocor dirender oleh /user/signin DAN /user/auth,
+ * ada: partial yang bocor dirender oleh /signin DAN /auth,
  * sementara test lain fokus pada hal lain (breadcrumb, tombol, label).
  * Tidak ada yang memeriksa "teks yang tak seharusnya tidak muncul di layar".
  *
@@ -129,7 +129,7 @@ test('the auth landing page shows no commented-out sign up text', function (): v
 });
 
 test('the sign in form shows no commented-out sign up text', function (): void {
-    $html = get('/user/signin')
+    $html = get('/signin')
         ->assertOk()
         ->getContent();
 

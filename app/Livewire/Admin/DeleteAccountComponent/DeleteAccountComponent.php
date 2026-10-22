@@ -39,7 +39,7 @@ class DeleteAccountComponent extends Component implements HasActions, HasForms
                 Section::make(__('Hapus Akun'))
                     ->description(__('Hapus akun Anda secara permanen.'))
                     ->aside()
-                    ->icon('heroicon-o-trash')
+                    ->icon('/images/icons/trash.svg')
                     ->schema([
                         Forms\Components\ViewField::make('deleteAccount')
                             ->label(__('Hapus Akun'))
@@ -48,7 +48,7 @@ class DeleteAccountComponent extends Component implements HasActions, HasForms
                         Actions::make([
                             Actions\Action::make('deleteAccount')
                                 ->label(__('Hapus Akun'))
-                                ->icon('heroicon-m-trash')
+                                ->icon('/images/icons/trash.svg')
                                 ->color('danger')
                                 ->requiresConfirmation()
                                 ->modalHeading(__('Hapus Akun'))

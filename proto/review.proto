@@ -1,0 +1,274 @@
+syntax = "proto3";
+
+package weddingapp.review;
+
+import "proto/auth.proto";
+import "proto/catalog.proto";
+import "proto/package.proto";
+import "proto/order.proto";
+
+option php_namespace = "App\\Grpc\\Review";
+option java_package = "com.weddingapp.review";
+option csharp_namespace = "WeddingApp.Review";
+option go_package = "github.com/weddingapp/grpc/review";
+
+service ReviewService {
+  rpc GetReviews (GetReviewsRequest) returns (ReviewsResponse);
+  rpc GetCatalogReviews (GetCatalogReviewsRequest) returns (ReviewsResponse);
+  rpc GetPackageReviews (GetPackageReviewsRequest) returns (ReviewsResponse);
+  rpc GetMyReviews (GetMyReviewsRequest) returns (ReviewsResponse);
+  rpc GetReview (GetReviewRequest) returns (ReviewResponse);
+  rpc CreateReview (CreateReviewRequest) returns (ReviewResponse);
+  rpc UpdateReview (UpdateReviewRequest) returns (ReviewResponse);
+  rpc DeleteReview (DeleteReviewRequest) returns (DeleteReviewResponse);
+  rpc AddReviewPhoto (AddReviewPhotoRequest) returns (ReviewResponse);
+  rpc RemoveReviewPhoto (RemoveReviewPhotoRequest) returns (ReviewResponse);
+  rpc MarkHelpful (MarkHelpfulRequest) returns (ReviewResponse);
+  rpc UnmarkHelpful (UnmarkHelpfulRequest) returns (ReviewResponse);
+  rpc GetReviewStats (GetReviewStatsRequest) returns (ReviewStatsResponse);
+  rpc GetFeaturedReviews (GetFeaturedReviewsRequest) returns (ReviewsResponse);
+  rpc ModerateReview (ModerateReviewRequest) returns (ReviewResponse);
+  rpc ReplyToReview (ReplyToReviewRequest) returns (ReviewResponse);
+  rpc ReportReview (ReportReviewRequest) returns (ReviewReportResponse);
+}
+
+message GetReviewsRequest {
+  string access_token = 1;
+  int32 page = 2;
+  int32 per_page = 3;
+  string status = 4;
+  int32 rating = 5;
+}
+
+message GetCatalogReviewsRequest {
+  string access_token = 1;
+  int64 catalog_id = 2;
+  int32 page = 3;
+  int32 per_page = 4;
+  int32 rating = 5;
+}
+
+message GetPackageReviewsRequest {
+  string access_token = 1;
+  int64 package_id = 2;
+  int32 page = 3;
+  int32 per_page = 4;
+  int32 rating = 5;
+}
+
+message GetMyReviewsRequest {
+  string access_token = 1;
+  int32 page = 2;
+  int32 per_page = 3;
+}
+
+message GetReviewRequest {
+  string access_token = 1;
+  int64 id = 2;
+}
+
+message CreateReviewRequest {
+  string access_token = 1;
+  int64 catalog_id = 2;
+  int64 package_id = 3;
+  int64 order_id = 4;
+  int32 rating = 5;
+  string title = 6;
+  string comment = 7;
+  repeated string photos = 8;
+  bool is_anonymous = 9;
+}
+
+message UpdateReviewRequest {
+  string access_token = 1;
+  int64 id = 2;
+  int32 rating = 3;
+  string title = 4;
+  string comment = 5;
+  repeated string photos = 6;
+  bool is_anonymous = 7;
+}
+
+message DeleteReviewRequest {
+  string access_token = 1;
+  int64 id = 2;
+}
+
+message AddReviewPhotoRequest {
+  string access_token = 1;
+  int64 review_id = 2;
+  string url = 3;
+  string caption = 4;
+}
+
+message RemoveReviewPhotoRequest {
+  string access_token = 1;
+  int64 review_id = 2;
+  string photo_url = 3;
+}
+
+message MarkHelpfulRequest {
+  string access_token = 1;
+  int64 review_id = 2;
+}
+
+message UnmarkHelpfulRequest {
+  string access_token = 1;
+  int64 review_id = 2;
+}
+
+message GetReviewStatsRequest {
+  string access_token = 1;
+  int64 catalog_id = 2;
+  int64 package_id = 3;
+}
+
+message GetFeaturedReviewsRequest {
+  string access_token = 1;
+  int32 limit = 2;
+}
+
+message ModerateReviewRequest {
+  string access_token = 1;
+  int64 review_id = 2;
+  ReviewStatus status = 3;
+  string moderation_note = 4;
+}
+
+message ReplyToReviewRequest {
+  string access_token = 1;
+  int64 review_id = 2;
+  string reply = 3;
+}
+
+message ReportReviewRequest {
+  string access_token = 1;
+  int64 review_id = 2;
+  ReportReason reason = 3;
+  string description = 4;
+}
+
+message ReviewResponse {
+  Review review = 1;
+  string message = 2;
+}
+
+message ReviewsResponse {
+  repeated Review reviews = 1;
+  PaginationMeta pagination = 2;
+}
+
+message DeleteReviewResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ReviewStatsResponse {
+  ReviewStats stats = 1;
+}
+
+message ReviewReportResponse {
+  ReviewReport report = 1;
+}
+
+message Review {
+  int64 id = 1;
+  int64 user_id = 2;
+  int64 catalog_id = 3;
+  int64 package_id = 4;
+  int64 order_id = 5;
+  User user = 6;
+  weddingapp.catalog.Catalog catalog = 7;
+  weddingapp.package.Package package = 8;
+  weddingapp.order.Order order = 9;
+  int32 rating = 10;
+  string title = 11;
+  string comment = 12;
+  repeated string photos = 13;
+  int32 helpful_count = 14;
+  bool is_anonymous = 15;
+  bool is_verified_purchase = 16;
+  ReviewStatus status = 17;
+  ReviewReply reply = 18;
+  string created_at = 19;
+  string updated_at = 20;
+}
+
+message User {
+  int64 id = 1;
+  string name = 2;
+  string email = 3;
+  string avatar = 4;
+}
+
+message ReviewReply {
+  int64 id = 1;
+  int64 review_id = 2;
+  string content = 3;
+  User created_by = 4;
+  string created_at = 5;
+}
+
+message ReviewStats {
+  int32 total_reviews = 1;
+  double average_rating = 2;
+  repeated RatingCount rating_distribution = 3;
+  int32 with_photos = 4;
+  int32 verified_purchases = 5;
+}
+
+message RatingCount {
+  int32 rating = 1;
+  int32 count = 2;
+  double percentage = 3;
+}
+
+message ReviewReport {
+  int64 id = 1;
+  int64 review_id = 2;
+  int64 reporter_id = 3;
+  User reporter = 4;
+  ReportReason reason = 5;
+  string description = 6;
+  ReportStatus status = 7;
+  string created_at = 8;
+  string reviewed_at = 9;
+  User reviewed_by = 10;
+}
+
+enum ReviewStatus {
+  REVIEW_STATUS_UNSPECIFIED = 0;
+  PENDING = 1;
+  APPROVED = 2;
+  REJECTED = 3;
+  HIDDEN = 4;
+}
+
+enum ReportReason {
+  REPORT_REASON_UNSPECIFIED = 0;
+  SPAM = 1;
+  INAPPROPRIATE = 2;
+  FAKE = 3;
+  OFFENSIVE = 4;
+  IRRELEVANT = 5;
+  OTHER = 6;
+}
+
+enum ReportStatus {
+  REPORT_STATUS_UNSPECIFIED = 0;
+  PENDING = 1;
+  REVIEWED = 2;
+  RESOLVED = 3;
+  DISMISSED = 4;
+}
+
+message PaginationMeta {
+  int32 current_page = 1;
+  int32 per_page = 2;
+  int32 total = 3;
+  int32 last_page = 4;
+  int32 from = 5;
+  int32 to = 6;
+  bool has_next_page = 7;
+  bool has_prev_page = 8;
+}

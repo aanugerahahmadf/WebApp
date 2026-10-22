@@ -101,7 +101,7 @@
             @if ($isSearchable)
                 <x-filament::input.wrapper
                     inline-prefix
-                    prefix-icon="heroicon-m-magnifying-glass"
+                    prefix-icon="/images/icons/search.svg"
                     prefix-icon-alias="forms:components.checkbox-list.search-field"
                     class="mb-4"
                 >

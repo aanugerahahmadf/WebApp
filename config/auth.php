@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Admin\Admin;
 use App\Models\User\User;
 
 return [
@@ -38,9 +39,21 @@ return [
     */
 
     'guards' => [
+        // Shopper + tamu. Satu-satunya guard yang punya token Sanctum, jadi
+        // satu-satunya yang bisa dipakai API HP.
         'web' => [
             'driver' => 'session',
             'provider' => 'users',
+        ],
+
+        // Tim internal. Provider-nya `admins`, jadi `attempt()` di guard ini
+        // hanya bisa menyentuh baris di tabel `admins` -- tidak ada baris di
+        // `users` yang bisa dijangkau dari sini, dan sebaliknya lewat `web`.
+        //
+        // Ini yang membuat pemisahan tabel sama dengan pemisahan otentikasi.
+        'admin' => [
+            'driver' => 'session',
+            'provider' => 'admins',
         ],
     ],
 
@@ -65,6 +78,15 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+
+        // Driver `active-admin` (bukan 'eloquent') = EloquentUserProvider +
+        // penolakan akun nonaktif. Daftarkan di AppServiceProvider::boot().
+        //
+        // @see \App\Auth\ActiveAdminUserProvider
+        'admins' => [
+            'driver' => 'active-admin',
+            'model' => env('AUTH_ADMIN_MODEL', Admin::class),
         ],
 
         // 'users' => [
@@ -96,6 +118,18 @@ return [
         'users' => [
             'provider' => 'users',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+
+        // Broker terpisah untuk tim internal, supaya "Lupa Kata Sandi?" di
+        // /admin/signin tidak pernah mengirim token reset ke email yang punya
+        // akun belanja. Tabel token-nya tetap sama, yang membedakan cuma
+        // provider -- jadi token milik admin tidak akan pernah dicocokkan ke
+        // baris `users` (dan sebaliknya).
+        'admins' => [
+            'provider' => 'admins',
+            'table' => env('AUTH_ADMIN_PASSWORD_RESET_TOKEN_TABLE', 'admin_password_reset_tokens'),
             'expire' => 60,
             'throttle' => 60,
         ],

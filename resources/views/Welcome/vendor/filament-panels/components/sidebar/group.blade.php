@@ -76,7 +76,7 @@
             @if ($collapsible)
                 <x-filament::icon-button
                     color="gray"
-                    icon="heroicon-m-chevron-up"
+                    icon="/images/icons/chevron_up.svg"
                     icon-alias="panels::sidebar.group.collapse-button"
                     :label="$label"
                     x-bind:aria-expanded="! $store.sidebar.groupIsCollapsed(label)"

@@ -1,0 +1,47 @@
+# Auth Input Types
+# Wedding Flower Decoration App - Auth GraphQL Input Types
+
+input LoginInput {
+  email: String!
+  password: String!
+  rememberMe: Boolean = false
+  deviceToken: String
+  deviceType: String
+}
+
+input RegisterInput {
+  name: String!
+  email: String!
+  password: String!
+  passwordConfirmation: String!
+  phone: String
+  acceptTerms: Boolean! = true
+  marketingConsent: Boolean = false
+}
+
+input ForgotPasswordInput {
+  email: String!
+}
+
+input ResetPasswordInput {
+  token: String!
+  email: String!
+  password: String!
+  passwordConfirmation: String!
+}
+
+input VerifyEmailInput {
+  token: String!
+  email: String!
+}
+
+input ResendVerificationInput {
+  email: String!
+}
+
+input SocialLoginInput {
+  provider: SocialProvider!
+  token: String!
+  deviceToken: String
+  deviceType: String
+}

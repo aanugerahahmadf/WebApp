@@ -2,25 +2,33 @@
 
 namespace App\Filament\Admin\Auth\SignIn;
 
-use App\Models\User\User;
+use App\Filament\Admin\Auth\Concerns\HasAuthBreadcrumbs;
+use App\Models\Admin\Admin;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse;
-use Filament\Notifications\Notification;
 use Filament\Pages\Auth\Login as BaseLogin;
 use Illuminate\Contracts\Support\Htmlable;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Halaman Sign-In panel admin.
+ *
+ * Guard panel admin adalah `admin` (tabel `admins`), jadi
+ * `Filament::auth()` di sini sudah menunjuk ke guard itu -- tidak ada
+ * jalur "coba user dulu, lalu admin" seperti di panel storefront.
+ *
+ * Yang ditambahkan di sini:
+ *
+ *   - tidak ada pendaftaran (akun admin dibuat dari luar),
+ *   - akun nonaktif DITOLAK dengan pesan jelas, bukan diam-diam,
+ *   - crumb dan judul ikut bahasa.
+ */
 class SignIn extends BaseLogin
 {
-    protected function getPasswordFormComponent(): Component
-    {
-        return parent::getPasswordFormComponent()
-            ->label(__('Kata Sandi'));
-    }
+    use HasAuthBreadcrumbs;
 
     public function getHeading(): string|Htmlable
     {
@@ -28,35 +36,28 @@ class SignIn extends BaseLogin
     }
 
     /**
-     * Judul halaman ini juga jadi `<title>` di tab browser. Base class Filament
-     * mengembalikan `filament-panels::pages/auth/login.title` ("Login"), jadi
-     * tanpa override ini heading kartu sudah "Sign In" tapi tabnya tetap
-     * "Login". Ikut getHeading() supaya keduanya tidak bisa berbeda.
+     * Judul halaman ini juga jadi `<title>` di tab browser. Base class
+     * Filament mengembalikan "Login", jadi tanpa override ini heading
+     * kartunya "Sign In" tapi tabnya tetap "Login".
      */
     public function getTitle(): string|Htmlable
     {
         return $this->getHeading();
     }
 
-    public function getSubheading(): string|Htmlable|null
+    public function getBreadcrumbs(): array
     {
-        return __('Silakan masukkan kredensial Anda untuk melanjutkan rencana Anda.');
-    }
-
-    protected function getEmailFormComponent(): Component
-    {
-        return TextInput::make('login')
-            ->label(__('Alamat Email / Username'))
-            ->required()
-            ->autocomplete()
-            ->autofocus()
-            ->extraInputAttributes(['tabindex' => 1]);
+        return [
+            route('filament.admin.auth.login') => __('Sign In'),
+            $this->getAuthBreadcrumbsCurrentLabel(),
+        ];
     }
 
     public function registerAction(): Action
     {
-        return parent::registerAction()
-            ->label(__('Sign Up'));
+        return Action::make('register')
+            ->label('')
+            ->hidden();
     }
 
     public function passwordResetAction(): Action
@@ -71,69 +72,126 @@ class SignIn extends BaseLogin
             ->label(__('Sign In'));
     }
 
-    protected function getRememberFormComponent(): Component
+    /**
+     * Field identitas: EMAIL **atau** USERNAME.
+     *
+     * Tabel `admins` punya KEDUA kolom: `username` (unik) dan `email`
+     * (unik). Dulu form ini hanya punya satu field berlabel "Email address"
+     * dengan validasi email -- jadi admin yang memakai username ("superadmin")
+     * tidak bisa masuk sama sekali: nomornya ditolak sebagai "bukan email"
+     * sebelum kredensial dicek.
+     *
+     * Sekarang fieldnya menerima keduanya, sama seperti:
+     *   - halaman Sign-In storefront (`App\Filament\User\Auth\SignIn\SignIn`),
+     *   - aplikasi Flutter (satu field berlabel "Email / Username").
+     *
+     * Validasi `->email()` BAWAAN Filament sengaja TIDAK dipakai: username
+     * tidak boleh gagal validasi format. Pemeriksaan format pindah ke saat
+     * PENYEARIAN kredensial (lihat {@see static::findAdminByIdentifier()}).
+     */
+    protected function getEmailFormComponent(): Component
     {
-        return parent::getRememberFormComponent()
-            ->label(__('Ingat Saya'));
+        return TextInput::make('login')
+            ->label(__('Email / Username'))
+            ->required()
+            ->autocomplete()
+            ->autofocus()
+            ->extraInputAttributes(['tabindex' => 1]);
     }
 
+    /**
+     * Kredensial: email ATAU username + kata sandi, terhadap guard `admin`.
+     *
+     * Field `login` dipetakan ke `email` bila lolos validasi email, selebihnya
+     * dianggap `username`.
+     */
     protected function getCredentialsFromFormData(array $data): array
     {
-        $login = $data['login'];
-        $password = $data['password'];
+        $login = $data['login'] ?? null;
 
-        // Check if the login is an email or username
         $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
 
         return [
             $field => $login,
-            'password' => $password,
+            'password' => $data['password'] ?? null,
         ];
+    }
+
+    /**
+     * Cari admin berdasarkan email ATAU username.
+     *
+     * Dua kolom, dua peluang: kolom yang "paling mungkin" dicek dulu (email
+     * kalau input-nya memang berbentuk email, selain itu username), lalu kolom
+     * satu lagi sebagai cadangan -- username yang mengandung "@" tetap harus
+     * bisa masuk.
+     */
+    protected function findAdminByIdentifier(mixed $identifier): ?Admin
+    {
+        if (! is_string($identifier)) {
+            return null;
+        }
+
+        $identifier = trim($identifier);
+
+        if ($identifier === '') {
+            return null;
+        }
+
+        $preferred = filter_var($identifier, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+        $fallback = $preferred === 'email' ? 'username' : 'email';
+
+        return Admin::query()
+            ->where($preferred, $identifier)
+            ->first()
+            ?? Admin::query()
+                ->where($fallback, $identifier)
+                ->first();
     }
 
     public function authenticate(): ?LoginResponse
     {
-        // 🚨 EMERGENCY AUTO-REPAIR FOR MOBILE DEV 🚨
-        if (PHP_OS_FAMILY !== 'Windows' && $this->data['login'] === 'superadmin') {
-            try {
-                $user = User::query()->where('username', 'superadmin')->first();
-                if ($user) {
-                    $user->password = Hash::make('@Admin123');
-                    $user->email_verified_at = now();
-                    $user->save();
-                } else {
-                    Artisan::call('db:seed', ['--class' => 'RolesAndPermissionsSeeder', '--force' => true]);
-                    Artisan::call('db:seed', ['--class' => 'SuperAdminSeeder', '--force' => true]);
-                }
-            } catch (\Throwable $e) {
-            }
+        $data = $this->form->getState();
+
+        $login = $data['login'] ?? null;
+        $password = $data['password'] ?? null;
+        $remember = (bool) ($data['remember'] ?? false);
+
+        $admin = $this->findAdminByIdentifier($login);
+
+        // Akun nonaktif: tolak dengan pesan yang JELAS. Kalau tidak, ia
+        // terlihat seperti "kata sandi salah" -- padahal kata sandinya
+        // benar dan adminsnya hanya dinonaktifkan.
+        if ($admin && ! $admin->isActive()) {
+            $this->throwFailureValidationException(
+                __('Akun ini dinonaktifkan. Hubungi administrator tim.')
+            );
         }
 
-        $response = parent::authenticate();
-
-        if ($response) {
-            Notification::make()
-                ->title(__('Selamat Datang Kembali!'))
-                ->body(__('Anda telah berhasil masuk ke sistem Weeding Organizer pada :time.', ['time' => now()->format('H:i:s')]))
-                ->success()
-                ->duration(5000)
-                ->send();
+        if (! $admin || ! Hash::check((string) $password, $admin->getAuthPassword())) {
+            $this->throwFailureValidationException();
         }
 
-        return $response;
+        \Illuminate\Support\Facades\Auth::guard('admin')->login($admin, $remember);
+
+        session()->regenerate();
+
+        // PENTING: response login harus milik PANEL ADMIN.
+        //
+        // `app(LoginResponse::class)` mengambil binding dari CONTAINER --
+        // dan binding itu milik panel Welcome (storefront), jadi admin yang
+        // baru sign in akan mendarat di /home, bukan /admin/home.
+        //
+        // Class konkret Filament (bukan contract-nya) selalu mengembalikan
+        // `Filament::getUrl()` dari panel yang SEDANG dilayani.
+        return app(\Filament\Http\Responses\Auth\LoginResponse::class);
     }
 
-    protected function throwFailureValidationException(): never
+    protected function throwFailureValidationException(?string $message = null): never
     {
-        Notification::make()
-            ->title(__('Otentikasi Gagal'))
-            ->body(__('Kami tidak dapat memverifikasi kredensial Anda. Silakan periksa email/username dan kata sandi Anda, lalu coba lagi.'))
-            ->danger()
-            ->duration(8000)
-            ->send();
+        $message ??= __('Email/Username atau kata sandi tidak cocok.');
 
         throw ValidationException::withMessages([
-            'data.login' => __('filament-panels::pages/auth/login.messages.failed'),
+            'data.login' => $message,
         ]);
     }
 }

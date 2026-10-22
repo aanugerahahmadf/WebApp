@@ -40,6 +40,25 @@ return [
     'cbir_min_similarity' => env('CBIR_MIN_SIMILARITY', 30.0),
     'cbir_api_url' => env('CBIR_API_URL', 'http://127.0.0.1:5000'),
 
+    /*
+     * Transport gRPC ke AI Core.
+     *
+     * `AI_CORE_URL` di atas tetap dipakai sebagai jalur cadangan (Flask).
+     * Kalau AI Core dijalankan sebagai server gRPC saja, HTTP tidak akan
+     * pernah menjawab, jadi gRPC-lah jalur utama. Host sengaja TANPA skema:
+     * gRPC memakai `host:port`, bukan URL.
+     */
+    'ai_core_grpc_enabled' => env('AI_CORE_GRPC_ENABLED', true),
+    'ai_core_grpc_host' => env('AI_CORE_GRPC_HOST', '127.0.0.1:50052'),
+    /*
+     * 120 detik, bukan 15. Panggilan PERTAMA ke server gRPC memuat model
+     * ekstraksi (torch) + `data/metadata.json` 20 MB, dan pada mesin ini
+     * makan ~49 detik. Timeout 15 detik membuat pencarian pertama SELALU
+     * gagal dengan "Deadline Exceeded" lalu jatuh ke HTTP yang juga mati,
+     * padahal panggilan berikutnya hanya ~0,4 detik.
+     */
+    'ai_core_grpc_timeout_ms' => env('AI_CORE_GRPC_TIMEOUT_MS', 120000),
+
     // WhatsApp via Fonnte API — https://fonnte.com
     'fonnte_token' => env('FONNTE_TOKEN', ''),
 

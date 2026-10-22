@@ -81,8 +81,16 @@ class VoucherSeeder extends Seeder
                 ['code' => $this->randomCode()],
                 [
                     'name' => $publicNames[$i],
+                    'name_translations' => [
+                        'id' => $publicNames[$i],
+                        'en' => $publicNames[$i],
+                    ],
                     'discount_id' => $discountMap[$data['key']],
                     'description' => 'Voucher promosi publik',
+                    'description_translations' => [
+                        'id' => 'Voucher promosi publik',
+                        'en' => 'Public promotional voucher',
+                    ],
                     'is_active' => true,
                     'is_global' => true,
                     'max_uses' => $data['max_uses'],
@@ -117,8 +125,23 @@ class VoucherSeeder extends Seeder
                 ['code' => $this->randomCode()],
                 [
                     'name' => $perUserNames[$i],
+                    'name_translations' => [
+                        'id' => $perUserNames[$i],
+                        'en' => $perUserNames[$i],
+                    ],
                     'discount_id' => $discountMap[$data['key']],
                     'description' => $data['desc'],
+                    'description_translations' => [
+                        'id' => $data['desc'],
+                        'en' => match ($data['desc']) {
+                            'Voucher eksklusif member Gold' => 'Gold member exclusive voucher',
+                            'Hadiah loyalitas pelanggan' => 'Customer loyalty reward',
+                            'Voucher spesial ulang tahun' => 'Birthday special voucher',
+                            'Bonus referral' => 'Referral bonus',
+                            'Early bird booking' => 'Early bird booking',
+                            default => $data['desc'],
+                        },
+                    ],
                     'is_active' => true,
                     'is_global' => false,
                     'max_uses' => null,

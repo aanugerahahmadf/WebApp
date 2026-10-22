@@ -16,14 +16,14 @@ use Illuminate\Support\Facades\Storage;
  *   4. Jalankan: php artisan firebase:sync --apply
  *   5. Otomatis via scheduler (lihat Kernel.php)
  *
- * File yang di-sync: storage/app/public/{Packages,Products,review-photos}/
- * Tujuan: Firebase bucket/uploads/{Packages,Products,review-photos}/
+ * File yang di-sync: storage/app/public/{Packages,Catalogs,review-photos}/
+ * Tujuan: Firebase bucket/uploads/{Packages,Catalogs,review-photos}/
  */
 class FirebaseStorageSync
 {
     protected string $localDisk = 'public';
     protected string $remoteDisk = 'firebase';
-    protected array $folders = ['Packages', 'Products', 'review-photos'];
+    protected array $folders = ['Packages', 'Catalogs', 'review-photos'];
 
     public function sync(bool $apply = false, bool $deleteLocalAfterSync = false): array
     {

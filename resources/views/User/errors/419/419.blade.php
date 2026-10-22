@@ -1,5 +1,9 @@
-@extends('User.errors.minimal.minimal')
+{{--
+    Halaman error 419 (storefront -- panel User).
 
-@section('title', __('Page Expired'))
-@section('code', '419')
-@section('message', __('Page Expired'))
+    Seluruh tampilan berasal dari satu view bersama:
+    Shared.errors.glass.glass (kaca + animasi). File ini hanya meneruskan
+    kode status; isi, warna, dan tombolnya ada di
+    App\Support\ErrorPage\ErrorPage.
+--}}
+@include('Shared.errors.glass.glass', ['status' => 419])

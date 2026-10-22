@@ -81,7 +81,7 @@
                     type="button"
                     size="sm"
                     color="gray"
-                    icon="heroicon-o-pencil-square"
+                    icon="/images/icons/pencil.svg"
                     x-on:click="$dispatch('open-modal', { id: @js($modalId) })"
                 >
                     {{ __('Edit') }}
@@ -221,7 +221,7 @@
                         x-bind:disabled="locating"
                     >
                         <x-filament::icon
-                            icon="heroicon-o-map-pin"
+                            icon="/images/icons/map_pin.svg"
                             class="h-4 w-4"
                             x-bind:class="locating && 'animate-pulse'"
                         />

@@ -8,7 +8,7 @@
         :color="$voted ? 'primary' : 'gray'"
         outlined
         size="sm"
-        :icon="$voted ? 'heroicon-s-hand-thumb-up' : 'heroicon-o-hand-thumb-up'"
+        :icon="$voted ? '/images/icons/thumb_up.svg' : '/images/icons/thumb_up.svg'"
     >
         {{ __('Membantu') }} ({{ number_format((int) $review->helpful_count) }})
     </x-filament::button>

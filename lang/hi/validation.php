@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'डाक कोड',
         'preview'                  => 'पूर्व दर्शन',
         'price'                    => 'कीमत',
-        'product_id'               => 'उत्पाद आयडी',
+        'catalog_id'               => 'उत्पाद आयडी',
         'product_uid'              => 'उत्पाद यूआईडी',
         'product_uuid'             => 'उत्पाद यूयूआईडी',
         'promo_code'               => 'प्रचार कोड',

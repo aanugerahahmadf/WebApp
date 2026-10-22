@@ -2,6 +2,22 @@
 
 namespace App\Providers\Filament\UserPanelProvider;
 
+/*
+ * ⚠️ FILE INI SUDAH TIDAK DIPAKAI (2026-10-21).
+ *
+ * Panel 'user' sudah DILEBUR ke panel 'welcome' (path '/'). Provider ini
+ * tidak lagi terdaftar di `bootstrap/providers.php` -- semua halaman yang
+ * dicakupnya sekarang hidup di `WelcomePanelProvider`.
+ *
+ * JANGAN mendaftarkan ulang provider ini tanpa membaca `AGENTS.md` ->
+ * "SATU PANEL: 'user' DILEBUR KE 'welcome'". Dua panel di path '/' akan
+ * saling menimpa route-nya, dan yang kalah biasanya bukan yang disangka.
+ *
+ * File ini sengaja DIPAKAI LAGI sebagai sumber rujukan: beberapa trait dan
+ * kelas di dalamnya (mis. `RedirectsLogoutToWelcomeHome`) masih dirujuk
+ * dari panel admin dan panel welcome.
+ */
+
 // Alias wajib: file ini juga memakai facade Illuminate\Support\Facades\Auth
 // (untuk label user menu & cek Auth::check()), jadi nama `Auth` terpakai.
 use App\Filament\User\Auth\Auth\Auth as UserAuth;
@@ -10,7 +26,8 @@ use App\Filament\User\Auth\OtpEmailVerificationPrompt\OtpEmailVerificationPrompt
 use App\Filament\User\Auth\OtpRequestPasswordReset\OtpRequestPasswordReset;
 use App\Filament\User\Auth\OtpResetPassword\OtpResetPassword;
 use App\Filament\User\Auth\VerifyOtp\VerifyOtp;
-// use App\Filament\User\Auth\SignUp\SignUp;
+use App\Filament\User\Auth\SignUp\SignUp;
+use App\Filament\User\Auth\LoginResponse\LoginResponse;
 use App\Filament\Concerns\RedirectsLogoutToWelcomeHome;
 use App\Filament\User\Auth\CompleteProfile\CompleteProfilePage;
 use App\Filament\User\Auth\SecurityQuestion\SecurityQuestion;
@@ -34,8 +51,12 @@ use App\Http\Middleware\ClerkFilamentAuth\ClerkFilamentAuth;
 use App\Http\Middleware\EnsureProfileComplete\EnsureProfileComplete;
 use App\Http\Middleware\SetLocale\SetLocale;
 use App\Http\Middleware\VerifyCsrfToken\VerifyCsrfToken;
+use App\Support\AppIcon\AppIcon;
 use App\Support\AppPlatform\AppPlatform;
+use App\Support\AppFont\AppFont;
+use App\Support\DesktopApp\DesktopApp;
 use App\Support\PanelGlassCss\PanelGlassCss;
+use App\Support\TopNavigation\TopNavigation;
 use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -49,6 +70,7 @@ use Filament\Support\Colors\Color;
 use Filament\Support\Enums\MaxWidth;
 use Filament\View\PanelsRenderHook;
 use App\Filament\Shared\Plugins\UserMulti2faPlugin\UserMulti2faPlugin;
+use MarcoGermani87\FilamentCaptcha\FilamentCaptcha;
 use Illuminate\Contracts\View\View;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -64,6 +86,17 @@ class UserPanelProvider extends PanelProvider
     // SignOut / Logout panel user diarahkan ke Welcome Home.
     use RedirectsLogoutToWelcomeHome;
 
+    public function boot(): void
+    {
+        // Custom LoginResponse: semua user (admin team, Google OAuth, shopper)
+        // yang masuk ke panel USER diarahkan langsung ke /user/home.
+        // Filament v3 tidak punya ->loginResponse(), jadi dipakai binding.
+        app()->bind(
+            \Filament\Http\Responses\Auth\Contracts\LoginResponse::class,
+            LoginResponse::class,
+        );
+    }
+
     public function panel(Panel $panel): Panel
     {
         $panel = $panel
@@ -71,43 +104,45 @@ class UserPanelProvider extends PanelProvider
             ->path('user')
             ->login(SignIn::class)
             // Slug route sign-in panel user = `signin` (bukan `login`),
-            // jadi URL utamanya `/user/signin`. Nama route tetap
+            // jadi URL utamanya `/signin`. Nama route tetap
             // `filament.user.auth.login` sehingga semua pemanggilan
             // route()/Filament::getLoginUrl() tetap aman. URL lama
-            // `/user/login` dilayani redirect di routes/web/web.php.
+            // `/user/signin` dilayani redirect di routes/web/web.php.
             ->loginRouteSlug('signin')
-            // Registrasi email/password DINONAKTIFKAN. Baris di bawah adalah
-            // kode ASLI yang sengaja hanya dikomentari -- tidak dihapus, tidak
-            // ditulis ulang. `App\Filament\User\Auth\SignUp\SignUp` beserta view
-            // `User/auth/sign-up/sign-up` masih ada di repo, jadi menghidupkan
-            // pendaftaran lagi cukup menghapus tiga tanda `//` di file ini
-            // (import, ->registration, ->registrationRouteSlug) dan satu blok
-            // markup di resources/views/User/social-buttons.
+            // Registrasi email/password AKTIF. Tiga baris di bawah adalah kode
+            // ASLI yang lama hanya dikomentari, dan sekarang dipulihkan apa
+            // adanya: import di atas, `->registration()` dan
+            // `->registrationRouteSlug()` di sini. View
+            // `User/auth/sign-up/sign-up` juga masih utuh, jadi tidak ada form
+            // yang ditulis ulang.
             //
-            // Pendaftaran yang aktif sekarang hanya lewat tombol Google di
-            // `/user/auth`: SocialiteController membuat akun otomatis lalu
-            // mengarahkan ke CompleteProfile, jadi tidak ada pengguna yang
-            // terkunci tanpa jalan daftar.
+            // Pendaftaran lewat Google di `/user/auth` TETAP ada dan tidak
+            // tidak
+            // menggantikan form ini -- keduanya pintu yang berbeda.
             //
-            // Selama `->registration()` tidak dipanggil, route
-            // `filament.user.auth.register` tidak terdaftar, `/user/signup` dan
-            // `/user/register` redirect ke `/user/auth`, dan tidak ada halaman
-            // auth yang menautkan ke pendaftaran. Kontrak itu dipin
-            // RenameSmokeTest dan UserAuthLandingPageTest.
+            // Karena `->registration()` dipanggil, route
+            // `filament.user.auth.register` terdaftar lagi. `routes/web/web.php`
+            // masih me-redirect `/user/register` ke `/user/signup`; kedua door
+            // itu boleh hidup bersamaan karena keduanya kini punya halaman.
             //
-            // ->registration(SignUp::class)
+            ->registration(SignUp::class)
             // Sejalan dengan sign-in: slug route sign-up = `signup`, jadi URL
-            // utamanya `/user/signup`. Nama route tetap
-            // `filament.user.auth.register`; URL lama `/user/register`
+            // utamanya `/signup`. Nama route tetap
+            // `filament.user.auth.register`; URL lama `/user/signup`
             // dilayani redirect di routes/web/web.php.
-            // ->registrationRouteSlug('signup')
+            ->registrationRouteSlug('signup')
             ->passwordReset(
                 OtpRequestPasswordReset::class,
                 OtpResetPassword::class
             )
             ->emailVerification(OtpEmailVerificationPrompt::class)
-            ->brandName(fn () => __('Dekorasi Bunga Pernikahan'))
-            ->brandLogo(fn () => '/images/logo.png')
+            // Sama seperti panel Welcome: logo untuk tamu mendarat di
+            // halaman auth landing (/auth), bukan form sign in.
+            ->homeUrl(fn (): string => auth()->check()
+                ? Home::getUrl(panel: 'user')
+                : UserAuth::getUrl())
+            ->brandName(fn () => AppFont::brandName())
+            ->brandLogo(fn () => AppFont::brandLogo())
             ->brandLogoHeight('5rem')
             ->colors([
                 'danger' => Color::Rose,
@@ -117,9 +152,52 @@ class UserPanelProvider extends PanelProvider
                 'success' => Color::Emerald,
                 'warning' => Color::Orange,
             ])
-            ->font('Inter')
+            // Font & tebal: dari config/app-font.php, lewat AppFont.
+            //
+            // Nilai keluarga huruf dan berat TIDAK ditulis di sini, supaya
+            // ketiga panel tidak punya tiga salinan yang harus diingat semua.
+            // Ubah config/app-font.php (atau APP_FONT_FAMILY /
+            // APP_FONT_WEIGHT di .env), lalu `php artisan optimize:clear`.
+            //
+            // Dua bagian yang diurus AppFont:
+            //   - `->font()` menulis `--font-family`, dipakai preset Tailwind
+            //     Filament (`sans: ['var(--font-family)', ...]`).
+            //   - `AppFont::styles()` di hook `panels::styles.after` yang
+            //     menulis `--app-font-weight`, karena `Panel::font()` tidak
+            //     pernah menyentuh font-weight.
+            //
+            // WAJIB eksplisit di sini: `Panel::getFontFamily()` default-nya
+            // 'Inter' BUKAN null, jadi panel yang tidak memanggil ->font()
+            // tetap memuat Inter. Jangan dihapus dan mengandalkan default.
+            ->font(AppFont::family(), provider: AppFont::provider())
             ->defaultThemeMode(ThemeMode::System)
-            ->topNavigation()
+            // CHROME DI SEMUA HALAMAN.
+            //
+            // `topNavigation` = baris link navigasi di dalam topbar.
+            // `topbar`        = topbar itu sendiri: logo, pencarian global,
+            //                    notifikasi, user menu, switcher bahasa + tema.
+            //
+            // Dulu KEDUA-nya hanya dimunculkan di halaman Home, jadi halaman
+            // lain (Pengaturan, Riwayat, Ulasan, Help Center, semua halaman
+            // resource) polos tanpa chrome. Aturan itu dibalik untuk aplikasi
+            // desktop (Capacitor): topbar adalah tempat pencarian global, user
+            // menu, switcher bahasa/tema, dan tombol kembali -- semuanya
+            // dibutuhkan di setiap layar.
+            //
+            // Sidebar dan bottom nav HP ikut aturan yang sama, lewat
+            // TopNavigation::hasChrome() -- sidebar dari override view, bottom
+            // nav dari MobileNav::shouldRender().
+            //
+            // Yang tetap sama: HasDynamicBreadcrumbs selalu diawali crumb
+            // 'Beranda' supaya selalu ada jalan pulang.
+            //
+            // Closure, bukan `true` -- Filament mengevaluasi argumen tiap kali
+            // hasTopNavigation()/hasTopbar() dipanggil saat layout dirender.
+            //
+            // Aturan dan alasannya sama persis di WelcomePanelProvider. Jangan
+            // salin logikanya ke sini; cukup panggil helper yang sama.
+            ->topNavigation(TopNavigation::always())
+            ->topbar(TopNavigation::always())
             // ->maxContentWidth(MaxWidth::Full)
             ->spa()
             ->unsavedChangesAlerts(false)
@@ -127,27 +205,45 @@ class UserPanelProvider extends PanelProvider
             ->globalSearch()
             ->renderHook(
                 'panels::global-search.after',
-                // Switcher bahasa di Top Navigation -- tablet dan website
-                // desktop saja.
+                // Switcher BAHASA + TEMA di Top Navigation -- tablet, website
+                // desktop, dan APLIKASI DESKTOP.
                 //
                 // Syaratnya AppPlatform::switchersBelongInTopbar(), sama dengan
                 // yang dipakai hook sidebar di bawah. Kalau hook ini memakai
                 // syaratnya sendiri, switcher bahasa bisa muncul dua kali di
                 // satu permukaan -- persis yang terjadi di aplikasi desktop
                 // sebelum keduanya berbagi predikat yang sama.
+                //
+                // Switcher TEMA ikut di hook yang sama (bukan di partial
+                // terpisah), supaya Topbar dan Sidebar benar-benar Surface
+                // yang SALING MENGGANTIKAN: satu di topbar, satu di sidebar,
+                // tidak pernah keduanya. Kalau tema dirender dari dua tempat
+                // berbeda, akan muncul dobel.
+                //
+                // Switcher bawaan Filament di dalam user menu sudah dimatikan
+                // di override view
+                // resources/views/User/vendor/filament-panels/components/
+                // user-menu.blade.php, supaya tidak ada dua switcher tema di
+                // panel yang sama.
                 function (): View|string {
                     if (! AppPlatform::switchersBelongInTopbar()) {
                         return '';
                     }
 
-                    return view('User.filament-language-switcher.language-switcher.language-switcher');
+                    return view('User.filament-language-switcher.language-switcher.language-switcher')->render()
+                        .view('Shared.components.theme-switcher.theme-switcher')->render();
                 },
             )
             ->renderHook(
-                // Switcher tema + bahasa di menu geser (sidebar) -- HP,
-                // mobile web Android/iOS, app shell Android/iOS, dan aplikasi
-                // desktop. Sama persis dengan yang WelcomePanelProvider
-                // lakukan untuk panelnya sendiri.
+                // Switcher tema + bahasa di menu geser (sidebar) -- HP dan
+                // mobile web Android/iOS. Sama persis dengan yang
+                // WelcomePanelProvider lakukan untuk panelnya sendiri.
+                //
+                // APLIKASI DESKTOP TIDAK DI SINI: predikat
+                // AppPlatform::switchersBelongInSidebar() tidak lagi menghitung
+                // desktop app, karena sidebar aplikasi desktop diterjemahkan ke
+                // luar layar di layar lebar -- switcher di sana ter-render tapi
+                // tidak terlihat. Desktop app pakai topbar.
                 //
                 // Sidebar belum punya switcher apa pun tanpa hook ini, dan
                 // topbar menyingkir di bawah 640px -- jadi di HP kedua
@@ -176,12 +272,51 @@ class UserPanelProvider extends PanelProvider
                     : '',
             )
             ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn (): string => view('Shared.components.notification-sound.notification-sound')->render(),
+            )
+            ->renderHook(
+                // SHELL DESKTOP (Electron) -- app/Capacitor/DekstopApp.
+                //
+                // Panel User ini adalah isi dari aplikasi desktop "Dekorasi"
+                // (bersama panel Welcome). Partial ini hanya dirender kalau
+                // request-nya benar-benar datang dari shell desktop.
+                //
+                // Yang dikerjakannya: menandai <html> sebagai shell desktop,
+                // mempublikasikan window.DesktopApp, dan mendahulukan judul
+                // aplikasi pada <title> (Electron memakainya sebagai judul
+                // jendela).
+                PanelsRenderHook::BODY_END,
+                fn (): View|string => AppPlatform::isDesktopApp()
+                    ? view('Shared.components.desktop-shell.desktop-shell')->render()
+                    : '',
+            )
+            ->renderHook(
+                // Partial shell desktop, KEDUA hook.
+                //
+                // Layout Filament punya dua bentuk: layout biasa (dashboard,
+                // halaman resource) yang punya BODY_END, dan layout SIMPLE
+                // (halaman auth: Sign In, OTP, Complete Profile) yang tidak.
+                //
+                // Jadi partial yang sama didaftarkan dua kali. Kalau hanya
+                // di BODY_END, hotkey F1..F12 (yang didaftarkan partial itu)
+                // hilang di seluruh halaman auth -- tanpa error apa pun.
+                PanelsRenderHook::SIMPLE_PAGE_END,
+                fn (): View|string => DesktopApp::shellPartial(),
+            )
+            ->renderHook(
                 'panels::styles.after',
                 // Lapisan kaca dimuat lewat <link> statis, bukan lewat @vite, supaya
                 // mengedit public/css/panel-glass.css langsung berlaku tanpa
                 // `npm run build`. Diletakkan setelah @vite karena berkacanya
                 // memakai token --fi-glass-* yang didefinisikan di Shared.css.
                 fn (): string => Blade::render('@vite(\'resources/css/User/User.css\')')
+                    ."\n"
+                    // Berat teks dari config/app-font.php. `Panel::font()`
+                    // hanya menulis --font-family, tidak menyentuh
+                    // font-weight sama sekali -- jadi blok ini satu-satunya
+                    // cara membuat "tebal" berlaku di ketiga panel.
+                    .AppFont::styles()
                     ."\n"
                     .PanelGlassCss::link()
             )
@@ -267,6 +402,7 @@ class UserPanelProvider extends PanelProvider
              */
             ->plugins([
                 UserMulti2faPlugin::make(),
+                FilamentCaptcha::make(),
             ])
             // Buang item menu 2FA dari plugin. MenuItem tidak punya cara
             // menghapus satu item, jadi daftarkan ulang daftar userMenuItems
@@ -281,7 +417,7 @@ class UserPanelProvider extends PanelProvider
                 'profile' => MenuItem::make()
                     ->label(fn (): string => Auth::user()?->full_name ?? __('Profil'))
                     ->url(fn (): string => EditProfilePage::getUrl())
-                    ->icon('eos-account-circle')
+                    ->icon(AppIcon::PROFILE)
                     ->visible(fn (): bool => Auth::check()),
 
                 // SEMUA label di bawah harus CLOSURE, bukan string.
@@ -299,23 +435,41 @@ class UserPanelProvider extends PanelProvider
                 'pengaturan' => MenuItem::make()
                     ->label(fn (): string => __('Pengaturan'))
                     ->url(fn (): string => SettingsPage::getUrl())
-                    ->icon('heroicon-o-cog-6-tooth'),
+                    ->icon(AppIcon::SETTINGS),
                 'riwayat' => MenuItem::make()
                     ->label(fn (): string => __('Riwayat'))
                     ->url(fn (): string => HistoryResource::getUrl())
-                    ->icon('heroicon-o-clock'),
+                    ->icon(AppIcon::HISTORY),
                 'ulasan' => MenuItem::make()
                     ->label(fn (): string => __('Ulasan Saya'))
                     ->url(fn (): string => ReviewResource::getUrl())
-                    ->icon('heroicon-o-star'),
+                    ->icon(AppIcon::REVIEW),
                 'privacy' => MenuItem::make()
                     ->label(fn (): string => __('Privasi & Ketentuan'))
                     ->url(fn (): string => PrivacyTermsPage::getUrl())
-                    ->icon('heroicon-o-shield-check'),
+                    ->icon(AppIcon::PRIVACY),
                 'bantuan' => MenuItem::make()
                     ->label(fn (): string => __('Pusat Bantuan'))
                     ->url(fn (): string => HelpCenterPage::getUrl())
-                    ->icon('heroicon-o-question-mark-circle'),
+                    ->icon(AppIcon::HELP),
+
+                // Pintu ke shell desktop yang lain: dari aplikasi toko ini
+                // staf bisa membuka panel admin TANPA keluar dari jendela.
+                //
+                // Hanya di desktop app, dan hanya untuk yang memang punya
+                // baris di tabel `admins` -- kalau tidak, tautannya hanya
+                // akan bouncing ke halaman login admin, dan di aplikasi
+                // desktop itu berarti jendela yang terbuka bukan panel yang
+                // dijanjikan. Lihat DesktopApp::canOpenAdminPanel().
+                //
+                // Label harus closure, seperti menu lain di blok ini.
+                'desktop-companion' => MenuItem::make()
+                    ->label(fn (): string => DesktopApp::companionLabel('user') ?? __('Buka Panel Admin'))
+                    ->url(fn (): string => DesktopApp::companionUrl('user') ?? Home::getUrl(panel: 'user'))
+                    ->icon(AppIcon::EXTERNAL_LINK)
+                    ->visible(fn (): bool => AppPlatform::isDesktopApp()
+                        && DesktopApp::canOpenAdminPanel()
+                        && DesktopApp::companionUrl('user') !== null),
 
                 // SignOut: label dikunci "Sign Out" (bukan "Log out"/"Keluar"
                 // hasil terjemahan per-bahasa) dan tujuannya Welcome Home.
@@ -338,7 +492,7 @@ class UserPanelProvider extends PanelProvider
                 // $except KOSONG, sedangkan yang aplikasi mengecualikan
                 // user/logout, welcome/logout, dan admin/*.
                 //
-                // Kalau panel memakai yang base, POST /user/logout akan lolos di
+                // Kalau panel memakai yang base, POST /logout akan lolos di
                 // lapisan global (sudah dikecualikan) lalu DITOLAK lagi di
                 // lapisan panel -> 419 PAGE EXPIRED. Route Filament sebenarnya
                 // sudah berada di group `web` (FilamentServiceProvider
@@ -349,13 +503,14 @@ class UserPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                \App\Http\Middleware\CheckWebsiteMaintenance\CheckWebsiteMaintenance::class . ':user',
             ])
             ->authMiddleware([
                 Authenticate::class,
                 EnsureProfileComplete::class,
             ])
             ->routes(function (Panel $panel): void {
-                // Pintu auth pertama untuk tamu: /user/auth (Sign In + Google).
+                // Pintu auth pertama untuk tamu: /auth (Sign In + Google).
                 // Daftarkan lewat ->routes(), BUKAN ->pages(), karena ->pages()
                 // dibungkus authMiddleware() panel -- yang akan mengarahkan tamu
                 // ke login, padahal halaman inilah yang harus mereka lihat.

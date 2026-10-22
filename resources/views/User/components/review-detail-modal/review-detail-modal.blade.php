@@ -14,7 +14,7 @@
             <p class="font-semibold">{{ $review->user?->full_name ?? __('Pengguna') }}</p>
             <span class="inline-flex items-center gap-1" role="img" aria-label="{{ __('Rating') }} {{ $review->rating }} dari 5">
                 @for ($star = 1; $star <= 5; $star++)
-                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="20" height="20" @class(['h-5 w-5', 'text-amber-400' => $star <= (int) $review->rating, 'text-gray-300 dark:text-gray-600' => $star > (int) $review->rating])><path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005Z" clip-rule="evenodd"/></svg>
+                    <x-filament::icon icon="/images/icons/star.svg" @class(['h-5 w-5', 'text-amber-400' => $star <= (int) $review->rating, 'text-gray-300 dark:text-gray-600' => $star > (int) $review->rating]) />
                 @endfor
             </span>
         </div>
@@ -38,7 +38,7 @@
                     <img
                         src="{{ $photo }}"
                         alt="{{ __('Foto ulasan dari :name', ['name' => $review->user?->full_name ?? __('Pengguna')]) }}"
-                        class="h-24 w-full cursor-zoom-in object-cover transition duration-200 group-hover:scale-105"
+                        class="h-20 w-full cursor-zoom-in object-cover transition duration-200 group-hover:scale-105"
                     >
                 </button>
             @endforeach
@@ -65,9 +65,7 @@
                 class="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white transition hover:bg-white/25"
                 aria-label="{{ __('Tutup') }}"
             >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                </svg>
+                <x-filament::icon icon="/images/icons/x.svg" class="h-5 w-5" />
             </button>
 
             {{-- Image --}}

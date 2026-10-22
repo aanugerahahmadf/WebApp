@@ -1,0 +1,55 @@
+# Home Data Query Definitions
+# Wedding Flower Decoration App - Home GraphQL Queries
+
+type Query {
+  # Get all home page data in one query
+  homeData: HomeData @field(resolver: "App\\Http\\GraphQL\\Resolvers\\HomeResolver@index")
+  
+  # Get hero banner data
+  heroBanners: [HeroBanner!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\HomeResolver@heroBanners")
+  
+  # Get promotional sections
+  promotions(first: Int = 5): [Promotion!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\HomeResolver@promotions")
+}
+
+type HomeData {
+  featuredCatalogs: [Catalog!]!
+  featuredPackages: [Package!]!
+  onSaleCatalogs: [Catalog!]!
+  onSalePackages: [Package!]!
+  categories: [Category!]!
+  heroBanners: [HeroBanner!]!
+  promotions: [Promotion!]!
+  stats: HomeStats!
+}
+
+type HeroBanner {
+  id: ID!
+  title: String!
+  subtitle: String
+  imageUrl: String!
+  linkUrl: String
+  linkType: String! # "catalog", "package", "category", "external"
+  linkId: ID
+  position: Int!
+  isActive: Boolean!
+}
+
+type Promotion {
+  id: ID!
+  title: String!
+  description: String
+  imageUrl: String
+  discountPercent: Int
+  code: String
+  validFrom: String!
+  validUntil: String!
+  isActive: Boolean!
+}
+
+type HomeStats {
+  totalCatalogs: Int!
+  totalPackages: Int!
+  totalCategories: Int!
+  happyCustomers: Int!
+}

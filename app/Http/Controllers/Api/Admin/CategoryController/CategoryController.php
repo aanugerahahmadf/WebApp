@@ -15,7 +15,7 @@ class CategoryController extends Controller
     {
         try {
             $type = $request->type;
-            $query = Category::withCount($type === 'product' ? 'categoryProducts' : 'categoryPackages');
+            $query = Category::withCount($type === 'catalog' ? 'categoryCatalogs' : 'categoryPackages');
             if ($request->filled('type')) {
                 $query->where('type', $request->type);
             }
@@ -31,7 +31,7 @@ class CategoryController extends Controller
     {
         try {
             $category = Category::findOrFail($id);
-            $category->loadCount($category->type === 'product' ? 'categoryProducts' : 'categoryPackages');
+            $category->loadCount($category->type === 'catalog' ? 'categoryCatalogs' : 'categoryPackages');
 
             return response()->json(['status' => 'success', 'data' => $category]);
         } catch (\Exception $e) {
@@ -44,7 +44,7 @@ class CategoryController extends Controller
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'type' => 'nullable|string|in:package,product',
+                'type' => 'nullable|string|in:package,catalog',
                 'slug' => 'nullable|string|max:255',
                 'icon' => 'nullable|string|max:255',
                 'color' => 'nullable|string|max:255',
@@ -76,7 +76,7 @@ class CategoryController extends Controller
 
             $validated = $request->validate([
                 'name' => 'sometimes|string|max:255',
-                'type' => 'nullable|string|in:package,product',
+                'type' => 'nullable|string|in:package,catalog',
                 'slug' => 'nullable|string|max:255',
                 'icon' => 'nullable|string|max:255',
                 'color' => 'nullable|string|max:255',
@@ -101,7 +101,7 @@ class CategoryController extends Controller
     {
         try {
             $category = Category::findOrFail($id);
-            if ($category->categoryPackages()->count() > 0 || $category->categoryProducts()->count() > 0) {
+            if ($category->categoryPackages()->count() > 0 || $category->categoryCatalogs()->count() > 0) {
                 return response()->json(['status' => 'error', 'message' => __('Kategori memiliki data terkait, tidak dapat dihapus')], 422);
             }
             $category->delete();

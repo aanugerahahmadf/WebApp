@@ -46,6 +46,20 @@ trait HasTranslations
         return $this;
     }
 
+    /**
+     * Apakah field ini dilokalisasi oleh model sendiri?
+     *
+     * Dipakai untuk mencegah terjemahan GANDA: model yang punya
+     * `$translatable` sudah mengembalikan versi sesuai locale lewat
+     * accessor-nya, jadi kolom tabel tidak boleh menerjemahkan lagi --
+     * kalau begitu, yang tampil di layar bukan teks yang tersimpan di
+     * database, dan admin mengedit angka yang tidak ada.
+     */
+    public function hasTranslationFor(string $field): bool
+    {
+        return in_array($field, $this->translatable ?? [], true);
+    }
+
     public function toTranslatedArray(?string $locale = null): array
     {
         $locale ??= app()->getLocale();

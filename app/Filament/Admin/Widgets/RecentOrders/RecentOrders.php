@@ -3,18 +3,29 @@
 namespace App\Filament\Admin\Widgets\RecentOrders;
 
 use App\Models\Order\Order;
-use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Filament\Widgets\TableWidget as BaseWidget;
-use Illuminate\Database\Eloquent\Builder;
+use Filament\Widgets\TableWidget;
 
-class RecentOrders extends BaseWidget
+/**
+ * Pesanan terakhir yang masuk.
+ */
+class RecentOrders extends TableWidget
 {
+    protected static ?string $heading = null;
+
     protected static ?int $sort = 4;
 
     protected int|string|array $columnSpan = 'full';
+    /**
+     * Widget Filament LAZY secara bawaan: isinya diambil lewat request
+     * Livewire terpisah saat widget masuk viewport, dan HTML awal cuma
+     * berisi skeleton. Untuk dashboard admin, angkanya harus LANGSUNG
+     * terlihat -- jadi lazy dimatikan.
+     */
+    protected static bool $isLazy = false;
 
-    public function getTableHeading(): string
+    public function getHeading(): ?string
     {
         return __('Pesanan Terbaru');
     }
@@ -22,31 +33,14 @@ class RecentOrders extends BaseWidget
     public function table(Table $table): Table
     {
         return $table
-            ->query(
-                fn (): Builder => Order::query()->latest()->limit(5)
-            )
-            ->paginated([5])
+            ->query(Order::query()->latest('created_at')->limit(10))
             ->columns([
-                Tables\Columns\TextColumn::make('order_number')
-                    ->label(__('No. Pesanan'))
-                    ->searchable()
-                    ->weight('bold'),
-                Tables\Columns\TextColumn::make('user.full_name')
-                    ->label(__('Pelanggan')),
-                Tables\Columns\TextColumn::make('package.name')
-                    ->label(__('Paket Dekorasi'))
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('total_price')
-                    ->label(__('Total Harga'))
-                    ->formatStateUsing(fn ($state) => 'Rp '.number_format($state, 0, ',', '.'))
-                    ->alignEnd(),
-                Tables\Columns\TextColumn::make('status')
-                    ->label(__('Status'))
-                    ->badge(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->label(__('Tanggal Terdaftar'))
-                    ->toggleable(isToggledHiddenByDefault: true),
-            ]);
+                TextColumn::make('order_number')->label(__('No. Pesanan'))->searchable(),
+                TextColumn::make('user.name')->label(__('Pelanggan')),
+                TextColumn::make('total_price')->label(__('Total'))->money('IDR'),
+                TextColumn::make('payment_status')->label(__('Status Pembayaran'))->badge(),
+                TextColumn::make('created_at')->label(__('Dibuat'))->since()->dateTimeTooltip(),
+            ])
+            ->defaultSort('created_at', 'desc');
     }
 }

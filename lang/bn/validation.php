@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'পোস্ট অফিসের নাম্বার',
         'preview'                  => 'পূর্বরূপ',
         'price'                    => 'মূল্য',
-        'product_id'               => 'পণ্য আইডি',
+        'catalog_id'               => 'পণ্য আইডি',
         'product_uid'              => 'পণ্য UID',
         'product_uuid'             => 'পণ্য UUID',
         'promo_code'               => 'প্রচার কোড',

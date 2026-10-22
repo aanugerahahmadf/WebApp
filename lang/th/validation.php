@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'รหัสไปรษณีย์',
         'preview'                  => 'ดูตัวอย่าง',
         'price'                    => 'ราคา',
-        'product_id'               => 'รหัสผลิตภัณฑ์',
+        'catalog_id'               => 'รหัสผลิตภัณฑ์',
         'product_uid'              => 'UID ของผลิตภัณฑ์',
         'product_uuid'             => 'UUID ของผลิตภัณฑ์',
         'promo_code'               => 'รหัสโปรโมชัน',

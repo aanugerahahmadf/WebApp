@@ -1,0 +1,119 @@
+# Voucher Mutations
+# Wedding Flower Decoration App - Voucher GraphQL Mutations
+
+input CreateVoucherInput {
+  name: String!
+  code: String!
+  description: String
+  discountAmount: Float!
+  discountType: DiscountType! = PERCENTAGE
+  minPurchase: Float! = 0
+  maxDiscount: Float
+  usageLimit: Int
+  usageLimitPerUser: Int = 1
+  validFrom: String!
+  validUntil: String!
+  isGlobal: Boolean! = true
+  applicableCatalogs: [ID!]
+  applicablePackages: [ID!]
+  applicableCategories: [ID!]
+  excludedCatalogs: [ID!]
+  excludedPackages: [ID!]
+  excludedCategories: [ID!]
+  userIds: [ID!]
+}
+
+input UpdateVoucherInput {
+  name: String
+  description: String
+  discountAmount: Float
+  discountType: DiscountType
+  minPurchase: Float
+  maxDiscount: Float
+  usageLimit: Int
+  usageLimitPerUser: Int
+  validFrom: String
+  validUntil: String
+  isActive: Boolean
+  isGlobal: Boolean
+  applicableCatalogs: [ID!]
+  applicablePackages: [ID!]
+  applicableCategories: [ID!]
+  excludedCatalogs: [ID!]
+  excludedPackages: [ID!]
+  excludedCategories: [ID!]
+  userIds: [ID!]
+}
+
+input BulkCreateVoucherInput {
+  prefix: String!
+  count: Int!
+  discountAmount: Float!
+  discountType: DiscountType! = PERCENTAGE
+  minPurchase: Float! = 0
+  maxDiscount: Float
+  usageLimit: Int = 1
+  usageLimitPerUser: Int = 1
+  validFrom: String!
+  validUntil: String!
+  length: Int = 8
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FREE_SHIPPING
+}
+
+type Mutation {
+  # Validate voucher code
+  validateVoucher(code: String!, cartTotal: Float!, items: [ValidateVoucherItemInput!]): VoucherValidation @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@validate")
+  
+  # Admin: Create voucher
+  createVoucher(input: CreateVoucherInput!): Voucher @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@create")
+  
+  # Admin: Update voucher
+  updateVoucher(id: ID!, input: UpdateVoucherInput!): Voucher @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@update")
+  
+  # Admin: Delete voucher
+  deleteVoucher(id: ID!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@delete")
+  
+  # Admin: Toggle voucher active status
+  toggleVoucherStatus(id: ID!): Voucher @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@toggleStatus")
+  
+  # Admin: Bulk create vouchers
+  bulkCreateVouchers(input: BulkCreateVoucherInput!): [Voucher!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@bulkCreate")
+  
+  # Admin: Export voucher codes
+  exportVoucherCodes(voucherId: ID!): VoucherExport @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@exportCodes")
+}
+
+input ValidateVoucherItemInput {
+  id: ID!
+  type: String! # "catalog" or "package"
+  quantity: Int!
+  price: Float!
+}
+
+type VoucherValidation {
+  valid: Boolean!
+  voucher: Voucher
+  discount: Float!
+  message: String!
+  appliedItems: [ValidatedItem!]!
+}
+
+type ValidatedItem {
+  id: ID!
+  type: String!
+  originalPrice: Float!
+  discountedPrice: Float!
+  discount: Float!
+}
+
+type VoucherExport {
+  voucher: Voucher!
+  codes: [String!]!
+  csvUrl: String!
+  exportedAt: String!
+}

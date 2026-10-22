@@ -1,5 +1,5 @@
 <div>
-    <x-filament::section aside icon="heroicon-o-language" :heading="__('Bahasa Aplikasi')" :description="__('Pilih bahasa yang ingin Anda gunakan di aplikasi ini.')">
+    <x-filament::section aside icon="/images/icons/language.svg" :heading="__('Bahasa Aplikasi')" :description="__('Pilih bahasa yang ingin Anda gunakan di aplikasi ini.')">
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
             @foreach (config('filament-language-switcher.locals') as $key => $language)
                 <button type="button" wire:click="changeLanguage('{{ $key }}')" @class([

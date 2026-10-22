@@ -1,0 +1,34 @@
+# Category Type Definitions
+# Wedding Flower Decoration App - Category GraphQL Types
+
+type Category @model(class: "App\\Models\\Category\\Category") {
+  id: ID!
+  name: String!
+  slug: String!
+  description: String
+  imageUrl: String
+  isActive: Boolean!
+  parent: Category @belongsTo
+  children: [Category!]! @hasMany
+  catalogs: [Catalog!]! @hasMany
+  packages: [Package!]! @hasMany
+  createdAt: String!
+  updatedAt: String!
+}
+
+type CategoryTree {
+  category: Category!
+  children: [CategoryTree!]!
+}
+
+type CategoryWithCounts {
+  category: Category!
+  catalogCount: Int!
+  packageCount: Int!
+  totalItems: Int!
+}
+
+type CategoryConnection {
+  data: [Category!]!
+  pageInfo: PageInfo!
+}

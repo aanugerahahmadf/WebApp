@@ -4,8 +4,12 @@ namespace App\Support\MobileNav;
 
 use App\Providers\MobileBottomNavItem\MobileBottomNavItem;
 use App\Support\AppPlatform\AppPlatform;
+use App\Support\TopNavigation\TopNavigation;
+use Filament\Facades\Filament;
 use Filament\Resources\Resource;
+use Illuminate\Contracts\Routing\Route as RouteContract;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Throwable;
 
 /**
@@ -49,6 +53,16 @@ class MobileNav
      *
      * Suppressed on auth pages so login / register / OTP / password-reset stay
      * a single centred card with no navigation chrome around them.
+     *
+     * Also suppressed on a panel that has no chrome on the page being
+     * rendered -- see TopNavigation::hasChrome(). That bar is navigation, and
+     * on such a page it would be the one place that still has navigation
+     * chrome, which is exactly the inconsistency the rule exists to remove.
+     *
+     * The check uses the CURRENT panel, not $panelId: $panelId names where the
+     * destinations come from, and WelcomePanelProvider deliberately asks for
+     * the 'user' set on its own panel. Gating on $panelId there would hide the
+     * bar on the Welcome Home page too, which does have chrome.
      */
     public static function shouldRender(?string $panelId = null): bool
     {
@@ -60,7 +74,17 @@ class MobileNav
             return false;
         }
 
-        $panelId ??= static::currentPanelId();
+        $currentPanelId = static::currentPanelId();
+
+        // Bar ini adalah navigasi, jadi harus nyamar dengan chrome:
+        // kalau panelnya tidak punya chrome di halaman ini, bar ini
+        // dimatikan -- kalau tidak, bar navigasi jadi satu-satunya
+        // navigasi di layar yang tidak punya topbar dan sidebar.
+        if ($currentPanelId !== null && ! TopNavigation::hasChrome($currentPanelId)) {
+            return false;
+        }
+
+        $panelId ??= $currentPanelId;
 
         if ($panelId === null || static::items($panelId) === []) {
             return false;
@@ -70,6 +94,19 @@ class MobileNav
     }
 
     /**
+     * Item bottom-nav untuk satu panel.
+     *
+     * Set itemnya diambil dari config per ID PANEL. Panel yang TIDAK punya set
+     * item -> hasil kosong, tanpa error, tanpa jejak di log, dan bar-nya
+     * hilang total dari aplikasi HP.
+     *
+     * Itu bukan kasus teoritis: panel 'user' dilebur ke panel 'welcome',
+     * config masih menyimpan set 'user', lalu panel yang benar-benar merender
+     * meminta set 'welcome' yang belum ada. Bar hilang tanpa satu pun
+     * pesan error.
+     *
+     * Jadi: SETIAP panel yang terdaftar harus punya set itemnya sendiri.
+     *
      * @return array<MobileBottomNavItem>
      */
     public static function items(?string $panelId = null): array
@@ -128,7 +165,7 @@ class MobileNav
         $match = ($definition['match'] ?? 'exact') === 'starts' ? 'starts' : 'exact';
 
         $item = MobileBottomNavItem::make((string) ($definition['label'] ?? ''))
-            ->icon((string) ($definition['icon'] ?? 'heroicon-o-squares-2x2'))
+            ->icon((string) ($definition['icon'] ?? '/images/icons/squares.svg'))
             ->url($url)
             ->sort((int) ($definition['sort'] ?? ($index + 1)))
             ->isActive(static::isActive($url, $match));
@@ -190,6 +227,18 @@ class MobileNav
             return null;
         }
 
+        // Panel 'user' sudah dilebur ke panel 'welcome'. `getUrl()` menyusun
+        // nama route dari id panel ('filament.user.pages.home'), dan route
+        // seperti itu sudah tidak ada -- hasilnya RouteNotFoundException
+        // yang membuat item DILEMPAR, bukan dirender.
+        //
+        // `Filament::getPanel()` untuk id yang tidak terdaftar mengembalikan
+        // panel default, jadi id panel lama tetap resolve ke route yang
+        // benar. Tapi panel yang benar harus yang MEMILIKI class-nya, bukan
+        // sekadar default: kalau panel default berubah, item ini harus
+        // tetap mengikuti panel asalnya.
+        $panelId = static::effectivePanelId($class, $panelId);
+
         try {
             // Page::getUrl(array $parameters, bool $isAbsolute, ?string $panel)
             // Resource::getUrl(string $name, array $parameters, bool $isAbsolute, ?string $panel)
@@ -208,6 +257,61 @@ class MobileNav
         } catch (Throwable) {
             return null;
         }
+    }
+
+    /**
+     * Panel id yang benar-benar punya route untuk class ini.
+     *
+     * Kalau id panel terdaftar, itu jawabannya. Kalau tidak (mis. 'user'
+     * yang sudah dilebur ke 'welcome'), cari panel yang route-nya benar-benar
+     * milik class ini.
+     */
+    protected static function effectivePanelId(string $class, string $panelId): string
+    {
+        try {
+            $registered = Filament::getPanel($panelId);
+
+            if ($registered->getId() === $panelId) {
+                return $panelId;
+            }
+        } catch (Throwable) {
+            // Panel tidak terdaftar sama sekali -- lanjut ke fallback.
+        }
+
+        foreach (array_keys(Filament::getPanels()) as $candidate) {
+            try {
+                $routeName = $class::getRouteBaseName($candidate);
+            } catch (Throwable) {
+                continue;
+            }
+
+            $route = Route::getRoutes()->getByName($routeName);
+
+            if (! $route instanceof RouteContract) {
+                continue;
+            }
+
+            $action = $route->getAction('uses');
+            $actionClass = is_string($action) ? explode('@', $action)[0] : null;
+
+            if ($actionClass === null) {
+                continue;
+            }
+
+            // Route dengan NAMA sama bisa milik class lain -- panel admin
+            // juga punya Home, juga punya Orders. Yang dicari adalah route
+            // yang AKSI-nya benar-benar class ini, jadi panel yang sama
+            // tidak bisa "mencuri" class milik panel lain.
+            $expected = is_subclass_of($class, Resource::class)
+                ? Str::beforeLast($class, '\\') . '\\Pages\\'
+                : $class;
+
+            if (str_starts_with($actionClass, $expected)) {
+                return $candidate;
+            }
+        }
+
+        return $panelId;
     }
 
     /**

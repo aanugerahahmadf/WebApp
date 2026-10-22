@@ -10,6 +10,7 @@ use App\Models\Message\Message;
 use App\Models\Order\Order;
 use App\Models\User\User;
 use App\Services\ChatService\ChatService;
+use App\Support\ChatStaff\ChatStaff;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -36,11 +37,14 @@ class ChatController extends Controller
             }])
             ->get(['*']);
 
-        $adminUser = User::whereHas('roles', function ($q) {
-            $q->where('name', 'super_admin');
-        })->first(['*']);
-        $adminId = $adminUser?->id ?? 1;
-        $isAdmin = $user->hasRole('super_admin');
+        // "Admin" di sini = identitas chat staf, yaitu baris `users` yang
+        // tertaut ke super admin. Query lama (`User::whereHas('roles',
+        // super_admin)`) SELALU null sejak role admin pindah ke tabel
+        // `admins`, dan kode jatuh ke `?? 1` -- akun super admin lama -- jadi
+        // app menunjuk "Admin" yang bukan siapa-siapa.
+        $adminUser = ChatStaff::adminUser();
+        $adminId = $adminUser?->getKey();
+        $isAdmin = ChatStaff::isStaff($user);
 
         $data = $inboxes->map(function (Inbox $inbox) use ($user, $adminId, $isAdmin) {
             $lastMessage = $inbox->messages->first();
@@ -98,10 +102,8 @@ class ChatController extends Controller
             return response()->json(['success' => false, 'message' => __('Tidak terautentikasi')], 403);
         }
 
-        $adminUser = User::whereHas('roles', function ($q) {
-            $q->where('name', 'super_admin');
-        })->first(['id', 'full_name', 'username', 'avatar_url']);
-        $adminId = $adminUser?->id ?? 1;
+        $adminUser = ChatStaff::adminUser();
+        $adminId = $adminUser?->getKey();
         $otherId = collect($userIds)->first(fn ($id) => (int) $id !== (int) $user->id);
         $otherUser = $otherId ? User::find($otherId, ['id', 'full_name', 'username', 'avatar_url']) : null;
 
@@ -192,16 +194,16 @@ class ChatController extends Controller
                 ];
             }
         } elseif ($request->filled('order_id')) {
-            $order = Order::with(['package.media', 'product.media'])->find((int) $request->input('order_id'));
+            $order = Order::with(['package.media', 'catalog.media'])->find((int) $request->input('order_id'));
             if ($order) {
-                $firstMedia = $order->package?->media?->first() ?? $order->product?->media?->first();
+                $firstMedia = $order->package?->media?->first() ?? $order->catalog?->media?->first();
                 $meta = [
                     'is_order' => true,
                     'order_id' => $order->id,
                     'order_number' => $order->order_number,
                     'order_status' => $order->status,
                     'payment_status' => $order->payment_status,
-                    'name' => $order->package?->name ?? $order->product?->name ?? '',
+                    'name' => $order->package?->name ?? $order->catalog?->name ?? '',
                     'image' => $firstMedia ? str_replace('/storage/', '/media/', $firstMedia->getFullUrl()) : '',
                 ];
             }
@@ -222,7 +224,7 @@ class ChatController extends Controller
             'meta' => $meta,
         ]);
 
-        if ($request->filled('cs_category') && ! $user->hasRole('super_admin')) {
+        if ($request->filled('cs_category') && ! ChatStaff::isStaff($user)) {
             $inboxMeta = $inbox->meta ?? [];
             $inboxMeta['cs_category'] = $request->input('cs_category');
             $inbox->meta = $inboxMeta;
@@ -234,7 +236,7 @@ class ChatController extends Controller
                 ->toMediaCollection(MediaCollectionType::FILAMENT_MESSAGES->value);
         }
 
-        if (! $user->hasRole('super_admin')) {
+        if (! ChatStaff::isStaff($user)) {
             SendBotReply::dispatch($message->id)->delay(now()->addSeconds(5));
         }
 
@@ -265,10 +267,8 @@ class ChatController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
-        $adminUser = User::whereHas('roles', function ($q) {
-            $q->where('name', 'super_admin');
-        })->first(['id']);
-        $adminId = $adminUser ? (int) $adminUser->id : 1;
+        $adminUser = ChatStaff::adminUser();
+        $adminId = $adminUser ? (int) $adminUser->getKey() : null;
 
         $withUserId = $request->input('with_user_id');
 
@@ -292,17 +292,24 @@ class ChatController extends Controller
         } else {
             $targetId = $adminId;
 
+            if (! $targetId) {
+                // Tanpa identitas staf tidak ada lawan bicara yang benar.
+                // Lebih baik gagal dengan pesan jelas daripada membuat inbox
+                // yang menunjuk akun lama (perilaku `?? 1` sebelum ini).
+                return response()->json([
+                    'success' => false,
+                    'message' => __('Admin belum tersedia untuk chat.'),
+                ], 503);
+            }
+
             if ((int) $user->id === $targetId) {
-                $other = User::whereHas('roles', function ($q) {
-                    $q->where('name', 'super_admin');
-                })->where('id', '!=', $user->id)->first(['id']);
-                if ($other) {
-                    $targetId = (int) $other->id;
-                } else {
-                    $anyUser = User::where('id', '!=', $user->id)->first(['id']);
-                    if ($anyUser) {
-                        $targetId = (int) $anyUser->id;
-                    }
+                // Staf tidak bisa chat dengan dirinya sendiri. Dulu di sini
+                // dicari "super admin lain" -- sejak tabel `admins` dipisah
+                // hanya ada SATU identitas staf, jadi langsung ke pengguna
+                // lain (persis fallback lama).
+                $anyUser = User::where('id', '!=', $user->id)->first(['id']);
+                if ($anyUser) {
+                    $targetId = (int) $anyUser->id;
                 }
             }
 
@@ -355,7 +362,7 @@ class ChatController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
-        if (! $user->hasRole('super_admin')) {
+        if (! ChatStaff::isStaff($user)) {
             return response()->json(['success' => false, 'message' => __('Tidak terautentikasi')], 403);
         }
         $customers = User::where('id', '!=', $user->id)
@@ -418,7 +425,7 @@ class ChatController extends Controller
         $deleteType = $request->input('delete_type', 'me');
 
         if ($deleteType === 'everyone') {
-            if ((int) $message->user_id !== (int) $user->id && ! $user->hasRole('super_admin')) {
+            if ((int) $message->user_id !== (int) $user->id && ! ChatStaff::isStaff($user)) {
                 return response()->json(['success' => false, 'message' => __('Tidak diizinkan')], 403);
             }
             $message->delete();
@@ -754,10 +761,8 @@ class ChatController extends Controller
             return response()->json(['success' => false, 'message' => __('Tidak terautentikasi')], 403);
         }
 
-        $adminUser = User::whereHas('roles', function ($q) {
-            $q->where('name', 'super_admin');
-        })->first(['id', 'full_name', 'username', 'avatar_url']);
-        $adminId = $adminUser?->id ?? 1;
+        $adminUser = ChatStaff::adminUser();
+        $adminId = $adminUser?->getKey();
 
         $otherId = collect($userIds)->first(fn ($id) => (int) $id !== (int) $guest->id);
         $otherUser = $otherId ? User::find($otherId, ['id', 'full_name', 'username', 'avatar_url']) : null;
@@ -879,7 +884,9 @@ class ChatController extends Controller
                 'email' => $email,
                 'username' => 'tamu_'.substr(md5($guestId), 0, 8),
                 'full_name' => ($name !== null && $name !== '') ? $name : __('Tamu'),
-                'password' => Hash::make(Str::random(40)),
+                // Password MENTAH — model User punya cast 'password' => 'hashed'
+                // yang akan hash otomatis saat create. JANGAN Hash::make di sini.
+                'password' => Str::random(40),
             ]);
         }
 

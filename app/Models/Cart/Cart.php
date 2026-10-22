@@ -5,18 +5,20 @@ use App\Models\Traits\LegacyMorphClass\LegacyMorphClass;
 
 
 use App\Models\Package\Package;
-use App\Models\Product\Product;
+use App\Models\Catalog\Catalog;
 use App\Models\User\User;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Cart extends Model
 {
+    use HasFactory;
     use LegacyMorphClass;
     protected $fillable = [
         'user_id',
-        'product_id',
+        'catalog_id',
         'package_id',
         'quantity',
         'meta',
@@ -32,9 +34,12 @@ class Cart extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function product(): BelongsTo
+    /**
+     * The catalog this cart line refers to.
+     */
+    public function catalog(): BelongsTo
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Catalog::class, 'catalog_id');
     }
 
     public function package(): BelongsTo
@@ -44,7 +49,7 @@ class Cart extends Model
 
     public function getItemAttribute()
     {
-        return $this->product ?? $this->package;
+        return $this->catalog ?? $this->package;
     }
 
     /**
@@ -60,11 +65,11 @@ class Cart extends Model
      *
      * firstOrNew() + penjumlahan di PHP aman untuk kedua cabang.
      */
-    public static function incrementQuantity(int $userId, ?int $productId, ?int $packageId, int $delta = 1): self
+    public static function incrementQuantity(int $userId, ?int $catalogId, ?int $packageId, int $delta = 1): self
     {
         $cart = static::firstOrNew([
             'user_id' => $userId,
-            'product_id' => $productId,
+            'catalog_id' => $catalogId,
             'package_id' => $packageId,
         ]);
 

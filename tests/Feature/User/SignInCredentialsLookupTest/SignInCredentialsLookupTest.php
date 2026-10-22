@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 /**
  * `SignIn::getCredentialsFromFormData()` -- menerjemahkan satu kolom input
@@ -133,10 +133,18 @@ test('the credentials array holds exactly one identity field', function (): void
 test('login by email authenticates end to end', function (): void {
     // Jalur sukses yang kini menjadi jalur utama: panel Filament dan app
     // Flutter memakai aturan yang sama.
-    Livewire\Livewire::test(SignIn::class)
-        ->fillForm(['login' => 'sekar@example.test', 'password' => 'rahasia-panel-user'])
-        ->set('data.agreement', true)
-        ->set('data.remember', true)
+    //
+    // `fillCaptcha()` (lihat `tests/Pest.php`) wajib ada di semua pemanggilan
+    // `authenticate()` di file ini: `CaptchaField` membandingkan nilai yang
+    // dikirim dengan session, jadi tanpa itu setiap test gagal dengan
+    // `captcha_invalid` -- termasuk test yang menguji hal lain sepenuhnya,
+    // seperti "nomor KTP ditolak".
+    fillCaptcha(
+        Livewire\Livewire::test(SignIn::class)
+            ->fillForm(['login' => 'sekar@example.test', 'password' => 'rahasia-panel-user'])
+            ->set('data.agreement', true)
+            ->set('data.remember', true)
+    )
         ->call('authenticate')
         ->assertHasNoFormErrors()
         ->assertRedirect();
@@ -146,10 +154,12 @@ test('login by email authenticates end to end', function (): void {
 });
 
 test('login by username authenticates end to end', function (): void {
-    Livewire\Livewire::test(SignIn::class)
-        ->fillForm(['login' => 'sekarayu', 'password' => 'rahasia-panel-user'])
-        ->set('data.agreement', true)
-        ->set('data.remember', true)
+    fillCaptcha(
+        Livewire\Livewire::test(SignIn::class)
+            ->fillForm(['login' => 'sekarayu', 'password' => 'rahasia-panel-user'])
+            ->set('data.agreement', true)
+            ->set('data.remember', true)
+    )
         ->call('authenticate')
         ->assertHasNoFormErrors()
         ->assertRedirect();
@@ -161,10 +171,12 @@ test('login by username authenticates end to end', function (): void {
 test('login by KTP number is rejected', function (): void {
     // Menutup jalur yang sebelumnya diiklankan UI. Nomor KTP user ini memang
     // ada di database, tapi tidak boleh bisa dipakai untuk masuk.
-    Livewire\Livewire::test(SignIn::class)
-        ->fillForm(['login' => '3201234567890001', 'password' => 'rahasia-panel-user'])
-        ->set('data.agreement', true)
-        ->set('data.remember', true)
+    fillCaptcha(
+        Livewire\Livewire::test(SignIn::class)
+            ->fillForm(['login' => '3201234567890001', 'password' => 'rahasia-panel-user'])
+            ->set('data.agreement', true)
+            ->set('data.remember', true)
+    )
         ->call('authenticate')
         ->assertHasFormErrors(['login']);
 

@@ -22,7 +22,7 @@ it('renders the birth place calendar with semiboldAll and no minDate', function 
     // boleh di masa lalu.
     $user = User::factory()->create();
 
-    $response = $this->actingAs($user)->get('/user/complete-profile');
+    $response = $this->actingAs($user)->get('/complete-profile');
 
     $response->assertStatus(200);
 
@@ -47,9 +47,9 @@ it('renders checkout calendar (CheckoutCalendarPicker) with minDate and no semib
     $user = User::factory()->create();
     $user->assignRole('customer');
 
-    $product = \App\Models\Product\Product::factory()->create(['vendor_id' => null]);
+    $catalog = \App\Models\Catalog\Catalog::factory()->create(['vendor_id' => null]);
 
-    $url = \App\Filament\User\Resources\ProductResource\ProductResource::getUrl('checkout', ['record' => $product->id]);
+    $url = \App\Filament\User\Resources\CatalogResource\CatalogResource::getUrl('checkout', ['record' => $catalog->id]);
 
     $response = $this->actingAs($user)->get($url);
 
@@ -85,3 +85,4 @@ it('renders checkout calendar (CheckoutCalendarPicker) with minDate and no semib
 
     $this->assertStringContainsString('booking_date', $html);
 });
+

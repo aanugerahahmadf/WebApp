@@ -88,6 +88,38 @@ final class CountryCallingCodeOptions
         return '+62|ID';
     }
 
+    /**
+     * Daftar negara ringkas untuk UI yang BUKAN komponen Select Filament
+     * (mis. dropdown custom di modal bagikan kontak).
+     *
+     * Bedanya dengan `all()`: labelnya sudah berupa data terpisah, bukan
+     * HTML, jadi bisa dipakai di dropdown buatan sendiri. Bendera emoji TIDAK
+     * dipakai di sini: Chromium di Windows tidak punya glyph bendera
+     * negara, sehingga emoji-nya tampil sebagai dua huruf (mis. "KG"),
+     * bukan gambar bendera. Karena itu yang dipakai adalah kode ISO.
+     *
+     * @return array<int, array{value: string, iso: string, name: string, dial: string}>
+     */
+    public static function list(): array
+    {
+        $rows = [];
+
+        foreach (self::all() as $selection => $html) {
+            // $selection sudah berbentuk '+62|ID', jadi kode dial-nya sudah
+            // ikut tanda '+'. Jangan menambah '+' lagi (hasilnya '++62').
+            [$dialCode, $region] = explode('|', $selection);
+
+            $rows[] = [
+                'value' => $selection,
+                'iso' => $region,
+                'name' => \Locale::getDisplayRegion('und_'.$region, 'en'),
+                'dial' => $dialCode,
+            ];
+        }
+
+        return $rows;
+    }
+
     /** @return array{selection: string, national: string} */
     public static function split(?string $phone): array
     {

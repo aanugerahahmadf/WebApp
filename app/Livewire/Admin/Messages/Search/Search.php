@@ -2,13 +2,13 @@
 
 namespace App\Livewire\Admin\Messages\Search;
 
+use App\Livewire\Admin\Traits\ChatIdentity\ChatIdentity;
 use App\Models\Message\Message;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
@@ -17,6 +17,8 @@ use Livewire\Component;
  */
 class Search extends Component
 {
+    use ChatIdentity;
+
     public $search = '';
 
     public Collection $messages;
@@ -39,13 +41,18 @@ class Search extends Component
     {
         $search = trim($this->search);
         $this->messages = collect();
-        if (! empty($search)) {
+
+        // Identitas chat panel admin = users.id staf (ChatStaff::adminUser()),
+        // bukan admins.id dari Auth::id() -- pencarian dulu selalu kosong.
+        $chatUserId = $this->chatUserId();
+
+        if (! empty($search) && $chatUserId) {
             /** @var Builder $query */
             $query = Message::query();
 
             $this->messages = $query->with(['inbox'])
-                ->whereHas('inbox', function (Builder $q): void {
-                    $q->whereJsonContains('user_ids', Auth::id(), 'and', false);
+                ->whereHas('inbox', function (Builder $q) use ($chatUserId): void {
+                    $q->whereJsonContains('user_ids', $chatUserId, 'and', false);
                 })
                 ->where('message', 'like', "%$search%")
                 ->limit(5)

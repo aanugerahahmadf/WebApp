@@ -129,11 +129,33 @@ class FirebaseService
                 'ttl' => '600s',
                 'notification' => [
                     'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
-                    'channel_id' => $androidConfig['channel_id'] ?? 'wedding_notifications',
+                    // Wajib sinkron dengan channel yang dibuat aplikasi
+                    // (lib/core/services/notification_service):
+                    // wedding_notifications_v2 = channel ber-suara chime,
+                    // wedding_notifications_silent = channel hening.
+                    'channel_id' => $androidConfig['channel_id'] ?? 'wedding_notifications_v2',
+                    // Fallback suara untuk Android; suara utama tetap dari
+                    // channel (wajib karena channel immutable). 'default'
+                    // hanya menghormati pengaturan sound device.
+                    'sound' => 'default',
                 ],
             ];
             $finalAndroid = array_replace_recursive($defaultAndroid, $androidConfig);
             $message = $message->withAndroidConfig($finalAndroid);
+
+            // iOS (APNs): tanpa ini notifikasi tampil HENYAP di iPhone
+            // karena iOS tidak punya sistem channel seperti Android.
+            $defaultApns = [
+                'headers' => [
+                    'apns-priority' => '10',
+                ],
+                'payload' => [
+                    'aps' => [
+                        'sound' => 'default',
+                    ],
+                ],
+            ];
+            $message = $message->withApnsConfig($defaultApns);
 
             $messaging->send($message);
             Log::info('FCM sent successfully', ['token_prefix' => substr($token, 0, 20).'...', 'title' => $title]);

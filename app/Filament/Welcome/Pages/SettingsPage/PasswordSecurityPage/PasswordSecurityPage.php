@@ -48,10 +48,6 @@ class PasswordSecurityPage extends Page
 
     public bool $requestSignInEnabled = false;
 
-    public ?string $authenticatorSecret = null;
-
-    public string $authenticatorCode = '';
-
     public bool $checkupCompleted = false;
 
     public function mount(): void
@@ -76,6 +72,26 @@ class PasswordSecurityPage extends Page
     public function getTitle(): string
     {
         return $this->getHeading();
+    }
+
+    /**
+     * Id sesi saat ini.
+     *
+     * Dipakai view untuk menandai sesi yang lagi dipakai, supaya baris
+     * "Perangkat ini" tidak ikut dianggap "perangkat lain".
+     *
+     * Sengaja lewat method, bukan `request()->session()` langsung di blade:
+     * saat komponen dirender ulang lewat Livewire (bukan lewat HTTP), objek
+     * request belum tentu punya session store -- dan memanggilnya di view
+     * akan melempar "Session store not set on request".
+     */
+    public function currentSessionId(): string
+    {
+        try {
+            return (string) request()->session()->getId();
+        } catch (\Throwable) {
+            return '';
+        }
     }
 
     public function getHeading(): string
@@ -107,7 +123,7 @@ class PasswordSecurityPage extends Page
             return [
                 Action::make('backToSettings')
                     ->label(__('Kembali ke Pengaturan'))
-                    ->icon('heroicon-m-arrow-left')
+                    ->icon('/images/icons/arrow_left.svg')
                     ->color('gray')
                     ->url(SettingsPage::getUrl(panel: 'welcome')),
             ];
@@ -119,7 +135,7 @@ class PasswordSecurityPage extends Page
             return [
                 Action::make('backToNotificationDetail')
                     ->label(__('Kembali ke Detail Notifikasi'))
-                    ->icon('heroicon-m-arrow-left')
+                    ->icon('/images/icons/arrow_left.svg')
                     ->color('gray')
                     ->url($notificationDetailUrl),
             ];
@@ -128,7 +144,7 @@ class PasswordSecurityPage extends Page
         return [
             Action::make('backToPasswordSecurity')
                 ->label(__('Kembali ke Kata Sandi dan Keamanan'))
-                ->icon('heroicon-m-arrow-left')
+                ->icon('/images/icons/arrow_left.svg')
                 ->color('gray')
                 ->url(static::getUrl(panel: 'welcome')),
         ];
@@ -140,7 +156,7 @@ class PasswordSecurityPage extends Page
             return null;
         }
 
-        $notificationUrlPrefix = url('/user/notifications/');
+        $notificationUrlPrefix = url('/notifications/');
 
         return str_starts_with($this->returnTo, $notificationUrlPrefix)
             ? $this->returnTo
@@ -333,7 +349,7 @@ class PasswordSecurityPage extends Page
             return;
         }
 
-        $user->password = Hash::make($this->passwordData['password']);
+        $user->password = $this->passwordData['password'];
         $user->save();
 
         if (! empty($this->passwordData['logout_others']) && config('session.driver') === 'database') {
@@ -383,22 +399,29 @@ class PasswordSecurityPage extends Page
         Notification::make()->title(__('Kode cadangan berhasil dibuat.'))->success()->send();
     }
 
-    public function prepareAuthenticator(): void
+    /**
+     * Halaman setup aplikasi autentikasi.
+     *
+     * Setup TOTP TIDAK ditulis ulang di halaman ini.
+     *
+     * Dulu halaman ini membuat secret sendiri dan hanya memeriksa
+     * `digits:6` -- jadi kode 6 digit BERAPA PUN lolos dan 2FA aktif dengan
+     * secret yang formatnya bukan base32 (punya tanda hubung). Secret seperti
+     * itu tidak pernah bisa diverifikasi Google2FA, sehingga 2FA yang aktif
+     * justru membuat pengguna terkunci: tidak bisa masuk, tidak bisa keluar
+     * dari 2FA.
+     *
+     * Setup yang benar ada di halaman setup (TwoFactorySetup), yang
+     * mewarisi alur mix-code/filament-multi-2fa: QR, verifikasi TOTP
+     * sungguhan, dan penyimpanan secret yang formatnya benar.
+     *
+     * URL-nya diambil dari NAMA ROUTE, bukan dari class-nya: halaman ini
+     * tinggal menaut ke sana, dan folder Welcome tidak perlu tahu class
+     * mana yang menghidupi route itu.
+     */
+    public function authenticatorSetupUrl(): string
     {
-        $this->authenticatorSecret = strtoupper(Str::random(4).'-'.Str::random(4).'-'.Str::random(4).'-'.Str::random(4));
-    }
-
-    public function verifyAuthenticator(): void
-    {
-        $this->validate(['authenticatorCode' => ['required', 'digits:6']]);
-        $user = Auth::user();
-        if (! $user || ! $this->authenticatorSecret) return;
-        $user->two_factor_secret = $this->authenticatorSecret;
-        $user->two_factor_enabled = true;
-        $user->save();
-        $this->generateBackupCodes();
-        $this->authenticatorCode = '';
-        Notification::make()->title(__('Aplikasi autentikasi berhasil diverifikasi.'))->success()->send();
+        return route('filament.welcome.pages.settings.password-security.two-factor.setup');
     }
 
     public function toggleSavedLogin(): void

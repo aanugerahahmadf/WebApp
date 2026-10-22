@@ -12,7 +12,7 @@ class FilamentUserContext
     public function handle(Request $request, Closure $next): Response
     {
         try {
-            Filament::setCurrentPanel(Filament::getPanel('user'));
+            Filament::setCurrentPanel(Filament::getPanel('welcome'));
         } catch (\Exception $e) {
             // Panel not found or other issue
         }

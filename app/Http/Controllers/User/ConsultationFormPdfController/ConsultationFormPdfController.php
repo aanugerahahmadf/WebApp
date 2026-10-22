@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User\ConsultationFormPdfController;
 
 use App\Http\Controllers\Controller;
 use App\Models\Inbox\Inbox;
+use App\Support\ChatStaff\ChatStaff;
 use Dompdf\Dompdf;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -13,7 +14,7 @@ class ConsultationFormPdfController extends Controller
     {
         $userId = auth()->id();
 
-        if (! in_array($userId, $inbox->user_ids ?? []) && ! auth()->user()?->hasRole('super_admin')) {
+        if (! in_array($userId, $inbox->user_ids ?? []) && ! ChatStaff::isStaff(auth()->user())) {
             abort(403);
         }
 
@@ -26,7 +27,7 @@ class ConsultationFormPdfController extends Controller
 
         $html = view('User.pdf.consultation-form.consultation-form', compact('form', 'inbox'))->render();
 
-        $dompdf = new Dompdf;
+        $dompdf = \App\Support\PdfLayout\PdfLayout::apply(new Dompdf);
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();

@@ -8,7 +8,7 @@
         @if($method && $method->qris_image)
             <div class="text-center mb-4">
                 <x-filament::badge color="info" size="lg" class="mb-4">
-                    <x-filament::icon icon="heroicon-o-qr-code" class="w-4 h-4 mr-1 inline-block" />
+                    <x-filament::icon icon="/images/icons/qr.svg" class="w-4 h-4 mr-1 inline-block" />
                     {{ __('Scan untuk Pembayaran QRIS') }}
                 </x-filament::badge>
                 <div class="mt-4">

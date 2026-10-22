@@ -7,16 +7,16 @@
     //
     // `->registration()` tidak dipanggil di UserPanelProvider, jadi
     // `filament()->getRegistrationUrl()` selalu null dan tidak ada route
-    // `filament.user.auth.register` untuk dijadikan fallback. Asli URL blok ini
+    // `filament.welcome.auth.register` untuk dijadikan fallback. Asli URL blok ini
     // disimpan di bawah dalam bentuk komentar; yang aktif sekarang mengarah ke
     // halaman auth -- satu-satunya pintu yang memuat tombol Google.
     //
     // $registerUrl       = filament()->getRegistrationUrl()
     //     ?? \App\Filament\User\Auth\Auth\Auth::getUrl()
     //     ?? filament()->getLoginUrl()
-    //     ?? route('filament.user.auth.login');
+    //     ?? route('filament.welcome.auth.login');
     $registerUrl       = \App\Filament\User\Auth\Auth\Auth::getUrl();
-    $loginUrl          = filament()->getLoginUrl() ?? route('filament.user.auth.login');
+    $loginUrl          = filament()->getLoginUrl() ?? route('filament.welcome.auth.login');
     $hasParentData     = $hasParentData ?? false;
     $hideCheckboxes    = $hideCheckboxes ?? false;
     // Mode 'signup', bukan 'register' -- sama dengan partial User.
@@ -103,10 +103,7 @@
             x-bind:disabled="!(agreed && remembered) || loading"
             class="flex items-center justify-center gap-3 w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm font-semibold shadow-sm transition-all duration-100">
             {{-- x-show dipakai bukan x-if/template — template tag tidak render di Android WebView lama --}}
-            <svg x-show="loading" class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="display:none">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-            </svg>
+            <x-filament::icon icon="/images/icons/refresh.svg" x-show="loading" style="display:none" class="animate-spin h-5 w-5 text-gray-500" />
             <svg x-show="!loading" class="h-5 w-5" viewBox="0 0 48 48">
                 <path fill="#EA4335"
                     d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
@@ -229,7 +226,7 @@
                     <div class="flex items-center gap-2">
                         <template x-if="mode === 'wizard'">
                             <button @click="step = 1" class="text-gray-400 hover:text-primary-500 transition-colors">
-                                <x-heroicon-m-arrow-left class="w-6 h-6" />
+                                <img src="/images/icons/arrow_left.svg" class="w-6 h-6" />
                             </button>
                         </template>
                         <h2 class="text-xl font-bold text-primary-500">
@@ -276,7 +273,7 @@
                     <div class="flex items-center gap-2">
                         <template x-if="mode === 'wizard'">
                             <button @click="step = 2" class="text-gray-400 hover:text-primary-500 transition-colors">
-                                <x-heroicon-m-arrow-left class="w-6 h-6" />
+                                <img src="/images/icons/arrow_left.svg" class="w-6 h-6" />
                             </button>
                         </template>
                         <h2 class="text-xl font-bold text-primary-500">

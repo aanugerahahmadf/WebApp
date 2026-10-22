@@ -1,0 +1,90 @@
+# Cart Mutations
+# Wedding Flower Decoration App - Cart GraphQL Mutations
+
+input AddToCartInput {
+  catalogId: ID
+  packageId: ID
+  quantity: Int! = 1
+  options: JSON
+}
+
+input UpdateCartItemInput {
+  quantity: Int!
+  options: JSON
+}
+
+input CartItemOptions {
+  # Custom options for the cart item
+  selectedFeatures: [String!]
+  deliveryDate: String
+  notes: String
+}
+
+type Mutation {
+  # Add item to cart
+  addToCart(input: AddToCartInput!): CartItem @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CartResolver@add")
+  
+  # Update cart item quantity
+  updateCartItem(cartItemId: ID!, input: UpdateCartItemInput!): CartItem @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CartResolver@update")
+  
+  # Remove item from cart
+  removeFromCart(cartItemId: ID!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CartResolver@remove")
+  
+  # Clear entire cart
+  clearCart: Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CartResolver@clear")
+  
+  # Get current user's cart
+  myCart: Cart @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CartResolver@myCart")
+  
+  # Apply voucher to cart
+  applyVoucherToCart(code: String!): Cart @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CartResolver@applyVoucher")
+  
+  # Remove voucher from cart
+  removeVoucherFromCart: Cart @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CartResolver@removeVoucher")
+  
+  # Sync cart from local storage (for guest to user migration)
+  syncCart(items: [SyncCartItemInput!]!): Cart @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CartResolver@sync")
+  
+  # Estimate shipping for cart
+  estimateShipping(addressId: ID!): ShippingEstimate @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CartResolver@estimateShipping")
+}
+
+input SyncCartItemInput {
+  catalogId: ID
+  packageId: ID
+  quantity: Int!
+  options: JSON
+}
+
+type Cart {
+  id: ID!
+  user: User
+  items: [CartItem!]!
+  subtotal: Float!
+  discount: Float!
+  voucher: Voucher
+  shippingCost: Float
+  tax: Float!
+  total: Float!
+  itemCount: Int!
+  updatedAt: String!
+}
+
+type CartItem {
+  id: ID!
+  user: User @belongsTo
+  catalog: Catalog @belongsTo
+  package: Package @belongsTo
+  quantity: Int!
+  subtotal: Float!
+  options: JSON
+  createdAt: String!
+  updatedAt: String!
+}
+
+type ShippingEstimate {
+  cost: Float!
+  estimatedDays: Int!
+  method: String!
+  available: Boolean!
+}

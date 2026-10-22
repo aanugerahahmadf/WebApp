@@ -1,5 +1,20 @@
 # Catalog Detail Actions — Developer Guide
 
+> **CATATAN ARSITEKTUR (2026-10-21).** Halaman ini ditulis saat masih ada DUA
+> panel terpisah: `user` di `/user` dan `welcome` di `/welcome`. Sekarang
+> panel `user` sudah **dilebur** ke panel `welcome` di root, jadi:
+>
+> - hanya ada dua panel: `welcome` (path `/`) dan `admin` (path `/admin`)
+> - prefix nama route berubah dari `filament.user.*` ke `filament.welcome.*`
+> - bookmark lama dilayani redirect: `/user/*` -> root, `/login` -> `/signin`,
+>   `/register` -> `/signup`
+> - bottom nav HP dan chrome ikut memakai panel `welcome`
+>
+> Ringkasan terbaru ada di `AGENTS.md` -> bagian "SATU PANEL: 'user' DILEBUR KE
+> 'welcome'". Nama route dan URL yang disebut di bawah sudah disesuaikan;
+> bagian yang men_**describe** dua panel terpisah masih perlu dibaca sebagai
+> sejarah.
+
 Applies to `PackageResource` and `ProductResource` in the **Welcome panel**.
 
 ---
@@ -97,8 +112,8 @@ protected static function getChatUser(): ?User
 Returns `null` for a signed-in member, so the guest guard can be called unconditionally before
 dereferencing `auth()->id()`.
 
-The redirect target is `AuthenticateWelcome::LOGIN_ROUTE` = `filament.user.auth.index`, i.e. the
-auth landing page `/user/auth` (Sign In **and** Continue With Google) — not the `/user/signin` form
+The redirect target is `AuthenticateWelcome::LOGIN_ROUTE` = `filament.welcome.auth.index`, i.e. the
+auth landing page `/auth` (Sign In **and** Continue With Google) — not the `/signin` form
 directly, so a guest pushed here by "add to cart" still has the Google door one click away.
 
 ---

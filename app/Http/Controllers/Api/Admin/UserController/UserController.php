@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Admin\UserController;
 
 use App\Http\Controllers\Controller;
 use App\Models\User\User;
-use App\Models\Vendor\Vendor;
+
 use App\Support\PasswordPolicy\PasswordPolicy;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -199,7 +199,9 @@ class UserController extends Controller
                 'full_name' => $validated['full_name'],
                 'username' => $validated['username'],
                 'email' => $validated['email'],
-                'password' => Hash::make($validated['password']),
+                // Password MENTAH — model User punya cast 'password' => 'hashed'
+                // yang akan hash otomatis saat create. JANGAN Hash::make di sini.
+                'password' => $validated['password'],
                 'whatsapp' => $validated['whatsapp'] ?? null,
                 'active_status' => $validated['active_status'] ?? true,
             ]);
@@ -240,7 +242,8 @@ class UserController extends Controller
 
             $updateData = collect($validated)->except(['password', 'roles'])->toArray();
             if (! empty($validated['password'])) {
-                $updateData['password'] = Hash::make($validated['password']);
+                // Password MENTAH — model User punya cast 'password' => 'hashed'
+                $updateData['password'] = $validated['password'];
             }
             $user->update($updateData);
 
@@ -298,39 +301,6 @@ class UserController extends Controller
             return response()->json(['status' => 'success', 'data' => $roles]);
         } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => __('Gagal mengambil roles')], 500);
-        }
-    }
-
-    /**
-     * Daftar vendor.
-     */
-    public function vendors(): JsonResponse
-    {
-        try {
-            $vendors = Vendor::withCount(['packages', 'products'])->orderBy('store_name')->get();
-
-            $data = $vendors->map(fn ($v) => [
-                'id' => $v->id,
-                'user_id' => $v->user_id,
-                'store_name' => $v->store_name,
-                'contact_person' => $v->contact_person,
-                'no_telp' => $v->no_telp,
-                'store_description' => $v->store_description,
-                'logo' => $v->logo ? asset('storage/'.$v->logo) : null,
-                'is_active' => $v->is_active,
-                'is_partner' => $v->is_partner,
-                'package_count' => (int) $v->packages_count,
-                'product_count' => (int) $v->products_count,
-                'created_at' => $v->created_at?->toISOString(),
-                'updated_at' => $v->updated_at?->toISOString(),
-            ]);
-
-            return response()->json([
-                'status' => 'success',
-                'data' => $data,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
         }
     }
 

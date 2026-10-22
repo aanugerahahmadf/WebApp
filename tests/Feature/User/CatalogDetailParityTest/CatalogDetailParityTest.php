@@ -1,17 +1,17 @@
 <?php
 
-use App\Filament\User\Resources\PackageResource\Pages\ViewPackage\ViewPackage;
-use App\Filament\User\Resources\ProductResource\Pages\ViewProduct\ViewProduct;
+use App\Filament\User\Resources\CatalogResource\Pages\ViewCatalog\ViewCatalog;
 use App\Jobs\SendBotReply\SendBotReply;
 use App\Models\Inbox\Inbox;
 use App\Models\Message\Message;
-use App\Models\Package\Package;
-use App\Models\Product\Product;
+use App\Models\Catalog\Catalog;
 use App\Models\Review\Review;
 use App\Models\User\User;
 use App\Services\ChatService\ChatService;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
+use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
 
 use function Pest\Laravel\actingAs;
@@ -19,8 +19,10 @@ use function Pest\Laravel\actingAs;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    Role::firstOrCreate(['name' => 'super_admin']);
-    Role::firstOrCreate(['name' => 'customer']);
+    // `super_admin` juga dibuat di guard `web`: user di bawah adalah
+    // `App\Models\User\User`, dan `assignRole()` mencari role di guard model itu
+    // sendiri. Role versi `admin` milik tabel `admins` tetap dibuat juga.
+    seedRoles(adminRoles: ['super_admin'], webRoles: ['super_admin', 'customer']);
 
     $this->admin = User::factory()->create();
     $this->admin->assignRole('super_admin');
@@ -33,55 +35,43 @@ beforeEach(function () {
     Queue::fake();
 });
 
-it('renders the package detail page with share, report, rating, discount, features, and reviews', function () {
+/*
+ * Test "renders the package detail page ..." DIHAPUS.
+ *
+ *
+ * Yang hilang bukan aturan yang diuji: Bagikan, Lapor, DISKON, Fitur, Ulasan,
+ * dan nama reviewer semuanya diperiksa ulang oleh test katalog tepat di bawahnya
+ * dengan record `Catalog`. Menyalinnya ke "tier paket" hanya menambah duplikat
+ * yang menguji halaman katalog sambil menyebut paket.
+ *
+ * Kalau halaman detail paket dihidupkan lagi, `Package` sekarang adalah TIER
+ * dari katalog (`Catalog::tiers()`), jadi tidak ada resource terpisah yang bisa
+ * menyalin struktur `ViewCatalog`. Test perlu ditulis ulang sesuai route tier
+ * yang benar-benar dibuat.
+ */
+
+it('renders the catalog detail page with the same parity blocks', function () {
     actingAs($this->customer);
 
-    $package = Package::factory()->create([
-        'name' => 'Paket Bunga Mewah',
-        'features' => ['Podium mewah', 'Kursi tamu', 'Dekorasi panggung'],
-        'discount_price' => 500000,
-    ]);
-
-    $reviewer = User::factory()->create(['full_name' => 'Siti Aminah']);
-    Review::create([
-        'user_id' => $reviewer->id,
-        'package_id' => $package->id,
-        'product_id' => null,
-        'rating' => 5,
-        'comment' => 'Sangat memuaskan!',
-    ]);
-
-    Livewire::test(ViewPackage::class, ['record' => $package->id])
-        ->assertSuccessful()
-        ->assertSee('Paket Bunga Mewah')
-        ->assertSee('Bagikan')
-        ->assertSee('Lapor')
-        ->assertSee('DISKON')
-        ->assertSee('Fitur')
-        ->assertSee('Podium mewah')
-        ->assertSee('Ulasan')
-        ->assertSee('Siti Aminah');
-});
-
-it('renders the product detail page with the same parity blocks', function () {
-    actingAs($this->customer);
-
-    $product = Product::factory()->create([
-        'name' => 'Produk Bunga Mewah',
-        'features' => ['Buket segar', 'Dibuat custom'],
-        'discount_price' => 100000,
+    // `name_translations`, bukan `name`: accessor `Catalog::getNameAttribute()`
+    // membaca translations lebih dulu, jadi override kolom `name` tidak
+    // terlihat di halaman. Lihat catatan di `CatalogFactory`.
+    $catalog = Catalog::factory()->create([
+        'features'          => ['Buket segar', 'Dibuat custom'],
+        'discount_price'    => 100000,
+        'name_translations' => ['id' => 'Produk Bunga Mewah', 'en' => 'Luxury Flower Product'],
     ]);
 
     $reviewer = User::factory()->create(['full_name' => 'Budi Santoso']);
     Review::create([
         'user_id' => $reviewer->id,
         'package_id' => null,
-        'product_id' => $product->id,
+        'catalog_id' => $catalog->id,
         'rating' => 4,
         'comment' => 'Bagus.',
     ]);
 
-    Livewire::test(ViewProduct::class, ['record' => $product->id])
+    Livewire::test(ViewCatalog::class, ['record' => $catalog->id])
         ->assertSuccessful()
         ->assertSee('Produk Bunga Mewah')
         ->assertSee('Bagikan')

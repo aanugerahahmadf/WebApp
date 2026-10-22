@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'საფოსტო ინდექსი',
         'preview'                  => 'გადახედვა',
         'price'                    => 'ფასი',
-        'product_id'               => 'პროდუქტის ID',
+        'catalog_id'               => 'პროდუქტის ID',
         'product_uid'              => 'პროდუქტის UID',
         'product_uuid'             => 'პროდუქტის UUID',
         'promo_code'               => 'პრომო კოდი',

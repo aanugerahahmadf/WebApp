@@ -42,12 +42,12 @@ enum OrderStatus: string implements HasColor, HasIcon, HasLabel
     public function getIcon(): ?string
     {
         return match ($this) {
-            self::PENDING => 'heroicon-m-clock',
-            self::CONFIRMED => 'heroicon-m-check-circle',
-            self::PREPARING => 'heroicon-m-arrow-path',
-            self::EVENT_DAY => 'heroicon-m-calendar-days',
-            self::COMPLETED => 'heroicon-m-check-badge',
-            self::CANCELLED => 'heroicon-m-x-circle',
+            self::PENDING => '/images/icons/clock.svg',
+            self::CONFIRMED => '/images/icons/check_circle.svg',
+            self::PREPARING => '/images/icons/refresh.svg',
+            self::EVENT_DAY => '/images/icons/calendar_days.svg',
+            self::COMPLETED => '/images/icons/check_badge.svg',
+            self::CANCELLED => '/images/icons/x_circle.svg',
         };
     }
 }

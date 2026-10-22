@@ -30,13 +30,19 @@
 
     `hideCheckboxes => true` menyembunyikan blok Ingat Saya + syarat.
 
-    `showAgreementModal => false` untuk ikut menyembunyikan modal Perjanjian
-    Pengguna / Kebijakan Privasi / Kebijakan Aplikasi yang dibawa partial social:
-    di halaman ini tidak ada satu pun pemicu `open-agreement` (satu-satunya
-    pemicunya adalah checkbox syarat yang baru saja disembunyikan), jadi modal
-    itu markup mati -- plus tiga query ke tabel terms/privacy/policy untuk isi
-    yang tak pernah dibuka. Flag-nya opsional dan default-nya `true`, jadi
-    SignIn yang memakai partial ini tetap punya modalnya.
+    `showAgreementModal => false` untuk ikut menyembunyikan modal persetujuan yang
+    dibawa partial social: di halaman ini tidak ada satu pun pemicu
+    `open-agreement` (satu-satunya pemicunya adalah checkbox syarat yang baru saja
+    disembunyikan), jadi modal itu markup mati -- plus tiga query ke tabel
+    terms/privacy/policy untuk isi yang tak pernah dibuka. Flag-nya opsional dan
+    default-nya `true`, jadi SignIn yang memakai partial ini tetap punya
+    modalnya.
+
+    CATATAN untuk test: nama tombol persetujuan sengaja TIDAK ditulis di
+    komentar ini. Komentar Blade ikut masuk ke HTML yang dikirim ke browser, jadi
+    `assertDontSee('...')` untuk salah satu label itu akan salah positives --
+    test mengira halaman masih menampilkan checkbox, padahal yang ditemukan
+    hanya teks di dalam komentar. `UserAuthLandingPageTest` menjaganya.
 --}}
 <x-filament-panels::page.simple>
     <div
@@ -64,7 +70,7 @@
             tag="a"
             href="{{ $signInUrl }}"
             size="lg"
-            icon="heroicon-o-arrow-right-on-rectangle"
+            icon="/images/icons/sign_out.svg"
             class="w-full"
         >
             {{ __('Sign In To Account') }}

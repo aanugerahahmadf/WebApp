@@ -1,0 +1,55 @@
+# Profile Input Types
+# Wedding Flower Decoration App - Profile GraphQL Input Types
+
+input UpdateProfileInput {
+  name: String
+  phone: String
+  address: String
+  city: String
+  province: String
+  postalCode: String
+  dateOfBirth: String
+  gender: Gender
+  avatar: String
+  notificationEmail: Boolean
+  notificationSms: Boolean
+  notificationPush: Boolean
+  language: String
+  currency: String
+  timezone: String
+}
+
+input ChangePasswordInput {
+  currentPassword: String!
+  newPassword: String!
+  newPasswordConfirmation: String!
+}
+
+input UpdateAvatarInput {
+  avatar: String!
+  deleteCurrent: Boolean = false
+}
+
+input DeleteAccountInput {
+  password: String!
+  reason: String
+}
+
+input NotificationPreferencesInput {
+  notificationEmail: Boolean
+  notificationSms: Boolean
+  notificationPush: Boolean
+}
+
+input LocalePreferencesInput {
+  language: String
+  currency: String
+  timezone: String
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}

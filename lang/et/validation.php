@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'Postiindeks',
         'preview'                  => 'eelvaade',
         'price'                    => 'hind',
-        'product_id'               => 'toote ID',
+        'catalog_id'               => 'toote ID',
         'product_uid'              => 'toote UID',
         'product_uuid'             => 'toote UUID',
         'promo_code'               => 'Promo kood',

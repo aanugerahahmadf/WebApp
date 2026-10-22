@@ -52,6 +52,35 @@
         <x-filament-panels::form id="form" wire:submit="authenticate">
             {{ $this->form }}
         </x-filament-panels::form>
+
+        {{--
+            Pintu pendaftaran.
+
+            Ditulis langsung di sini, bukan lewat partial social-buttons:
+            partial itu hanya dirender di /user/auth (yang sudah punya dua
+            tombol sendiri) dan tidak pernah dipanggil dengan
+            `showAuthSwitchLink => true`. Menempel switch link di dua tempat
+            berarti dua copy yang harus dijaga sinkron; di halaman form
+            (sign in dan sign up) cukup satu blok masing-masing.
+
+            URL-nya diambil dari PANEL, bukan `SignUp::getUrl()`: SignUp
+            extends `Filament\Pages\Auth\Register`, yang -- tidak seperti
+            Page/SimplePage -- tidak punya helper getUrl() statis.
+            Memanggilnya jatuh ke __callStatic dan melempar
+            BadMethodCallException. Sama seperti catatannya di Auth\Auth
+            untuk `SignIn::getUrl()`.
+
+            `getRegistrationUrl()` bisa null kalau pendaftaran dimatikan
+            lagi; disembunyikan supaya tidak pernah ada tautan mati.
+        --}}
+        @if ($signUpUrl = \Filament\Facades\Filament::getPanel('welcome')->getRegistrationUrl())
+            <p class="mt-4 w-full text-center text-sm text-gray-500 dark:text-gray-400">
+                {{ __('Belum memiliki akun?') }}
+                <x-filament::link :href="$signUpUrl" class="font-semibold">
+                    {{ __('Sign Up') }}
+                </x-filament::link>
+            </p>
+        @endif
     </div>
 
     {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::AUTH_LOGIN_FORM_AFTER, scopes: $this->getRenderHookScopes()) }}

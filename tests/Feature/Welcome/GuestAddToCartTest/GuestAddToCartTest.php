@@ -1,7 +1,20 @@
 <?php
 
+use App\Filament\Welcome\Resources\CatalogResource\CatalogResource as WelcomeCatalogResource;
+use App\Filament\Welcome\Resources\CatalogResource\Pages\ViewCatalog\ViewCatalog as WelcomeViewCatalog;
+use App\Http\Middleware\AuthenticateWelcome\AuthenticateWelcome;
+use App\Models\Cart\Cart;
+use App\Models\Catalog\Catalog;
+use App\Models\User\User;
+use Filament\Facades\Filament;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
+use Spatie\Permission\Models\Role;
+
+use function Pest\Laravel\actingAs;
+
 /**
- * Alur guest Add to Cart di katalog Welcome (Package & Product):
+ * Alur guest Add to Cart di katalog Welcome:
  *
  * - Klik Add to Cart SELALU memunculkan form qty (termasuk untuk guest).
  * - Untuk guest, tombol Submit Livewire disembunyikan dan diganti link
@@ -14,23 +27,26 @@
  *
  * URL detail diambil via Resource::getUrl() agar kebal terhadap
  * perubahan slug resource.
+ *
+ * HANYA KATALOG, BUKAN PAKET.
+ *
+ * File ini dulu menguji keduanya lewat `PackageResource` +
+ * `PackageResource\Pages\ViewCatalog\ViewCatalog`. Keduanya sudah tidak ada
+ * sejak penataan ulang `Product` -> `Catalog`: `Welcome\Resources\PackageResource`
+ * dihapus, dan `ViewCatalog` yang tersisa hanya punya
+ * `protected static string $resource = CatalogResource::class`.
+ *
+ * Test paket DIHAPUS, bukan diarahkan ulang ke `WelcomeViewCatalog`. Alasannya
+ * bukan hanya class-nya hilang: `ViewCatalog::resolveRecord()` mencari record
+ * di tabel `catalogs`, jadi memberikan id paket akan menghasilkan 404 -- testnya
+ * akan hijau sambil menguji katalog, bukan paket. Dan `carts.package_id` masih
+ * ada di skema, jadi ada temptation untuk membuat record `Package` lalu
+ * memaksa lewat; itu hanya memunculkan kegagalan yang lebih menyesatkan.
+ *
+ * Kalau alur add-to-cart paket dihidupkan lagi, yang perlu kembali bukan hanya
+ * import: butuh resource-nya, halaman detailnya, dan keputusan sendiri soal
+ * apakah `carts.package_id` masih relevan atau tabelnya ikut dibersihkan.
  */
-
-use App\Filament\Welcome\Resources\PackageResource\PackageResource as WelcomePackageResource;
-use App\Filament\Welcome\Resources\PackageResource\Pages\ViewPackage\ViewPackage as WelcomeViewPackage;
-use App\Filament\Welcome\Resources\ProductResource\Pages\ViewProduct\ViewProduct as WelcomeViewProduct;
-use App\Filament\Welcome\Resources\ProductResource\ProductResource as WelcomeProductResource;
-use App\Http\Middleware\AuthenticateWelcome\AuthenticateWelcome;
-use App\Models\Cart\Cart;
-use App\Models\Package\Package;
-use App\Models\Product\Product;
-use App\Models\User\User;
-use Filament\Facades\Filament;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Livewire;
-use Spatie\Permission\Models\Role;
-
-use function Pest\Laravel\actingAs;
 
 uses(RefreshDatabase::class);
 
@@ -43,35 +59,33 @@ beforeEach(function (): void {
     Filament::setCurrentPanel(Filament::getPanel('welcome'));
 });
 
-it('guest bisa membuka detail paket dan produk tanpa error', function (): void {
-    $package = Package::factory()->create(['stock' => 10]);
-    $product = Product::factory()->create(['stock' => 10]);
+it('guest bisa membuka detail katalog tanpa error', function (): void {
+    $catalog = Catalog::factory()->create(['stock' => 10]);
 
-    $this->get(WelcomePackageResource::getUrl('view', ['record' => $package->getKey()]))->assertOk();
-    $this->get(WelcomeProductResource::getUrl('view', ['record' => $product->getKey()]))->assertOk();
+    $this->get(WelcomeCatalogResource::getUrl('view', ['record' => $catalog->getKey()]))->assertOk();
 });
 
 it('guard server mengarahkan guest ke login dan menyimpan halaman tujuan', function (): void {
-    $intended = WelcomePackageResource::getUrl('view', ['record' => 99]);
+    $intended = WelcomeCatalogResource::getUrl('view', ['record' => 99]);
 
-    $redirect = WelcomePackageResource::redirectGuestToLogin($intended);
+    $redirect = WelcomeCatalogResource::redirectGuestToLogin($intended);
 
     expect($redirect)->not->toBeNull()
         ->and($redirect->getTargetUrl())->toBe(route(AuthenticateWelcome::LOGIN_ROUTE))
-        ->and(route(AuthenticateWelcome::LOGIN_ROUTE))->toContain('/user/auth')
+        ->and(route(AuthenticateWelcome::LOGIN_ROUTE))->toContain('/auth')
         ->and(session()->get('url.intended'))->toBe($intended);
 });
 
 it('guard server membiarkan user login lewat (tidak redirect)', function (): void {
     actingAs($this->customer, 'web');
 
-    expect(WelcomePackageResource::redirectGuestToLogin('/welcome/whatever'))->toBeNull();
+    expect(WelcomeCatalogResource::redirectGuestToLogin('/welcome/whatever'))->toBeNull();
 });
 
 it('modal guest tidak punya tombol Submit Livewire, adanya link biasa ke login', function (): void {
-    $package = Package::factory()->create(['stock' => 10]);
+    $catalog = Catalog::factory()->create(['stock' => 10]);
 
-    $test = Livewire::test(WelcomeViewPackage::class, ['record' => $package->getKey()])
+    $test = Livewire::test(WelcomeViewCatalog::class, ['record' => $catalog->getKey()])
         ->mountInfolistAction('.add_to_cart_detailAction', 'add_to_cart_detail')
         ->assertSee(route(AuthenticateWelcome::LOGIN_ROUTE), escape: false);
 
@@ -82,43 +96,24 @@ it('modal guest tidak punya tombol Submit Livewire, adanya link biasa ke login',
     expect(Cart::count())->toBe(0);
 });
 
-it('user login bisa memasukkan paket ke keranjang lewat form qty', function (): void {
+it('user login bisa memasukkan katalog ke keranjang lewat form qty', function (): void {
     actingAs($this->customer, 'web');
 
-    $package = Package::factory()->create(['stock' => 10]);
+    $catalog = Catalog::factory()->create(['stock' => 10]);
 
     Livewire::actingAs($this->customer)
-        ->test(WelcomeViewPackage::class, ['record' => $package->getKey()])
-        ->callInfolistAction('.add_to_cart_detailAction', 'add_to_cart_detail', ['quantity' => 2])
-        ->assertHasNoInfolistActionErrors();
-
-    // Tambah 2 ke keranjang kosong harus menghasilkan 2, bukan 3.
-    // Sebelumnya kode memakai updateOrCreate() + DB::raw('quantity + N'): pada
-    // cabang INSERT, MySQL menyelesaikan `quantity` ke DEFAULT kolom (1), jadi
-    // 1 + 2 = 3 — padahal notifikasi berbunyi "menambahkan 2 paket". SQLite
-    // menolak ekspresi itu outright, jadi perilakunya tidak portabel sama sekali.
-    $this->assertDatabaseHas('carts', [
-        'user_id' => $this->customer->id,
-        'package_id' => $package->id,
-        'quantity' => 2,
-    ]);
-});
-
-it('user login bisa memasukkan produk ke keranjang lewat form qty', function (): void {
-    actingAs($this->customer, 'web');
-
-    $product = Product::factory()->create(['stock' => 10]);
-
-    Livewire::actingAs($this->customer)
-        ->test(WelcomeViewProduct::class, ['record' => $product->getKey()])
+        ->test(WelcomeViewCatalog::class, ['record' => $catalog->getKey()])
         ->callInfolistAction('.add_to_cart_detailAction', 'add_to_cart_detail', ['quantity' => 3])
         ->assertHasNoInfolistActionErrors();
 
-    // Tambah 3 ke keranjang kosong harus menghasilkan 3. Lihat catatan pada
-    // test paket di atas untuk akar bug DB::raw('quantity + N').
+    // Tambah 3 ke keranjang kosong harus menghasilkan 3, bukan 4. Test ini
+    // menjaga akar bug `updateOrCreate()` + `DB::raw('quantity + N')`: pada
+    // cabang INSERT, MySQL menyelesaikan `quantity` ke DEFAULT kolom (1), jadi
+    // 1 + 3 = 4 -- padahal notifikasi berbunyi "menambahkan 3". SQLite menolak
+    // ekspresi itu outright, jadi perilakunya tidak portabel sama sekali.
     $this->assertDatabaseHas('carts', [
         'user_id' => $this->customer->id,
-        'product_id' => $product->id,
+        'catalog_id' => $catalog->id,
         'quantity' => 3,
     ]);
 });
@@ -126,18 +121,19 @@ it('user login bisa memasukkan produk ke keranjang lewat form qty', function ():
 it('menambah item yang sama dua kali akan menjumlahkan, bukan menimpa', function (): void {
     actingAs($this->customer, 'web');
 
-    $product = Product::factory()->create(['stock' => 10]);
+    $catalog = Catalog::factory()->create(['stock' => 10]);
 
     // 2 + 3 = 5, dan tetap satu baris keranjang saja.
     Livewire::actingAs($this->customer)
-        ->test(WelcomeViewProduct::class, ['record' => $product->getKey()])
+        ->test(WelcomeViewCatalog::class, ['record' => $catalog->getKey()])
         ->callInfolistAction('.add_to_cart_detailAction', 'add_to_cart_detail', ['quantity' => 2])
         ->callInfolistAction('.add_to_cart_detailAction', 'add_to_cart_detail', ['quantity' => 3]);
 
     $this->assertDatabaseCount('carts', 1);
     $this->assertDatabaseHas('carts', [
         'user_id' => $this->customer->id,
-        'product_id' => $product->id,
+        'catalog_id' => $catalog->id,
         'quantity' => 5,
     ]);
 });
+

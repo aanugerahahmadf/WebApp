@@ -2,13 +2,14 @@
 
 namespace App\Services\ChatService;
 
-use App\Filament\User\Resources\PackageResource\PackageResource;
-use App\Filament\User\Resources\ProductResource\ProductResource;
+
+use App\Filament\Welcome\Resources\CatalogResource\CatalogResource;
 use App\Jobs\SendBotReply\SendBotReply;
 use App\Models\Inbox\Inbox;
 use App\Models\Message\Message;
 use App\Models\Order\Order;
 use App\Models\User\User;
+use App\Support\ChatStaff\ChatStaff;
 use Illuminate\Support\Facades\Auth;
 
 class ChatService
@@ -16,16 +17,25 @@ class ChatService
     /**
      * Get or create an inbox between a user and the first super admin.
      * Returns null if no admin exists (graceful degradation).
+     *
+     * "Admin" di sini berarti BARIS `users` yang tertaut ke akun super admin di
+     * tabel `admins` -- bukan objek `Admin` itu sendiri, karena
+     * `inboxes.user_ids` menyimpan `users.id`. Pencarian lewat `ChatStaff`,
+     * bukan `whereHas('roles')` langsung di sini, supaya tidak ada dua versi
+     * "cari admin" yang bisa kembar berbeda.
+     *
+     * Kalau tabel `admins` punya admin aktif tapi `user_id`-nya masih null --
+     * keadaan default, sebelum `php artisan admin:grant-storefront` dijalankan
+     * -- ini mengembalikan null dan pemanggil degrade dengan rapi: pesan tetap
+     * tersimpan, hanya tanpa staff tujuan.
      */
     public static function getOrCreateInboxWithAdmin(int $userId): ?Inbox
     {
-        $admin = User::whereHas('roles', function ($q) {
-            $q->where('name', 'super_admin');
-        })->first();
+        $admin = ChatStaff::adminUser();
 
         if (! $admin) {
             // Log warning but don't throw - allows chat to work when admin is configured later
-            logger()->warning('Super Admin not found. Chat admin feature unavailable.');
+            logger()->warning('Super Admin belum punya identitas belanja tertaut. Jalankan `php artisan admin:grant-storefront`. Chat admin feature unavailable.');
             return null;
         }
 
@@ -44,7 +54,7 @@ class ChatService
     }
 
     /**
-     * Send a context message (product/package card) to an inbox.
+     * Send a context message (catalog/package card) to an inbox.
      * Accepts optional sender user_id (for guest users).
      */
     public static function sendContextMessage(Inbox $inbox, array $meta, ?int $senderUserId = null): Message
@@ -65,7 +75,7 @@ class ChatService
             'inbox_id' => $inbox->id,
             'user_id' => $senderUserId ?? Auth::id(),
             'message' => __('Saya menanyakan tentang :itemType ini: :name', [
-                'itemType' => __($meta['type'] == 'product' ? 'Produk' : 'Paket'),
+                'itemType' => __($meta['type'] == 'catalog' ? 'Katalog' : 'Paket'),
                 'name' => $meta['name'] ?? '',
             ]),
             'meta' => $meta,
@@ -73,7 +83,7 @@ class ChatService
 
         // Dispatch bot reply if user is not admin
         $sender = $senderUserId ? User::find($senderUserId) : Auth::user();
-        if ($sender && ! $sender->hasRole('super_admin')) {
+        if ($sender && ! ChatStaff::isStaff($sender)) {
             SendBotReply::dispatch($message->id)->delay(now()->addSeconds(5));
         }
 
@@ -106,9 +116,9 @@ class ChatService
         }
 
         $catLabel = match ($category) {
-            'product' => __('Produk'),
+            'catalog' => __('Katalog'),
             'package' => __('Paket'),
-            'vendor' => __('Vendor'),
+            
             'order' => __('Pesanan'),
             'review' => __('Ulasan'),
             default => __('Umum'),
@@ -136,7 +146,7 @@ class ChatService
         // Dispatch bot reply if sender is not admin. Null-safe because a
         // guest row always counts as "not admin".
         $sender = $senderId ? User::find($senderId) : Auth::user();
-        if ($sender && ! $sender->hasRole('super_admin')) {
+        if ($sender && ! ChatStaff::isStaff($sender)) {
             SendBotReply::dispatch($message->id)->delay(now()->addSeconds(5));
         }
 
@@ -148,12 +158,10 @@ class ChatService
      */
     public static function sendOrderMessage(Inbox $inbox, Order $order): Message
     {
-        $admin = User::whereHas('roles', function ($q) {
-            $q->where('name', 'super_admin');
-        })->first();
+        $admin = ChatStaff::adminUser();
 
-        $type = $order->package_id ? 'package' : 'product';
-        $item = $order->package ?? $order->product;
+        $type = $order->package_id ? 'package' : 'catalog';
+        $item = $order->package ?? $order->catalog;
 
         $message = Message::create([
             'inbox_id' => $inbox->id,
@@ -168,7 +176,7 @@ class ChatService
                 'name' => $item->name,
                 'price' => $order->total_price,
                 'image' => $item->image_url,
-                'url' => $order->package_id ? self::resourceUrl(PackageResource::class) : self::resourceUrl(ProductResource::class),
+                'url' => $order->package_id ? self::resourceUrl(CatalogResource::class) : self::resourceUrl(CatalogResource::class),
                 'is_order' => true,
                 'order_id' => $order->id,
                 'order_number' => $order->order_number,
@@ -186,7 +194,7 @@ class ChatService
     private static function resourceUrl(string $resource): ?string
     {
         try {
-            return $resource::getUrl(panel: 'user');
+            return $resource::getUrl(panel: 'welcome');
         } catch (\Throwable $e) {
             return null;
         }

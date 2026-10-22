@@ -16,7 +16,7 @@
     <div class="w-full text-center mt-2">
         <p class="text-sm text-gray-500 dark:text-gray-400">
             {{ __('Salah memasukkan email?') }}
-            <x-filament::link :href="route('filament.user.auth.password-reset.request')" color="primary" class="font-semibold ml-1">
+            <x-filament::link :href="route('filament.welcome.auth.password-reset.request')" color="primary" class="font-semibold ml-1">
                 {{ __('Kirim Ulang') }}
             </x-filament::link>
         </p>

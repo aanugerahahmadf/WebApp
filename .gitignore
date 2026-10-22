@@ -1,94 +1,31 @@
-/node_modules
-/vendor
-/lang
-!/lang
-/public/storage
-/storage/*.key
-/storage/framework/cache/data/*
-# Cache facade yang di-generate Laravel (`php artisan cache:clear`). Ini artefak
-# runtime, bukan source -- sempat ter-commit lalu terhapus lagi tiap optimize:clear.
-/storage/framework/cache/*.php
-/storage/framework/sessions/*
-/storage/framework/views/*
+﻿# Laravel / PHP
+/vendor/
+/vendor/**/*
+/composer.lock
+
+# Environment
+/.env
+/.env.*
+
+# Build / Compiled
+/public/build/
+/npm-debug.log
+yarn-error.log
+
+# Storage
+/storage/*
+/storage/app/*
 /storage/logs/*
+/storage/framework/*
 
-# Runtime artifacts under storage/framework/temp. bootstrap/app.php points
-# TMP/TEMP/TMPDIR here on Windows so Artisan works when the system temp path is
-# locked, which means PHP's own temp files land here too -- plus the stdout/stderr
-# of spawned subprocesses (sf_proc_*). None of it is source.
-/storage/framework/temp/*
-!/storage/framework/temp/.gitignore
+# IDE
+/.idea/
+/.vscode/
 
-# Larastan/LSP scratch files dropped at the storage root.
-/storage/framework/lsp-*.php
-/storage/framework/*.tmp
-/bootstrap/cache/*.php
-/bootstrap/cache/*.tmp
-/bootstrap/cache/filament
-!/bootstrap/cache/.gitignore
-.phpunit.result.cache
-/tmp
-.vercel
-.netlify
-.idea
-sqlite.db
-# Database SQLite development. Hanya nama `sqlite.db` yang tertangkap aturan di
-# atas; file bernama `database.sqlite` (Laravel default) tidak, padahal isinya
-# data user nyata.
-/database.sqlite
-/database/*.sqlite
-*.sqlite-journal
-*.sqlite-wal
-*.sqlite-shm
-.env.backup
-.phpstorm.meta.php
-_ide_helper.php
-_ide_helper_models.php
-.env
-.env.*
-!.env.example
-!.env.mobile.example
-!.env.desktop.example
-!.env.web.example
-# Credential files (keystores, private keys, etc.)
-/credentials/
-*.jks
-exportedData/
-dataconnect/.dataconnect/pgliteData/
-.firebase/
-dataconnect-debug.log
-pglite-debug.log
-patches.lock.json
-skills-lock.json
-firebase-debug.log
+# OS
+.DS_Store
+Thumbs.db
 
-# Firebase service account (private key) — jangan commit!
-/storage/keys/firebase-service-account.json
-.git-rewrite/
-coverage/
-.phpunit.cache/
-/.phpunit.result.cache
+# Capacitor / Electron
+# (kosong untuk sekarang, sesuai butuhan)
 
-# Skrip debug sekali pakai yang ditulis di root repo. Awalnya tidak tertangkap
-# aturan apa pun, jadi `_probe2.php` dan `_gray_probe.php` terus muncul sebagai
-# untracked di setiap `git status` dan terlihat seperti ada file yang belum
-# terkirim. Awalan underscore + .php juga membuat mereka tidak dianggap file
-# entrance point Composer.
-/_*.php
-
-# Folder scratch. Hanya `columns.txt` yang benar-benar source; sisanya skrip
-# audit sekali pakai. Aturan di baris 22 hanya mencakup /storage/framework,
-# sehingga folder scratch/ sendiri tidak pernah ikut tertutup.
-/scratch/*
-!/scratch/columns.txt
-
-# Dump SQLite dari pengujian. Ekstensi sengaja dihapus supaya tidak tertangkap
-# aturan `*.sqlite` di atas.
-/wedding_cbir_test
-
-# Disk palsu yang dibuat pengujian (file unggahan sementara)
-/storage/framework/testing/disks/
-
-# Database Connection Extension (VS Code). Isinya path absolut mesin lokal,
-# jadi tidak berguna di repo dan tidak boleh dibagikan.
-.devdbrc

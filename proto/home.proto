@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package weddingapp.home;
+
+import "proto/auth.proto";
+import "proto/catalog.proto";
+import "proto/package.proto";
+
+option php_namespace = "App\\Grpc\\Home";
+option java_package = "com.weddingapp.home";
+option csharp_namespace = "WeddingApp.Home";
+option go_package = "github.com/weddingapp/grpc/home";
+
+service HomeService {
+  rpc GetHomeData (GetHomeDataRequest) returns (HomeDataResponse);
+  rpc GetHeroBanners (GetHeroBannersRequest) returns (HeroBannersResponse);
+  rpc GetPromotions (GetPromotionsRequest) returns (PromotionsResponse);
+}
+
+message GetHomeDataRequest {
+  string access_token = 1;
+}
+
+message GetHeroBannersRequest {
+  string access_token = 1;
+}
+
+message GetPromotionsRequest {
+  string access_token = 1;
+  int32 limit = 2;
+}
+
+message HomeDataResponse {
+  HomeData data = 1;
+}
+
+message HeroBannersResponse {
+  repeated HeroBanner banners = 1;
+}
+
+message PromotionsResponse {
+  repeated Promotion promotions = 1;
+}
+
+message HomeData {
+  repeated weddingapp.catalog.Catalog featured_catalogs = 1;
+  repeated weddingapp.package.Package featured_packages = 2;
+  repeated weddingapp.catalog.Catalog on_sale_catalogs = 3;
+  repeated weddingapp.package.Package on_sale_packages = 4;
+  repeated weddingapp.catalog.Category categories = 5;
+  repeated HeroBanner hero_banners = 6;
+  repeated Promotion promotions = 7;
+  HomeStats stats = 8;
+}
+
+message HeroBanner {
+  int64 id = 1;
+  string title = 2;
+  string subtitle = 3;
+  string image_url = 4;
+  string link_url = 5;
+  string link_type = 6;
+  int64 link_id = 7;
+  int32 position = 8;
+  bool is_active = 9;
+}
+
+message Promotion {
+  int64 id = 1;
+  string title = 2;
+  string description = 3;
+  string image_url = 4;
+  int32 discount_percent = 5;
+  string code = 6;
+  string valid_from = 7;
+  string valid_until = 8;
+  bool is_active = 9;
+}
+
+message HomeStats {
+  int32 total_catalogs = 1;
+  int32 total_packages = 2;
+  int32 total_categories = 3;
+  int32 happy_customers = 4;
+}

@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 /**
  * Sync file upload lokal (storage/app/public) ke Firebase Storage (GCS).
  *
- * Tujuan: Pindahkan file besar (Packages, Products, review-photos) ke cloud
+ * Tujuan: Pindahkan file besar (Packages, Catalogs, review-photos) ke cloud
  * supaya storage lokal tidak penuh. Firebase gratis 5 GB, auto-scaling.
  *
  *   php artisan firebase:sync              # dry-run (laporan saja)
@@ -20,7 +20,7 @@ class FirebaseSyncCommand extends Command
     protected $signature = 'firebase:sync
                             {--apply : Benar-benar upload (tanpa flag ini hanya dry-run)}
                             {--delete-local : Hapus file lokal setelah upload berhasil}
-                            {--folders=* : Folder spesifik (default: Packages,Products,review-photos)}';
+                            {--folders=* : Folder spesifik (default: Packages,Catalogs,review-photos)}';
 
     protected $description = 'Sync upload lokal ke Firebase Storage (Google Cloud Storage)';
 

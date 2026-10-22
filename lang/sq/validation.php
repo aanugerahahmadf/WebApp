@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'Kodi Postar',
         'preview'                  => 'pamje paraprake',
         'price'                    => 'çmimi',
-        'product_id'               => 'Numri identifikues i produktit',
+        'catalog_id'               => 'Numri identifikues i produktit',
         'product_uid'              => 'UID e produktit',
         'product_uuid'             => 'UUID e produktit',
         'promo_code'               => 'kod promocional',

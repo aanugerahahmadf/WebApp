@@ -1418,14 +1418,14 @@ describe('RuntimePlatformDetector', function () {
             $mode = PlatformMode::Web;
 
             // Create a mock request that will throw an exception when userAgent() is called
-            $request = Mockery::mock(Request::class);
+            $request = \Mockery::mock(Request::class);
             $request->shouldReceive('userAgent')
                 ->andThrow(new RuntimeException('User agent parsing failed'));
 
             $result = $this->detector->detect($mode, $request);
 
             expect($result)->toBe(RuntimePlatform::WebsiteWindows);
-        })->skip('Mockery not available in property test context');
+        });
 
         test('returns WebsiteWindows and logs warning when detection fails for web mode', function () {
             // Test with various inputs that might cause failures

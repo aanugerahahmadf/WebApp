@@ -1,0 +1,74 @@
+# Package Queries
+# Wedding Flower Decoration App - Package GraphQL Queries
+
+# Single Package by ID or Slug
+type Query {
+  package(id: ID @eq, slug: String @eq): Package @find
+}
+
+# Packages with filtering, sorting, and pagination
+type Query {
+  packages(
+    first: Int
+    filter: PackageFilter
+    sort: PackageSort
+    after: String
+    before: String
+  ): PackageConnection @paginate(defaultCount: 10, model: "App\\Models\\Package\\Package")
+}
+
+# Featured Packages
+type Query {
+  featuredPackages(first: Int = 10): [Package!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\PackageResolver@featuredPackages")
+}
+
+# On Sale Packages
+type Query {
+  onSalePackages(first: Int = 10): [Package!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\PackageResolver@onSalePackages")
+}
+
+# Packages by Category
+type Query {
+  packagesByCategory(categoryId: ID!, first: Int = 10): [Package!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\PackageResolver@byCategory")
+}
+
+# Packages by Capacity
+type Query {
+  packagesByCapacity(minCapacity: Int!, maxCapacity: Int, first: Int = 10): [Package!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\PackageResolver@byCapacity")
+}
+
+# Related Packages
+type Query {
+  relatedPackages(packageId: ID!, first: Int = 5): [Package!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\PackageResolver@related")
+}
+
+# Search Packages
+type Query {
+  searchPackages(query: String!, first: Int = 10): [Package!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\PackageResolver@search")
+}
+
+# Package Stats (for admin)
+type Query {
+  packageStats: PackageStats @field(resolver: "App\\Http\\GraphQL\\Resolvers\\PackageResolver@stats")
+}
+
+type PackageStats {
+  totalPackages: Int!
+  activePackages: Int!
+  featuredPackages: Int!
+  onSalePackages: Int!
+  totalValue: Float!
+  byCategory: [CategoryPackageCount!]!
+  byCapacity: [CapacityPackageCount!]!
+}
+
+type CategoryPackageCount {
+  category: Category!
+  count: Int!
+}
+
+type CapacityPackageCount {
+  minCapacity: Int!
+  maxCapacity: Int!
+  count: Int!
+}

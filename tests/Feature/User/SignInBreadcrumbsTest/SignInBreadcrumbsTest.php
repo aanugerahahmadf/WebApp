@@ -1,11 +1,11 @@
 <?php
 
 /**
- * Rantai breadcrumb, judul, dan isi form di halaman Sign-In (`/user/signin`).
+ * Rantai breadcrumb, judul, dan isi form di halaman Sign-In (`/signin`).
  *
  * Yang dijaga di sini:
  *
- *   1. Parent crumb halaman Sign In adalah HALAMAN AUTH (`/user/auth`), bukan
+ *   1. Parent crumb halaman Sign In adalah HALAMAN AUTH (`/auth`), bukan
  *      Welcome Home dan bukan "halaman asal klik". Lihat
  *      `SignIn::getBreadcrumbs()`: ia meng-override trait HasAuthBreadcrumbs
  *      dengan tepat dua crumb, `[Auth::getUrl() => Auth::crumbLabel(), label
@@ -18,11 +18,11 @@
  *
  *   3. `url.intended` tidak pernah jadi crumb parent. Nilainya milik tombol
  *      back, bukan breadcrumb; lihat `SignIn::getBackUrl()` yang diuji di
- *      `tests/Feature/User/SignInBackUrlTest/SignInBackUrlTest.php`.
+ *      `tests/Feature/signinBackUrlTest/SignInBackUrlTest.php`.
  *
  *   4. Tidak ada crumb "Beranda" maupun label generik "Kembali" di halaman
  *      auth: keduanya mengarahkan tamu ke storefront, padahal alur auth
- *      bercabang dari `/user/auth`.
+ *      bercabang dari `/auth`.
  *
  *   5. `<title>` ikut heading ("Sign In"), bukan "Login" bawaan Filament --
  *      lihat `SignIn::getTitle()`.
@@ -37,16 +37,16 @@
  *      kalau field-nya hilang, nilainya null dan semua login ditolak padahal
  *      checkbox di layar sudah dicentang.
  *
- *   8. Tidak ada lagi pintu pendaftaran di form ini. Halaman Sign Up dan route
- *      `filament.user.auth.register` dinonaktifkan (Google-only; class SignUp
- *      sendiri masih ada di repo), jadi form
- *      hanya boleh punya SATU pintu auth: tombol submit. `/user/signup` dan
- *      `/user/register` redirect ke `/user/auth`, bukan halaman lagi.
+ *   8. Tidak ada pintu pendaftaran di form ini. `registerAction()` bawaan
+ *      Filament disembunyikan (lihat butir 6), jadi form Sign In hanya boleh
+ *      punya SATU pintu auth: tombol submit. Pendaftaran sendiri hidup di
+ *      halaman terpisah (`/signup`, route `filament.welcome.auth.register`) --
+ *      bukan di dalam form ini.
  *
  * CATATAN SOAL NAMA FILE: file ini dulunya `SignInBackButtonTest`, padahal
  * tidak pernah menguji `getBackUrl()` sama sekali -- yang diuji adalah
  * breadcrumb. Test back button yang sebenarnya sekarang ada di
- * `tests/Feature/User/SignInBackUrlTest/SignInBackUrlTest.php`.
+ * `tests/Feature/signinBackUrlTest/SignInBackUrlTest.php`.
  *
  * CATATAN SOAL LOKALE: expectation sengaja memakai `__()` yang dievaluasi
  * SETELAH request, bukan literal Bahasa Indonesia. Locale suite tidak dikunci
@@ -148,7 +148,7 @@ test('the sign in breadcrumb chain is welcome back then sign in', function (): v
 });
 
 test('the rendered breadcrumb nav links the parent to the auth landing page', function (): void {
-    $nav = breadcrumbNav($this->get(route('filament.user.auth.login'))->assertOk()->getContent());
+    $nav = breadcrumbNav($this->get(route('filament.welcome.auth.login'))->assertOk()->getContent());
 
     // `__()` dievaluasi setelah request supaya ikut locale yang benar-benar
     // dipakai saat render.
@@ -160,7 +160,7 @@ test('the rendered breadcrumb nav links the parent to the auth landing page', fu
         ->toContain('aria-current="page"')
         // Parent-nya halaman auth, bukan storefront maupun halaman akun.
         ->not->toContain('href="'.route('filament.welcome.pages.home').'"')
-        ->not->toContain('href="'.route('filament.user.pages.home').'"');
+        ->not->toContain('href="'.route('filament.welcome.pages.home').'"');
 
     // Tepat dua crumb: satu parent (halaman auth) dan halaman ini sendiri --
     // hanya parent yang berupa link. Jumlah link dihitung, bukan negasi label,
@@ -182,7 +182,7 @@ test('url intended never becomes the breadcrumb parent', function (string $inten
     // butuh login, jadi nilai realistis di sini bukan nilai remeh.
     $nav = breadcrumbNav(
         $this->withSession(['url.intended' => $intended])
-            ->get(route('filament.user.auth.login'))
+            ->get(route('filament.welcome.auth.login'))
             ->assertOk()
             ->getContent()
     );
@@ -192,9 +192,9 @@ test('url intended never becomes the breadcrumb parent', function (string $inten
         ->not->toContain('href="'.$intended.'"');
 })->with([
     'package detail' => ['http://localhost/welcome/flowerdecorationspackagecatalog/2'],
-    'product detail' => ['http://localhost/welcome/flowerdecorationscatalog/7'],
-    'catalog index' => ['http://localhost/welcome/flowerdecorationscatalog'],
-    'dead sign up url' => ['http://localhost/user/signup'],
+    'catalog detail' => ['http://localhost/flowerdecorationscatalog/7'],
+    'catalog index' => ['http://localhost/flowerdecorationscatalog'],
+    'dead sign up url' => ['http://localhost/signup'],
 ]);
 
 test('a signed in visitor sees the same chain, not an account crumb', function (): void {
@@ -205,7 +205,7 @@ test('a signed in visitor sees the same chain, not an account crumb', function (
 
     expect(array_keys($crumbs)[0])->toBe(Auth::getUrl())
         ->and(implode(' ', array_keys($crumbs)))
-        ->not->toContain(route('filament.user.pages.home'));
+        ->not->toContain(route('filament.welcome.pages.home'));
 });
 
 test('the page title follows the heading instead of the filament default', function (): void {
@@ -217,7 +217,7 @@ test('the page title follows the heading instead of the filament default', funct
     expect((string) $page->getTitle())->toBe(__('Sign In'))
         ->and((string) $page->getTitle())->toBe((string) $page->getHeading());
 
-    $html = $this->get(route('filament.user.auth.login'))->assertOk()->getContent();
+    $html = $this->get(route('filament.welcome.auth.login'))->assertOk()->getContent();
 
     expect($html)->toMatch('/<title>\s*'.preg_quote(e(__('Sign In')), '/').'\s*-/');
 });
@@ -235,7 +235,7 @@ test('the form has exactly one submit action', function (): void {
     expect($actions)->not->toBeEmpty()
         ->and(collect($actions)->filter(fn ($action): bool => ! $action->isHidden())->count())->toBe(1);
 
-    $html = $this->get(route('filament.user.auth.login'))->assertOk()->getContent();
+    $html = $this->get(route('filament.welcome.auth.login'))->assertOk()->getContent();
 
     expect(substr_count($html, 'type="submit"'))->toBe(1);
 });
@@ -246,11 +246,13 @@ test('the forgot password link still points at the password reset route', functi
     // `SignIn::passwordResetAction()` -- dan itu boleh berubah saat Filament
     // naik versi. Yang tidak boleh hilang adalah jalurnya: tanpa link ini tamu
     // yang lupa kata sandi tidak punya jalan keluar dari form.
-    expect(route('filament.user.auth.password-reset.request'))->toContain('/user/password-reset/request');
+    // Panel storefront hidup di root, jadi jalur reset password juga di root
+    // (dulu /user/password-reset/request).
+    expect(route('filament.welcome.auth.password-reset.request'))->toContain('/password-reset/request');
 
-    $html = $this->get(route('filament.user.auth.login'))->assertOk()->getContent();
+    $html = $this->get(route('filament.welcome.auth.login'))->assertOk()->getContent();
 
-    expect($html)->toContain('href="'.route('filament.user.auth.password-reset.request').'"');
+    expect($html)->toContain('href="'.route('filament.welcome.auth.password-reset.request').'"');
 });
 
 test('the form state carries hidden agreement and remember fields', function (): void {
@@ -268,51 +270,60 @@ test('the form state carries hidden agreement and remember fields', function ():
     expect($hiddenNames)->toBe(['agreement', 'remember']);
 });
 
-test('the sign in page no longer offers a sign up door, because none exists', function (): void {
-    // Registrasi email/password dinonaktifkan: tidak ada halaman Sign Up yang
-    // terbuka, dan route `filament.user.auth.register` tidak terdaftar.
-    // Link "Belum memiliki akun?"
-    // yang dulu mengarah ke sana ikut mati (blok `$showAuthSwitchLink`), dan
-    // registration link tidak boleh PUNYA lagi di markup ini -- kalau suatu saat
-    // hidup lagi tanpa halaman tujuan, ia akan mengarahkan tamu ke URL yang tidak
-    // ada.
-    $html = $this->get(route('filament.user.auth.login'))->assertOk()->getContent();
+test('the sign in page no longer offers a google door, it lives on the landing page', function (): void {
+    // PERUBAHAAN PERILAKU pada dua hal yang tadinya satu test:
+    //
+    // 1. Test ini sebelumnya bernama "no longer offers a sign up door, because
+    //    none exists" -- benar saat pendaftaran email/password dinonaktifkan.
+    //    Sekarang pendaftaran AKTIF (`UserPanelProvider` memanggil
+    //    `->registration(SignUp::class)`), jadi `/signup` adalah halaman
+    //    nyata dan link dari Sign In ke sana memang benar adanya.
+    //
+    // 2. Yang TETAP melarang adalah tombol Google: `social-buttons` di
+    //    `/signin` dirender dengan `showGoogleButton=false`, karena pintu
+    //    OAuth hanya di `/auth`. Kalau itu berubah, ada dua pintu OAuth
+    //    yang harus dijaga sinkron. Test di bawah ("drops the google button")
+    //    sudah menjaganya; yang dijaga di sini adalah label-door Sign Up tidak
+    //    lagi dilarang muncul, sementara label Google tetap dilarang.
+    $html = $this->get(route('filament.welcome.auth.login'))->assertOk()->getContent();
 
     expect($html)
-        ->not->toContain(label('Belum memiliki akun?'))
         ->not->toContain(label('Daftar dengan Google'))
-        // Tidak satu pun href di halaman ini boleh menunjuk ke door yang sudah
-        // dihapus. Breadcrumb parent-nya memang `/user/auth`, jadi yang dilarang
-        // hanya path `/user/signup` dan `?register` milik form pendaftaran.
-        ->not->toContain('/user/signup')
+        // Tidak ada lagi larangan atas `/signup`: itu halaman yang hidup.
+        // Yang masih dilarang adalah `?register` gaya lama, karena door-nya
+        // sekarang punya slug sendiri.
         ->not->toContain('?register');
 });
 
-test('the old sign up urls are redirects to the landing page, not pages', function (): void {
-    // Door `/user/signup` dan `/user/register` tidak hilang tanpa jejak: keduanya
-    // redirect ke `/user/auth`, satu-satunya halaman auth untuk tamu, yang memuat
-    // tombol Google -- jadi pathway pendaftaran tetap ada meski form-nya tidak.
-    expect(Route::has('filament.user.auth.register'))->toBeFalse();
+test('the sign up page is a real page, and the old slug still redirects to it', function (): void {
+    // `/signup` sekarang halaman utuh: `->registration(SignUp::class)` dan
+    // `->registrationRouteSlug('signup')` di UserPanelProvider mendaftarkan
+    // route-nya.
+    //
+    // `/user/register` tetap alias: itu slug default Filament SEBELUM
+    // `registrationRouteSlug('signup')`, dan `routes/web/web.php` masih
+    // mengarahkan ke `/signup`. Yang dijaga adalah alias itu tidak hilang
+    // tanpa jejak -- bookmark lama harus tetap sampai ke form pendaftaran.
+    expect(Route::has('filament.welcome.auth.register'))->toBeTrue();
 
-    foreach (['/user/signup', '/user/register'] as $url) {
-        $this->get($url)->assertRedirect(Auth::getUrl());
-    }
+    $this->get('/signup')->assertOk();
+    $this->get('/user/register')->assertRedirect('/signup');
 });
 
 test('the sign in form drops the google button, which now lives on the landing page', function (): void {
-    // Penjaga Entrance page: tombol Google hanya boleh ada di /user/auth. Kalau
+    // Penjaga Entrance page: tombol Google hanya boleh ada di /auth. Kalau
     // partial social-buttons dirender lagi di sini tanpa showGoogleButton=false,
     // ada dua pintu OAuth yang harus dijaga sinkron.
-    expect($this->get(route('filament.user.auth.login'))->assertOk()->getContent())
+    expect($this->get(route('filament.welcome.auth.login'))->assertOk()->getContent())
         ->not->toContain(label('Masuk Dengan Google'));
 });
 
 test('the consent checkboxes are on the sign in form, unlike on the landing page', function (): void {
-    // Kebalikan dari /user/auth: di form, "Ingat Saya" + persetujuan syarat WAJIB
+    // Kebalikan dari /auth: di form, "Ingat Saya" + persetujuan syarat WAJIB
     // ada karena authenticate() menolak tanpa keduanya (lihat
     // SignInAuthenticationTest). Checkbox hilang = validasi tidak pernah bisa
     // terpenuhi padahal formnya masih 200.
-    $html = $this->get(route('filament.user.auth.login'))->assertOk()->getContent();
+    $html = $this->get(route('filament.welcome.auth.login'))->assertOk()->getContent();
 
     expect($html)
         ->toContain('id="remember-me-checkbox"')

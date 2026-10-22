@@ -17,6 +17,11 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/security/two-factor/setup/verify', [SecurityController::class, 'verifyTwoFactorSetup']);
     Route::post('/security/two-factor/setup/resend', [SecurityController::class, 'resendTwoFactorSetupOtp']);
     Route::get('/security/trusted-devices', [SecurityController::class, 'trustedDevices']);
+    // Jawaban atas notifikasi "Perangkat Baru -- Apakah Ini Anda?" dari HP:
+    // verify = "Ya, Ini Saya" (perangkat dipercaya), reject = "Bukan Saya"
+    // (semua sesi web lain + token HP dicabut -- termasuk token pemanggil).
+    Route::post('/security/trusted-devices/{deviceId}/verify', [SecurityController::class, 'verifyTrustedDevice']);
+    Route::post('/security/trusted-devices/{deviceId}/reject', [SecurityController::class, 'rejectTrustedDevice']);
     Route::delete('/security/trusted-devices/{deviceId}', [SecurityController::class, 'removeTrustedDevice']);
     Route::delete('/security/trusted-devices', [SecurityController::class, 'removeAllTrustedDevices']);
     Route::post('/security/sessions/remove-all', [SecurityController::class, 'removeAllOtherSessions']);

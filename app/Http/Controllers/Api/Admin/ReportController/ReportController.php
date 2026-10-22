@@ -49,7 +49,7 @@ class ReportController extends Controller
                 'status' => $r->status->value,
                 'reportable_type' => $r->reportable_type,
                 'reportable_id' => $r->reportable_id,
-                'reportable_label' => $r->reportable?->name ?? $r->reportable?->store_name ?? $r->reportable?->comment ?? $r->reportable?->order_number ?? '-',
+                'reportable_label' => $r->reportable?->name ?? $r->reportable?->comment ?? $r->reportable?->order_number ?? '-',
                 'resolved_at' => $r->resolved_at?->toISOString(),
                 'created_at' => $r->created_at?->toISOString(),
             ]);
@@ -93,7 +93,7 @@ class ReportController extends Controller
                     'status' => $report->status->value,
                     'reportable_type' => $report->reportable_type,
                     'reportable_id' => $report->reportable_id,
-                    'reportable_label' => $report->reportable?->name ?? $report->reportable?->store_name ?? $report->reportable?->comment ?? $report->reportable?->order_number ?? '-',
+                    'reportable_label' => $report->reportable?->name ?? $report->reportable?->comment ?? $report->reportable?->order_number ?? '-',
                     'resolver' => $report->resolver?->full_name,
                     'resolved_at' => $report->resolved_at?->toISOString(),
                     'created_at' => $report->created_at?->toISOString(),

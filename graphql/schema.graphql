@@ -1,0 +1,1199 @@
+# Main GraphQL Schema Entry Point
+# Wedding Flower Decoration App - GraphQL API
+# This file imports all modular schema parts
+
+# ============================================================
+# SCHEMA DEFINITION
+# ============================================================
+#
+# CATATAN: blok `schema { query: Query mutation: Mutation }` SENGAJA
+# TIDAK ditulis di sini. Lighthouse v6 (graphql-php v15) otomatis
+# menugaskan tipe root Query/Mutation, dan keberadaan blok schema
+# eksplisit membuat AST builder gagal dengan:
+#
+#   Unknown definition type: GraphQL\Language\AST\SchemaDefinitionNode
+#
+# Root type tetap Query dan Mutation, hanya diinferensikan otomatis.
+
+# ============================================================
+# QUERY ROOT
+# ============================================================
+
+type Query {
+  # User & Auth
+  me: User @field(resolver: "App\\Http\\GraphQL\\Resolvers\\UserResolver@me")
+  user(id: ID @eq): User @find
+  users(first: Int, search: String): [User!]! @paginate(defaultCount: 10)
+  userProfile(id: ID): UserProfile @field(resolver: "App\\Http\\GraphQL\\Resolvers\\UserResolver@profile")
+  userActivity(userId: ID!, first: Int!): [UserActivity!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\UserResolver@activity")
+
+  # Categories
+  category(id: ID @eq): Category @find
+  categoryBySlug(slug: String!): Category @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CategoryResolver@bySlug")
+  categories(first: Int, active: Boolean @where(key: "is_active"), parentId: ID @where(key: "parent_id")): [Category!]! @paginate(defaultCount: 20)
+  allCategories(active: Boolean): [Category!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CategoryResolver@all")
+  categoryTree: [CategoryTree!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CategoryResolver@tree")
+  categoriesWithCounts(active: Boolean): [CategoryWithCounts!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CategoryResolver@withCounts")
+
+  # Catalogs
+  catalog(id: ID @eq, slug: String @eq): Catalog @find
+  catalogs(
+    first: Int
+    categoryId: ID @where(key: "category_id")
+    featured: Boolean @where(key: "is_featured")
+    minPrice: Float @where(key: "price", operator: ">=")
+    maxPrice: Float @where(key: "price", operator: "<=")
+    active: Boolean @where(key: "is_active")
+    theme: String @where(key: "theme")
+    color: String @where(key: "color")
+  ): [Catalog!]! @paginate(defaultCount: 10)
+  featuredCatalogs(first: Int): [Catalog!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CatalogResolver@featuredCatalogs")
+  onSaleCatalogs(first: Int): [Catalog!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CatalogResolver@onSaleCatalogs")
+  catalogsByCategory(categoryId: ID!, first: Int): [Catalog!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CatalogResolver@byCategory")
+  relatedCatalogs(catalogId: ID!, first: Int): [Catalog!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CatalogResolver@related")
+  searchCatalogs(query: String!, first: Int): [Catalog!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CatalogResolver@search")
+  catalogStats: CatalogStats @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CatalogResolver@stats")
+
+  # Packages
+  package(id: ID @eq, slug: String @eq): Package @find
+  packages(
+    first: Int
+    categoryId: ID @where(key: "category_id")
+    featured: Boolean @where(key: "is_featured")
+    minPrice: Float @where(key: "price", operator: ">=")
+    maxPrice: Float @where(key: "price", operator: "<=")
+    active: Boolean @where(key: "is_active")
+  ): [Package!]! @paginate(defaultCount: 10)
+  featuredPackages(first: Int): [Package!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\PackageResolver@featuredPackages")
+  onSalePackages(first: Int): [Package!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\PackageResolver@onSalePackages")
+  packagesByCategory(categoryId: ID!, first: Int): [Package!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\PackageResolver@byCategory")
+  packagesByCapacity(minCapacity: Int!, maxCapacity: Int, first: Int): [Package!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\PackageResolver@byCapacity")
+  relatedPackages(packageId: ID!, first: Int): [Package!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\PackageResolver@related")
+  searchPackages(query: String!, first: Int): [Package!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\PackageResolver@search")
+  packageStats: PackageStats @field(resolver: "App\\Http\\GraphQL\\Resolvers\\PackageResolver@stats")
+
+  # Orders
+  myOrders(first: Int, status: String @where(key: "status")): [Order!]! @paginate(defaultCount: 10)
+  order(id: ID @eq): Order @find
+  orderByNumber(orderNumber: String!): Order @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@byNumber")
+  orders(
+    first: Int
+    status: String @where(key: "status")
+    paymentStatus: String @where(key: "payment_status")
+    userId: ID @where(key: "user_id")
+    dateFrom: String
+    dateTo: String
+  ): [Order!]! @paginate(defaultCount: 20)
+  orderStats: OrderStats @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@stats")
+  orderTimeline(orderId: ID!): [OrderTimeline!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@timeline")
+
+  # Reviews
+  catalogReviews(catalogId: ID!, first: Int, rating: Int @where(key: "rating")): [Review!]! @paginate(defaultCount: 10)
+  packageReviews(packageId: ID!, first: Int, rating: Int @where(key: "rating")): [Review!]! @paginate(defaultCount: 10)
+  myReviews(first: Int): [Review!]! @paginate(defaultCount: 10)
+  review(id: ID @eq): Review @find
+  reviewStats(catalogId: ID, packageId: ID): ReviewStats @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ReviewResolver@stats")
+  featuredReviews(first: Int): [Review!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ReviewResolver@featured")
+  allReviews(first: Int, status: String @where(key: "status"), rating: Int @where(key: "rating")): [Review!]! @paginate(defaultCount: 20)
+
+  # Vouchers
+  myVouchers(first: Int): [Voucher!]! @paginate(defaultCount: 10)
+  voucherByCode(code: String!): Voucher @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@byCode")
+  vouchers(first: Int, code: String @where(key: "code"), active: Boolean @where(key: "is_active"), isGlobal: Boolean @where(key: "is_global")): [Voucher!]! @paginate(defaultCount: 20)
+  voucherStats(voucherId: ID!): VoucherStats @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@stats")
+
+  # Cart
+  myCart: Cart @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CartResolver@myCart")
+
+  # Wishlist
+  myWishlist(first: Int): [Wishlist!]! @paginate(defaultCount: 50)
+  isInWishlist(catalogId: ID, packageId: ID): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\WishlistResolver@isInWishlist")
+
+  # CBIR
+  cbirStats: CbirStats @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@stats")
+  cbirHistory(first: Int): [CbirHistory!]! @paginate(model: "App\\Models\\Cbir\\CbirSearch", defaultCount: 20)
+  cbirSavedResults(searchId: ID!): [CbirResult!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@savedResults")
+
+  # Home
+  homeData: HomeData @field(resolver: "App\\Http\\GraphQL\\Resolvers\\HomeResolver@index")
+  heroBanners: [HeroBanner!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\HomeResolver@heroBanners")
+  promotions(first: Int): [Promotion!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\HomeResolver@promotions")
+
+  # Search
+  search(query: String!, type: SearchType, first: Int): [SearchResult!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\SearchResolver@index")
+  searchSuggestions(query: String!, limit: Int): [SearchSuggestion!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\SearchResolver@suggestions")
+  popularSearches(limit: Int): [PopularSearch!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\SearchResolver@popular")
+  searchFilters(query: String, categoryId: ID): SearchFilters @field(resolver: "App\\Http\\GraphQL\\Resolvers\\SearchResolver@filters")
+}
+
+# ============================================================
+# MUTATION ROOT
+# ============================================================
+
+type Mutation {
+  # Auth
+  login(input: LoginInput!): AuthPayload @field(resolver: "App\\Http\\GraphQL\\Resolvers\\AuthResolver@login")
+  register(input: RegisterInput!): AuthPayload @field(resolver: "App\\Http\\GraphQL\\Resolvers\\AuthResolver@register")
+  logout: Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\AuthResolver@logout")
+  refreshToken: AuthPayload @field(resolver: "App\\Http\\GraphQL\\Resolvers\\AuthResolver@refreshToken")
+  forgotPassword(input: ForgotPasswordInput!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\AuthResolver@forgotPassword")
+  resetPassword(input: ResetPasswordInput!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\AuthResolver@resetPassword")
+  verifyEmail(input: VerifyEmailInput!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\AuthResolver@verifyEmail")
+  resendVerification(input: ResendVerificationInput!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\AuthResolver@resendVerification")
+
+  # Profile
+  updateProfile(input: UpdateProfileInput!): User @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ProfileResolver@update")
+  changePassword(input: ChangePasswordInput!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ProfileResolver@changePassword")
+  updateAvatar(input: UpdateAvatarInput!): User @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ProfileResolver@updateAvatar")
+  deleteAvatar: User @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ProfileResolver@deleteAvatar")
+  deleteAccount(input: DeleteAccountInput!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ProfileResolver@deleteAccount")
+  updateNotificationPreferences(notificationEmail: Boolean, notificationSms: Boolean, notificationPush: Boolean): User @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ProfileResolver@updateNotifications")
+  updateLocalePreferences(language: String, currency: String, timezone: String): User @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ProfileResolver@updateLocale")
+
+  # Cart
+  addToCart(input: AddToCartInput!): CartItem @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CartResolver@add")
+  updateCartItem(cartItemId: ID!, input: UpdateCartItemInput!): CartItem @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CartResolver@update")
+  removeFromCart(cartItemId: ID!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CartResolver@remove")
+  clearCart: Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CartResolver@clear")
+  applyVoucherToCart(code: String!): Cart @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CartResolver@applyVoucher")
+  removeVoucherFromCart: Cart @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CartResolver@removeVoucher")
+  syncCart(items: [SyncCartItemInput!]!): Cart @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CartResolver@sync")
+  estimateShipping(addressId: ID!): ShippingEstimate @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CartResolver@estimateShipping")
+
+  # Wishlist
+  toggleWishlist(input: ToggleWishlistInput!): WishlistAction @field(resolver: "App\\Http\\GraphQL\\Resolvers\\WishlistResolver@toggle")
+  addToWishlist(input: ToggleWishlistInput!): Wishlist @field(resolver: "App\\Http\\GraphQL\\Resolvers\\WishlistResolver@add")
+  removeFromWishlist(wishlistId: ID!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\WishlistResolver@remove")
+  clearWishlist: Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\WishlistResolver@clear")
+  moveToCart(wishlistId: ID!, quantity: Int): CartItem @field(resolver: "App\\Http\\GraphQL\\Resolvers\\WishlistResolver@moveToCart")
+  shareWishlist: WishlistShare @field(resolver: "App\\Http\\GraphQL\\Resolvers\\WishlistResolver@share")
+
+  # Orders
+  createOrder(input: CreateOrderInput!): Order @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@store")
+  cancelOrder(orderId: ID!, input: CancelOrderInput!): Order @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@cancel")
+  reorder(orderId: ID!): Order @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@reorder")
+  updateOrder(orderId: ID!, input: UpdateOrderInput!): Order @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@update")
+  updateOrderStatus(orderId: ID!, status: OrderStatus!): Order @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@updateStatus")
+  updatePaymentStatus(orderId: ID!, paymentStatus: PaymentStatus!): Order @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@updatePaymentStatus")
+  processPayment(orderId: ID!, paymentData: JSON!): PaymentResult @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@processPayment")
+  requestRefund(orderId: ID!, reason: String!, amount: Float): RefundRequest @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@requestRefund")
+
+  # Reviews
+  createReview(input: CreateReviewInput!): Review @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ReviewResolver@store")
+  updateReview(reviewId: ID!, input: UpdateReviewInput!): Review @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ReviewResolver@update")
+  deleteReview(reviewId: ID!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ReviewResolver@destroy")
+  addReviewPhoto(reviewId: ID!, photo: ReviewPhotoInput!): Review @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ReviewResolver@addPhoto")
+  removeReviewPhoto(reviewId: ID!, photoUrl: String!): Review @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ReviewResolver@removePhoto")
+  markReviewHelpful(reviewId: ID!): Review @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ReviewResolver@markHelpful")
+  unmarkReviewHelpful(reviewId: ID!): Review @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ReviewResolver@unmarkHelpful")
+  moderateReview(reviewId: ID!, status: ReviewStatus!, moderationNote: String): Review @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ReviewResolver@moderate")
+  replyToReview(reviewId: ID!, reply: String!): Review @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ReviewResolver@reply")
+  reportReview(reviewId: ID!, reason: ReportReason!, description: String): ReviewReport @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ReviewResolver@report")
+
+  # Vouchers
+  validateVoucher(code: String!, cartTotal: Float!, items: [ValidateVoucherItemInput!]): VoucherValidation @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@validate")
+  createVoucher(input: CreateVoucherInput!): Voucher @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@create")
+  updateVoucher(id: ID!, input: UpdateVoucherInput!): Voucher @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@update")
+  deleteVoucher(id: ID!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@delete")
+  toggleVoucherStatus(id: ID!): Voucher @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@toggleStatus")
+  bulkCreateVouchers(input: BulkCreateVoucherInput!): [Voucher!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@bulkCreate")
+  exportVoucherCodes(voucherId: ID!): VoucherExport @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@exportCodes")
+
+  # CBIR
+  saveCbirSearch(input: SaveCbirSearchInput!): CbirHistory @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@saveSearch")
+  deleteCbirSearch(searchId: ID!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@deleteSearch")
+  clearCbirHistory: Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@clearHistory")
+  submitCbirFeedback(input: CbirFeedbackInput!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@submitFeedback")
+  rebuildCbirIndex: CbirIndexResult @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@rebuildIndex")
+  addToCbirIndex(mediaId: ID!, imageUrl: String!, type: String!, metadata: JSON): CbirIndexResult @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@addToIndex")
+  removeFromCbirIndex(mediaId: ID!): CbirIndexResult @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@removeFromIndex")
+}
+
+# ============================================================
+# TYPES
+# ============================================================
+
+type User @model(class: "App\\Models\\User\\User") {
+  id: ID!
+  name: String!
+  email: String!
+  phone: String
+  avatar: String
+  emailVerifiedAt: String
+  address: String
+  city: String
+  province: String
+  postalCode: String
+  dateOfBirth: String
+  gender: Gender
+  notificationEmail: Boolean!
+  notificationSms: Boolean!
+  notificationPush: Boolean!
+  language: String!
+  currency: String!
+  timezone: String!
+  roles: [String!]!
+  createdAt: String!
+  updatedAt: String!
+  orders: [Order!]! @hasMany
+  reviews: [Review!]! @hasMany
+  wishlist: [Wishlist!]! @hasMany
+  addresses: [UserAddress!]! @hasMany
+  profileCompletion: Float @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ProfileResolver@completion")
+}
+
+type UserAddress {
+  id: ID!
+  user: User! @belongsTo
+  name: String!
+  phone: String!
+  address: String!
+  city: String!
+  province: String!
+  postalCode: String!
+  type: AddressType!
+  isDefault: Boolean!
+  createdAt: String!
+}
+
+type UserProfile {
+  user: User!
+  orderCount: Int!
+  reviewCount: Int!
+  wishlistCount: Int!
+  totalSpent: Float!
+  favoriteCategory: Category
+  joinedAt: String!
+}
+
+type UserActivity {
+  id: ID!
+  type: String!
+  description: String!
+  metadata: JSON
+  createdAt: String!
+}
+
+type Category @model(class: "App\\Models\\Category\\Category") {
+  id: ID!
+  name: String!
+  slug: String!
+  description: String
+  imageUrl: String
+  isActive: Boolean!
+  parent: Category @belongsTo
+  children: [Category!]! @hasMany
+  catalogs: [Catalog!]! @hasMany
+  packages: [Package!]! @hasMany
+  createdAt: String!
+  updatedAt: String!
+}
+
+type CategoryTree {
+  category: Category!
+  children: [CategoryTree!]!
+}
+
+type CategoryWithCounts {
+  category: Category!
+  catalogCount: Int!
+  packageCount: Int!
+  totalItems: Int!
+}
+
+type Catalog @model(class: "App\\Models\\Catalog\\Catalog") {
+  id: ID!
+  name: String!
+  slug: String!
+  description: String
+  price: Float!
+  discountPrice: Float
+  finalPrice: Float!
+  stock: Int!
+  isActive: Boolean!
+  isFeatured: Boolean!
+  isOutOfStock: Boolean!
+  imageUrl: String
+  thumbnailUrl: String
+  galleryUrls: [GalleryImage!]!
+  videoUrl: String
+  features: [String!]
+  theme: String
+  color: String
+  minCapacity: Int
+  maxCapacity: Int
+  category: Category @belongsTo
+  averageRating: Float
+  reviews: [Review!]! @hasMany
+  createdAt: String!
+  updatedAt: String!
+}
+
+type GalleryImage {
+  id: Int!
+  url: String!
+  thumb: String!
+  collection: String!
+  order: Int!
+}
+
+type CatalogStats {
+  totalCatalogs: Int!
+  activeCatalogs: Int!
+  featuredCatalogs: Int!
+  outOfStockCatalogs: Int!
+  lowStockCatalogs: Int!
+  totalValue: Float!
+  byCategory: [CategoryCatalogCount!]!
+}
+
+type CategoryCatalogCount {
+  category: Category!
+  count: Int!
+}
+
+type Package @model(class: "App\\Models\\Package\\Package") {
+  id: ID!
+  name: String!
+  slug: String!
+  description: String
+  price: Float!
+  discountPrice: Float
+  finalPrice: Float!
+  isActive: Boolean!
+  isFeatured: Boolean!
+  imageUrl: String
+  features: [String!]
+  theme: String
+  color: String
+  minCapacity: Int
+  maxCapacity: Int
+  category: Category @belongsTo
+  averageRating: Float
+  reviews: [Review!]! @hasMany
+  createdAt: String!
+  updatedAt: String!
+}
+
+type PackageStats {
+  totalPackages: Int!
+  activePackages: Int!
+  featuredPackages: Int!
+  onSalePackages: Int!
+  totalValue: Float!
+  byCategory: [CategoryPackageCount!]!
+  byCapacity: [CapacityPackageCount!]!
+}
+
+type CategoryPackageCount {
+  category: Category!
+  count: Int!
+}
+
+type CapacityPackageCount {
+  minCapacity: Int!
+  maxCapacity: Int!
+  count: Int!
+}
+
+type Order @model(class: "App\\Models\\Order\\Order") {
+  id: ID!
+  orderNumber: String!
+  user: User! @belongsTo
+  package: Package @belongsTo
+  catalog: Catalog @belongsTo
+  totalPrice: Float!
+  status: String!
+  paymentStatus: String!
+  bookingDate: String
+  quantity: Int
+  notes: String
+  address: OrderAddress @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@address")
+  voucher: Voucher @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@voucher")
+  payment: OrderPayment @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@payment")
+  timeline: [OrderTimeline!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@timeline")
+  createdAt: String!
+  updatedAt: String!
+}
+
+type OrderAddress {
+  id: ID!
+  name: String!
+  phone: String!
+  address: String!
+  city: String!
+  province: String!
+  postalCode: String!
+  isDefault: Boolean!
+}
+
+type OrderPayment {
+  id: ID!
+  method: String!
+  status: String!
+  amount: Float!
+  paidAt: String
+  transactionId: String
+  proofUrl: String
+}
+
+type OrderTimeline {
+  id: ID!
+  orderId: ID!
+  status: String!
+  description: String!
+  metadata: JSON
+  createdAt: String!
+  createdBy: User
+}
+
+type OrderStats {
+  totalOrders: Int!
+  pendingOrders: Int!
+  confirmedOrders: Int!
+  processingOrders: Int!
+  shippedOrders: Int!
+  deliveredOrders: Int!
+  cancelledOrders: Int!
+  totalRevenue: Float!
+  pendingRevenue: Float!
+  thisMonthRevenue: Float!
+  averageOrderValue: Float!
+  byStatus: [OrderStatusCount!]!
+  byPaymentStatus: [OrderPaymentStatusCount!]!
+}
+
+type OrderStatusCount {
+  status: String!
+  count: Int!
+}
+
+type OrderPaymentStatusCount {
+  paymentStatus: String!
+  count: Int!
+}
+
+type Invoice {
+  id: ID!
+  order: Order!
+  invoiceNumber: String!
+  pdfUrl: String!
+  issuedAt: String!
+  dueAt: String!
+  status: String!
+}
+
+type RefundRequest {
+  id: ID!
+  order: Order!
+  reason: String!
+  amount: Float!
+  status: RefundStatus!
+  requestedAt: String!
+  processedAt: String
+}
+
+type PaymentResult {
+  success: Boolean!
+  order: Order
+  redirectUrl: String
+  message: String
+}
+
+type Review @model(class: "App\\Models\\Review\\Review") {
+  id: ID!
+  user: User @belongsTo
+  catalog: Catalog @belongsTo
+  package: Package @belongsTo
+  order: Order @belongsTo
+  rating: Int!
+  title: String
+  comment: String
+  photos: [String!]
+  helpfulCount: Int!
+  isAnonymous: Boolean!
+  isVerifiedPurchase: Boolean!
+  status: ReviewStatus!
+  reply: ReviewReply
+  createdAt: String!
+  updatedAt: String!
+}
+
+type ReviewReply {
+  id: ID!
+  reviewId: ID!
+  content: String!
+  createdBy: User!
+  createdAt: String!
+}
+
+type ReviewStats {
+  totalReviews: Int!
+  averageRating: Float!
+  ratingDistribution: [RatingCount!]!
+  withPhotos: Int!
+  verifiedPurchases: Int!
+}
+
+type RatingCount {
+  rating: Int!
+  count: Int!
+  percentage: Float!
+}
+
+type ReviewReport {
+  id: ID!
+  review: Review!
+  reporter: User!
+  reason: ReportReason!
+  description: String
+  status: ReportStatus!
+  createdAt: String!
+  reviewedAt: String
+  reviewedBy: User
+}
+
+type Cart {
+  id: ID!
+  user: User
+  items: [CartItem!]!
+  subtotal: Float!
+  discount: Float!
+  voucher: Voucher
+  shippingCost: Float
+  tax: Float!
+  total: Float!
+  itemCount: Int!
+  updatedAt: String!
+}
+
+type CartItem @model(class: "App\\Models\\Cart\\Cart") {
+  id: ID!
+  user: User @belongsTo
+  catalog: Catalog @belongsTo
+  package: Package @belongsTo
+  quantity: Int!
+  subtotal: Float!
+  options: JSON
+  createdAt: String!
+  updatedAt: String!
+}
+
+type ShippingEstimate {
+  cost: Float!
+  estimatedDays: Int!
+  method: String!
+  available: Boolean!
+}
+
+type Wishlist @model(class: "App\\Models\\Wishlist\\Wishlist") {
+  id: ID!
+  user: User @belongsTo
+  catalog: Catalog @belongsTo
+  package: Package @belongsTo
+  createdAt: String!
+}
+
+type WishlistAction {
+  wishlist: Wishlist
+  action: WishlistActionType!
+  message: String!
+}
+
+type WishlistShare {
+  shareToken: String!
+  shareUrl: String!
+  expiresAt: String!
+}
+
+type Voucher @model(class: "App\\Models\\Voucher\\Voucher") {
+  id: ID!
+  name: String
+  code: String!
+  description: String
+  isActive: Boolean!
+  isGlobal: Boolean!
+  maxUses: Int
+  usesCount: Int!
+  expiresAt: String
+  discountAmount: Float!
+  discountType: DiscountType!
+  minPurchase: Float!
+  maxDiscount: Float
+  applicableCatalogs: [Catalog!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@applicableCatalogs")
+  applicablePackages: [Package!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@applicablePackages")
+  applicableCategories: [Category!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@applicableCategories")
+  excludedCatalogs: [Catalog!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@excludedCatalogs")
+  excludedPackages: [Package!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@excludedPackages")
+  excludedCategories: [Category!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@excludedCategories")
+  users: [User!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\VoucherResolver@users")
+  createdAt: String!
+  updatedAt: String!
+}
+
+type VoucherValidation {
+  valid: Boolean!
+  voucher: Voucher
+  discount: Float!
+  message: String!
+  appliedItems: [ValidatedItem!]!
+}
+
+type ValidatedItem {
+  id: ID!
+  type: String!
+  originalPrice: Float!
+  discountedPrice: Float!
+  discount: Float!
+}
+
+type VoucherStats {
+  voucher: Voucher!
+  totalUses: Int!
+  remainingUses: Int!
+  usageByUser: [VoucherUserUsage!]!
+  revenueImpact: Float!
+}
+
+type VoucherUserUsage {
+  user: User!
+  usesCount: Int!
+  firstUsedAt: String!
+  lastUsedAt: String!
+}
+
+type VoucherExport {
+  voucher: Voucher!
+  codes: [String!]!
+  csvUrl: String!
+  exportedAt: String!
+}
+
+type CbirStats {
+  totalImages: Int!
+  totalFeatures: Int!
+  databaseSize: String
+  lastUpdated: String
+}
+
+type CbirSearchResult {
+  success: Boolean!
+  results: [CbirResult!]!
+  totalResults: Int!
+  queryTimeSeconds: Float!
+}
+
+type CbirResult {
+  type: String!
+  similarity: Float!
+  score: Float!
+  data: CbirResultData!
+}
+
+type CbirResultData {
+  id: ID!
+  name: String!
+  slug: String!
+  description: String
+  price: Float!
+  discountPrice: Float
+  finalPrice: Float @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@finalPrice")
+  imageUrl: String
+  category: String
+  categoryObj: Category @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@category")
+  isAvailable: Boolean! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@isAvailable")
+}
+
+type CbirHistory {
+  id: ID!
+  userId: ID!
+  queryImageUrl: String!
+  results: [CbirHistoryResult!]!
+  resultsCount: Int!
+  topSimilarity: Float!
+  createdAt: String!
+}
+
+type CbirHistoryResult {
+  type: String!
+  itemId: ID!
+  similarity: Float!
+  score: Float!
+  item: CbirResultData!
+}
+
+type CbirIndexResult {
+  success: Boolean!
+  message: String!
+  affectedCount: Int!
+  processingTime: Float!
+}
+
+type HomeData {
+  featuredCatalogs: [Catalog!]!
+  featuredPackages: [Package!]!
+  onSaleCatalogs: [Catalog!]!
+  onSalePackages: [Package!]!
+  categories: [Category!]!
+  heroBanners: [HeroBanner!]!
+  promotions: [Promotion!]!
+  stats: HomeStats!
+}
+
+type HeroBanner {
+  id: ID!
+  title: String!
+  subtitle: String
+  imageUrl: String!
+  linkUrl: String
+  linkType: String!
+  linkId: ID
+  position: Int!
+  isActive: Boolean!
+}
+
+type Promotion {
+  id: ID!
+  title: String!
+  description: String
+  imageUrl: String
+  discountPercent: Int
+  code: String
+  validFrom: String!
+  validUntil: String!
+  isActive: Boolean!
+}
+
+type HomeStats {
+  totalCatalogs: Int!
+  totalPackages: Int!
+  totalCategories: Int!
+  happyCustomers: Int!
+}
+
+type SearchResult {
+  id: ID!
+  type: String!
+  name: String!
+  slug: String!
+  price: Float
+  imageUrl: String
+  category: String
+}
+
+type SearchResults {
+  catalogs: [Catalog!]!
+  packages: [Package!]!
+  categories: [Category!]!
+  totalCatalogs: Int!
+  totalPackages: Int!
+  query: String!
+  took: Float!
+}
+
+type SearchSuggestion {
+  text: String!
+  type: SearchSuggestionType!
+  count: Int!
+  imageUrl: String
+}
+
+type PopularSearch {
+  query: String!
+  count: Int!
+  trend: String!
+}
+
+type SearchFilters {
+  categories: [CategoryFilter!]!
+  priceRange: PriceRange!
+  themes: [String!]!
+  colors: [String!]!
+  minCapacity: Int
+  maxCapacity: Int
+}
+
+type CategoryFilter {
+  category: Category!
+  count: Int!
+}
+
+type PriceRange {
+  min: Float!
+  max: Float!
+  minFound: Float!
+  maxFound: Float!
+}
+
+type AuthPayload {
+  user: User!
+  token: String!
+  tokenType: String!
+  expiresIn: Int!
+  refreshToken: String
+  refreshExpiresIn: Int
+}
+
+# ============================================================
+# INPUT TYPES
+# ============================================================
+
+input LoginInput {
+  email: String!
+  password: String!
+  deviceToken: String
+  deviceType: String
+  rememberMe: Boolean
+}
+
+input RegisterInput {
+  name: String!
+  email: String!
+  password: String!
+  passwordConfirmation: String!
+  phone: String
+  acceptTerms: Boolean
+  marketingConsent: Boolean
+}
+
+input ForgotPasswordInput {
+  email: String!
+}
+
+input ResetPasswordInput {
+  token: String!
+  email: String!
+  password: String!
+  passwordConfirmation: String!
+}
+
+input VerifyEmailInput {
+  token: String!
+  email: String!
+}
+
+input ResendVerificationInput {
+  email: String!
+}
+
+input UpdateProfileInput {
+  name: String
+  phone: String
+  address: String
+  city: String
+  province: String
+  postalCode: String
+  dateOfBirth: String
+  gender: Gender
+  avatar: String
+  notificationEmail: Boolean
+  notificationSms: Boolean
+  notificationPush: Boolean
+  language: String
+  currency: String
+  timezone: String
+}
+
+input ChangePasswordInput {
+  currentPassword: String!
+  newPassword: String!
+  newPasswordConfirmation: String!
+}
+
+input UpdateAvatarInput {
+  avatar: String!
+  deleteCurrent: Boolean
+}
+
+input DeleteAccountInput {
+  password: String!
+  reason: String
+}
+
+input AddToCartInput {
+  catalogId: ID
+  packageId: ID
+  quantity: Int!
+  options: JSON
+}
+
+input UpdateCartItemInput {
+  quantity: Int!
+  options: JSON
+}
+
+input ToggleWishlistInput {
+  catalogId: ID
+  packageId: ID
+}
+
+input CreateOrderInput {
+  catalogId: ID
+  packageId: ID
+  quantity: Int!
+  bookingDate: String
+  notes: String
+  addressId: ID!
+  voucherCode: String
+  paymentMethod: PaymentMethod
+  customOptions: JSON
+}
+
+input CancelOrderInput {
+  reason: String!
+  reasonDetail: String
+}
+
+input UpdateOrderInput {
+  status: OrderStatus
+  paymentStatus: PaymentStatus
+  notes: String
+  trackingNumber: String
+  estimatedDelivery: String
+}
+
+input CreateReviewInput {
+  catalogId: ID
+  packageId: ID
+  orderId: ID!
+  rating: Int!
+  title: String
+  comment: String
+  photos: [String!]
+  isAnonymous: Boolean
+}
+
+input UpdateReviewInput {
+  rating: Int
+  title: String
+  comment: String
+  photos: [String!]
+  isAnonymous: Boolean
+}
+
+input ReviewPhotoInput {
+  url: String!
+  caption: String
+}
+
+input CreateVoucherInput {
+  name: String!
+  code: String!
+  description: String
+  discountAmount: Float!
+  discountType: DiscountType!
+  minPurchase: Float!
+  maxDiscount: Float
+  usageLimit: Int
+  usageLimitPerUser: Int
+  validFrom: String!
+  validUntil: String!
+  isGlobal: Boolean!
+  applicableCatalogs: [ID!]
+  applicablePackages: [ID!]
+  applicableCategories: [ID!]
+  excludedCatalogs: [ID!]
+  excludedPackages: [ID!]
+  excludedCategories: [ID!]
+  userIds: [ID!]
+}
+
+input UpdateVoucherInput {
+  name: String
+  description: String
+  discountAmount: Float
+  discountType: DiscountType
+  minPurchase: Float
+  maxDiscount: Float
+  usageLimit: Int
+  usageLimitPerUser: Int
+  validFrom: String
+  validUntil: String
+  isActive: Boolean
+  isGlobal: Boolean
+  applicableCatalogs: [ID!]
+  applicablePackages: [ID!]
+  applicableCategories: [ID!]
+  excludedCatalogs: [ID!]
+  excludedPackages: [ID!]
+  excludedCategories: [ID!]
+  userIds: [ID!]
+}
+
+input BulkCreateVoucherInput {
+  prefix: String!
+  count: Int!
+  discountAmount: Float!
+  discountType: DiscountType!
+  minPurchase: Float!
+  maxDiscount: Float
+  usageLimit: Int
+  usageLimitPerUser: Int
+  validFrom: String!
+  validUntil: String!
+  length: Int
+}
+
+input ValidateVoucherItemInput {
+  id: ID!
+  type: String!
+  quantity: Int!
+  price: Float!
+}
+
+input SaveCbirSearchInput {
+  queryImageUrl: String!
+  results: [CbirSearchResultItemInput!]!
+}
+
+input CbirSearchResultItemInput {
+  type: String!
+  itemId: ID!
+  similarity: Float!
+  score: Float!
+}
+
+input CbirFeedbackInput {
+  searchId: ID!
+  itemId: ID!
+  itemType: String!
+  isRelevant: Boolean!
+  feedback: String
+}
+
+input SyncCartItemInput {
+  catalogId: ID
+  packageId: ID
+  quantity: Int!
+  options: JSON
+}
+
+# ============================================================
+# ENUMS
+# ============================================================
+
+enum SearchType {
+  CATALOG
+  PACKAGE
+  BOTH
+}
+
+enum CatalogSortField {
+  NAME
+  PRICE
+  CREATED_AT
+  UPDATED_AT
+  RATING
+  POPULARITY
+}
+
+enum PackageSortField {
+  NAME
+  PRICE
+  CREATED_AT
+  UPDATED_AT
+  RATING
+  POPULARITY
+  MIN_CAPACITY
+  MAX_CAPACITY
+}
+
+enum SortDirection {
+  ASC
+  DESC
+}
+
+enum PaymentMethod {
+  MIDTRANS
+  BANK_TRANSFER
+  CASH_ON_DELIVERY
+  E_WALLET
+  CREDIT_CARD
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum RefundStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PROCESSED
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  HIDDEN
+}
+
+enum ReportReason {
+  SPAM
+  INAPPROPRIATE
+  FAKE
+  OFFENSIVE
+  IRRELEVANT
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+  DISMISSED
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FREE_SHIPPING
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+enum AddressType {
+  HOME
+  WORK
+  OTHER
+}
+
+enum SearchSuggestionType {
+  CATALOG
+  PACKAGE
+  CATEGORY
+  KEYWORD
+}
+
+enum WishlistActionType {
+  ADDED
+  REMOVED
+}
+
+# ============================================================
+# SCALARS
+# ============================================================
+
+scalar JSON
+scalar DateTime
+scalar Upload

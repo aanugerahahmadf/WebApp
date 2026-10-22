@@ -1,0 +1,44 @@
+# Home Type Definitions
+# Wedding Flower Decoration App - Home GraphQL Types
+
+type HomeData {
+  featuredCatalogs: [Catalog!]!
+  featuredPackages: [Package!]!
+  onSaleCatalogs: [Catalog!]!
+  onSalePackages: [Package!]!
+  categories: [Category!]!
+  heroBanners: [HeroBanner!]!
+  promotions: [Promotion!]!
+  stats: HomeStats!
+}
+
+type HeroBanner {
+  id: ID!
+  title: String!
+  subtitle: String
+  imageUrl: String!
+  linkUrl: String
+  linkType: String!
+  linkId: ID
+  position: Int!
+  isActive: Boolean!
+}
+
+type Promotion {
+  id: ID!
+  title: String!
+  description: String
+  imageUrl: String
+  discountPercent: Int
+  code: String
+  validFrom: String!
+  validUntil: String!
+  isActive: Boolean!
+}
+
+type HomeStats {
+  totalCatalogs: Int!
+  totalPackages: Int!
+  totalCategories: Int!
+  happyCustomers: Int!
+}

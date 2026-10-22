@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'Cod poștal',
         'preview'                  => 'previzualizare',
         'price'                    => 'Preț',
-        'product_id'               => 'ID-ul produsului',
+        'catalog_id'               => 'ID-ul produsului',
         'product_uid'              => 'UID-ul produsului',
         'product_uuid'             => 'UUID produs',
         'promo_code'               => 'Cod promoțional',

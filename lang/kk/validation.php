@@ -234,7 +234,7 @@ return [
         'postal_code'              => 'Пошта Индексі',
         'preview'                  => 'алдын ала қарау',
         'price'                    => 'бағасы',
-        'product_id'               => 'өнім идентификаторы',
+        'catalog_id'               => 'өнім идентификаторы',
         'product_uid'              => 'өнімнің UID',
         'product_uuid'             => 'өнім UUID',
         'promo_code'               => 'промокод',

@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Filament\User\Auth\OtpRequestPasswordReset;
+use App\Filament\User\Auth\VerifyOtp\VerifyOtp;
 
 use App\Filament\User\Auth\Concerns\HasAuthBreadcrumbs;
 use App\Models\User\User;

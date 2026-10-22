@@ -1,5 +1,20 @@
 # Katalog & Keranjang (Panel Welcome & User)
 
+> **CATATAN ARSITEKTUR (2026-10-21).** Halaman ini ditulis saat masih ada DUA
+> panel terpisah: `user` di `/user` dan `welcome` di `/welcome`. Sekarang
+> panel `user` sudah **dilebur** ke panel `welcome` di root, jadi:
+>
+> - hanya ada dua panel: `welcome` (path `/`) dan `admin` (path `/admin`)
+> - prefix nama route berubah dari `filament.user.*` ke `filament.welcome.*`
+> - bookmark lama dilayani redirect: `/user/*` -> root, `/login` -> `/signin`,
+>   `/register` -> `/signup`
+> - bottom nav HP dan chrome ikut memakai panel `welcome`
+>
+> Ringkasan terbaru ada di `AGENTS.md` -> bagian "SATU PANEL: 'user' DILEBUR KE
+> 'welcome'". Nama route dan URL yang disebut di bawah sudah disesuaikan;
+> bagian yang men_**describe** dua panel terpisah masih perlu dibaca sebagai
+> sejarah.
+
 Berlaku untuk `PackageResource` dan `ProductResource` di panel Welcome
 (storefront publik) dan panel User. Slug resource katalog saat ini memakai
 nama panjang (`flowerdecorationspackagecatalog`, `flowerdecorationscatalog`);
@@ -27,7 +42,7 @@ Desain ini menjawab error lama `419 Page Expired` saat guest menekan Submit:
      Submit Livewire** dan tidak ada `POST /livewire/update`.
    - Sebagai gantinya tampil `extraModalFooterActions` berupa `StaticAction`
      link biasa (`<a href>`) ke halaman auth pertama panel user
-     (`AuthenticateWelcome::LOGIN_ROUTE` = `/user/auth`: Sign In **dan** Google).
+     (`AuthenticateWelcome::LOGIN_ROUTE` = `/auth`: Sign In **dan** Google).
      Klik = `GET` biasa, sehingga error 419 **mustahil** terjadi.
    - `url.intended` disimpan ke session saat modal dibuka, supaya tombol
      kembali di halaman login bisa pulang ke detail yang diklik.

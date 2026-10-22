@@ -14,25 +14,25 @@
         $sources = [
             [
                 'id'    => 'internal',
-                'icon'  => 'heroicon-o-folder',
+                'icon'  => '/images/icons/folder.svg',
                 'label' => $isAndroid ? __('Buka Files Android') : __('Buka Files iOS'),
                 'pick'  => 'all',
             ],
             [
                 'id'    => 'photos',
-                'icon'  => 'heroicon-o-photo',
+                'icon'  => '/images/icons/photo.svg',
                 'label' => __('Buka Album Foto'),
                 'pick'  => 'image',
             ],
             [
                 'id'    => 'videos',
-                'icon'  => 'heroicon-o-video-camera',
+                'icon'  => '/images/icons/video.svg',
                 'label' => __('Buka Galeri Video'),
                 'pick'  => 'video',
             ],
             [
                 'id'    => 'cloud',
-                'icon'  => 'heroicon-o-cloud',
+                'icon'  => '/images/icons/cloud.svg',
                 'label' => $isAndroid ? __('Buka Google Drive') : __('Buka iCloud Drive'),
                 'pick'  => 'all',
             ],
@@ -61,25 +61,25 @@
         $sources = [
             [
                 'id'    => 'file-manager',
-                'icon'  => 'heroicon-o-folder',
+                'icon'  => '/images/icons/folder.svg',
                 'label' => $fileManagerLabel,
                 'pick'  => 'all',
             ],
             [
                 'id'    => 'photos',
-                'icon'  => 'heroicon-o-photo',
+                'icon'  => '/images/icons/photo.svg',
                 'label' => __('Buka Album Foto'),
                 'pick'  => 'image',
             ],
             [
                 'id'    => 'videos',
-                'icon'  => 'heroicon-o-video-camera',
+                'icon'  => '/images/icons/video.svg',
                 'label' => __('Buka Galeri Video'),
                 'pick'  => 'video',
             ],
             [
                 'id'    => 'cloud',
-                'icon'  => 'heroicon-o-cloud',
+                'icon'  => '/images/icons/cloud.svg',
                 'label' => $cloudLabel,
                 'pick'  => 'all',
             ],

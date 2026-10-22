@@ -83,7 +83,7 @@ class OrderObserver
 
                 $statusIcon = $order->status instanceof OrderStatus
                     ? $order->status->getIcon()
-                    : 'heroicon-o-information-circle';
+                    : '/images/icons/info.svg';
 
                 try {
                     [$statusTitle, $statusBody] = PlatformNotificationService::withRecipientLocale(
