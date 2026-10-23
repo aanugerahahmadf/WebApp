@@ -63,6 +63,35 @@ class DocumentationController extends Controller
         ]);
     }
 
+    public function snippet(int $index, string $path): \Illuminate\Contracts\View\View
+    {
+        $key = trim(preg_replace('/\.md$/i', '', rawurldecode($path)), '/');
+        $documents = $this->documents();
+
+        if (! isset($documents[$key])) {
+            throw new NotFoundHttpException;
+        }
+
+        $markdown = file_get_contents(base_path($documents[$key]['file'])) ?: '';
+        preg_match_all('/```([^\r\n]*)\r?\n(.*?)```/s', $markdown, $matches, PREG_SET_ORDER);
+
+        if (! isset($matches[$index])) {
+            throw new NotFoundHttpException;
+        }
+
+        $info = trim($matches[$index][1]);
+        $language = preg_replace('/\s+title=(?:"[^"]+"|\'[^\']+\')/i', '', $info) ?: 'text';
+        $title = preg_match('/\btitle=(?:"([^"]+)"|\'([^\']+)\')/i', $info, $titleMatch)
+            ? ($titleMatch[1] ?? $titleMatch[2])
+            : strtoupper($language).' code example';
+
+        return view('Welcome.pages.documentation.code', [
+            'title' => $title,
+            'path' => 'Dokumentasi: '.$documents[$key]['title'],
+            'code' => rtrim($matches[$index][2], "\r\n"),
+        ]);
+    }
+
     /**
      * Build the shared page payload: selected document plus a sidebar grouped
      * by category. Grouping happens server-side so the Blade template only

@@ -173,7 +173,7 @@
         <div class="eyebrow-row">
             <div class="eyebrow">Wedding Flower Decorations</div>
         </div>
-        <article class="markdown">{!! $document !!}</article>
+        <article class="markdown" data-doc-key="{{ $selected }}">{!! $document !!}</article>
     </main>
 </div>
 <script>
@@ -203,7 +203,7 @@
         }
     };
 
-    document.querySelectorAll('.markdown pre').forEach((pre) => {
+    document.querySelectorAll('.markdown pre').forEach((pre, index) => {
         const code = pre.querySelector('code');
         let source = code?.textContent || pre.textContent || '';
         let codeTitle = '';
@@ -231,7 +231,12 @@
             link.title = 'Buka kode program: ' + codeTitle;
             title.appendChild(link);
         } else {
-            title.textContent = languageTitle;
+            const link = document.createElement('a');
+            const docKey = document.querySelector('.markdown')?.dataset.docKey || 'project-readme';
+            link.href = @json(url('/docs/code-snippet')) + '/' + index + '/' + docKey.split('/').map(encodeURIComponent).join('/');
+            link.textContent = languageTitle;
+            link.title = 'Buka halaman kode program';
+            title.appendChild(link);
         }
         header.appendChild(dots);
         header.appendChild(title);

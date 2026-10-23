@@ -63,6 +63,9 @@ Route::get('/docs', [DocumentationController::class, 'index'])->name('docs.index
 Route::get('/docs/code/{path}', [DocumentationController::class, 'code'])
     ->where('path', '.*')
     ->name('docs.code');
+Route::get('/docs/code-snippet/{index}/{path}', [DocumentationController::class, 'snippet'])
+    ->where(['index' => '[0-9]+', 'path' => '.*'])
+    ->name('docs.snippet');
 Route::get('/docs/{path}', [DocumentationController::class, 'show'])
     ->where('path', '.*')
     ->name('docs.show');
