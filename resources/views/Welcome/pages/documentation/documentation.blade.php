@@ -54,10 +54,9 @@
         .search::placeholder { color: var(--docs-muted); }
         .search:focus { border-color: var(--docs-accent); }
         .group { display: flex; align-items: center; gap: .4rem; margin: 1.15rem .35rem .45rem; color: var(--docs-group); font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-        .group svg { width: .85rem; height: .85rem; flex: 0 0 .85rem; color: var(--docs-accent); stroke: currentColor; fill: rgb(99 102 241 / .16); }
+        .group svg { width: .85rem; height: .85rem; flex: 0 0 .85rem; color: var(--doc-color); stroke: currentColor; fill: color-mix(in srgb, var(--doc-color) 16%, transparent); }
         .nav-link { display: flex; align-items: center; gap: .55rem; padding: .48rem .65rem; border-radius: .55rem; color: var(--docs-muted); font-size: .88rem; }
-        .nav-link svg { width: .95rem; height: .95rem; flex: 0 0 .95rem; color: #6366f1; stroke: currentColor; }
-        .dark .nav-link svg { color: #a5b4fc; }
+        .nav-link svg { width: .95rem; height: .95rem; flex: 0 0 .95rem; color: var(--doc-color); stroke: currentColor; }
         .nav-link span { min-width: 0; }
         .nav-link:hover { color: var(--docs-text); background: rgb(0 0 0 / .05); text-decoration: none; }
         .dark .nav-link:hover { background: rgb(255 255 255 / .05); }
@@ -107,6 +106,30 @@
     </style>
 </head>
 <body>
+@php
+    $docColors = [
+        'Mulai di sini' => '#f59e0b',
+        'Dokumen proyek' => '#ec4899',
+        'Arsitektur' => '#6366f1',
+        'Asset Compilation' => '#14b8a6',
+        'Autentikasi' => '#10b981',
+        'Catalog Actions' => '#f97316',
+        'Command Decision Tree' => '#8b5cf6',
+        'Command Guide' => '#a855f7',
+        'Deployment' => '#f97316',
+        'Environment Configuration' => '#06b6d4',
+        'Katalog Keranjang' => '#eab308',
+        'Messages System' => '#ef4444',
+        'Pengujian' => '#8b5cf6',
+        'Platform Features' => '#0ea5e9',
+        'Platform Support' => '#3b82f6',
+        'Platform Testing' => '#7c3aed',
+        'Tipografi' => '#d946ef',
+        'Welcome Panel' => '#22c55e',
+        'Mobile App' => '#06b6d4',
+        'Ai Core' => '#14b8a6',
+    ];
+@endphp
 <div class="docs-shell">
     <aside class="docs-sidebar">
         <a class="brand" href="{{ route('docs.index') }}">
@@ -126,18 +149,20 @@
         </div>
         <nav aria-label="Daftar dokumentasi">
             @foreach ($groups as $group)
-                <div class="group">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h5l2 2H19.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5v-11Z"/>
-                    </svg>
-                    <span>{{ $group['label'] }}</span>
-                </div>
-                @foreach ($group['items'] as $item)
-                    <a class="nav-link {{ $selected === $item['key'] ? 'active' : '' }}" href="{{ route('docs.show', ['path' => $item['key']]) }}" data-doc-link>
-                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h8l4 4v13H6a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2Z"/><path d="M14 3.5v5h5M8 13h8M8 17h6"/></svg>
-                        <span>{{ $item['title'] }}</span>
-                    </a>
-                @endforeach
+                <section class="nav-group" style="--doc-color: {{ $docColors[$group['label']] ?? '#6366f1' }}">
+                    <div class="group">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h5l2 2H19.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5v-11Z"/>
+                        </svg>
+                        <span>{{ $group['label'] }}</span>
+                    </div>
+                    @foreach ($group['items'] as $item)
+                        <a class="nav-link {{ $selected === $item['key'] ? 'active' : '' }}" href="{{ route('docs.show', ['path' => $item['key']]) }}" data-doc-link>
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h8l4 4v13H6a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2Z"/><path d="M14 3.5v5h5M8 13h8M8 17h6"/></svg>
+                            <span>{{ $item['title'] }}</span>
+                        </a>
+                    @endforeach
+                </section>
             @endforeach
         </nav>
     </aside>
