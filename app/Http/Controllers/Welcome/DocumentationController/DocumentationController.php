@@ -29,6 +29,10 @@ class DocumentationController extends Controller
     {
         $documents = $this->documents();
         $key = trim($path, '/');
+        $key = preg_replace('/\.md$/i', '', $key);
+        $key = Str::startsWith($key, 'docs/')
+            ? Str::after($key, 'docs/')
+            : $key;
 
         if (! isset($documents[$key])) {
             throw new NotFoundHttpException;
