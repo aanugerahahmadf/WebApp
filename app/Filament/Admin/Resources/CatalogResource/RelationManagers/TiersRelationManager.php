@@ -226,6 +226,7 @@ class TiersRelationManager extends RelationManager
                     ->sortable()
                     ->weight('bold')
                     ->icon('heroicon-s-gift')
+                    ->extraAttributes(['data-typo' => 'heading', 'data-field' => 'catalogs.tier_name'])
                     ->description(fn ($record): string => $this->statusHint($record, $expected)),
 
                 Tables\Columns\TextColumn::make('price')
@@ -233,12 +234,14 @@ class TiersRelationManager extends RelationManager
                     ->money('IDR')
                     ->sortable()
                     ->alignment('end')
+                    ->extraAttributes(['data-field' => 'catalogs.tier_price'])
                     ->icon('heroicon-s-banknotes'),
 
                 Tables\Columns\TextColumn::make('discount_price')
                     ->label(__('Harga Diskon'))
                     ->money('IDR')
                     ->placeholder('—')
+                    ->extraAttributes(['data-field' => 'catalogs.tier_discount_price'])
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\TextColumn::make('stock')
@@ -251,11 +254,13 @@ class TiersRelationManager extends RelationManager
                     })
                     ->numeric()
                     ->sortable()
-                    ->alignment('center'),
+                    ->alignment('center')
+                    ->extraAttributes(['data-field' => 'catalogs.tier_stock']),
 
                 Tables\Columns\TextColumn::make('description')
                     ->label(__('Deskripsi'))
                     ->limit(60)
+                    ->extraAttributes(['data-typo' => 'description', 'data-field' => 'catalogs.tier_description'])
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\TextColumn::make('is_active')

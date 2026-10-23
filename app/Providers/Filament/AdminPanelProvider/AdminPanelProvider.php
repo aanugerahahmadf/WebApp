@@ -237,6 +237,32 @@ class AdminPanelProvider extends PanelProvider
                     : '',
             )
             ->renderHook(
+                // KUSTOMIZER TAMPILAN WORDPRESS-STYLE: panel gaya dirender
+                // TEPAT DI ATAS TABEL halaman LIST resource
+                // (RESOURCE_PAGES_LIST_RECORDS_TABLE_BEFORE). Halaman
+                // form/edit/view TIDAK disuntik apa pun (isi rekam
+                // beda-beda, panel di sana malah jelek). Daftar isinya
+                // menyesuaikan isi form resource: peran teks dari
+                // deklarasi PageStyle milik file resource + satu baris
+                // gaya per FIELD teks di schema form-nya.
+                PanelsRenderHook::RESOURCE_PAGES_LIST_RECORDS_TABLE_BEFORE,
+                function (): string {
+                    $route = (string) \Illuminate\Support\Facades\Route::currentRouteName();
+
+                    if (! str_contains($route, '.resources.') || ! str_ends_with($route, '.index')) {
+                        return '';
+                    }
+
+                    return view('Livewire.Admin.page-customizer.hook')->render();
+                }
+            )
+            ->renderHook(
+                // Semua halaman Admin, termasuk page/widget yang tidak
+                // memiliki tabel, tetap menjadi target scope tipografi.
+                PanelsRenderHook::PAGE_END,
+                fn (): string => view('Livewire.Admin.page-customizer.scope-marker')->render(),
+            )
+            ->renderHook(
                 'panels::styles.after',
                 // Lapisan kaca dimuat lewat <link> statis, bukan lewat @vite, supaya
                 // mengedit public/css/panel-glass.css langsung berlaku tanpa

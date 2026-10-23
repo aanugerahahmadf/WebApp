@@ -318,7 +318,15 @@ class UserPanelProvider extends PanelProvider
                     // cara membuat "tebal" berlaku di ketiga panel.
                     .AppFont::styles()
                     ."\n"
-                    .PanelGlassCss::link()
+                     .PanelGlassCss::link()
+            )
+            ->renderHook(
+                // Penanda scope halaman dipasang juga di panel User.
+                // PageStyles::styles() dimuat bersama stylesheet panel dan
+                // memakai penanda ini agar pengaturan yang dibuat Admin
+                // tersinkron ke seluruh halaman User/Livewire.
+                PanelsRenderHook::PAGE_END,
+                fn (): string => view('Livewire.Admin.page-customizer.scope-marker')->render(),
             )
             ->renderHook(
                 PanelsRenderHook::SIMPLE_PAGE_START,

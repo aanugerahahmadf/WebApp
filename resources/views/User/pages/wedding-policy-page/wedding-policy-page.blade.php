@@ -2,7 +2,12 @@
     <div class="space-y-4">
         <x-filament::section>
             <x-slot name="heading">
-                {{ $document['title'] }}
+                {{-- Gaya Teks: styling per-field "wedding_decoration_policies.title" dari
+                     form admin (App\Support\TextStyles) -- input Kapital dkk.
+                     di form ikut ke sini. --}}
+                <div>
+                    {{ $document['title'] }}
+                </div>
             </x-slot>
             @if ($document['updated_at'])
                 <x-slot name="description">
@@ -17,9 +22,10 @@
                     @endphp
                     <div>
                         @if ($heading)
-                            <h3 class="mb-1 font-semibold text-gray-900 dark:text-white">{{ $heading }}</h3>
+                            {{-- data-typo="subheading": tipografi per-peran; data-field: override per-field "content". --}}
+                            <h3 class="mb-1 font-semibold text-gray-900 dark:text-white" data-typo="subheading">{{ $heading }}</h3>
                         @endif
-                        <p class="{{ ! empty($item['is_italic']) ? 'italic' : '' }}">{{ $body }}</p>
+                        <p class="{{ ! empty($item['is_italic']) ? 'italic' : '' }}" data-typo="description">{{ $body }}</p>
                     </div>
                 @empty
                     <p>{{ __('Konten belum tersedia.') }}</p>

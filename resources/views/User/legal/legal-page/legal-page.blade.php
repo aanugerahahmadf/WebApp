@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title }} - {{ config('app.name') }}</title>
+    {{-- Gaya Teks & tipografi: CSS dari setelan admin (AppFont dengan
+         per-peran AppTypography + override per-field TextStyles) ke SETIAP
+         halaman, bukan hanya panel -- supaya Kapital/perataan/font yang
+         diatur di form Admin ikut ke sini juga (per-field menang). --}}
+    {!! \App\Support\AppFont\AppFont::styles() !!}
+
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -74,6 +80,7 @@
 <body>
     <div class="container">
         <div class="header">
+            {{-- data-field: override per-field "title"/"content"; data-typo: tipografi per-peran. --}}
             <h1>{{ $title }}</h1>
             @if ($updatedAt)
                 <div class="updated">{{ __('Terakhir diperbarui:') }} {{ $updatedAt->format('d M Y') }}</div>
@@ -83,8 +90,8 @@
         <div class="content">
             @forelse ($sections as $i => $item)
                 <div class="section @if(!empty($item['is_italic'])) italic @endif">
-                    <h2>{{ $i + 1 }}. {{ $item['heading'] ?? '' }}</h2>
-                    <p>{{ $item['body'] ?? '' }}</p>
+                    <h2 data-typo="subheading">{{ $i + 1 }}. {{ $item['heading'] ?? '' }}</h2>
+                    <p data-typo="description">{{ $item['body'] ?? '' }}</p>
                 </div>
             @empty
                 <div class="empty">{{ __('Konten belum tersedia.') }}</div>

@@ -572,6 +572,12 @@ class AppServiceProvider extends ServiceProvider
         Livewire::component('fm-admin-catalog-categories', AdminCatalogCategoryTable::class);
         Livewire::component('fm-admin-catalog-packages', AdminCatalogPackageTable::class);
 
+        // Kustomizer gaya WordPress: panel "Tampilan Halaman Publik"
+        // (tipografi per-peran + tombol + border) yang bisa dibuka dari
+        // bawah konten SETIAP halaman admin (hook panels::page.end di
+        // AdminPanelProvider) dan dari halaman terpusat Kustomisasi.
+        Livewire::component('fm-admin-page-customizer', \App\Livewire\Admin\PageCustomizer\PageCustomizer::class);
+
         Livewire::component('fm-admin-inbox', AdminMessagesInbox::class);
         Livewire::component('fm-admin-messages', AdminMessagesContent::class);
         Livewire::component('fm-admin-search', AdminMessagesSearch::class);

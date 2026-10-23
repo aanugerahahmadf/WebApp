@@ -337,6 +337,20 @@ HTML;
         if (trim($cssExtra) !== '') {
             $css .= "\n<style data-app-custom-css>\n" . $cssExtra . "\n</style>\n";
         }
+
+        // LAPISAN GAYA HALAMAN -- sistem WordPress-style: diatur dari
+        // panel kustomizer di bawah konten tiap halaman Admin, CSS di-emit
+        // DI SINI (satu hook, ketiga panel + User/Welcome/Livewire/views
+        // memakai hook yang sama):
+        //   1. PageStyles   -- teks dasar/peran/tombol/border per-scope
+        //      (key 'page_scope_styles'); keluarannya SELALU ber-induk
+        //      [data-page-style="<scope>"] -- custom halaman A netral
+        //      untuk halaman B.
+        //   2. TextStyles   -- gaya per-field, WAJIB SETELAH #1, juga
+        //      di-cakup per scope ([data-page-style] [data-field]).
+        $css .= \App\Support\PageStyles\PageStyles::styles();
+        $css .= \App\Support\TextStyles\TextStyles::stylesheet();
+
         return $css;
     }
 

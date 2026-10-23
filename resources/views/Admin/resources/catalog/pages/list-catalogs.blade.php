@@ -31,6 +31,11 @@
         @endif
 
         @if ($this->catalogTab() === 'catalog')
+            {{-- View ini menggantikan view list Filament bawaan, sehingga
+                 render hook RESOURCE_PAGES_LIST_RECORDS_TABLE_BEFORE tidak
+                 otomatis dipanggil. Pasang kustomizer secara eksplisit tepat
+                 di atas tabel Catalog. --}}
+            @include('Livewire.Admin.page-customizer.hook')
             {{ $this->table }}
         @endif
     </div>

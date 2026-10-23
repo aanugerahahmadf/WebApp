@@ -74,6 +74,7 @@ class DeveloperStudioResource extends Resource
         // di-cast array disodorkan ke Textarea mentah -- nilainya tidak
         // pernah bisa dibaca/ditulis dengan benar.
         return $form->schema([
+
             Section::make(__('Detail Endpoint'))
                 ->columns(2)
                 ->schema([

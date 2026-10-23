@@ -31,6 +31,9 @@ class LegalWebController extends Controller
             'title' => $terms?->title ?? 'Perjanjian Pengguna',
             'sections' => $terms?->content ?? [],
             'updatedAt' => $terms?->updated_at,
+            // Nama tabel datanya -- dipakai blade untuk atribut
+            // data-field (override "Gaya Teks" per-field dari form admin).
+            'styleTable' => 'terms_of_services',
         ]);
     }
 
@@ -42,6 +45,7 @@ class LegalWebController extends Controller
             'title' => $privacy?->title ?? 'Kebijakan Privasi',
             'sections' => $privacy?->content ?? [],
             'updatedAt' => $privacy?->updated_at,
+            'styleTable' => 'privacy_policies',
         ]);
     }
 
@@ -55,6 +59,7 @@ class LegalWebController extends Controller
             'faqs' => $help?->faqs ?? [],
             'contactOptions' => $help?->contact_options ?? null,
             'updatedAt' => $help?->updated_at,
+            'styleTable' => 'helps',
         ]);
     }
 }

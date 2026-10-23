@@ -237,12 +237,14 @@ class AdminResource extends Resource
                     Forms\Components\Select::make('roles')
                         ->searchable()
                         ->label(__('Role'))
-                        ->relationship('roles', 'name')
-                        // Hanya role ber-guard 'admin'. Role shopper ('user',
-                        // 'customer') tidak boleh muncul di sini -- dan kalau
-                        // muncul pun, `assignRole()` akan menolaknya, karena
-                        // guard model ini adalah 'admin'.
-                        ->modifyQueryUsing(fn ($query) => $query->where('guard_name', 'admin'))
+                        // Catatan: di Filament versi ini, `modifyQueryUsing`
+                        // adalah PARAMETER ke-3 relationship() -- bukan
+                        // method berantai (chaining-nya 500 BadMethodCall).
+                        ->relationship(
+                            'roles',
+                            'name',
+                            fn ($query) => $query->where('guard_name', 'admin')
+                        )
                         ->getOptionLabelFromRecordUsing(fn ($record) => str($record->name)->headline())
                         ->multiple()
                         ->preload()

@@ -2,6 +2,7 @@
 
 namespace App\Models\FmAppSetting;
 
+use App\Support\PageStyles\PageStyles;
 use Illuminate\Database\Eloquent\Model;
 
 class FmAppSetting extends Model
@@ -90,5 +91,63 @@ class FmAppSetting extends Model
         $setting->save();
 
         \Cache::forget('app_font_settings');
+    }
+
+    /**
+     * Record mentah `key='typography'` -- peta per-peran milik
+     * `App\Support\AppTypography\AppTypography` (lapisan tipografi
+     * per-peran). TANPA validasi di sini: nilai yang masuk sudah
+     * dibersihkan mesin penyimpannya (pola `savePageStyles()`).
+     */
+    public static function typography(): array
+    {
+        try {
+            if (! \Illuminate\Support\Facades\Schema::hasTable('fm_app_settings')) {
+                return [];
+            }
+
+            $setting = self::where('key', 'typography')->first();
+
+            return ($setting && is_array($setting->value)) ? $setting->value : [];
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
+
+    public static function saveTypography(array $map): void
+    {
+        $setting = self::firstOrNew(['key' => 'typography']);
+        $setting->value = $map;
+        $setting->save();
+
+        \Cache::forget('app_typography');
+    }
+
+    /**
+     * Record mentah `key='text_styles'` -- peta per-field milik
+     * `App\Support\TextStyles\TextStyles` (lapisan gaya per input).
+     */
+    public static function textStyles(): array
+    {
+        try {
+            if (! \Illuminate\Support\Facades\Schema::hasTable('fm_app_settings')) {
+                return [];
+            }
+
+            $setting = self::where('key', 'text_styles')->first();
+
+            return ($setting && is_array($setting->value)) ? $setting->value : [];
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
+
+    public static function saveTextStyles(array $map): void
+    {
+        $setting = self::firstOrNew(['key' => 'text_styles']);
+        $setting->value = $map;
+        $setting->save();
+
+        \Cache::forget('app_text_styles');
     }
 }

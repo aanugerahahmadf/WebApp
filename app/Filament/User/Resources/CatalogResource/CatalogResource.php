@@ -227,21 +227,35 @@ class CatalogResource extends Resource
                                         ->view('User.components.catalog-image-gallery.catalog-image-gallery', [
                                             'mediaCollection' => 'catalog_image',
                                         ]),
-                                ])->columnSpan([
+                                ])
+                                    // Custom border: kartu galeri kiri dibingkai rapi
+                                    // supaya kolom kiri-kanan detail terlihat
+                                    // TERTATA di halaman publik
+                                    // /flowerdecorationscatalog/{id}.
+                                    // Chrome border customizer: gaya/ketebalan/
+                                    // radius/warna dari panel admin (scope 'catalogs').
+                                    ->extraAttributes([
+                                        'class' => 'rounded-2xl border border-gray-200 dark:border-white/10 overflow-hidden',
+                                        'data-chrome' => 'catalogs.border',
+                                    ])
+                                    ->columnSpan([
                                     'default' => 12,
                                     'md' => 5,
                                 ]),
 
                                 // RIGHT: CATALOG IDENTITY
                                 Group::make([
-                                    // CATEGORY BADGE
+                                    // CATEGORY BADGE -- peran "Sub Judul" milik
+                                    // AppTypography tertaut di sini via
+                                    // data-typo, jadi pengaturan admin untuk
+                                    // Sub Judul ikut mempengaruhi badge ini.
                                     Infolists\Components\TextEntry::make('category.name')
                                         ->formatStateUsing(fn ($state) => __($state))
                                         ->label('')
                                         ->badge()
                                         ->color('info')
                                         ->icon('/images/icons/tag.svg')
-                                        ->extraAttributes(['class' => 'mb-2']),
+                                        ->extraAttributes(['class' => 'mb-2', 'data-typo' => 'subheading', 'data-field' => 'catalogs.category']),
 
                                     // SHARE & REPORT (mobile app-bar parity: AppBar share + flag buttons)
                                     Actions::make([
@@ -334,14 +348,22 @@ class CatalogResource extends Resource
                                             }),
                                     ])->fullWidth()->extraAttributes(['class' => '!mb-3']),
 
-                                    // CATALOG NAME
+                                    // CATALOG NAME -- data-typo="heading"
+                                    // (peran Judul) + data-field per-field
+                                    // override: pengaturan font/ukuran/kapital
+                                    // yang diatur admin dari form resource
+                                    // IKUT tampil di sini.
                                     Infolists\Components\TextEntry::make('name')
                                         ->formatStateUsing(fn ($state) => __($state))
                                         ->label('')
                                         ->hiddenLabel()
                                         ->weight('black')
                                         ->size('2xl')
-                                        ->extraAttributes(['class' => 'tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-400 mb-2 uppercase leading-tight']),
+                                        ->extraAttributes([
+                                            'class' => 'tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-400 mb-2 uppercase leading-tight',
+                                            'data-typo' => 'heading',
+                                            'data-field' => 'catalogs.name',
+                                        ]),
 
                                     // RATING & DISKON BADGE (mobile _buildRatingBadge parity)
                                     Group::make([
@@ -352,9 +374,10 @@ class CatalogResource extends Resource
                                             ->iconColor('warning')
                                             ->color('warning')
                                             ->weight('semibold')
-                                            ->state(fn ($record) => $record->reviews()->avg('rating'))
-                                            ->formatStateUsing(fn ($state) => is_numeric($state) ? number_format((float) $state, 1) : __('Belum ada rating'))
-                                            ->visible(fn ($record) => $record->reviews()->count() > 0),
+                                             ->state(fn ($record) => $record->reviews()->avg('rating'))
+                                             ->formatStateUsing(fn ($state) => is_numeric($state) ? number_format((float) $state, 1) : __('Belum ada rating'))
+                                             ->extraAttributes(['data-field' => 'catalogs.rating'])
+                                             ->visible(fn ($record) => $record->reviews()->count() > 0),
 
                                         Infolists\Components\TextEntry::make('discount_badge')
                                             ->label('')
@@ -379,7 +402,17 @@ class CatalogResource extends Resource
                                                 ->label('')
                                                 ->html()
                                                 ->prose()
-                                                ->extraAttributes(['class' => 'leading-relaxed text-sm']),
+                                                // Peran "Deskripsi" (data-typo) +
+                                                // override per-field: pengaturan
+                                                // Judul/Sub/Deskripsi & gaya teks
+                                                // dari kustomizer ADMIN ikut di
+                                                // sini, HANYA di halaman publik
+                                                // (scope 'catalogs').
+                                                ->extraAttributes([
+                                                    'class' => 'leading-relaxed text-sm',
+                                                    'data-typo' => 'description',
+                                                    'data-field' => 'catalogs.description',
+                                                ]),
                                         ])->icon('/images/icons/document.svg')->iconColor('primary'),
 
                                     // FEATURES (mobile "Fitur" section parity)
@@ -412,7 +445,13 @@ class CatalogResource extends Resource
                                             ->outlined(fn ($record) => $record->stock > 0)
                                             ->disabled(fn ($record) => $record->stock <= 0)
                                             ->size(ActionSize::Large)
-                                            ->extraAttributes(['class' => 'w-full py-2 text-sm rounded-xl shadow-sm transition-all'])
+                                            // Tombol utama = chrome customizer
+                                            // (ukuran/warna dari panel admin,
+                                            // scope 'catalogs').
+                                            ->extraAttributes([
+                                                'class' => 'w-full py-2 text-sm rounded-xl shadow-sm transition-all',
+                                                'data-chrome' => 'catalogs.button',
+                                            ])
                                             ->url(fn ($record) => static::getUrl('checkout', ['record' => $record->id])),
 
                                         Action::make('add_to_cart_detail')
@@ -422,7 +461,10 @@ class CatalogResource extends Resource
                                             ->color('warning')
                                             ->outlined()
                                             ->size(ActionSize::Large)
-                                            ->extraAttributes(['class' => 'w-full py-2 text-sm rounded-xl shadow-sm transition-all'])
+                                            ->extraAttributes([
+                                                'class' => 'w-full py-2 text-sm rounded-xl shadow-sm transition-all',
+                                                'data-chrome' => 'catalogs.button',
+                                            ])
                                             ->form([
                                                 Forms\Components\TextInput::make('quantity')
                                                     ->label(__('Jumlah yang ingin dibeli'))
@@ -459,7 +501,10 @@ class CatalogResource extends Resource
                                             ->color('info')
                                             ->outlined()
                                             ->size(ActionSize::Large)
-                                            ->extraAttributes(['class' => 'w-full flex-1 rounded-xl py-2 text-sm shadow-sm transition-all'])
+                                            ->extraAttributes([
+                                                'class' => 'w-full flex-1 rounded-xl py-2 text-sm shadow-sm transition-all',
+                                                'data-chrome' => 'catalogs.button',
+                                            ])
                                             ->action(function ($record) {
                                                 $inbox = ChatService::getOrCreateInboxWithAdmin(auth()->id());
 
@@ -492,7 +537,10 @@ class CatalogResource extends Resource
                                             ->color(fn ($record) => $record->is_wishlisted ? 'danger' : 'gray')
                                             ->outlined(fn ($record) => ! $record->is_wishlisted)
                                             ->size(ActionSize::Large)
-                                            ->extraAttributes(['class' => 'w-full flex-1 rounded-xl py-2 text-sm shadow-sm transition-all duration-300'])
+                                            ->extraAttributes([
+                                                'class' => 'w-full flex-1 rounded-xl py-2 text-sm shadow-sm transition-all duration-300',
+                                                'data-chrome' => 'catalogs.button',
+                                            ])
                                             ->form([
                                                 Forms\Components\Hidden::make('confirm')->default(true),
                                             ])
@@ -568,9 +616,22 @@ class CatalogResource extends Resource
                                     'md' => 7,
                                 ]),
                             ])
-                            ->extraAttributes(['class' => 'gap-6 p-2 sm:p-3 md:gap-10']),
+                            ->extraAttributes(['class' => 'gap-6 p-2 sm:p-3 md:gap-10',
+                                // ROOT SCOPE HALAMAN: seluruh aturan
+                                // kustomizer scope 'catalogs' ber-induk
+                                // selektor ini -- custom satu halaman A
+                                // tidak pernah menyentuh halaman lain.
+                                'data-page-style' => 'catalogs']),
                     ])
-                    ->extraAttributes(['class' => 'border-none bg-transparent shadow-none text-primary']),
+                    // SCOPE HALAMAN -- seluruh infolist detail ini diberi
+                    // penandaan `data-page-style="catalogs"`: teks dasar,
+                    // peran (data-typo), tombol, dan border yang diatur
+                    // admin dari kustomizer jalur CSS menarget scope ini
+                    // saja. Halaman lain tidak tersentuh sama sekali.
+                    ->extraAttributes([
+                        'class' => 'border-none bg-transparent shadow-none text-primary',
+                        'data-page-style' => 'catalogs',
+                    ]),
             ]);
     }
 

@@ -35,6 +35,7 @@
     x-on:tier-chosen.window="if ($event.detail && Number($event.detail.catalogId) === {{ (int) $catalogId }}) { selectedId = Number($event.detail.tierId); }"
     class="flex items-baseline flex-wrap mb-6"
     data-testid="catalog-price"
+    data-field="catalogs.price"
 >
     <span
         class="catalog-final-price text-2xl font-black drop-shadow-sm"

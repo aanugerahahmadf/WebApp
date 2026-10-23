@@ -2,6 +2,7 @@
 
 namespace App\Filament\Shared\Concerns\HasModelColumns;
 
+use App\Filament\Shared\Typography\TypographyControls;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -45,6 +46,25 @@ trait HasModelColumns
 
         $columns = static::modelColumnListing();
 
+        // LAPISAN KUSTOMISASI BER-SCOPE (WordPress-style, anti-tumbukan):
+        // scope = halaman resource ini sendiri (slug -> key `PageStyles`),
+        // MIS. form Catalog menyetel scope 'catalogs'. Custom halaman A
+        // menulis ke scope A; scope lain (halaman resource lain) tidak
+        // terpengaruh. SETIAP TextInput/Textarea juga membawa section
+        // "Gaya Teks" per-field di atasnya (dehydrated(false) semua --
+        // tidak menyentuh kolom model).
+        $scope = \App\Support\PageStyles\PageStyles::scopeFromSlug(
+            (string) static::getSlug()
+        );
+
+        $fields = [
+            TypographyControls::section($scope),
+        ];
+
+        // TANPA lapisan gaya di dalam form: kustomisasi tampilan tidak
+        // tinggal di halaman form (tiap rekam judulnya beda-beda) --
+        // panelnya hidup DI ATAS TABEL halaman list resource, dari hook
+        // `PAGE_START` di AdminPanelProvider. Form ini murni kolom model.
         return collect($columns)
             ->reject(fn (string $column): bool => str_ends_with($column, '_id')
                 || str_ends_with($column, '_at')

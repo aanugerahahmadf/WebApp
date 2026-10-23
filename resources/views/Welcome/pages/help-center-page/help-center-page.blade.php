@@ -1,15 +1,17 @@
 <x-filament-panels::page>
     <div class="space-y-4">
         @if ($subtitle)
-            <p class="text-sm text-gray-500 dark:text-gray-400">{{ $subtitle }}</p>
+            {{-- Gaya Teks: styling per-field "helps.subtitle" dari form admin. --}}
+            <p class="text-sm text-gray-500 dark:text-gray-400" data-typo="subheading">{{ $subtitle }}</p>
         @endif
 
         @forelse ($faqs as $item)
             <x-filament::section collapsible collapsed>
                 <x-slot name="heading">
-                    {{ $item['question'] ?? $item['q'] ?? $item['heading'] ?? '' }}
+                    {{-- data-typo/data-field agar tipografi per-peran & override per-field "helps.faqs" ikut di sini. --}}
+                    <span data-typo="subheading">{{ $item['question'] ?? $item['q'] ?? $item['heading'] ?? '' }}</span>
                 </x-slot>
-                <div class="text-sm text-gray-600 dark:text-gray-300">
+                <div class="text-sm text-gray-600 dark:text-gray-300" data-typo="description">
                     {{ $item['answer'] ?? $item['a'] ?? $item['body'] ?? '' }}
                 </div>
             </x-filament::section>

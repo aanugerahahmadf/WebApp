@@ -397,6 +397,20 @@ class WelcomePanelProvider extends PanelProvider
                     .PanelGlassCss::link()
             )
             ->renderHook(
+                // PENANDA SCOPE HALAMAN -- WordPress-style. Panel ini
+                // menampung SEMUA halaman storefront (resource User +
+                // Welcome hasil peleburan panel, dan Livewire pages
+                // keduanya). Setiap halaman membawa key scope-nya sendiri
+                // (dari route aktif, lihat scope-marker view) -- CSS
+                // kustom yang diatur dari PANEL ADMIN (hook PAGE_END di
+                // AdminPanelProvider, AppFont::styles() yang sama di atas)
+                // menarget penanda ini, jadi SEMUA halaman bisa diatur
+                // dari Admin tanpa mengedit satu file halaman pun, dan
+                // kustom halaman A tidak pernah bocor ke halaman B.
+                PanelsRenderHook::PAGE_END,
+                fn (): string => view('Livewire.Admin.page-customizer.scope-marker')->render(),
+            )
+            ->renderHook(
                 // Phone-only bottom navigation. MobileNav menekan bar ini di
                 // halaman auth dan di desktop; item-nya diambil dari
                 // config/app-platform.php (mobile_nav.items.welcome).

@@ -12,6 +12,9 @@
 <div>
     @if ($canView)
         <div class="fm-admin-catalog-packages">
+            {{-- The package tab is a custom Livewire table, so Filament's
+                 normal resource-table hook is not invoked automatically. --}}
+            @include('Livewire.Admin.page-customizer.hook', ['pageStyleScope' => 'catalogs'])
             <div class="fi-fi-page">
                 <div class="fi-fi-page-content">
                     {{ $this->table }}

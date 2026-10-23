@@ -320,13 +320,14 @@ class PackageTable extends Component implements HasForms, HasTable
                  * description -- satu-satunya informasi yang milik tabel ini
                  * dan tidak bisa dilihat di tempat lain.
                  */
-                Tables\Columns\TextColumn::make('name')
-                    ->label(__('Nama Paket'))
-                    ->searchable()
-                    ->sortable()
-                    ->weight('bold')
-                    ->icon('heroicon-s-gift')
-                    ->description(fn (?Package $record): string => $this->statusHint($record, $expected)),
+                 Tables\Columns\TextColumn::make('name')
+                     ->label(__('Nama Paket'))
+                     ->searchable()
+                     ->sortable()
+                     ->weight('bold')
+                     ->icon('heroicon-s-gift')
+                     ->extraAttributes(['data-typo' => 'heading', 'data-field' => 'catalogs.tier_name'])
+                     ->description(fn (?Package $record): string => $this->statusHint($record, $expected)),
             ])
             ->headerActions([
                 Tables\Actions\CreateAction::make()

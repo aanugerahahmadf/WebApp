@@ -164,19 +164,9 @@ return new class extends Migration
         // memang belum berisi apa pun -- itu urutan yang normal, bukan tanda
         // ada yang salah. Melempar di sini akan menggagalkan seluruh suite,
         // termasuk test yang justru memverifikasi pemisahan ini.
-        if (Admin::count() === 0 && ! $this->isRunningTests()) {
-            throw new RuntimeException(
-                'Tabel admins kosong setelah migrasi, sementara role admin di tabel users '
-                .'sudah dicabut. Jalankan `php artisan db:seed --class=SuperAdminSeeder` '
-                .'sebelum deploy ke server.'
-            );
-        }
-    }
-
-    protected function isRunningTests(): bool
-    {
-        return app()->runningUnitTests()
-            || app()->environment('testing');
+        // Akun admin dibuat oleh SuperAdminSeeder setelah semua migration
+        // selesai. Migration tidak boleh bergantung pada data seed karena
+        // `migrate:fresh --seed` menjalankan migration terlebih dahulu.
     }
 
     public function down(): void

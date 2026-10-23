@@ -991,6 +991,16 @@ class CatalogSeeder extends Seeder
                 'en' => $data['desc_en'],
             ];
 
+            // CategorySeeder menormalkan slug dari nama terjemahan (contoh
+            // `Lighting & Lampu` menjadi `lighting-lampu`), sementara data
+            // katalog lama memakai slug pendek `lighting`. Cari exact match
+            // lebih dulu lalu fallback ke slug kategori yang diawali key lama.
+            $category = $data['category'] === null
+                ? null
+                : ($cats[$data['category']] ?? $cats->first(
+                    fn ($candidate) => str($candidate->slug)->startsWith($data['category'].'-')
+                ));
+
             $catalog = Catalog::updateOrCreate(
                 ['slug' => $slug],
                 [
@@ -1008,9 +1018,7 @@ class CatalogSeeder extends Seeder
                     // mengembalikan null dan INSERT gagal dengan "Foreign key
                     // constraint fails". Dan kalau kategori paket dibiarkan,
                     // admin akan ditawari "Paket Royal" sebagai jenis dekorasi.
-                    'category_id' => $data['category'] === null
-                        ? null
-                        : ($cats[$data['category']]?->id),
+                    'category_id' => $category?->id,
                     'name' => $data['name'],
                     'description' => $data['description'],
                     'name_translations' => $nameTranslations,

@@ -69,6 +69,12 @@ test('BRI OAuth2 access token can be obtained from sandbox', function () {
 });
 
 test('BRI snapAccessToken returns token for current key mode', function () {
+    // Sama seperti test lain di file ini: skip bila integrasi BRI tidak
+    // diaktifkan (CI tidak punya credential sandbox BRI_ENABLED != true).
+    if (! config('bri.enabled')) {
+        $this->markTestSkipped('BRI integration disabled (BRI_ENABLED != true)');
+    }
+
     $keyType = config('bri.snap_key_type');
     expect($keyType)->toBeIn(['symmetric', 'asymmetric']);
 

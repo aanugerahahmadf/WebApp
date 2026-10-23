@@ -30,6 +30,7 @@ Berikut adalah daftar semua dokumen teknis yang tersedia, terorganisir berdasark
 | 19 | [Welcome Panel (Indeks)](welcome-panel/welcome-panel.md) | welcome-panel/welcome-panel.md | Indeks lengkap welcome panel (register, auth, navigation, pages, resources, widgets, guest identity, chat, CBIR) |
 | 20 | [Panduan Pengujian (Lama)](pengujian/panduan-pengujian.md) | pengujian/panduan-pengujian.md | Batasan yang diketahui, cakupan test per fitur baru |
 | 21 | [Security Best Practices](security-best-practices.md) | security-best-practices.md | Praktik keamanan terbaik: environment, auth, data protection, API security, deployment checklist |
+| 22 | [Tipografi & Gaya Teks](tipografi/tipografi.md) | tipografi/tipografi.md | Dua lapisan tipografi form admin (per-peran AppTypography + per-field TextStyles), penyimpanan fm_app_settings, injeksi CSS trio panel, pemakai blade |
 
 ---
 

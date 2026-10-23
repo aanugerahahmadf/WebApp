@@ -283,21 +283,28 @@ class CatalogResource extends Resource
                                         ->view('Welcome.components.catalog-image-gallery.catalog-image-gallery', [
                                             'mediaCollection' => 'catalog_image',
                                         ]),
-                                ])->columnSpan([
+                                ])
+                                    // Chrome border customizer (scope 'catalogs'):
+                                    // gaya/ketebalan/radius/warna dari panel admin.
+                                    ->extraAttributes([
+                                        'class' => 'rounded-2xl border border-gray-200 dark:border-white/10 overflow-hidden',
+                                        'data-chrome' => 'catalogs.border',
+                                    ])->columnSpan([
                                     'default' => 12,
                                     'md' => 5,
                                 ]),
 
                                 // RIGHT: CATALOG IDENTITY
                                 Group::make([
-                                    // CATEGORY BADGE
+                                    // CATEGORY BADGE -- peran "Sub Judul"
+                                    // (data-typo) dari kustomizer ADMIN.
                                     Infolists\Components\TextEntry::make('category.name')
                                         ->formatStateUsing(fn ($state) => __($state))
                                         ->label('')
                                         ->badge()
                                         ->color('info')
                                         ->icon('/images/icons/tag.svg')
-                                        ->extraAttributes(['class' => 'mb-2']),
+                                         ->extraAttributes(['class' => 'mb-2', 'data-typo' => 'subheading', 'data-field' => 'catalogs.category']),
 
                                     // SHARE & REPORT (mobile app-bar parity: AppBar share + flag buttons)
                                     Actions::make([
@@ -420,7 +427,7 @@ class CatalogResource extends Resource
                                         ->hiddenLabel()
                                         ->weight('black')
                                         ->size('2xl')
-                                        ->extraAttributes(['class' => 'tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-400 mb-2 uppercase leading-tight']),
+                                         ->extraAttributes(['class' => 'tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-400 mb-2 uppercase leading-tight', 'data-typo' => 'heading', 'data-field' => 'catalogs.name']),
 
                                     // RATING & DISKON BADGE (mobile _buildRatingBadge parity)
                                     Group::make([
@@ -431,9 +438,10 @@ class CatalogResource extends Resource
                                             ->iconColor('warning')
                                             ->color('warning')
                                             ->weight('semibold')
-                                            ->state(fn ($record) => $record->reviews()->avg('rating'))
-                                            ->formatStateUsing(fn ($state) => is_numeric($state) ? number_format((float) $state, 1) : __('Belum ada rating'))
-                                            ->visible(fn ($record) => $record->reviews()->count() > 0),
+                                             ->state(fn ($record) => $record->reviews()->avg('rating'))
+                                             ->formatStateUsing(fn ($state) => is_numeric($state) ? number_format((float) $state, 1) : __('Belum ada rating'))
+                                             ->extraAttributes(['data-field' => 'catalogs.rating'])
+                                             ->visible(fn ($record) => $record->reviews()->count() > 0),
 
                                         Infolists\Components\TextEntry::make('discount_badge')
                                             ->label('')
@@ -458,7 +466,7 @@ class CatalogResource extends Resource
                                                 ->label('')
                                                 ->html()
                                                 ->prose()
-                                                ->extraAttributes(['class' => 'leading-relaxed text-sm']),
+                                                 ->extraAttributes(['class' => 'leading-relaxed text-sm', 'data-typo' => 'description', 'data-field' => 'catalogs.description']),
                                         ])->icon('/images/icons/document.svg')->iconColor('primary'),
 
                                     // FEATURES (mobile "Fitur" section parity)

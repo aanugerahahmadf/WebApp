@@ -268,14 +268,18 @@ test('halaman paket dan kategori tidak ada lagi', function (): void {
         ->and(Route::has('filament.admin.resources.categories.index'))->toBeFalse();
 });
 
-test('form kategori di tab katalog hanya menanyakan nama', function (): void {
+test('form kategori di tab katalog hanya memiliki satu input penyimpanan: nama', function (): void {
     $manager = categoriesManager()->instance();
 
-    $fields = array_keys(
-        $manager->form(Form::make($manager))->getFlatFields(withHidden: true)
-    );
+    $flat = $manager->form(Form::make($manager))->getFlatFields(withHidden: true);
 
-    expect($fields)->toBe(['name']);
+    /*
+     * Form ini hanya punya SATU field penyimpan: `name`. (Section
+     * "Tipografi"/"Gaya Teks" lama sudah dihapus -- kustomisasi tampilan
+     * dipindah ke panel kustomizer di bawah tabel,
+     * `App\Livewire\Admin\PageCustomizer`.)
+     */
+    expect(array_keys($flat))->toBe(['name']);
 });
 
 test('kategori yang dibuat dari tab katalog menyimpan slug dan tipe otomatis', function (): void {

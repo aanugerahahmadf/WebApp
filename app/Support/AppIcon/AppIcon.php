@@ -121,6 +121,9 @@ final class AppIcon
     public const DOCUMENT = self::FOLDER.'general-document.svg';
     public const TEXT = self::FOLDER.'text.svg';
 
+    /** Kustomizer "Tampilan" (padanan Appearance wp-admin). */
+    public const BRUSH = self::FOLDER.'brush.svg';
+
     /**
      * Semua ikon yang ada, untuk dipakai penjaga test.
      *

@@ -88,7 +88,10 @@
     $catColor = $catName ? $catColors[abs(crc32($catName)) % count($catColors)] : '#6b7280';
     $rating = number_format($record->reviews()->avg('rating') ?: 0, 1);
 @endphp
-<a href="{{ $url }}" wire:navigate class="catalog-card">
+<a href="{{ $url }}" wire:navigate class="catalog-card"
+    {{-- data-chrome="catalogs.border": border view kartu mengikuti
+         kustomizer scope catalogs --}}
+    data-chrome="catalogs.border">
     <div class="catalog-img">
         <img src="{{ $img }}" alt="{{ $record->name }}" loading="lazy"
              onerror="this.src='{{ asset('images/placeholders/image-placeholder.svg') }}'">
@@ -97,14 +100,15 @@
     <div class="catalog-info">
         <div style="height:18px;overflow:hidden;margin-bottom:2px;display:flex;align-items:center;">
             @if($catName)
-                <span class="catalog-cat" style="border-left-color:{{ $catColor }};color:{{ $catColor }};">{{ $catName }}</span>
+                <span class="catalog-cat" data-typo="subheading" data-field="catalogs.category" style="border-left-color:{{ $catColor }};color:{{ $catColor }};">{{ $catName }}</span>
             @endif
         </div>
         <div style="height:2.6rem;overflow:hidden;margin-bottom:3px;">
-            <p class="catalog-name">{{ __($record->name) }}</p>
+            {{-- data-field: override per-field (scope by [data-page-style="catalogs"]) --}}
+            <p class="catalog-name" data-typo="heading" data-field="catalogs.name">{{ __($record->name) }}</p>
         </div>
         <div style="height:2.2rem;display:flex;flex-direction:column;justify-content:flex-start;gap:0;margin-bottom:3px;">
-            <span class="catalog-price">Rp{{ number_format($fp, 0, ',', '.') }}</span>
+            <span class="catalog-price" data-field="catalogs.price">Rp{{ number_format($fp, 0, ',', '.') }}</span>
             <span class="catalog-price-original" style="min-height:1rem;">
                 @if($pct)Rp{{ number_format($record->price, 0, ',', '.') }}@endif
             </span>
@@ -112,9 +116,9 @@
         <div class="catalog-footer">
             <div style="display:flex;align-items:center;gap:2px;font-size:9px;color:var(--catalog-muted,#9ca3af);">
                 <x-filament::icon icon="/images/icons/star.svg" class="h-[9px] w-[9px] shrink-0 text-yellow-400" />
-                {{ $rating }}
+                <span data-field="catalogs.rating">{{ $rating }}</span>
             </div>
-            <span class="{{ $stockClass }}">{{ $stockLabel }}</span>
+            <span class="{{ $stockClass }}" data-field="catalogs.stock">{{ $stockLabel }}</span>
         </div>
     </div>
 </a>

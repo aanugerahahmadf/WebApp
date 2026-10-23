@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title }} - {{ config('app.name') }}</title>
+    {{-- Gaya Teks & tipografi: CSS dari setelan admin (AppFont dengan
+         per-peran AppTypography + override per-field TextStyles) ke SETIAP
+         halaman, bukan hanya panel. --}}
+    {!! \App\Support\AppFont\AppFont::styles() !!}
+
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -107,9 +112,10 @@
 <body>
     <div class="container">
         <div class="header">
+            {{-- data-field: override per-field dari form admin; data-typo: per-peran. --}}
             <h1>{{ $title }}</h1>
             @if ($subtitle)
-                <p>{{ $subtitle }}</p>
+                <p data-typo="subheading">{{ $subtitle }}</p>
             @endif
             @if ($updatedAt)
                 <div class="updated">{{ __('Terakhir diperbarui:') }} {{ $updatedAt->format('d M Y') }}</div>
@@ -117,11 +123,11 @@
         </div>
 
         <div class="faq-section">
-            <h2>{{ __('FAQ') }}</h2>
+            <h2 data-typo="subheading">{{ __('FAQ') }}</h2>
             @forelse ($faqs as $item)
                 <div class="faq">
-                    <div class="q">{{ $item['question'] ?? $item['q'] ?? $item['heading'] ?? '' }}</div>
-                    <div class="a">{{ $item['answer'] ?? $item['a'] ?? $item['body'] ?? '' }}</div>
+                    <div class="q" data-typo="subheading">{{ $item['question'] ?? $item['q'] ?? $item['heading'] ?? '' }}</div>
+                    <div class="a" data-typo="description">{{ $item['answer'] ?? $item['a'] ?? $item['body'] ?? '' }}</div>
                 </div>
             @empty
                 <div class="empty">{{ __('Konten belum tersedia.') }}</div>
