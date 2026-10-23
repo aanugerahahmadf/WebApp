@@ -130,10 +130,6 @@
             <a class="back" href="{{ url('/home') }}">← Kembali ke aplikasi</a>
         <div class="eyebrow-row">
             <div class="eyebrow">Wedding Flower Decorations</div>
-            <button class="copy-button" type="button" data-copy-page>
-                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                <span>Salin halaman</span>
-            </button>
         </div>
         <article class="markdown">{!! $document !!}</article>
     </main>
@@ -164,10 +160,6 @@
             area.remove();
         }
     };
-
-    document.querySelector('[data-copy-page]')?.addEventListener('click', (event) => {
-        copyText(document.querySelector('.markdown')?.innerText || '', event.currentTarget);
-    });
 
     document.querySelectorAll('.markdown pre').forEach((pre) => {
         const code = pre.querySelector('code');
