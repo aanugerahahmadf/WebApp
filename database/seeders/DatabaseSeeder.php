@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             ReferenceOptionSeeder::class,
             CategorySeeder::class,
             CatalogSeeder::class,
+            HeroBannerSeeder::class,
 
             // Data transaksi/konten yang memiliki relasi ke katalog atau user.
             DiscountSeeder::class,

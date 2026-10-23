@@ -3,6 +3,7 @@
 namespace App\Filament\User\Pages\Home;
 
 use App\Filament\User\Widgets\CombinedCatalogWidget\CombinedCatalogWidget;
+use App\Filament\User\Widgets\PromoBannerWidget\PromoBannerWidget;
 use App\Filament\User\Widgets\ShortcutStats\ShortcutStats;
 use App\Filament\User\Widgets\StatsOverview\StatsOverview;
 use App\Support\AppIcon\AppIcon;
@@ -57,6 +58,7 @@ class Home extends BaseDashboard
     public function getWidgets(): array
     {
         return [
+            PromoBannerWidget::class,
             StatsOverview::class,
             ShortcutStats::class,
             CombinedCatalogWidget::class,

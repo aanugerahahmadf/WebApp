@@ -3,6 +3,7 @@
 namespace App\Filament\Welcome\Pages\Home;
 
 use App\Filament\Welcome\Widgets\CombinedCatalogWidget\CombinedCatalogWidget;
+use App\Filament\Welcome\Widgets\PromoBannerWidget\PromoBannerWidget;
 use App\Filament\Welcome\Widgets\ShortcutStats\ShortcutStats;
 use App\Filament\Welcome\Widgets\StatsOverview\StatsOverview;
 use App\Support\AppIcon\AppIcon;
@@ -70,6 +71,7 @@ class Home extends BaseDashboard
         // StatsOverview aman untuk guest (angka 0 + sapaan "Tamu"),
         // jadi selalu ditampilkan di storefront.
         return [
+            PromoBannerWidget::class,
             StatsOverview::class,
             ShortcutStats::class,
             CombinedCatalogWidget::class,
