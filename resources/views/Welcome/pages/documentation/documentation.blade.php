@@ -44,11 +44,11 @@
         <a class="brand" href="{{ route('docs.index') }}"><span class="brand-mark">✦</span> Dokumentasi</a>
         <input class="search" type="search" placeholder="Cari dokumentasi…" aria-label="Cari dokumentasi" data-doc-search>
         <nav aria-label="Daftar dokumentasi">
-            @foreach ($documents as $key => $item)
-                @if ($loop->first || $documents[$loop->index - 1]['category'] !== $item['category'])
-                    <div class="group">{{ $item['category'] }}</div>
-                @endif
-                <a class="nav-link {{ $selected === $key ? 'active' : '' }}" href="{{ route('docs.show', ['path' => $key]) }}" data-doc-link>{{ $item['title'] }}</a>
+            @foreach ($groups as $group)
+                <div class="group">{{ $group['label'] }}</div>
+                @foreach ($group['items'] as $item)
+                    <a class="nav-link {{ $selected === $item['key'] ? 'active' : '' }}" href="{{ route('docs.show', ['path' => $item['key']]) }}" data-doc-link>{{ $item['title'] }}</a>
+                @endforeach
             @endforeach
         </nav>
     </aside>

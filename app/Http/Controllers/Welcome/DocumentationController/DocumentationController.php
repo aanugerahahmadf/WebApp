@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Welcome\DocumentationController;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Str;
 use League\CommonMark\GithubFlavoredMarkdownConverter;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -21,11 +22,7 @@ class DocumentationController extends Controller
             $selected = 'README';
         }
 
-        return view('Welcome.pages.documentation.documentation', [
-            'documents' => $documents,
-            'selected' => $selected,
-            'document' => $this->renderDocument($selected, $documents),
-        ]);
+        return $this->render($selected, $documents);
     }
 
     public function show(string $path): \Illuminate\Contracts\View\View
@@ -37,10 +34,36 @@ class DocumentationController extends Controller
             throw new NotFoundHttpException;
         }
 
+        return $this->render($key, $documents);
+    }
+
+    /**
+     * Build the shared page payload: selected document plus a sidebar grouped
+     * by category. Grouping happens server-side so the Blade template only
+     * needs a nested loop (and does not depend on loop internals).
+     *
+     * @param  array<string, array{file: string, title: string, category: string}>  $documents
+     * @return array<string, array{documents: array<string, array{file: string, title: string, category: string}>, groups: array<int, array{label: string, items: array<int, array{key: string, title: string}>}>, selected: string, document: string}>
+     */
+    private function render(string $selected, array $documents): \Illuminate\Contracts\View\View
+    {
+        $groups = [];
+
+        foreach ($documents as $key => $item) {
+            $groups[$item['category']][] = [
+                'key' => $key,
+                'title' => $item['title'],
+            ];
+        }
+
         return view('Welcome.pages.documentation.documentation', [
             'documents' => $documents,
-            'selected' => $key,
-            'document' => $this->renderDocument($key, $documents),
+            'groups' => collect($groups)
+                ->map(fn (array $items, string $label): array => ['label' => $label, 'items' => $items])
+                ->values()
+                ->all(),
+            'selected' => $selected,
+            'document' => $this->renderDocument($selected, $documents),
         ]);
     }
 
@@ -74,7 +97,7 @@ class DocumentationController extends Controller
                 'file' => $relative,
                 'title' => $title,
                 'category' => str_contains($key, '/')
-                    ? str(str_before($key, '/'))->headline()->toString()
+                    ? Str::headline(Str::before($key, '/'))
                     : 'Mulai di sini',
             ];
         }
