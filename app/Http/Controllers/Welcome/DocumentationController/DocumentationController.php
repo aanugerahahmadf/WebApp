@@ -127,6 +127,28 @@ class DocumentationController extends Controller
      */
     private function documents(): array
     {
+        $categoryLabels = [
+            'Asset Compilation' => 'Kompilasi Aset',
+            'Catalog Actions' => 'Aksi Katalog',
+            'Command Decision Tree' => 'Pohon Keputusan Perintah',
+            'Command Guide' => 'Panduan Perintah',
+            'Deployment' => 'Deployment',
+            'Environment Configuration' => 'Konfigurasi Lingkungan',
+            'Messages System' => 'Sistem Pesan',
+            'Platform Features' => 'Fitur Platform',
+            'Platform Support' => 'Dukungan Platform',
+            'Platform Testing' => 'Pengujian Platform',
+            'Welcome Panel' => 'Panel Welcome',
+            'Mobile App' => 'Aplikasi Mobile',
+            'Ai Core' => 'AI Core',
+        ];
+        $titleTranslations = [
+            'Security Best Practices — Wedding Flower Decorations CBIR' => 'Praktik Keamanan Terbaik — Wedding Flower Decorations CBIR',
+            'Catalog Detail Actions — Developer Guide' => 'Aksi Katalog — Panduan Pengembang',
+            'Messages System — Technical Reference' => 'Sistem Pesan — Referensi Teknis',
+            'Platform Testing' => 'Pengujian Platform',
+            'Catalog Detail Actions' => 'Aksi Katalog',
+        ];
         $root = base_path('docs');
         $files = collect(
             new \RecursiveIteratorIterator(
@@ -191,12 +213,13 @@ class DocumentationController extends Controller
                 ? trim($match[1])
                 : str($key)->headline()->toString();
 
+            $category = str_contains($key, '/')
+                ? Str::headline(Str::before($key, '/'))
+                : 'Mulai di sini';
             $documents[$key] = [
                 'file' => 'docs/'.$relative,
-                'title' => $title,
-                'category' => str_contains($key, '/')
-                    ? Str::headline(Str::before($key, '/'))
-                    : 'Mulai di sini',
+                'title' => $titleTranslations[$title] ?? $title,
+                'category' => $categoryLabels[$category] ?? $category,
             ];
         }
 
@@ -240,7 +263,7 @@ class DocumentationController extends Controller
                     'title' => preg_match('/^#\s+(.+)$/m', $contents, $match)
                         ? trim($match[1])
                         : Str::headline(pathinfo($relative, PATHINFO_FILENAME)),
-                    'category' => Str::headline($category),
+                    'category' => $categoryLabels[Str::headline($category)] ?? Str::headline($category),
                 ];
             }
         }
