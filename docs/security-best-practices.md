@@ -1,4 +1,4 @@
-﻿# Security Best Practices â€” Wedding Flower Decorations CBIR
+# Security Best Practices — Wedding Flower Decorations CBIR
 
 Dokumen ini menyumutikan praktik terbaik keamanan yang harus diimplementasikan
 dan diikuti selama pengembangan, deployment, dan maintenance aplikasi
@@ -10,7 +10,7 @@ dan diikuti selama pengembangan, deployment, dan maintenance aplikasi
 
 ---
 
-## 🔒 Konfigurasi Dasar
+##  Konfigurasi Dasar
 
 ### 1. File Environment (.env)
 
@@ -91,7 +91,7 @@ public function handle($request, Closure $next)
 
 ---
 
-## 👤 Autentikasi & Otorisasi
+##  Autentikasi & Otorisasi
 
 ### 1. Password & Account Security
 
@@ -124,7 +124,7 @@ public function handle($request, Closure $next)
 
 ---
 
-## ðŸ›¡ï¸ Data & Privacy Protection
+## Data & Privacy Protection
 
 ### 1. PPDK (Personal Data Protection)
 
@@ -152,7 +152,7 @@ public function handle($request, Closure $next)
 
 ---
 
-## 🌐 Network & API Security
+##  Network & API Security
 
 ### 1. API Endpoints
 
@@ -185,7 +185,7 @@ public function handle($request, Closure $next)
 
 ---
 
-## 📦 Dependencies & Supply Chain
+##  Dependencies & Supply Chain
 
 ### 1. Composer Packages
 
@@ -206,7 +206,7 @@ public function handle($request, Closure $next)
 
 ---
 
-## 🔍 Testing Security
+##  Testing Security
 
 ### 1. Security Test Cases
 
@@ -234,7 +234,7 @@ curl -I https://domain-anda.com | grep -i "content-security-policy\|strict-trans
 
 ---
 
-## ðŸ› ï¸ Operational Security
+## Operational Security
 
 ### 1. Deployment Checklist
 
@@ -268,7 +268,7 @@ Sebelum deployment produksi:
 
 ---
 
-## 📚 Referensi & Alat
+##  Referensi & Alat
 
 | Alat | Digunakan untuk |
 |---|---|
@@ -281,7 +281,7 @@ Sebelum deployment produksi:
 
 ---
 
-## ðŸ™ Kontribusi
+## Kontribusi
 
 Jika Anda menemukan kerentanan keamanan atau ingin menambahkan praktik terbaik,
 buat issue di repositori atau kirim pull request dengan pembaruan dokumentasi ini.

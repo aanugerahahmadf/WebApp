@@ -1,4 +1,4 @@
-﻿# Panduan Pengujian
+# Panduan Pengujian
 
 ## Cara Menjalankan
 

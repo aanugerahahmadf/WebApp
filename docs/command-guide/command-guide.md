@@ -1,4 +1,4 @@
-﻿# Panduan Penggunaan Perintah (Capacitor)
+# Panduan Penggunaan Perintah (Capacitor)
 
 Panduan ini menjelaskan perintah Artisan untuk platform target Anda, apa yang
 dibutuhkan setiap perintah, dan referensi pemecahan masalah.
@@ -15,12 +15,12 @@ dibutuhkan setiap perintah, dan referensi pemecahan masalah.
 flowchart TD
     START([Apa yang sedang Anda bangun?])
     START --> Q1{Apakah pengguna akan membuka aplikasi\ndalam browser web?}
-    Q1 -- YA --> WEB["✅ php artisan serve:web\nMode Browser Web"]
+    Q1 -- YA --> WEB["Ya php artisan serve:web\nMode Browser Web"]
     Q1 -- TIDAK --> Q2{Apakah ini aplikasi mobile\nCapacitor shell untuk\nAndroid atau iOS?}
-    Q2 -- YA --> MOB["✅ php artisan serve:mobile\nMode Mobile (Capacitor)\nShell: app/Capacitor/DekstopApp|DekstopAdminApp"]
+    Q2 -- YA --> MOB["Ya php artisan serve:mobile\nMode Mobile (Capacitor)\nShell: app/Capacitor/DekstopApp|DekstopAdminApp"]
     Q2 -- TIDAK --> Q3{Apakah ini aplikasi desktop\nCapacitor Electron untuk\nWindows atau macOS?}
-    Q3 -- YA --> DESK["✅ php artisan serve:desktop\nMode Desktop (Capacitor Electron)\nShell: app/Capacitor/DekstopApp/electron atau app/Capacitor/DekstopAdminApp/electron"]
-    Q3 -- TIDAK --> HELP["❓ Jalankan: php artisan platform:status\natau lihat command-decision-tree.md"]
+    Q3 -- YA --> DESK["Ya php artisan serve:desktop\nMode Desktop (Capacitor Electron)\nShell: app/Capacitor/DekstopApp/electron atau app/Capacitor/DekstopAdminApp/electron"]
+    Q3 -- TIDAK --> HELP["? Jalankan: php artisan platform:status\natau lihat command-decision-tree.md"]
 
     style WEB fill:#d4edda,stroke:#28a745,color:#155724
     style MOB fill:#d4edda,stroke:#28a745,color:#155724
@@ -191,9 +191,9 @@ php artisan serve:desktop --port=8002
 | **API Kamera** | WebRTC `getUserMedia` | Shell: `<input capture>` | Shell: `<input capture>` |
 | **Port konvensi** | 8000 | 8001 | 8002 |
 | **Paket Composer tambahan** | Tidak ada | Tidak ada | Tidak ada |
-| **Push Notifications** | ❌ | ✅ FCM | ❌ |
-| **Desktop Notifications** | Web Notif API | ❌ | Web Notif API (Electron) |
-| **Auto-update capability** | ❌ | ❌ | ✅ capability flag; update feed harus dikonfigurasi terpisah |
+| **Push Notifications** | Tidak | Ya FCM | Tidak |
+| **Desktop Notifications** | Web Notif API | Tidak | Web Notif API (Electron) |
+| **Auto-update capability** | Tidak | Tidak | Ya capability flag; update feed harus dikonfigurasi terpisah |
 
 > **Semua tiga perintah mendelegasikan ke `php artisan serve` internal.**
 > Lihat `app/Console/Commands/ServePlatformCommand/DelegatesToServeCommand.php`.

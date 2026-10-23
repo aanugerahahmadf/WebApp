@@ -1,4 +1,4 @@
-﻿# Arsitektur Dukungan Platform (Capacitor)
+# Arsitektur Dukungan Platform (Capacitor)
 
 Dokumen ini menjelaskan bagaimana aplikasi Laravel Wedding Flower Decorations CBIR menangani
 tiga lingkungan runtime: browser web, shell mobile Capacitor (Android/iOS), dan
@@ -248,13 +248,13 @@ $registry->getPlatformsForFeature('push_notifications');
 
 | Fitur | Website* | MobileApp* | DesktopApp* |
 |---|---|---|---|
-| `camera` | ❌ | ✅ (input file) | ✅ (input file) |
-| `webrtc` | ✅ | ❌ | ❌ |
-| `file_system` | ❌ | ✅ (input file) | ✅ (input file) |
-| `desktop_notifications` | ❌ | ❌ | ✅ (Web Notifications API) |
-| `push_notifications` | ❌ | ✅ (FCM) | ❌ |
-| `auto_updates` | ❌ | ❌ | ✅ (implementasi feed terpisah) |
-| `app_badge` | ❌ | ✅ | ❌ |
+| `camera` | Tidak | Ya (input file) | Ya (input file) |
+| `webrtc` | Ya | Tidak | Tidak |
+| `file_system` | Tidak | Ya (input file) | Ya (input file) |
+| `desktop_notifications` | Tidak | Tidak | Ya (Web Notifications API) |
+| `push_notifications` | Tidak | Ya (FCM) | Tidak |
+| `auto_updates` | Tidak | Tidak | Ya (implementasi feed terpisah) |
+| `app_badge` | Tidak | Ya | Tidak |
 
 > **Catatan:** `camera` dan `file_system` di Mobile/Desktop menggunakan
 > `<input type="file" capture>` yang dibuka oleh shell, bukan bridge native.
@@ -460,10 +460,10 @@ listener `x-on:capacitor-camera-open-input.window` yang memicu
 
 | Saluran | Website | MobileApp | DesktopApp |
 |---|---|---|---|
-| Database (Filament) | ✅ | ✅ | ✅ |
-| WebSocket Broadcast | ✅ | ✅ | ✅ |
-| FCM Push | ❌ | ✅ | ❌ |
-| OS Toast/Desktop Notif | ❌ (pakai Web Notif API) | ❌ | ✅ (Web Notif API via Electron) |
+| Database (Filament) | Ya | Ya | Ya |
+| WebSocket Broadcast | Ya | Ya | Ya |
+| FCM Push | Tidak | Ya | Tidak |
+| OS Toast/Desktop Notif | Tidak (pakai Web Notif API) | Tidak | Ya (Web Notif API via Electron) |
 
 Semua platform menerima notifikasi via DB record + broadcast. FCM hanya untuk
 mobile saat app background. Desktop pakai Web Notifications API (standar

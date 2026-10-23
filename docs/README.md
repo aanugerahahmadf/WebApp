@@ -1,4 +1,4 @@
-﻿# Indeks Dokumentasi
+# Indeks Dokumentasi
 
 Dokumen teknis aplikasi Dekorasi Bunga Pernikahan / Wedding Flower Decorations (Mobile & Backend).
 Seluruh dokumen memakai Bahasa Indonesia.

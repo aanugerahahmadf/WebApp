@@ -1,4 +1,4 @@
-﻿# Matriks Fitur Platform (Capacitor)
+# Matriks Fitur Platform (Capacitor)
 
 Dokumen ini menjelaskan fitur-fitur aplikasi yang tersedia di masing-masing dari delapan
 runtime platform yang didukung, menjelaskan apa yang diaktifkan setiap fitur dalam
@@ -21,15 +21,15 @@ mendukungnya.
 
 | Fitur | Website<br>Windows | Website<br>macOS | Website<br>Android | Website<br>iOS | Mobile App<br>Android | Mobile App<br>iOS | Desktop App<br>Windows | Desktop App<br>macOS |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| `camera` | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
-| `webrtc` | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| `file_system` | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
-| `desktop_notifications` | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
-| `push_notifications` | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ |
-| `auto_updates` | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
-| `app_badge` | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ |
+| `camera` | Tidak | Tidak | Tidak | Tidak | Ya | Ya | Ya | Ya |
+| `webrtc` | Ya | Ya | Ya | Ya | Tidak | Tidak | Tidak | Tidak |
+| `file_system` | Tidak | Tidak | Tidak | Tidak | Ya | Ya | Ya | Ya |
+| `desktop_notifications` | Tidak | Tidak | Tidak | Tidak | Tidak | Tidak | Ya | Ya |
+| `push_notifications` | Tidak | Tidak | Tidak | Tidak | Ya | Ya | Tidak | Tidak |
+| `auto_updates` | Tidak | Tidak | Tidak | Tidak | Tidak | Tidak | Ya | Ya |
+| `app_badge` | Tidak | Tidak | Tidak | Tidak | Ya | Ya | Tidak | Tidak |
 
-> **Keterangan:** ✅ Tersedia &nbsp;|&nbsp; ❌ Tidak tersedia
+> **Keterangan:** Ya Tersedia &nbsp;|&nbsp; Tidak Tidak tersedia
 
 ### Referensi kolom platform
 

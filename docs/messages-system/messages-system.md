@@ -1,4 +1,4 @@
-﻿# Messages System â€” Technical Reference
+# Messages System — Technical Reference
 
 > Berlaku untuk panel welcome (storefront/akun) dan admin panel
 

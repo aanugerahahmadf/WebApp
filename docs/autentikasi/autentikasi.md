@@ -1,4 +1,4 @@
-﻿# Autentikasi (Sign-In & Auth Landing)
+# Autentikasi (Sign-In & Auth Landing)
 
 > **CATATAN ARSITEKTUR (2026-10-21).** Halaman ini ditulis saat masih ada DUA
 > panel terpisah: `user` di `/user` dan `welcome` di `/welcome`. Sekarang

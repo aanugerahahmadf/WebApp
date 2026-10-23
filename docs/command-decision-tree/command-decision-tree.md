@@ -1,4 +1,4 @@
-﻿# Pohon Keputusan Penggunaan Perintah (Capacitor)
+# Pohon Keputusan Penggunaan Perintah (Capacitor)
 
 Dokumen ini membantu Anda memilih perintah Artisan yang tepat untuk platform target
 Anda dan menyediakan panduan pemecahan masalah untuk error paling umum.
@@ -17,17 +17,17 @@ flowchart TD
 
     START --> Q1{Apakah pengguna akan membuka aplikasi\ndalam browser web?}
 
-    Q1 -- YA --> WEB["✅ php artisan serve:web\n──────────────────\nMode Browser Web\nPlatformMode::Web\nPort: 8000 (default)\nTidak perlu paket tambahan"]
+    Q1 -- YA --> WEB["Ya php artisan serve:web\n──────────────────\nMode Browser Web\nPlatformMode::Web\nPort: 8000 (default)\nTidak perlu paket tambahan"]
 
     Q1 -- TIDAK --> Q2{Apakah ini aplikasi mobile\nCapacitor shell untuk\nAndroid atau iOS?}
 
-    Q2 -- YA --> MOB["✅ php artisan serve:mobile\n─────────────────────────\nMode Mobile (Capacitor)\nPlatformMode::Mobile\nPort: 8001 (konvensi)\nShell: app/Capacitor/DekstopApp atau DekstopAdminApp"]
+    Q2 -- YA --> MOB["Ya php artisan serve:mobile\n─────────────────────────\nMode Mobile (Capacitor)\nPlatformMode::Mobile\nPort: 8001 (konvensi)\nShell: app/Capacitor/DekstopApp atau DekstopAdminApp"]
 
     Q2 -- TIDAK --> Q3{Apakah ini aplikasi desktop\nCapacitor Electron untuk\nWindows atau macOS?}
 
-    Q3 -- YA --> DESK["✅ php artisan serve:desktop\n──────────────────────────\nMode Desktop (Capacitor Electron)\nPlatformMode::Desktop\nPort: 8002 (konvensi)\nShell: app/Capacitor/DekstopApp/electron atau app/Capacitor/DekstopAdminApp/electron"]
+    Q3 -- YA --> DESK["Ya php artisan serve:desktop\n──────────────────────────\nMode Desktop (Capacitor Electron)\nPlatformMode::Desktop\nPort: 8002 (konvensi)\nShell: app/Capacitor/DekstopApp/electron atau app/Capacitor/DekstopAdminApp/electron"]
 
-    Q3 -- TIDAK --> UNSURE["❓ Tidak yakin?\nLihat 'Cara Memilih' di bawah\natau jalankan: php artisan platform:status"]
+    Q3 -- TIDAK --> UNSURE["? Tidak yakin?\nLihat 'Cara Memilih' di bawah\natau jalankan: php artisan platform:status"]
 
     style WEB fill:#d4edda,stroke:#28a745,color:#155724
     style MOB fill:#d4edda,stroke:#28a745,color:#155724
@@ -128,9 +128,9 @@ php artisan serve:desktop --port=8002
 | **File override env** | `.env.web` | `.env.mobile` | `.env.desktop` |
 | **Direktori aset** | `public/build/web` | `public/build/mobile` | `public/build/desktop` |
 | **Driver sesi** | `cookie` | `database` | `file` |
-| **Push Notifications** | ❌ | ✅ FCM | ❌ |
-| **Desktop Notifications** | ❌ (pakai Web Notif API) | ❌ | ✅ Web Notif API |
-| **Auto-update capability** | ❌ | ❌ | ✅ capability flag (implementasi feed terpisah) |
+| **Push Notifications** | Tidak | Ya FCM | Tidak |
+| **Desktop Notifications** | Tidak (pakai Web Notif API) | Tidak | Ya Web Notif API |
+| **Auto-update capability** | Tidak | Tidak | Ya capability flag (implementasi feed terpisah) |
 
 > **Semua tiga perintah mendelegasikan ke `php artisan serve` internal.**
 > Lihat `app/Console/Commands/ServePlatformCommand/DelegatesToServeCommand.php`.

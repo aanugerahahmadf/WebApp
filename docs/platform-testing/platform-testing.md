@@ -1,4 +1,4 @@
-﻿# Platform Testing
+# Platform Testing
 
 Langkah uji untuk delapan target runtime. Dipakai oleh
 `php artisan platform:matrix`, yang mencetak matriks itu sendiri lalu
@@ -46,7 +46,7 @@ Environment File: .env.web
 Asset Directory:  build/web
 ```
 
-Untuk memastikan semua mode, jalankan tiap `serve:*` (Â§2) lalu ulangi
+Untuk memastikan semua mode, jalankan tiap `serve:*` (§2) lalu ulangi
 ketiga perintah itu.
 
 ---

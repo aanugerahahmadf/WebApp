@@ -1,4 +1,4 @@
-﻿# Katalog & Keranjang (Panel Welcome & User)
+# Katalog & Keranjang (Panel Welcome & User)
 
 > **CATATAN ARSITEKTUR (2026-10-21).** Halaman ini ditulis saat masih ada DUA
 > panel terpisah: `user` di `/user` dan `welcome` di `/welcome`. Sekarang

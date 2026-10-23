@@ -1,4 +1,4 @@
-﻿# Strategi Konfigurasi Environment (Capacitor)
+# Strategi Konfigurasi Environment (Capacitor)
 
 Dokumen ini menjelaskan bagaimana aplikasi mengelola variabel environment di tiga
 mode platform: **web**, **mobile**, dan **desktop**. Memahami strategi ini sangat
