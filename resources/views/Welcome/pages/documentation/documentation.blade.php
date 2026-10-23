@@ -34,12 +34,20 @@
         body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 15% 0%, rgb(99 102 241 / .16), transparent 34rem), var(--docs-bg); color: var(--docs-text); font-family: 'Google Sans', ui-sans-serif, system-ui, sans-serif; }
         a { color: var(--docs-accent); text-decoration: none; }
         a:hover { text-decoration: underline; }
-        .docs-shell { display: grid; grid-template-columns: 280px minmax(0, 1fr); min-height: 100vh; }
-        .docs-sidebar { position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 1.5rem 1rem; background-color: var(--docs-surface); background-image: linear-gradient(var(--docs-tint), var(--docs-tint)); border-right: 1px solid var(--docs-ring); backdrop-filter: blur(15px) saturate(180%); -webkit-backdrop-filter: blur(15px) saturate(180%); }
+        .docs-shell { display: grid; grid-template-columns: 280px minmax(0, 1fr); min-height: 100vh; transition: grid-template-columns .2s ease; }
+        .docs-shell.sidebar-collapsed { grid-template-columns: 76px minmax(0, 1fr); }
+        .docs-sidebar { position: sticky; top: 0; height: 100vh; overflow-y: auto; scrollbar-width: none; padding: 1.5rem 1rem; background-color: var(--docs-surface); background-image: linear-gradient(var(--docs-tint), var(--docs-tint)); border-right: 1px solid var(--docs-ring); backdrop-filter: blur(15px) saturate(180%); -webkit-backdrop-filter: blur(15px) saturate(180%); }
+        .docs-sidebar::-webkit-scrollbar { display: none; }
         .brand { display: flex; align-items: center; gap: .65rem; margin: 0 .6rem 1.5rem; color: var(--docs-text); font-weight: 700; font-size: 1.1rem; }
         .brand:hover { text-decoration: none; }
         .brand-mark { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: .7rem; background: var(--docs-box); color: var(--docs-accent); }
         .brand-mark svg { width: 1.15rem; height: 1.15rem; stroke: currentColor; }
+        .brand-label, .collapse-label { transition: opacity .15s ease; }
+        .sidebar-tools { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin: 0 .35rem 1rem; }
+        .collapse-button { display: inline-grid; place-items: center; width: 2rem; height: 2rem; flex: 0 0 2rem; padding: 0; color: var(--docs-muted); background: transparent; border: 1px solid transparent; border-radius: .55rem; cursor: pointer; }
+        .collapse-button:hover { color: var(--docs-text); background: rgb(0 0 0 / .05); border-color: var(--docs-ring); }
+        .dark .collapse-button:hover { background: rgb(255 255 255 / .05); }
+        .collapse-button svg { width: 1rem; height: 1rem; stroke: currentColor; }
         .search { width: 100%; padding: .7rem .8rem; margin-bottom: 1.25rem; color: var(--docs-text); background: var(--docs-surface); border: 1px solid var(--docs-ring); border-radius: .55rem; outline: none; font: inherit; }
         .search::placeholder { color: var(--docs-muted); }
         .search:focus { border-color: var(--docs-accent); }
@@ -48,6 +56,11 @@
         .nav-link:hover { color: var(--docs-text); background: rgb(0 0 0 / .05); text-decoration: none; }
         .dark .nav-link:hover { background: rgb(255 255 255 / .05); }
         .nav-link.active { color: var(--docs-accent); background: var(--docs-box); text-decoration: none; }
+        .sidebar-collapsed .brand { justify-content: center; margin-left: 0; margin-right: 0; }
+        .sidebar-collapsed .brand-label, .sidebar-collapsed .group, .sidebar-collapsed .search, .sidebar-collapsed .collapse-label { display: none; }
+        .sidebar-collapsed .sidebar-tools { justify-content: center; margin-left: 0; margin-right: 0; }
+        .sidebar-collapsed .nav-link { overflow: hidden; padding-left: .65rem; padding-right: .65rem; white-space: nowrap; text-indent: -999px; }
+        .sidebar-collapsed .collapse-button svg { transform: rotate(180deg); }
         .docs-main { width: min(100%, 980px); padding: 3.5rem clamp(1.25rem, 5vw, 5rem); }
         .eyebrow { color: var(--docs-accent); font-size: .78rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
         .markdown { line-height: 1.75; font-size: 1rem; }
@@ -64,7 +77,7 @@
         .markdown th { color: var(--docs-text); background: var(--docs-surface); }
         .markdown img { max-width: 100%; height: auto; border-radius: .75rem; }
         .back { display: inline-block; margin-bottom: 2rem; color: var(--docs-muted); font-size: .9rem; }
-        @media (max-width: 760px) { .docs-shell { display: block; } .docs-sidebar { position: static; height: auto; max-height: 45vh; border-right: 0; border-bottom: 1px solid var(--docs-ring); } .docs-main { padding-top: 2rem; } }
+        @media (max-width: 760px) { .docs-shell, .docs-shell.sidebar-collapsed { display: block; } .docs-sidebar { position: static; height: auto; max-height: none; border-right: 0; border-bottom: 1px solid var(--docs-ring); } .docs-shell.sidebar-collapsed .docs-sidebar { height: 4.75rem; overflow: hidden; } .docs-main { padding-top: 2rem; } }
     </style>
 </head>
 <body>
@@ -77,9 +90,14 @@
                     <path d="M4 21.5A2.5 2.5 0 0 1 6.5 19H20M8 7h8M8 11h8"/>
                 </svg>
             </span>
-            Dokumentasi
+            <span class="brand-label">Dokumentasi</span>
         </a>
-        <input class="search" type="search" placeholder="Cari dokumentasi…" aria-label="Cari dokumentasi" data-doc-search>
+        <div class="sidebar-tools">
+            <input class="search" type="search" placeholder="Cari dokumentasi…" aria-label="Cari dokumentasi" data-doc-search>
+            <button class="collapse-button" type="button" aria-label="Ciutkan sidebar" aria-expanded="true" data-sidebar-toggle>
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14 6-6 6 6 6"/><path d="M20 6l-6 6 6 6"/></svg>
+            </button>
+        </div>
         <nav aria-label="Daftar dokumentasi">
             @foreach ($groups as $group)
                 <div class="group">{{ $group['label'] }}</div>
@@ -105,6 +123,19 @@
 </script>
 <script>
     (() => {
+        const shell = document.querySelector('.docs-shell');
+        const toggle = document.querySelector('[data-sidebar-toggle]');
+        const collapsed = localStorage.getItem('docs-sidebar-collapsed') === '1';
+        shell?.classList.toggle('sidebar-collapsed', collapsed);
+        toggle?.setAttribute('aria-expanded', String(!collapsed));
+        toggle?.setAttribute('aria-label', collapsed ? 'Buka sidebar' : 'Ciutkan sidebar');
+        toggle?.addEventListener('click', () => {
+            const next = shell.classList.toggle('sidebar-collapsed');
+            localStorage.setItem('docs-sidebar-collapsed', next ? '1' : '0');
+            toggle.setAttribute('aria-expanded', String(!next));
+            toggle.setAttribute('aria-label', next ? 'Buka sidebar' : 'Ciutkan sidebar');
+        });
+
         const stored = localStorage.getItem('theme') || 'system';
         const dark = stored === 'dark' || (stored === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
         document.documentElement.classList.toggle('dark', dark);
