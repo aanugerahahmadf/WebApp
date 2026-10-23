@@ -1444,6 +1444,16 @@ body.cbir-browse-modal-open .fi-bottom-nav {
     backdrop-filter: none;
 }
 
+/* Filament adds the visible card background to the content container of an
+   aside section, not to the section root. Remove that layer as well. */
+.fi-panel-welcome .profile-glass-page .fi-section-content-ctn,
+.fi-panel-user .profile-glass-page .fi-section-content-ctn {
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+}
+
 @media (min-width: 640px) {
     .fi-panel-welcome .profile-glass-page,
     .fi-panel-user .profile-glass-page {
