@@ -1,4 +1,4 @@
-# Autentikasi (Sign-In & Auth Landing)
+﻿# Autentikasi (Sign-In & Auth Landing)
 
 > **CATATAN ARSITEKTUR (2026-10-21).** Halaman ini ditulis saat masih ada DUA
 > panel terpisah: `user` di `/user` dan `welcome` di `/welcome`. Sekarang
@@ -19,64 +19,29 @@
 
 | Panel | Sign-In | Auth Landing | Pendaftaran | Reset Kata Sandi | Catatan |
 |---|---|---|---|---|---|
-| User | `User\Auth\SignIn\SignIn` (`/signin`) | `User\Auth\Auth\Auth` (`/auth`) | **Tidak ada halaman** (Google only) | OTP via WhatsApp/Email (`OtpRequestPasswordReset` + `OtpResetPassword`) + verifikasi OTP + prompt verifikasi email | Pendaftaran lewat tombol Google di `/auth` |
+| Welcome | `User\Auth\SignIn\SignIn` (`/signin`) | `User\Auth\Auth\Auth` (`/auth`) | `User\Auth\SignUp\SignUp` (`/signup`) | OTP via WhatsApp/Email (`OtpRequestPasswordReset` + `OtpResetPassword`) + verifikasi OTP + prompt verifikasi email | Panel storefront dan akun aktif |
 | Admin | `Admin\Auth\SignIn\SignIn` (`/admin/signin`) | — | — (tidak ada route `/admin/register`) | OTP, sama seperti user | Admin dibuat lewat seeder, bukan registrasi publik |
 | Welcome | — | — | — | — | Menumpang ke `/auth` (Sign In + Google) lewat `AuthenticateWelcome::LOGIN_ROUTE` |
 
-### Registrasi email/password DINONAKTIFKAN (kodenya disimpan)
+### Registrasi email/password
 
-Baris pemanggil **tidak dihapus, hanya dikomentari** dengan `//`, dalam bentuk
-aslinya. Yang dimatikan di `UserPanelProvider`:
+Panel `welcome` mendaftarkan `SignUp` secara aktif melalui
+`->registration(SignUp::class)` dan `->registrationRouteSlug('signup')` pada
+`WelcomePanelProvider`. URL `/signup` adalah route canonical. OAuth Google di
+`/auth` tetap tersedia sebagai jalur alternatif dan dapat membuat akun baru.
 
-```php
-// use App\Filament\User\Auth\SignUp\SignUp;
-// ->registration(SignUp::class)
-// ->registrationRouteSlug('signup')
-```
-
-Dan di `AppServiceProvider` (bentuk aslinya, pakai alias `as UserSignUp`):
-
-```php
-// use App\Filament\User\Auth\SignUp\SignUp as UserSignUp;
-// Livewire::component('app.filament.welcome.auth.sign-up', UserSignUp::class);
-```
-
-Jadi `App\Filament\User\Auth\SignUp\SignUp` beserta view
-`User/auth/sign-up/sign-up` masih utuh di repo. Menghidupkan pendaftaran lagi
-berarti menghapus keenam tanda `//` itu plus satu blok markup di
-`resources/views/User/social-buttons/social-buttons/social-buttons.blade.php`.
-
-`->registrationRouteSlug('signup')` wajib ikut dibuka — kalau terlewat,
-`/signup` hilang tanpa jejak sementara `/user/register` tetap hidup
-sebagai door yang tidak punya halaman. `RenameSmokeTest` dan
-`UserAuthLandingPageTest` menjaga keenam baris itu tetap terkomentari selama
-pendaftaran dinonaktifkan.
-
-Konsekuensi selama dimatikan:
-
-- Satu-satunya pintu masuk tamu adalah `/auth`, yang memuat dua pintu:
-  tombol Sign In (form `/signin`) dan tombol Google.
-- Tombol Google membuat akun otomatis kalau email-nya belum terdaftar
-  (`SocialiteController`), lalu mengarahkan ke Complete Profile — jadi tidak
-  ada pengguna yang terkunci tanpa jalan daftar.
-- `/signup` dan `/user/register` dilayani `Route::redirect` ke `/auth`,
-  supaya bookmark lama mendarat di tombol Google, bukan 404.
-- Data yang dulu hanya ditanyakan di form pendaftaran (nama depan/tengah/belakang,
-  unggah KTP/selfie/avatar, KYC) dirender di `/user/complete-profile`.
-- `SignIn::registerAction()` tetap di-`->hidden()` supaya form sign-in tidak
-  mewarisi link "Register" dari base class Filament.
-- `HasAuthBreadcrumbs::retiredRegisterPaths()` mengenali `/signup` dan
-  `/user/register` sebagai URL yang tidak boleh jadi crumb. Kalau pendaftaran
-  dihidupkan, daftar itu harus ikut dikosongkan.
+Data tambahan yang tidak dikumpulkan pada form dasar pendaftaran dilengkapi di
+`/complete-profile`. URL legacy `/register` dan `/user/register` diarahkan ke
+route canonical melalui kompatibilitas web.
 
 Slug route sign-in mengikuti penamaan class (`login` -> `signin`) lewat
-`loginRouteSlug()` di `UserPanelProvider` & `AdminPanelProvider`. **Nama route
+`loginRouteSlug()` di `WelcomePanelProvider` dan `AdminPanelProvider`. **Nama route
 tetap** `filament.welcome.auth.login` / `filament.admin.auth.login`, jadi semua
 pemanggilan `route()`/`Filament::getLoginUrl()` tidak berubah. URL lama
-(`/user/login`, `/user/register`, `/signup`, `/admin/login`) dilayani
+(`/user/login`, `/user/register`, `/register`, `/admin/login`) dilayani
 `Route::redirect` di `routes/web/web.php` supaya bookmark lama tidak jadi 404.
 
-Panel admin **tidak** memakai halaman auth panel user: redirect ke sign-in
+Panel admin **tidak** memakai halaman auth panel welcome: redirect ke sign-in
 selalu lewat `route('filament.admin.auth.login')`, bukan URL yang ditulis
 manual, supaya otomatis ikut slug baru.
 
@@ -118,8 +83,8 @@ Method `SignIn::getBackUrl()` memilih tujuan dengan urutan:
 2. `session('url.intended')` (disimpan saat guest membuka modal Add to Cart atau aksi guest lain; tetap benar walau login sempat gagal lalu form di-render ulang),
 3. fallback ke beranda welcome (`filament.welcome.pages.home`).
 
-Kandidat yang menunjuk ke Livewire, halaman auth (`/signin`), door
-pendaftaran yang sudah dinonaktifkan (`/signup`, `/user/register`), OTP, atau
+Kandidat yang menunjuk ke Livewire, halaman auth (`/signin`), route pendaftaran
+(`/signup`, `/user/register`), OTP, atau
 `/admin` dilewati. Path itu tidak ditulis manual:
 `HasAuthBreadcrumbs::authPagePath()` dan `retiredRegisterPaths()` mengambilnya
 dari slug route panel, jadi tetap benar kalau slug-nya diubah lagi. Prioritas

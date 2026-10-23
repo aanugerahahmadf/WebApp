@@ -1,4 +1,4 @@
-# Arsitektur Dukungan Platform (Capacitor)
+﻿# Arsitektur Dukungan Platform (Capacitor)
 
 Dokumen ini menjelaskan bagaimana aplikasi Laravel Wedding Flower Decorations CBIR menangani
 tiga lingkungan runtime: browser web, shell mobile Capacitor (Android/iOS), dan
@@ -42,7 +42,7 @@ php artisan serve:mobile
 ```
 
 Menjalankan server Laravel yang diload oleh shell Capacitor mobile (Android/iOS).
-Shell berada di `app/Capacitor/UserApp` dan `app/Capacitor/AdminApp`. Server
+Shell berada di `app/Capacitor/DekstopApp` dan `app/Capacitor/DekstopAdminApp`. Server
 harus dijangkau via jaringan (mis. `http://10.0.2.2:8001` untuk emulator).
 
 **Kasus RuntimePlatform yang dihasilkan:**
@@ -253,7 +253,7 @@ $registry->getPlatformsForFeature('push_notifications');
 | `file_system` | ❌ | ✅ (input file) | ✅ (input file) |
 | `desktop_notifications` | ❌ | ❌ | ✅ (Web Notifications API) |
 | `push_notifications` | ❌ | ✅ (FCM) | ❌ |
-| `auto_updates` | ❌ | ❌ | ✅ (electron-updater) |
+| `auto_updates` | ❌ | ❌ | ✅ (implementasi feed terpisah) |
 | `app_badge` | ❌ | ✅ | ❌ |
 
 > **Catatan:** `camera` dan `file_system` di Mobile/Desktop menggunakan
@@ -317,7 +317,7 @@ saat rute kondisional dimuat.
         ▼
 7. Aplikasi sepenuhnya dikonfigurasi
    - Views meminta aset via PlatformAssetManager::asset(...)
-   - Filament panel /user atau /admin termuat
+   - Filament panel /home atau /admin termuat
 ```
 
 ---
@@ -425,10 +425,10 @@ Setiap shell memiliki `capacitor.config.json` dan `src/js/launcher.js`. Jangan
 edit manual — gunakan skrip:
 
 ```bash
-cd app/Capacitor/UserApp
-npm run set:url -- https://dekorasi.example.com/user
+cd app/Capacitor/DekstopApp
+npm run set:url -- https://dekorasi.example.com/home
 # atau untuk admin
-cd app/Capacitor/AdminApp
+cd app/Capacitor/DekstopAdminApp
 npm run set:url -- https://dekorasi.example.com/admin
 ```
 

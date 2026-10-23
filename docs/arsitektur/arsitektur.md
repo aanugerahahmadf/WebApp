@@ -1,4 +1,4 @@
-# Arsitektur Aplikasi
+﻿# Arsitektur Aplikasi
 
 > **CATATAN ARSITEKTUR (2026-10-21).** Halaman ini ditulis saat masih ada DUA
 > panel terpisah: `user` di `/user` dan `welcome` di `/welcome`. Sekarang
@@ -79,7 +79,7 @@ selalu Sign Up — class, view, nilai `$authMode`, dan label yang dilihat user:
 
 | Middleware | Fungsi |
 |---|---|
-| `AuthenticateWelcome` | Gerbang panel welcome. Path publik (`welcome`, `welcome/home`, `welcome/products/*`, `welcome/packages/*`, `welcome/messages/*`, ...) boleh dibuka guest; sisanya dilempar ke halaman auth pertama panel user (`/auth`, Sign In + Google). Konstanta `LOGIN_ROUTE = 'filament.welcome.auth.index'`. |
+| `AuthenticateWelcome` | Gerbang panel welcome. Path publik (`welcome` (root), `/home`, `/flowerdecorationscatalog`, `/messages/{id?}`, ...) boleh dibuka guest; sisanya dilempar ke halaman auth panel welcome (`/auth`, Sign In + Google). Konstanta `LOGIN_ROUTE = 'filament.welcome.auth.index'`. |
 | `VerifyCsrfToken` (kustom) | Pengecualian CSRF untuk `admin/*`, `livewire/*`, dan webhook pembayaran. |
 | `SetLocale` | Sinkronisasi bahasa (grup `web` dan `api`). |
 | `ClerkFilamentAuth` | Login otomatis via token Sanctum (`clerk_token`). |

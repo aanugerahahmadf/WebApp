@@ -1,4 +1,4 @@
-# Katalog & Keranjang (Panel Welcome & User)
+﻿# Katalog & Keranjang (Panel Welcome & User)
 
 > **CATATAN ARSITEKTUR (2026-10-21).** Halaman ini ditulis saat masih ada DUA
 > panel terpisah: `user` di `/user` dan `welcome` di `/welcome`. Sekarang
@@ -41,7 +41,7 @@ Desain ini menjawab error lama `419 Page Expired` saat guest menekan Submit:
    - `modalSubmitAction` dinonaktifkan (`false`), jadi **tidak ada tombol
      Submit Livewire** dan tidak ada `POST /livewire/update`.
    - Sebagai gantinya tampil `extraModalFooterActions` berupa `StaticAction`
-     link biasa (`<a href>`) ke halaman auth pertama panel user
+     link biasa (`<a href>`) ke halaman auth panel welcome
      (`AuthenticateWelcome::LOGIN_ROUTE` = `/auth`: Sign In **dan** Google).
      Klik = `GET` biasa, sehingga error 419 **mustahil** terjadi.
    - `url.intended` disimpan ke session saat modal dibuka, supaya tombol

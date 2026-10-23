@@ -9,7 +9,7 @@ Berikut adalah daftar semua dokumen teknis yang tersedia, terorganisir berdasark
 
 | No | Dokumen | Path | Topik Utama |
 |---|---|---|---|
-| 1 | [Arsitektur Aplikasi](arsitektur/arsitektur.md) | arsitekturn/arsitektur.md | Struktur panel (welcome/admin), middleware, konvensi penamaan, identitas guest, session url.intended |
+| 1 | [Arsitektur Aplikasi](arsitektur/arsitektur.md) | arsitektur/arsitektur.md | Struktur panel (welcome/admin), middleware, konvensi penamaan, identitas guest, session url.intended |
 | 2 | [Autentikasi](autentikasi/autentikasi.md) | autentikasi/autentikasi.md | Alur Sign-In, Sign-Up, OTP, login sosial, guard, checkbox persetujuan, auth landing page |
 | 3 | [Katalog & Keranjang](katalog-keranjang/katalog-keranjang.md) | katalog-keranjang/katalog-keranjang.md | Aksi katalog, anti-419 guest flow, cart, checkout, wishlist, ulasan, quantity behavior |
 | 4 | [Panduan Pengujian](pengujian/panduan-pengujian.md) | pengujian/panduan-pengujian.md | Cara menjalankan test Pest, struktur file test, pola umum, batasan yang diketahui |
@@ -24,7 +24,7 @@ Berikut adalah daftar semua dokumen teknis yang tersedia, terorganisir berdasark
 | 13 | [Kompilasi Aset](asset-compilation/asset-compilation.md) | asset-compilation/asset-compilation.md | Pipeline build Vite multi-platform, entry point per platform, HMR per platform, konstanta __VITE_PLATFORM__ |
 | 14 | [Deployment Web](deployment/web/web.md) | deployment/web/web.md | Deployment web, konfigurasi produksi |
 | 15 | [Deployment Mobile](deployment/mobile/mobile.md) | deployment/mobile/mobile.md | Build APK/AAB/IPA, shell mobile Capacitor |
-| 16 | \[Deployment Desktop\]\(deployment/desktop/desktop.md\) \[Security Best Practices\]\(security-best-practices.md\) | deployment/desktop/desktop.md | Build .exe/.dmg, shell desktop Capacitor Electron |
+| 16 | [Deployment Desktop](deployment/desktop/desktop.md) | deployment/desktop/desktop.md | Build .exe/.dmg, shell desktop Capacitor Electron |
 | 17 | [Pohon Keputusan Penggunaan Perintah (Capacitor)](command-guide/command-guide.md#pohon-keputusan-cepat) | command-guide/command-guide.md | Quick decision tree for command selection |
 | 18 | [Sistem Penentuan Fitur](platform-features/platform-features.md#ketersediaan-fitur-berdasarkan-kelompok-platform) | platform-features/platform-features.md | Fitur per kelompok platform (Website, MobileApp, DesktopApp) |
 | 19 | [Welcome Panel (Indeks)](welcome-panel/welcome-panel.md) | welcome-panel/welcome-panel.md | Indeks lengkap welcome panel (register, auth, navigation, pages, resources, widgets, guest identity, chat, CBIR) |
@@ -66,23 +66,32 @@ Berikut adalah daftar semua dokumen teknis yang tersedia, terorganisir berdasark
 > - bottom nav HP dan chrome ikut memakai panel `welcome`
 > - ringkasan terbaru ada di `AGENTS.md` -> bagian "SATU PANEL: 'user' DILEBUR KE 'welcome'"
 
-Nama route dan URL yang disebut di bawah sudah disesuaikan; bagian yang
-men**describe** dua panel terpisah masih perlu dibaca sebagai sejarah.
+URL canonical berada di root; URL `/user/*` dan `/welcome/*` hanya redirect legacy.
 
 ---
+
+## Sumber kebenaran platform
+
+- Panel storefront + akun: `welcome` di root, home `/home`.
+- Panel admin: `admin` di `/admin`.
+- Shell user: `app/Capacitor/DekstopApp`.
+- Shell admin: `app/Capacitor/DekstopAdminApp`.
+- URL `/user/*` dan `/welcome/*` adalah legacy redirect, bukan path panel aktif.
+- `serve:web`, `serve:mobile`, dan `serve:desktop` hanya menerima `--host`,
+  `--port`, dan `--tries`, lalu mendelegasikan ke Laravel `serve`.
 
 ## Struktur File Environment
 
 | File | Kegunaan | Wajib/Opsional |
 |---|---|---|
-| `.env` | Konfigurasi dasar bersama â€” kredensial database, mail, Firebase, Midtrans, dll. | **Wajib** |
-| `.env.web` | Override khusus web â€” APP_URL, SESSION_DRIVER=cookie, VITE_PLATFORM=web | Opsional |
-| `.env.mobile` | Override Capacitor Mobile â€” APP_URL=10.0.2.2:8001, SESSION_DRIVER=database, VITE_PLATFORM=mobile | Opsional |
-| `.env.desktop` | Override Capacitor Desktop â€” APP_URL=localhost:8002, SESSION_DRIVER=file, VITE_PLATFORM=desktop | Opsional |
-| `.env.example` | Template untuk `.env` | â€” |
-| `.env.web.example` | Template untuk `.env.web` | â€” |
-| `.env.mobile.example` | Template untuk `.env.mobile` | â€” |
-| `.env.desktop.example` | Template untuk `.env.desktop` | â€” |
+| `.env` | Konfigurasi dasar bersama — kredensial database, mail, Firebase, Midtrans, dll. | **Wajib** |
+| `.env.web` | Override khusus web — APP_URL, SESSION_DRIVER=cookie, VITE_PLATFORM=web | Opsional |
+| `.env.mobile` | Override Capacitor Mobile — APP_URL=10.0.2.2:8001, SESSION_DRIVER=database, VITE_PLATFORM=mobile | Opsional |
+| `.env.desktop` | Override Capacitor Desktop — APP_URL=localhost:8002, SESSION_DRIVER=file, VITE_PLATFORM=desktop | Opsional |
+| `.env.example` | Template untuk `.env` | — |
+| `.env.web.example` | Template untuk `.env.web` | — |
+| `.env.mobile.example` | Template untuk `.env.mobile` | — |
+| `.env.desktop.example` | Template untuk `.env.desktop` | — |
 
 Prioritas pembacaan: file platform lebih diutamakan daripada `.env`. Jika file
 platform tidak ada, aplikasi melanjutkan diam-diam dengan `.env` saja.
@@ -95,7 +104,7 @@ platform tidak ada, aplikasi melanjutkan diam-diam dengan `.env` saja.
 |---|---|---|---|
 | **Web** | `php artisan serve:web` | 8000 | Browser, WebRTC kamera, session cookie |
 | **Mobile (Capacitor)** | `php artisan serve:mobile` | 8001 | Shell WebView, FCM push, input file kamera, database session |
-| **Desktop (Capacitor Electron)** | `php artisan serve:desktop` | 8002 | Shell Electron, Web Notifications, auto-updater, file session |
+| **Desktop (Capacitor Electron)** | `php artisan serve:desktop` | 8002 | Shell Electron, Web Notifications, file session; auto-update masih capability flag |
 
 > **Catatan arsitektur:** Shell Capacitor hanyalah *WebView loader*. Tidak ada
 > PHP tertanem, tidak ada bridge native, dan tidak ada database proxy. Semua
@@ -120,7 +129,8 @@ platform tidak ada, aplikasi melanjutkan diam-diam dengan `.env` saja.
 [Kompilasi Aset](asset-compilation/asset-compilation.md) |
 [Deployment Web](deployment/web/web.md) |
 [Deployment Mobile](deployment/mobile/mobile.md) |
-\[Deployment Desktop\]\(deployment/desktop/desktop.md\) \[Security Best Practices\]\(security-best-practices.md\)
+[Deployment Desktop](deployment/desktop/desktop.md) |
+[Security Best Practices](security-best-practices.md)
 
 ---
 
@@ -150,7 +160,7 @@ php artisan app:init-admin admin@example.com "PasswordKuat123" "Admin"
 # Buka http://127.0.0.1:8000
 ```
 
-> **Penting:** Selalu `--port` ditansurkan ke `serve:web`/`serve:mobile`/`serve:desktop`.
+> **Penting:** Selalu teruskan `--port` ke `serve:web`/`serve:mobile`/`serve:desktop`.
 > Tanpa `--port`, ketiga mode akan berebut port yang sama melewati `php artisan serve`.
 
 ---

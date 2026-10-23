@@ -1,4 +1,4 @@
-# Security Best Practices — Wedding Flower Decorations CBIR
+﻿# Security Best Practices â€” Wedding Flower Decorations CBIR
 
 Dokumen ini menyumutikan praktik terbaik keamanan yang harus diimplementasikan
 dan diikuti selama pengembangan, deployment, dan maintenance aplikasi
@@ -124,7 +124,7 @@ public function handle($request, Closure $next)
 
 ---
 
-## 🛡️ Data & Privacy Protection
+## ðŸ›¡ï¸ Data & Privacy Protection
 
 ### 1. PPDK (Personal Data Protection)
 
@@ -234,7 +234,7 @@ curl -I https://domain-anda.com | grep -i "content-security-policy\|strict-trans
 
 ---
 
-## 🛠️ Operational Security
+## ðŸ› ï¸ Operational Security
 
 ### 1. Deployment Checklist
 
@@ -281,7 +281,7 @@ Sebelum deployment produksi:
 
 ---
 
-## 🙏 Kontribusi
+## ðŸ™ Kontribusi
 
 Jika Anda menemukan kerentanan keamanan atau ingin menambahkan praktik terbaik,
 buat issue di repositori atau kirim pull request dengan pembaruan dokumentasi ini.

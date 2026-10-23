@@ -1,4 +1,4 @@
-# Strategi Konfigurasi Environment (Capacitor)
+﻿# Strategi Konfigurasi Environment (Capacitor)
 
 Dokumen ini menjelaskan bagaimana aplikasi mengelola variabel environment di tiga
 mode platform: **web**, **mobile**, dan **desktop**. Memahami strategi ini sangat
@@ -160,7 +160,7 @@ FILESYSTEM_DISK=local
 VITE_PLATFORM=desktop
 
 # Cermin dari shell, untuk helper sisi PHP
-CAPACITOR_USER_URL=http://localhost:8002/user
+CAPACITOR_USER_URL=http://localhost:8002/home
 CAPACITOR_ADMIN_URL=http://localhost:8002/admin
 CAPACITOR_USER_APP_ID=id.dekorasi.pengantin.user
 CAPACITOR_ADMIN_APP_ID=id.dekorasi.pengantin.admin
@@ -407,21 +407,23 @@ platform.
 
 ---
 
-## Variabel Khusus Capacitor (Cermin Shell)
+## Variabel shell Capacitor (catatan penting)
 
-Variabel di bawah ini **hanya cermin** dari konfigurasi shell Capacitor. Nilai
-harus selalu sama dengan isi `capacitor.config.json` shell masing-masing.
-Skrip `npm run set:url` menjaga keselarasan.
+Variabel di bawah ini adalah override Laravel untuk helper PHP yang perlu
+membangun URL absolut atau mengenali app ID. File shell tetap memiliki sumber
+kebenaran sendiri: `capacitor.config.json` dan `src/js/launcher.js`. Skrip
+`npm run set:url` memperbarui dua file shell tersebut, bukan file `.env` server.
 
 | Variabel | Sumber di Shell | Digunakan Server Untuk |
 |---|---|---|
-| `CAPACITOR_USER_URL` | `capacitor.config.json` → `server.url` (UserApp) | Bangun URL absolut ke panel user |
-| `CAPACITOR_ADMIN_URL` | `capacitor.config.json` → `server.url` (AdminApp) | Bangun URL absolut ke panel admin |
-| `CAPACITOR_USER_APP_ID` | `capacitor.config.json` → `appId` (UserApp) | Deep link FCM / notifikasi |
-| `CAPACITOR_ADMIN_APP_ID` | `capacitor.config.json` → `appId` (AdminApp) | Deep link FCM / notifikasi |
+| `CAPACITOR_USER_URL` | `.env` → `config/app-platform.php` | URL dasar helper shell user; sesuaikan dengan `server.url` |
+| `CAPACITOR_ADMIN_URL` | `.env` → `config/app-platform.php` | URL dasar helper shell admin; sesuaikan dengan `server.url` |
+| `CAPACITOR_USER_APP_ID` | `.env` → `config/app-platform.php` | App ID helper user |
+| `CAPACITOR_ADMIN_APP_ID` | `.env` → `config/app-platform.php` | App ID helper admin |
 
-> **Jangan** set variabel ini tanpa juga update `capacitor.config.json` via
-> `npm run set:url`. Kedua sisi harus selalu sinkron.
+> Jika `CAPACITOR_*` dipelihara sebagai metadata, sinkronkan nilainya secara
+> manual dengan konfigurasi shell. Runtime shell tetap membaca file di folder
+> `app/Capacitor/DekstopApp` atau `app/Capacitor/DekstopAdminApp`.
 
 ---
 

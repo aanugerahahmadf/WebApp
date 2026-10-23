@@ -1,4 +1,4 @@
-# Panduan Penggunaan Perintah (Capacitor)
+﻿# Panduan Penggunaan Perintah (Capacitor)
 
 Panduan ini menjelaskan perintah Artisan untuk platform target Anda, apa yang
 dibutuhkan setiap perintah, dan referensi pemecahan masalah.
@@ -17,9 +17,9 @@ flowchart TD
     START --> Q1{Apakah pengguna akan membuka aplikasi\ndalam browser web?}
     Q1 -- YA --> WEB["✅ php artisan serve:web\nMode Browser Web"]
     Q1 -- TIDAK --> Q2{Apakah ini aplikasi mobile\nCapacitor shell untuk\nAndroid atau iOS?}
-    Q2 -- YA --> MOB["✅ php artisan serve:mobile\nMode Mobile (Capacitor)\nShell: app/Capacitor/UserApp|AdminApp"]
+    Q2 -- YA --> MOB["✅ php artisan serve:mobile\nMode Mobile (Capacitor)\nShell: app/Capacitor/DekstopApp|DekstopAdminApp"]
     Q2 -- TIDAK --> Q3{Apakah ini aplikasi desktop\nCapacitor Electron untuk\nWindows atau macOS?}
-    Q3 -- YA --> DESK["✅ php artisan serve:desktop\nMode Desktop (Capacitor Electron)\nShell: app/Capacitor/*/electron"]
+    Q3 -- YA --> DESK["✅ php artisan serve:desktop\nMode Desktop (Capacitor Electron)\nShell: app/Capacitor/DekstopApp/electron atau app/Capacitor/DekstopAdminApp/electron"]
     Q3 -- TIDAK --> HELP["❓ Jalankan: php artisan platform:status\natau lihat command-decision-tree.md"]
 
     style WEB fill:#d4edda,stroke:#28a745,color:#155724
@@ -90,7 +90,7 @@ Tidak diperlukan paket Composer tambahan di luar instalasi Laravel standar.
 ### `php artisan serve:mobile` — Mode Mobile (Capacitor Shell)
 
 Menjalankan server Laravel yang diload oleh shell Capacitor mobile
-(`app/Capacitor/UserApp` atau `AdminApp`) di Android/iOS.
+(`app/Capacitor/DekstopApp` atau `app/Capacitor/DekstopAdminApp`) di Android/iOS.
 
 ```bash
 php artisan serve:mobile --port=8001
@@ -118,12 +118,12 @@ php artisan serve:mobile --port=8001
 | Aset mobile dikompilasi | `npm run build:mobile` (atau `npm run dev:mobile` untuk HMR) |
 | `.env.mobile` | Override `APP_URL`, `SESSION_DRIVER=database`, `VITE_PLATFORM=mobile` |
 
-**Prasyarat (di SHELL — `app/Capacitor/UserApp` atau `AdminApp`):**
+**Prasyarat (di SHELL — `app/Capacitor/DekstopApp` atau `app/Capacitor/DekstopAdminApp`):**
 
 | Persyaratan | Detail |
 |-------------|---------| 
 | Node.js 18+ | `npm install` sudah dijalankan |
-| `capacitor.config.json` → `server.url` | Menunjuk ke URL server ini (mis. `http://10.0.2.2:8001/user`) |
+| `capacitor.config.json` → `server.url` | Menunjuk ke URL server ini (mis. `http://10.0.2.2:8001/home`) |
 | Android SDK + ADB | Diperlukan untuk `cap run android` / build APK |
 | Xcode + `devicectl` | Diperlukan untuk `cap run ios` / build IPA; hanya macOS |
 | `cap sync` sudah dijalankan | Menyalin `dist/` ke project native |
@@ -136,19 +136,13 @@ php artisan serve:mobile --port=8001
 ### `php artisan serve:desktop` — Mode Desktop (Capacitor Electron)
 
 Menjalankan server Laravel yang diload oleh shell Capacitor Electron
-(`app/Capacitor/UserApp/electron` atau `AdminApp/electron`) di Windows/macOS.
+(`app/Capacitor/DekstopApp/electron` atau `app/Capacitor/DekstopAdminApp/electron`) di Windows/macOS.
 
 ```bash
 php artisan serve:desktop --port=8002
 
-# Lewati queue worker
-php artisan serve:desktop --without-queue
-
-# Lewati scheduler
-php artisan serve:desktop --without-schedule
-
-# Sembunyikan output log Laravel dari konsol
-php artisan serve:desktop --quiet-logs
+# Queue worker dan scheduler dijalankan sebagai proses terpisah.
+# serve:desktop hanya menerima --host, --port, dan --tries.
 ```
 
 **Mode platform yang diinisialisasi:** `PlatformMode::Desktop`
@@ -165,7 +159,7 @@ php artisan serve:desktop --quiet-logs
 - Driver sesi: `file` (proses lokal pengguna tunggal)
 - Kamera: shell membuka `<input type="file" capture>` (bukan WebRTC)
 - Desktop Notifications: Web Notifications API (standar browser, tersedia di Electron)
-- Auto-updater: `electron-updater` (di shell, bukan server)
+- Auto-updates: capability flag di `PlatformFeatureRegistry`; installer update feed harus dikonfigurasi terpisah bila akan diaktifkan
 
 **Prasyarat (di SERVER):**
 
@@ -174,7 +168,7 @@ php artisan serve:desktop --quiet-logs
 | Aset desktop dikompilasi | `npm run build:desktop` (atau `npm run dev:desktop` untuk HMR) |
 | `.env.desktop` | Override `APP_URL`, `SESSION_DRIVER=file`, `VITE_PLATFORM=desktop` |
 
-**Prasyarat (di SHELL — `app/Capacitor/*/electron`):**
+**Prasyarat (di SHELL — `app/Capacitor/DekstopApp/electron` atau `app/Capacitor/DekstopAdminApp/electron`):**
 
 | Persyaratan | Detail |
 |-------------|---------| 
@@ -199,7 +193,7 @@ php artisan serve:desktop --quiet-logs
 | **Paket Composer tambahan** | Tidak ada | Tidak ada | Tidak ada |
 | **Push Notifications** | ❌ | ✅ FCM | ❌ |
 | **Desktop Notifications** | Web Notif API | ❌ | Web Notif API (Electron) |
-| **Auto-updater** | ❌ | ❌ | ✅ `electron-updater` (shell) |
+| **Auto-update capability** | ❌ | ❌ | ✅ capability flag; update feed harus dikonfigurasi terpisah |
 
 > **Semua tiga perintah mendelegasikan ke `php artisan serve` internal.**
 > Lihat `app/Console/Commands/ServePlatformCommand/DelegatesToServeCommand.php`.
@@ -223,7 +217,7 @@ php artisan serve:web --port=8000
 npm run dev:mobile
 php artisan serve:mobile --port=8001
 # Di shell terpisah:
-cd app/Capacitor/UserApp && npm run android   # atau ios
+cd app/Capacitor/DekstopApp && npm run android   # atau ios
 ```
 
 ### Terminal 3 — Desktop (port 8002)
@@ -232,7 +226,10 @@ cd app/Capacitor/UserApp && npm run android   # atau ios
 npm run dev:desktop
 php artisan serve:desktop --port=8002
 # Di shell terpisah:
-cd app/Capacitor/UserApp && npx electron-builder --config electron/electron-builder.config.js --dir
+cd app/Capacitor/DekstopApp
+npm run sync
+npm --prefix electron run build
+npx electron-builder --config electron/electron-builder.config.js --dir
 ```
 
 ### Konvensi Penugasan Port
@@ -298,17 +295,17 @@ public/
 ### Mobile (Android)
 
 ```bash
-cd app/Capacitor/UserApp
+cd app/Capacitor/DekstopApp
 npm run build              # Vite build → dist/
 npx cap sync android       # Copy dist + update native project
 npx cap run android        # Deploy ke emulator/device
-npx cap run android --watch # Hot reload (dev)
+npx cap run android -l      # live reload (dev); bukan --watch
 ```
 
 ### Mobile (iOS — hanya macOS)
 
 ```bash
-cd app/Capacitor/UserApp
+cd app/Capacitor/DekstopApp
 npm run build
 npx cap sync ios
 npx cap run ios
@@ -317,9 +314,9 @@ npx cap run ios
 ### Desktop (Windows)
 
 ```bash
-cd app/Capacitor/UserApp
-npm run build
-npx tsc -p electron/tsconfig.json
+cd app/Capacitor/DekstopApp
+npm run sync
+npm --prefix electron run build
 npx electron-builder --config electron/electron-builder.config.js --win
 # Output: electron/dist/*.exe, *.zip
 ```
@@ -327,9 +324,9 @@ npx electron-builder --config electron/electron-builder.config.js --win
 ### Desktop (macOS)
 
 ```bash
-cd app/Capacitor/UserApp
-npm run build
-npx tsc -p electron/tsconfig.json
+cd app/Capacitor/DekstopApp
+npm run sync
+npm --prefix electron run build
 npx electron-builder --config electron/electron-builder.config.js --mac
 # Output: electron/dist/*.dmg, *.zip
 ```
@@ -337,10 +334,10 @@ npx electron-builder --config electron/electron-builder.config.js --mac
 ### Set URL Shell (wajib sebelum build produksi)
 
 ```bash
-cd app/Capacitor/UserApp
-npm run set:url -- https://dekorasi.example.com/user
+cd app/Capacitor/DekstopApp
+npm run set:url -- https://dekorasi.example.com/home
 
-cd app/Capacitor/AdminApp
+cd app/Capacitor/DekstopAdminApp
 npm run set:url -- https://dekorasi.example.com/admin
 ```
 
@@ -449,16 +446,16 @@ php artisan platform:clear
 **Diagnosa:**
 ```bash
 # 1. Server Laravel hidup?
-curl -I http://10.0.2.2:8001/user   # mobile emulator
-curl -I http://localhost:8002/user  # desktop
+curl -I http://10.0.2.2:8001/home   # mobile emulator
+curl -I http://localhost:8002/home  # desktop
 
 # 2. Aset platform ada?
 ls public/build/mobile/.vite/manifest.json
 ls public/build/desktop/.vite/manifest.json
 
 # 3. capacitor.config.json URL benar?
-cat app/Capacitor/UserApp/capacitor.config.json
-# "server": { "url": "http://10.0.2.2:8001/user", "cleartext": true }
+cat app/Capacitor/DekstopApp/capacitor.config.json
+# "server": { "url": "http://10.0.2.2:8001/home", "cleartext": true }
 
 # 4. Cleartext diizinkan untuk http dev?
 ```
@@ -470,10 +467,10 @@ npm run build:mobile
 npm run build:desktop
 
 # Set URL shell ke server yang benar
-cd app/Capacitor/UserApp && npm run set:url -- http://10.0.2.2:8001/user
+cd app/Capacitor/DekstopApp && npm run set:url -- http://10.0.2.2:8001/home
 
 # Sync Capacitor
-cd app/Capacitor/UserApp && npm run sync
+cd app/Capacitor/DekstopApp && npm run sync
 ```
 
 ---

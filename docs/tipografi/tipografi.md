@@ -1,4 +1,4 @@
-# Tipografi & Gaya Teks
+﻿# Tipografi & Gaya Teks
 
 Kontrol tipografi form admin yang mempengaruhi TAMPILAN semua panel
 (Admin, User/Welcome, Livewire, dan blade views).

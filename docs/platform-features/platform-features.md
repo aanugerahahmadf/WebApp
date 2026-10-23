@@ -1,4 +1,4 @@
-# Matriks Fitur Platform (Capacitor)
+﻿# Matriks Fitur Platform (Capacitor)
 
 Dokumen ini menjelaskan fitur-fitur aplikasi yang tersedia di masing-masing dari delapan
 runtime platform yang didukung, menjelaskan apa yang diaktifkan setiap fitur dalam
@@ -131,10 +131,11 @@ berada di latar belakang via **FCM** (Firebase Cloud Messaging). Digunakan oleh
 
 **Tersedia di:** Hanya aplikasi Desktop (Capacitor Electron Windows, macOS)
 
-Memungkungi shell Electron mengunduh dan menginstal pembaruan aplikasi
-secara otomatis di latar belakang via **electron-updater**. Ditangani sepenuhnya
-di sisi shell (`electron/main.ts` + `electron-builder.config.js`), bukan
-server Laravel.
+Registry hanya mengekspos capability flag untuk kemungkinan update desktop.
+Pengunduhan dan instalasi otomatis belum diimplementasikan: saat ini tidak ada
+dependency `electron-updater` atau update feed di shell. Jika fitur ini akan
+diaktifkan, implementasikan dan uji mekanismenya di sisi shell
+(`electron/main.ts` + `electron-builder.config.js`), bukan di server Laravel.
 
 > Tidak berlaku untuk aplikasi mobile (dikelola oleh toko aplikasi) atau
 > website (selalu disajikan fresh).
@@ -358,9 +359,9 @@ untuk kasus platform mana pun.
 
 ## Dokumentasi Terkait
 
-- [Arsitektur Dukungan Platform](platform-support.md) — ikhtisar arsitektur lengkap, pipeline deteksi, dan alur data
-- [Konfigurasi Lingkungan](environment-configuration.md) — file `.env` per platform dan penggabungan variabel
-- [Kompilasi Aset](asset-compilation.md) — titik masuk Vite dan direktori build per platform
+- [Arsitektur Dukungan Platform](../platform-support/platform-support.md) — ikhtisar arsitektur lengkap, pipeline deteksi, dan alur data
+- [Konfigurasi Lingkungan](../environment-configuration/environment-configuration.md) — file `.env` per platform dan penggabungan variabel
+- [Kompilasi Aset](../asset-compilation/asset-compilation.md) — titik masuk Vite dan direktori build per platform
 - `app/Support/Platform/PlatformFeatureRegistry/PlatformFeatureRegistry.php` — sumber kebenaran matriks fitur
 - `app/Enums/RuntimePlatform/RuntimePlatform.php` — definisi enum dengan semua metode helper fitur
 - `app/helpers.php` — `platform_feature()`, `runtime_platform()`, dan helper mode

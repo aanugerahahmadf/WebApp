@@ -1,6 +1,6 @@
-# Messages System — Technical Reference
+﻿# Messages System â€” Technical Reference
 
-> Applies to: Welcome panel, User panel, Admin panel
+> Berlaku untuk panel welcome (storefront/akun) dan admin panel
 
 ---
 
@@ -159,8 +159,8 @@ browser (kamera / MediaRecorder / vCard)
 
 | Date | Bug | Fix |
 |---|---|---|
-| 2026-10-01 | `hasRole() on null` — 500 on `/welcome/messages/{id}` for guests | Changed `chatUser()->hasRole()` → `chatUser()?->hasRole()` in Welcome blade |
-| 2026-10-01 | Same bug in User panel messages blade | Changed `auth()->user()->hasRole()` → `auth()->user()?->hasRole()` |
+| 2026-10-01 | `hasRole() on null` — 500 on `/messages/{id}` for guests | Changed `chatUser()->hasRole()` → `chatUser()?->hasRole()` in Welcome blade |
+| 2026-10-01 | Pola null-safe juga harus dipakai pada blade messages yang sudah dilebur ke panel welcome | Changed `auth()->user()->hasRole()` → `auth()->user()?->hasRole()` |
 | 2026-10-01 | `chat_admin` 500 — `return redirect()` ignored by Filament | Changed to `$livewire->redirect(url, navigate: true)` |
 | 2026-10-01 | `wishlist_detail` 419 — hidden form forced CSRF modal POST | Removed `->form([Hidden::make('confirm')])` from both resources |
 | 2026-10-21 | Item Poll & New sticker di menu "+" tidak menutup menunya | `open = false` → `attachOpen = false`. `open` milik komponen global `messageBubble`, scope-nya lebih dekat, jadi yang ketutup gelembung pesan -- bukan menu lampiran |

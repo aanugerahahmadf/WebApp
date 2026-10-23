@@ -1,4 +1,4 @@
-# Panduan Pengujian
+﻿# Panduan Pengujian
 
 ## Cara Menjalankan
 
@@ -63,7 +63,7 @@ seperti kode aplikasi:
    Solusinya: uji modal-nya (`mountInfolistAction` + `assertSee` link login)
    dan uji guard-nya langsung (`Resource::redirectGuestToLogin()`), seperti
    pada `GuestAddToCartTest`.
-2. **Jangan hardcode slug katalog** (`/welcome/packages`, `/welcome/products`)
+2. **Jangan hardcode slug katalog** (`/flowerdecorationscatalog`, `/flowerdecorationscatalog/{record}`)
    karena slug resource bisa berubah (pernah menjadi `flowerdecorations*`).
    Selalu pakai `Resource::getUrl()`.
 3. Beberapa test lama masih memakai path lama dan merah karena perubahan slug

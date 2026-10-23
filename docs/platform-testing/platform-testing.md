@@ -1,4 +1,4 @@
-# Platform Testing
+﻿# Platform Testing
 
 Langkah uji untuk delapan target runtime. Dipakai oleh
 `php artisan platform:matrix`, yang mencetak matriks itu sendiri lalu
@@ -46,7 +46,7 @@ Environment File: .env.web
 Asset Directory:  build/web
 ```
 
-Untuk memastikan semua mode, jalankan tiap `serve:*` (§2) lalu ulangi
+Untuk memastikan semua mode, jalankan tiap `serve:*` (Â§2) lalu ulangi
 ketiga perintah itu.
 
 ---
@@ -70,9 +70,9 @@ Di browser, pakai ekstensi yang bisa menambah header kustom. Di terminal,
 langsung ke server:
 
 ```bash
-curl -s -H "X-Shell: android"  http://127.0.0.1:8000/welcome/home | grep 'slug:'
-curl -s -H "X-Shell: desktop" http://127.0.0.1:8000/welcome/home | grep 'slug:'
-curl -s                        http://127.0.0.1:8000/welcome/home | grep 'slug:'
+curl -s -H "X-Shell: android"  http://127.0.0.1:8000/home | grep 'slug:'
+curl -s -H "X-Shell: desktop" http://127.0.0.1:8000/home | grep 'slug:'
+curl -s                        http://127.0.0.1:8000/home | grep 'slug:'
 ```
 
 Hasilnya, baris `slug:` di dalam `window.AppPlatform`:
@@ -144,18 +144,18 @@ dijalankan **dari dalam folder shell**_itulah satu-satunya tempat `npx cap`
 dan `npm run android` tersedia.
 
 ```bash
-cd app/Capacitor/UserApp     # atau app/Capacitor/AdminApp
+cd app/Capacitor/DekstopApp     # atau app/Capacitor/DekstopAdminApp
 ```
 
 | shell   | `appId`                        | panel  |
 |---------|--------------------------------|--------|
-| UserApp | `id.dekorasi.pengantin.user`    | `/user`  |
-| AdminApp| `id.dekorasi.pengantin.admin`   | `/admin` |
+| DekstopApp | `id.dekorasi.pengantin.user`    | `/home`  |
+| DekstopAdminApp| `id.dekorasi.pengantin.admin`   | `/admin` |
 
 Server yang dipanggil shell diatur lewat:
 
 ```bash
-npm run set:url -- http://10.0.2.2:8001/welcome   # emulator Android
+npm run set:url -- http://10.0.2.2:8001/home   # emulator Android
 ```
 
 `10.0.2.2` adalah cara emulator Android mencapai mesin host; perangkat
@@ -165,7 +165,8 @@ fisik memakai IP LAN, dan produksi memakai domain. Nilai ini disimpan di
 ### Android
 
 ```bash
-npm run sync         # build + cap sync
+npm run sync         # build + sync Capacitor Electron
+npx cap sync android # sinkronkan project Android bila diperlukan
 npm run android      # build + cap run android
 ```
 

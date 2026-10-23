@@ -1,4 +1,4 @@
-# Proses Kompilasi Aset (Capacitor)
+﻿# Proses Kompilasi Aset (Capacitor)
 
 Dokumen ini menjelaskan bagaimana pipeline build Vite dikonfigurasi untuk
 kompilasi aset multi-platform pada aplikasi Laravel Wedding Flower Decorations CBIR.
@@ -397,7 +397,7 @@ if (__VITE_PLATFORM__ === 'desktop') {
 | Kamera Shell (input file)   | ❌          | ✅             | ✅              |
 | Push notifications (FCM)    | ❌          | ✅             | ❌              |
 | Desktop Notifications (Web Notif API) | ❌ | ❌ | ✅ |
-| Auto-updater (electron-updater) | ❌       | ❌             | ✅ (di shell)   |
+| Auto-updates (capability flag) | ❌       | ❌             | ✅ (di shell)   |
 | Akses file via input        | ❌          | ✅             | ✅              |
 | Firebase client             | ✅          | ✅             | ✅              |
 | WebSocket Broadcast (Laravel Echo) | ✅    | ✅             | ✅              |
