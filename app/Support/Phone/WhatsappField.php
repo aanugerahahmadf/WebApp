@@ -3,6 +3,7 @@
 namespace App\Support\Phone;
 
 use App\Models\WhatsappOtp\WhatsappOtp;
+use Closure;
 use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Components\Group;
 use Filament\Forms\Components\Select;
@@ -30,8 +31,9 @@ final class WhatsappField
      * @param  bool  $required  nomor wajib diisi (Complete Profile)
      * @param  bool  $withOtpButton  tampilkan tombol "Kirim Kode OTP" dan
      *                            pastikan nomor tersimpan sebelum OTP dikirim
+     * @param  bool|Closure  $disabled  disable seluruh group secara kondisional
      */
-    public static function group(bool $required = false, bool $withOtpButton = false): Group
+    public static function group(bool $required = false, bool $withOtpButton = false, bool|Closure $disabled = false): Group
     {
         $number = TextInput::make('whatsapp')
             ->label(__('Nomor WhatsApp'))
@@ -49,6 +51,7 @@ final class WhatsappField
                     Action::make('sendOtp')
                         ->label(__('Kirim Kode OTP'))
                         ->icon('/images/icons/send.svg')
+                        ->disabled($disabled)
                         ->action('sendOtp'),
                 ]);
         }
@@ -67,7 +70,7 @@ final class WhatsappField
                 ->dehydrated(false)
                 ->columnSpanFull(),
             $number,
-        ])->columns(1)->columnSpanFull();
+        ])->columns(1)->columnSpanFull()->disabled($disabled);
     }
 
     /**

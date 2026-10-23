@@ -25,6 +25,8 @@ class PersonalInfoComponent extends Component implements HasForms
 
     public ?array $data = [];
 
+    public bool $isEditing = false;
+
     protected static int $sort = 1;
 
     public static function getSort(): int
@@ -91,11 +93,13 @@ class PersonalInfoComponent extends Component implements HasForms
                             ])
                             ->extraFieldWrapperAttributes(['class' => 'avatar-upload-centered'])
                             ->alignCenter()
+                            ->disabled(fn (): bool => ! $this->isEditing)
                             ->columnSpanFull(),
                         TextInput::make('first_name')
                             ->label(__('Nama Depan'))
                             ->required()
                             ->maxLength(255)
+                            ->disabled(fn (): bool => ! $this->isEditing)
                             ->live(onBlur: true)
                             ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                 $set('full_name', $this->buildFullName($state, $get('mid_name'), $get('last_name')));
@@ -103,6 +107,7 @@ class PersonalInfoComponent extends Component implements HasForms
                         TextInput::make('mid_name')
                             ->label(__('Nama Tengah'))
                             ->maxLength(255)
+                            ->disabled(fn (): bool => ! $this->isEditing)
                             ->live(onBlur: true)
                             ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                 $set('full_name', $this->buildFullName($get('first_name'), $state, $get('last_name')));
@@ -110,6 +115,7 @@ class PersonalInfoComponent extends Component implements HasForms
                         TextInput::make('last_name')
                             ->label(__('Nama Belakang'))
                             ->maxLength(255)
+                            ->disabled(fn (): bool => ! $this->isEditing)
                             ->live(onBlur: true)
                             ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                 $set('full_name', $this->buildFullName($get('first_name'), $get('mid_name'), $state));
@@ -125,14 +131,19 @@ class PersonalInfoComponent extends Component implements HasForms
                             ->label(__('Username'))
                             ->placeholder(__('Masukkan username Anda'))
                             ->required()
+                            ->disabled(fn (): bool => ! $this->isEditing)
                             ->minLength(3)
                             ->maxLength(255)
                             ->unique(table: 'users', column: 'username', ignorable: $user)
                             ->autocomplete('username'),
-                        WhatsappField::group(withOtpButton: true),
+                        WhatsappField::group(
+                            withOtpButton: true,
+                            disabled: fn (): bool => ! $this->isEditing,
+                        ),
                         TextInput::make('otp_code')
                             ->label(__('Kode Verifikasi OTP'))
                             ->numeric()
+                            ->disabled(fn (): bool => ! $this->isEditing)
                             ->length(6)
                             ->placeholder(__('6 digit'))
                             ->live()
@@ -170,8 +181,17 @@ class PersonalInfoComponent extends Component implements HasForms
         Log::info('PersonalInfoComponent: WhatsApp OTP sent', ['whatsapp' => $phone]);
     }
 
+    public function startEditing(): void
+    {
+        $this->isEditing = true;
+    }
+
     public function save(): void
     {
+        if (! $this->isEditing) {
+            return;
+        }
+
         try {
             $data = $this->form->getState();
 
@@ -231,6 +251,7 @@ class PersonalInfoComponent extends Component implements HasForms
                 ->success()
                 ->send();
 
+            $this->isEditing = false;
             $this->dispatch('profile-updated');
         } catch (\Exception $e) {
             Log::error('PersonalInfoComponent: Error saving profile', ['error' => $e->getMessage()]);

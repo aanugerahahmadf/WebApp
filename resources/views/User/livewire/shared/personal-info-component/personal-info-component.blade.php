@@ -3,9 +3,15 @@
         {{ $this->form }}
 
         <div class="flex justify-end mt-4 mb-8">
-            <x-filament::button type="submit">
-                {{ __('Simpan Perubahan') }}
-            </x-filament::button>
+            @if ($isEditing)
+                <x-filament::button type="submit">
+                    {{ __('Save Changes') }}
+                </x-filament::button>
+            @else
+                <x-filament::button type="button" wire:click="startEditing">
+                    {{ __('Edit') }}
+                </x-filament::button>
+            @endif
         </div>
     </form>
 
