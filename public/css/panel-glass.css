@@ -1242,7 +1242,27 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
         backdrop-filter: none !important;
     }
 
-    .dark #cookie-consent-banner .cc-bar {
+.dark #cookie-consent-banner .cc-bar {
         background-color: rgb(9 9 11 / 0.98) !important;
     }
+}
+
+/* --- Settings & Profile: transparent surfaces -----------------------
+ * panel-glass.css is loaded after the Vite stylesheets, so this exception
+ * must live here. The generic `.fi-section` glass rule above otherwise
+ * restores the navy card background on Settings and Edit Profile.
+ */
+.fi-panel-welcome .profile-glass-page section.fi-section,
+.fi-panel-user .profile-glass-page section.fi-section,
+.fi-panel-welcome .profile-glass-page .fi-section-content-ctn,
+.fi-panel-user .profile-glass-page .fi-section-content-ctn {
+    background: transparent !important;
+    background-image: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    --tw-ring-color: transparent !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+    --tw-ring-offset-shadow: 0 0 #0000 !important;
 }
