@@ -53,7 +53,8 @@
         .search { width: 100%; padding: .7rem .8rem; margin-bottom: 1.25rem; color: var(--docs-text); background: var(--docs-surface); border: 1px solid var(--docs-ring); border-radius: .55rem; outline: none; font: inherit; }
         .search::placeholder { color: var(--docs-muted); }
         .search:focus { border-color: var(--docs-accent); }
-        .group { margin: 1.15rem .35rem .45rem; color: var(--docs-group); font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+        .group { display: flex; align-items: center; gap: .4rem; margin: 1.15rem .35rem .45rem; color: var(--docs-group); font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+        .group svg { width: .85rem; height: .85rem; flex: 0 0 .85rem; stroke: currentColor; }
         .nav-link { display: block; padding: .48rem .65rem; border-radius: .55rem; color: var(--docs-muted); font-size: .88rem; }
         .nav-link:hover { color: var(--docs-text); background: rgb(0 0 0 / .05); text-decoration: none; }
         .dark .nav-link:hover { background: rgb(255 255 255 / .05); }
@@ -121,7 +122,12 @@
         </div>
         <nav aria-label="Daftar dokumentasi">
             @foreach ($groups as $group)
-                <div class="group">{{ $group['label'] }}</div>
+                <div class="group">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h5l2 2H19.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5v-11Z"/>
+                    </svg>
+                    <span>{{ $group['label'] }}</span>
+                </div>
                 @foreach ($group['items'] as $item)
                     <a class="nav-link {{ $selected === $item['key'] ? 'active' : '' }}" href="{{ route('docs.show', ['path' => $item['key']]) }}" data-doc-link>{{ $item['title'] }}</a>
                 @endforeach
