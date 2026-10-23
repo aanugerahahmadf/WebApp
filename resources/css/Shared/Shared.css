@@ -1437,25 +1437,23 @@ body.cbir-browse-modal-open .fi-bottom-nav {
    a form column. Both parts remain transparent on these profile pages. */
 .fi-panel-welcome .profile-glass-page section.fi-section,
 .fi-panel-user .profile-glass-page section.fi-section {
-    background-color: rgb(15 23 42 / 0.58) !important;
-    background-image: none !important;
-    border-color: rgb(148 163 184 / 0.28) !important;
+    background: transparent !important;
+    border-color: transparent !important;
     box-shadow: none !important;
-    -webkit-backdrop-filter: blur(20px) saturate(150%);
-    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
 }
 
 /* Filament adds the visible card background to the content container of an
    aside section, not to the section root. Remove that layer as well. */
 .fi-panel-welcome .profile-glass-page .fi-section-content-ctn,
 .fi-panel-user .profile-glass-page .fi-section-content-ctn {
-    background-color: rgb(15 23 42 / 0.58) !important;
-    background-image: none !important;
-    border-color: rgb(148 163 184 / 0.28) !important;
+    background: transparent !important;
+    border-color: transparent !important;
     box-shadow: none !important;
     --tw-ring-shadow: 0 0 #0000 !important;
-    -webkit-backdrop-filter: blur(20px) saturate(150%);
-    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
 }
 
 @media (min-width: 640px) {
