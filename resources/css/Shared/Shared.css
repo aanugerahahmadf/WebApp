@@ -1440,6 +1440,24 @@ body.cbir-browse-modal-open .fi-bottom-nav {
     padding: 1.25rem;
 }
 
+/* Filament's `aside` sections split the surface into a description column and
+   a form column. Style the section itself as well, otherwise the description
+   column remains transparent while only the form column appears glassy. */
+.fi-panel-welcome .profile-glass-page section.fi-section,
+.fi-panel-user .profile-glass-page section.fi-section {
+    --fi-glass-angle: 180deg;
+    background-color: var(--fi-glass-bg) !important;
+    background-image: linear-gradient(
+        var(--fi-glass-angle),
+        var(--fi-glass-t1) 0%,
+        var(--fi-glass-t2) 30%,
+        var(--fi-glass-t3) 100%
+    ) !important;
+    border-color: var(--fi-glass-ring) !important;
+    -webkit-backdrop-filter: var(--fi-glass-blur);
+    backdrop-filter: var(--fi-glass-blur);
+}
+
 @media (min-width: 640px) {
     .fi-panel-welcome .profile-glass-page,
     .fi-panel-user .profile-glass-page {
