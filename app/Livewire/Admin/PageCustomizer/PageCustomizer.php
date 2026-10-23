@@ -274,8 +274,15 @@ class PageCustomizer extends Component implements HasForms
                     ->afterStateUpdated(function (?string $state): void {
                         if ($state !== null && $state !== '') {
                             $this->scope = $state;
-                            $this->resourceClass = self::resourceForScope($state)
-                                ?? self::currentResource();
+                            // The selected page has its own text structure.
+                            // Refresh this explicitly; otherwise Livewire
+                            // keeps rendering the roles from the page that
+                            // opened the customizer (for example Catalogs).
+                            $this->roleSet = PageStyles::rolesFor($this->scope);
+                            // Do not fall back to the resource that originally
+                            // opened this component. A non-resource page such
+                            // as Home/Settings must not inherit Catalog fields.
+                            $this->resourceClass = self::resourceForScope($state);
                         }
 
                         $this->resetFill();

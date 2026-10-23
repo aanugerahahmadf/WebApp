@@ -121,6 +121,16 @@ class PageStyles
     public const ROLES_BY_SCOPE = [
         // Halaman NON-resource (di-g-vari dari hook, bukan folder resource):
         'home' => ['heading', 'subheading', 'description'],
+        'messages' => ['heading', 'description'],
+        'notification-detail' => ['heading', 'subheading', 'description'],
+        'settings' => ['heading', 'subheading', 'description'],
+        'edit-profile' => ['heading', 'subheading', 'description'],
+        'help-center' => ['heading', 'heading2', 'heading3', 'description'],
+        'privacy-policy' => ['heading', 'subheading', 'description'],
+        'privacy-terms' => ['heading', 'subheading', 'description'],
+        'terms-of-service' => ['heading', 'subheading', 'description'],
+        'wedding-policy' => ['heading', 'subheading', 'description'],
+        'cbir-search' => ['heading', 'subheading', 'description'],
     ];
 
     /**
