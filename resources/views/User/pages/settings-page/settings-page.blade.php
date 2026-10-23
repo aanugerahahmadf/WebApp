@@ -1,5 +1,5 @@
 <x-filament-panels::page>
-    <div class="space-y-6">
+    <div class="profile-glass-page settings-page space-y-6">
 
         {{-- ── BAHASA ────────────────────────────────────────────── --}}
         <div id="bahasa">

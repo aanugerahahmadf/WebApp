@@ -1420,6 +1420,33 @@ body.cbir-browse-modal-open .fi-bottom-nav {
     box-shadow: none !important;
 }
 
+/* Settings and Edit Profile use the same glass surface as the topbar/sidebar.
+   Keep this scoped to those two pages so catalog, home, and legal pages retain
+   their existing surfaces. */
+.fi-panel-welcome .profile-glass-page,
+.fi-panel-user .profile-glass-page {
+    --fi-glass-angle: 180deg;
+    background-color: var(--fi-glass-bg) !important;
+    background-image: linear-gradient(
+        var(--fi-glass-angle),
+        var(--fi-glass-t1) 0%,
+        var(--fi-glass-t2) 30%,
+        var(--fi-glass-t3) 100%
+    ) !important;
+    border: 1px solid var(--fi-glass-ring);
+    border-radius: 1.25rem;
+    -webkit-backdrop-filter: var(--fi-glass-blur);
+    backdrop-filter: var(--fi-glass-blur);
+    padding: 1.25rem;
+}
+
+@media (min-width: 640px) {
+    .fi-panel-welcome .profile-glass-page,
+    .fi-panel-user .profile-glass-page {
+        padding: 1.5rem;
+    }
+}
+
 /* CATATAN: offset `top` sidebar TIDAK ditulis di CSS ini, tapi inline di tiap
    override sidebar:
      resources/views/{User,Welcome,Admin}/vendor/filament-panels/components/
