@@ -17,6 +17,7 @@ use App\Http\Controllers\User\ReviewReportController\ReviewReportController;
 use App\Http\Controllers\User\ReviewVoteController\ReviewVoteController;
 use App\Http\Controllers\User\SocialiteController\SocialiteController;
 use App\Http\Controllers\Welcome\LegalWebController\LegalWebController as WelcomeLegalWebController;
+use App\Http\Controllers\Welcome\DocumentationController\DocumentationController;
 use App\Http\Controllers\Welcome\ReportPdfController\ReportPdfController as WelcomeReportPdfController;
 use App\Http\Middleware\SetLocale\SetLocale;
 use App\Http\Middleware\SuperAdmin\SuperAdmin;
@@ -56,6 +57,12 @@ use Illuminate\Support\Facades\Route;
 Route::get('/legal/terms', [WelcomeLegalWebController::class, 'terms'])->name('legal.terms');
 Route::get('/legal/privacy', [WelcomeLegalWebController::class, 'privacy'])->name('legal.privacy');
 Route::get('/legal/help', [WelcomeLegalWebController::class, 'help'])->name('legal.help');
+
+// Dokumentasi teknis publik yang dirender langsung dari folder /docs.
+Route::get('/docs', [DocumentationController::class, 'index'])->name('docs.index');
+Route::get('/docs/{path}', [DocumentationController::class, 'show'])
+    ->where('path', '.*')
+    ->name('docs.show');
 
 // Token CSRF terbaru, untuk pemulihan diam-diam di sisi browser.
 //
