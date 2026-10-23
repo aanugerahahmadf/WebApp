@@ -73,8 +73,8 @@
         .markdown p, .markdown ul, .markdown ol { color: var(--docs-text); }
         .markdown blockquote { margin: 1.25rem 0; padding: .7rem 1rem; color: var(--docs-muted); background: var(--docs-surface); border-left: 3px solid var(--docs-accent); border-radius: .25rem; }
         .markdown code { padding: .15rem .35rem; color: var(--docs-accent); background: var(--docs-code); border-radius: .3rem; }
-        .markdown pre { overflow-x: auto; margin: 0; padding: 1.1rem 1rem 1.25rem; background: #111; border: 0; border-radius: 0 0 .8rem .8rem; }
-        .code-wrap { position: relative; overflow: hidden; margin: 1.35rem 0; background: #111; border: 1px solid rgb(255 255 255 / .12); border-radius: .8rem; box-shadow: 0 12px 30px rgb(0 0 0 / .14); }
+        .markdown pre { overflow-x: auto; margin: 0; padding: 1.1rem 1rem 1.25rem; background: #111; border: 0; border-radius: 0 0 .4rem .4rem; }
+        .code-wrap { position: relative; overflow: hidden; margin: 1.35rem 0; background: #111; border: 1px solid rgb(255 255 255 / .12); border-radius: .4rem; box-shadow: 0 12px 30px rgb(0 0 0 / .14); }
         .code-header { display: flex; align-items: center; justify-content: space-between; min-height: 2.65rem; padding: 0 .75rem; color: #a8a29e; background: #292524; border-bottom: 1px solid rgb(255 255 255 / .14); font-size: .84rem; }
         .code-title { display: inline-flex; align-items: center; gap: .65rem; margin: 0 auto; transform: translateX(1.8rem); }
         .code-dots { display: inline-flex; gap: .35rem; }
