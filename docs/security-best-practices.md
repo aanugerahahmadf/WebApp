@@ -10,7 +10,7 @@ dan diikuti selama pengembangan, deployment, dan maintenance aplikasi
 
 ---
 
-##  Konfigurasi Dasar
+## 🔒 Konfigurasi Dasar
 
 ### 1. File Environment (.env)
 
@@ -91,7 +91,7 @@ public function handle($request, Closure $next)
 
 ---
 
-##  Autentikasi & Otorisasi
+## 👤 Autentikasi & Otorisasi
 
 ### 1. Password & Account Security
 
@@ -152,7 +152,7 @@ public function handle($request, Closure $next)
 
 ---
 
-##  Network & API Security
+## 🌐 Network & API Security
 
 ### 1. API Endpoints
 
@@ -185,7 +185,7 @@ public function handle($request, Closure $next)
 
 ---
 
-##  Dependencies & Supply Chain
+## 📦 Dependencies & Supply Chain
 
 ### 1. Composer Packages
 
@@ -206,7 +206,7 @@ public function handle($request, Closure $next)
 
 ---
 
-##  Testing Security
+## 🔍 Testing Security
 
 ### 1. Security Test Cases
 
@@ -268,7 +268,7 @@ Sebelum deployment produksi:
 
 ---
 
-##  Referensi & Alat
+## 📚 Referensi & Alat
 
 | Alat | Digunakan untuk |
 |---|---|
