@@ -104,6 +104,15 @@ class DocumentationController extends Controller
             ];
         }
 
+        $license = base_path('LICENSE');
+        if (is_file($license)) {
+            $documents['project-license'] = [
+                'file' => 'LICENSE',
+                'title' => 'Lisensi MIT',
+                'category' => 'Dokumen proyek',
+            ];
+        }
+
         // Include other project-level Markdown guides, while keeping the
         // internal docs/ tree handled below. Agent/tooling instructions are
         // intentionally not public documentation.

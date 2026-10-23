@@ -636,7 +636,7 @@ Buka `/health` dari AI Core bila CBIR dipakai, lalu jalankan
 
 ## Lisensi
 
-Proyek ini dilisensikan di bawah [Lisensi MIT](LICENSE). Ketentuan hukum
-lengkap ada di file [`LICENSE`](LICENSE) root.
+Proyek ini dilisensikan di bawah [Lisensi MIT](/docs/project-license). Ketentuan hukum
+lengkap tersedia di halaman [Lisensi MIT](/docs/project-license) pada portal dokumentasi.
 
 Hak Cipta (c) 2026 Anugerah Ahmad Fachrurochim.
