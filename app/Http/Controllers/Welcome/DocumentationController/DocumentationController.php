@@ -16,10 +16,10 @@ class DocumentationController extends Controller
     public function index(Request $request): \Illuminate\Contracts\View\View
     {
         $documents = $this->documents();
-        $selected = $request->query('doc', 'README');
+        $selected = $request->query('doc', 'project-readme');
 
         if (! isset($documents[$selected])) {
-            $selected = 'README';
+            $selected = 'project-readme';
         }
 
         return $this->render($selected, $documents);
@@ -85,6 +85,21 @@ class DocumentationController extends Controller
 
         $documents = [];
 
+        // The repository README is the landing document for the public portal.
+        // Keep it outside docs/ on disk, but expose it beside the documentation
+        // index so the complete project documentation is available from /docs.
+        $readme = base_path('README.md');
+        if (is_file($readme)) {
+            $contents = file_get_contents($readme) ?: '';
+            $documents['project-readme'] = [
+                'file' => 'README.md',
+                'title' => preg_match('/^#\s+(.+)$/m', $contents, $match)
+                    ? trim($match[1])
+                    : 'README',
+                'category' => 'Mulai di sini',
+            ];
+        }
+
         foreach ($files as $file) {
             $relative = ltrim(str_replace('\\', '/', str_replace($root, '', $file)), '/');
             $key = preg_replace('/\.md$/i', '', $relative);
@@ -94,7 +109,7 @@ class DocumentationController extends Controller
                 : str($key)->headline()->toString();
 
             $documents[$key] = [
-                'file' => $relative,
+                'file' => 'docs/'.$relative,
                 'title' => $title,
                 'category' => str_contains($key, '/')
                     ? Str::headline(Str::before($key, '/'))
@@ -107,7 +122,7 @@ class DocumentationController extends Controller
 
     private function renderDocument(string $key, array $documents): string
     {
-        $file = base_path('docs/'.$documents[$key]['file']);
+        $file = base_path($documents[$key]['file']);
         $markdown = file_get_contents($file) ?: '';
 
         // Keep internal Markdown links inside the documentation web.
