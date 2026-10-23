@@ -15,6 +15,7 @@
             --docs-box: rgb(79 70 229 / .14);
             --docs-text: #172033;
             --docs-muted: #64748b;
+            --docs-group: #334155;
             --docs-accent: rgb(202 138 4);
             --docs-code: rgb(255 255 255 / .42);
         }
@@ -27,6 +28,7 @@
             --docs-box: rgb(79 70 229 / .14);
             --docs-text: #e5e7eb;
             --docs-muted: #a1a1aa;
+            --docs-group: #f4f4f5;
             --docs-accent: rgb(250 204 21);
             --docs-code: rgb(15 23 42 / .52);
         }
@@ -51,7 +53,7 @@
         .search { width: 100%; padding: .7rem .8rem; margin-bottom: 1.25rem; color: var(--docs-text); background: var(--docs-surface); border: 1px solid var(--docs-ring); border-radius: .55rem; outline: none; font: inherit; }
         .search::placeholder { color: var(--docs-muted); }
         .search:focus { border-color: var(--docs-accent); }
-        .group { margin: 1.15rem .35rem .45rem; color: var(--docs-muted); font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+        .group { margin: 1.15rem .35rem .45rem; color: var(--docs-group); font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
         .nav-link { display: block; padding: .48rem .65rem; border-radius: .55rem; color: var(--docs-muted); font-size: .88rem; }
         .nav-link:hover { color: var(--docs-text); background: rgb(0 0 0 / .05); text-decoration: none; }
         .dark .nav-link:hover { background: rgb(255 255 255 / .05); }
