@@ -108,14 +108,15 @@ class HomeResolver
      */
     public function heroBanners($root, array $args, GraphQLContext $context)
     {
-        return \App\Models\Home\HeroBanner::visible()
+        return \App\Models\Home\HeroBanner::where('is_active', true)
+            ->orderBy('position')
             ->get()
             ->map(function ($banner) {
                 return [
                     'id' => $banner->id,
                     'title' => $banner->title,
                     'subtitle' => $banner->subtitle,
-                    'imageUrl' => $banner->publicImageUrl(),
+                    'imageUrl' => $banner->image_url,
                     'linkUrl' => $banner->link_url,
                     'linkType' => $banner->link_type,
                     'linkId' => $banner->link_id,
