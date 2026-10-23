@@ -73,13 +73,24 @@
         .markdown p, .markdown ul, .markdown ol { color: var(--docs-text); }
         .markdown blockquote { margin: 1.25rem 0; padding: .7rem 1rem; color: var(--docs-muted); background: var(--docs-surface); border-left: 3px solid var(--docs-accent); border-radius: .25rem; }
         .markdown code { padding: .15rem .35rem; color: var(--docs-accent); background: var(--docs-code); border-radius: .3rem; }
-        .markdown pre { overflow-x: auto; padding: 3rem 1rem 1rem; background: var(--docs-code); border: 1px solid var(--docs-ring); border-radius: .8rem; }
-        .code-wrap { position: relative; }
-        .copy-button { display: inline-flex; align-items: center; gap: .35rem; padding: .4rem .65rem; color: var(--docs-muted); background: var(--docs-surface); border: 1px solid var(--docs-ring); border-radius: .45rem; cursor: pointer; font: inherit; font-size: .78rem; }
+        .markdown pre { overflow-x: auto; margin: 0; padding: 1.1rem 1rem 1.25rem; background: #111; border: 0; border-radius: 0 0 .8rem .8rem; }
+        .code-wrap { position: relative; overflow: hidden; margin: 1.35rem 0; background: #111; border: 1px solid rgb(255 255 255 / .12); border-radius: .8rem; box-shadow: 0 12px 30px rgb(0 0 0 / .14); }
+        .code-header { display: flex; align-items: center; justify-content: space-between; min-height: 2.65rem; padding: 0 .75rem; color: #a8a29e; background: #292524; border-bottom: 1px solid rgb(255 255 255 / .14); font-size: .84rem; }
+        .code-title { display: inline-flex; align-items: center; gap: .65rem; margin: 0 auto; transform: translateX(1.8rem); }
+        .code-dots { display: inline-flex; gap: .35rem; }
+        .code-dots i { display: block; width: .62rem; height: .62rem; border-radius: 999px; }
+        .code-dots i:nth-child(1) { background: #fbbf24; }
+        .code-dots i:nth-child(2) { background: #fda4af; }
+        .code-dots i:nth-child(3) { background: #93c5fd; }
+        .copy-button { display: inline-flex; align-items: center; gap: .35rem; padding: .35rem .55rem; color: #d6d3d1; background: transparent; border: 1px solid transparent; border-radius: .4rem; cursor: pointer; font: inherit; font-size: .76rem; }
         .copy-button:hover { color: var(--docs-text); background: var(--docs-box); }
-        .code-wrap .copy-button { position: absolute; top: .6rem; right: .6rem; }
+        .code-header .copy-button { color: #d6d3d1; }
+        .code-header .copy-button:hover { color: #fff; background: rgb(255 255 255 / .1); }
         .copy-button svg { width: .9rem; height: .9rem; stroke: currentColor; }
-        .markdown pre code { padding: 0; background: none; color: var(--docs-text); }
+        .markdown pre code { display: block; padding: 0; background: none; color: #f5f5f4; font-size: .9rem; line-height: 1.65; }
+        .code-line { display: grid; grid-template-columns: 2.25rem minmax(max-content, 1fr); min-width: max-content; }
+        .code-line-number { padding-right: .75rem; color: #57534e; text-align: right; user-select: none; }
+        .code-line-content { white-space: pre; }
         .markdown table { display: block; overflow-x: auto; width: 100%; border-collapse: collapse; }
         .markdown th, .markdown td { padding: .65rem .8rem; text-align: left; border: 1px solid var(--docs-ring); }
         .markdown th { color: var(--docs-text); background: var(--docs-surface); }
@@ -159,16 +170,42 @@
     });
 
     document.querySelectorAll('.markdown pre').forEach((pre) => {
+        const code = pre.querySelector('code');
+        const source = code?.textContent || pre.textContent || '';
         const wrapper = document.createElement('div');
         wrapper.className = 'code-wrap';
         pre.parentNode.insertBefore(wrapper, pre);
+        const header = document.createElement('div');
+        header.className = 'code-header';
+        const dots = document.createElement('span');
+        dots.className = 'code-dots';
+        dots.innerHTML = '<i></i><i></i><i></i>';
+        const title = document.createElement('span');
+        title.className = 'code-title';
+        const language = code?.className.match(/language-([\w-]+)/)?.[1] || 'text';
+        title.textContent = language === 'php' ? 'PHP' : language === 'bash' || language === 'shell' ? 'Terminal' : language.toUpperCase();
+        header.appendChild(dots);
+        header.appendChild(title);
+        wrapper.appendChild(header);
+
+        if (code) {
+            const lines = source.replace(/\n$/, '').split('\n');
+            code.innerHTML = lines.map((line, index) => {
+                const number = `<span class="code-line-number">${index + 1}</span>`;
+                const content = document.createElement('span');
+                content.className = 'code-line-content';
+                content.textContent = line || ' ';
+                return `<span class="code-line">${number}${content.outerHTML}</span>`;
+            }).join('');
+        }
+
         wrapper.appendChild(pre);
         const button = document.createElement('button');
         button.className = 'copy-button';
         button.type = 'button';
         button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>Salin kode</span>';
-        button.addEventListener('click', () => copyText(pre.innerText, button));
-        wrapper.appendChild(button);
+        button.addEventListener('click', () => copyText(source, button));
+        header.appendChild(button);
     });
 </script>
 <script>
