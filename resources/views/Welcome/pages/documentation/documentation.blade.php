@@ -73,7 +73,7 @@
         .markdown p, .markdown ul, .markdown ol { color: var(--docs-text); }
         .markdown blockquote { margin: 1.25rem 0; padding: .7rem 1rem; color: var(--docs-muted); background: var(--docs-surface); border-left: 3px solid var(--docs-accent); border-radius: .25rem; }
         .markdown code { padding: .15rem .35rem; color: var(--docs-accent); background: var(--docs-code); border-radius: .3rem; }
-        .markdown pre { overflow-x: auto; padding: 1rem; background: var(--docs-code); border: 1px solid var(--docs-ring); border-radius: .8rem; }
+        .markdown pre { overflow-x: auto; padding: 3rem 1rem 1rem; background: var(--docs-code); border: 1px solid var(--docs-ring); border-radius: .8rem; }
         .code-wrap { position: relative; }
         .copy-button { display: inline-flex; align-items: center; gap: .35rem; padding: .4rem .65rem; color: var(--docs-muted); background: var(--docs-surface); border: 1px solid var(--docs-ring); border-radius: .45rem; cursor: pointer; font: inherit; font-size: .78rem; }
         .copy-button:hover { color: var(--docs-text); background: var(--docs-box); }
