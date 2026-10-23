@@ -1267,17 +1267,15 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     --tw-ring-offset-shadow: 0 0 #0000 !important;
 }
 
-/* Settings cards: let the page background show through while retaining the
-   subtle outline that separates each settings group. */
+/* Settings cards: use the same glass material as the topbar and sidebar. */
 .fi-panel-welcome .profile-glass-page.settings-page section.fi-section,
 .fi-panel-user .profile-glass-page.settings-page section.fi-section,
 .fi-panel-welcome .profile-glass-page.settings-page .fi-section-content-ctn,
 .fi-panel-user .profile-glass-page.settings-page .fi-section-content-ctn {
-    background: transparent !important;
-    background-image: none !important;
-    border: 0 !important;
-    border-color: transparent !important;
+    background-color: var(--fi-glass-bg) !important;
+    background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
+    border: 1px solid var(--fi-glass-ring) !important;
     box-shadow: none !important;
-    -webkit-backdrop-filter: none !important;
-    backdrop-filter: none !important;
+    -webkit-backdrop-filter: var(--fi-glass-blur) !important;
+    backdrop-filter: var(--fi-glass-blur) !important;
 }
