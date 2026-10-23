@@ -147,9 +147,21 @@ class DocumentationController extends Controller
                 continue;
             }
 
-            $externalFiles = new \RecursiveIteratorIterator(
-                new \RecursiveDirectoryIterator($externalRoot, \FilesystemIterator::SKIP_DOTS),
+            $externalDirectory = new \RecursiveDirectoryIterator($externalRoot, \FilesystemIterator::SKIP_DOTS);
+            $externalFilter = new \RecursiveCallbackFilterIterator(
+                $externalDirectory,
+                static function (\SplFileInfo $current): bool {
+                    if (! $current->isDir()) {
+                        return true;
+                    }
+
+                    return ! in_array($current->getFilename(), [
+                        '.agents', '.claude', '.dart_tool', '.git', '.idea',
+                        'build', 'node_modules', 'venv', 'dataconnect_generated',
+                    ], true);
+                },
             );
+            $externalFiles = new \RecursiveIteratorIterator($externalFilter);
 
             foreach ($externalFiles as $file) {
                 if (! $file->isFile() || strtolower($file->getExtension()) !== 'md') {
