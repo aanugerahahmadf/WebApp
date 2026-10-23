@@ -100,6 +100,25 @@ class DocumentationController extends Controller
             ];
         }
 
+        // Include other project-level Markdown guides, while keeping the
+        // internal docs/ tree handled below. Agent/tooling instructions are
+        // intentionally not public documentation.
+        foreach (glob(base_path('*.md')) ?: [] as $file) {
+            if (basename($file) === 'README.md') {
+                continue;
+            }
+
+            $contents = file_get_contents($file) ?: '';
+            $slug = Str::slug(pathinfo($file, PATHINFO_FILENAME));
+            $documents['project-'.$slug] = [
+                'file' => basename($file),
+                'title' => preg_match('/^#\s+(.+)$/m', $contents, $match)
+                    ? trim($match[1])
+                    : Str::headline($slug),
+                'category' => 'Dokumen proyek',
+            ];
+        }
+
         foreach ($files as $file) {
             $relative = ltrim(str_replace('\\', '/', str_replace($root, '', $file)), '/');
             $key = preg_replace('/\.md$/i', '', $relative);
