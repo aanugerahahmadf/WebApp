@@ -67,6 +67,10 @@
         .sidebar-collapsed .nav-link { justify-content: center; overflow: hidden; padding-left: .65rem; padding-right: .65rem; white-space: nowrap; }
         .sidebar-collapsed .nav-link span { display: none; }
         .sidebar-collapsed .collapse-button svg { transform: rotate(180deg); }
+        .nav-group { margin-bottom: .25rem; }
+        .nav-group .nav-link { max-height: 3rem; overflow: hidden; opacity: 1; transition: max-height .18s ease, opacity .18s ease, padding .18s ease; }
+        .nav-group:not(:hover):not(:focus-within):not(.has-active) .nav-link { max-height: 0; padding-top: 0; padding-bottom: 0; opacity: 0; pointer-events: none; }
+        .nav-group:not(:hover):not(:focus-within):not(.has-active) .group { cursor: pointer; }
         .docs-main { width: min(100%, 980px); padding: 3.5rem clamp(1.25rem, 5vw, 5rem); }
         .eyebrow-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .75rem; }
         .eyebrow { color: var(--docs-accent); font-size: .78rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
@@ -151,7 +155,7 @@
         </div>
         <nav aria-label="Daftar dokumentasi">
             @foreach ($groups as $group)
-                <section class="nav-group" style="--doc-color: {{ $docColors[$group['label']] ?? '#6366f1' }}">
+                <section class="nav-group {{ collect($group['items'])->contains('key', $selected) ? 'has-active' : '' }}" style="--doc-color: {{ $docColors[$group['label']] ?? '#6366f1' }}">
                     <div class="group">
                         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h5l2 2H19.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5v-11Z"/>
