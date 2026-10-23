@@ -222,6 +222,33 @@ class DocumentationController extends Controller
             'allow_unsafe_links' => false,
         ]);
 
-        return $converter->convert($markdown)->getContent();
+        $html = $converter->convert($markdown)->getContent();
+        $usedHeadingIds = [];
+
+        // CommonMark renders heading text but does not add anchor IDs by
+        // default. Add stable slugs so README tables of contents such as
+        // `#fitur` and `#konfigurasi` work inside the public portal.
+        return preg_replace_callback(
+            '/<h([1-6])([^>]*)>(.*?)<\/h\1>/is',
+            static function (array $match) use (&$usedHeadingIds): string {
+                if (preg_match('/\sid=["\']/', $match[2])) {
+                    return $match[0];
+                }
+
+                $text = html_entity_decode(strip_tags($match[3]), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                $id = Str::slug($text) ?: 'section';
+                $base = $id;
+                $suffix = 2;
+
+                while (isset($usedHeadingIds[$id])) {
+                    $id = $base.'-'.$suffix++;
+                }
+
+                $usedHeadingIds[$id] = true;
+
+                return '<h'.$match[1].$match[2].' id="'.$id.'">'.$match[3].'</h'.$match[1].'>';
+            },
+            $html,
+        ) ?? $html;
     }
 }
