@@ -194,6 +194,12 @@ class DocumentationController extends Controller
             '/\]\((?!https?:\/\/|mailto:|#)([^)#]+\.md)(#[^)]*)?\)/i',
             function (array $match) use ($key, $documents): string {
                 $target = trim($match[1], "./");
+                // README.md lives at the repository root and links to files
+                // using their on-disk `docs/...` paths. Portal keys already
+                // start inside docs/, so remove that prefix before resolving.
+                $target = Str::startsWith($target, 'docs/')
+                    ? Str::after($target, 'docs/')
+                    : $target;
                 $candidate = str_contains($target, '/')
                     ? preg_replace('/\.md$/i', '', $target)
                     : preg_replace('/\.md$/i', '', str($key)->beforeLast('/')->append('/'.$target)->toString());
