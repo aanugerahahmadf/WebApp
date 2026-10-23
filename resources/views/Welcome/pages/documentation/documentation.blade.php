@@ -63,10 +63,11 @@
         .sidebar-collapsed .collapse-button svg { transform: rotate(180deg); }
         .docs-main { width: min(100%, 980px); padding: 3.5rem clamp(1.25rem, 5vw, 5rem); }
         .eyebrow { color: var(--docs-accent); font-size: .78rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
-        .markdown { line-height: 1.75; font-size: 1rem; }
+        .markdown { line-height: 1.75; font-size: 1rem; text-align: justify; }
         .markdown h1 { margin: .35rem 0 1.5rem; color: var(--docs-text); font-size: clamp(2rem, 5vw, 3.25rem); line-height: 1.1; }
         .markdown h2 { margin-top: 2.7rem; padding-bottom: .45rem; color: var(--docs-text); border-bottom: 1px solid var(--docs-ring); }
         .markdown h3 { margin-top: 2rem; color: var(--docs-text); }
+        .markdown h1, .markdown h2, .markdown h3, .markdown pre, .markdown code { text-align: left; }
         .markdown p, .markdown ul, .markdown ol { color: var(--docs-text); }
         .markdown blockquote { margin: 1.25rem 0; padding: .7rem 1rem; color: var(--docs-muted); background: var(--docs-surface); border-left: 3px solid var(--docs-accent); border-radius: .25rem; }
         .markdown code { padding: .15rem .35rem; color: var(--docs-accent); background: var(--docs-code); border-radius: .3rem; }
