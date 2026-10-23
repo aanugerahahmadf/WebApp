@@ -62,8 +62,10 @@
         .sidebar-collapsed .nav-link { overflow: hidden; padding-left: .65rem; padding-right: .65rem; white-space: nowrap; text-indent: -999px; }
         .sidebar-collapsed .collapse-button svg { transform: rotate(180deg); }
         .docs-main { width: min(100%, 980px); padding: 3.5rem clamp(1.25rem, 5vw, 5rem); }
+        .eyebrow-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .75rem; }
         .eyebrow { color: var(--docs-accent); font-size: .78rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
         .markdown { line-height: 1.75; font-size: 1rem; text-align: justify; }
+        .markdown, .markdown * { user-select: text; -webkit-user-select: text; }
         .markdown h1 { margin: .35rem 0 1.5rem; color: var(--docs-text); font-size: clamp(2rem, 5vw, 3.25rem); line-height: 1.1; }
         .markdown h2 { margin-top: 2.7rem; padding-bottom: .45rem; color: var(--docs-text); border-bottom: 1px solid var(--docs-ring); }
         .markdown h3 { margin-top: 2rem; color: var(--docs-text); }
@@ -72,13 +74,18 @@
         .markdown blockquote { margin: 1.25rem 0; padding: .7rem 1rem; color: var(--docs-muted); background: var(--docs-surface); border-left: 3px solid var(--docs-accent); border-radius: .25rem; }
         .markdown code { padding: .15rem .35rem; color: var(--docs-accent); background: var(--docs-code); border-radius: .3rem; }
         .markdown pre { overflow-x: auto; padding: 1rem; background: var(--docs-code); border: 1px solid var(--docs-ring); border-radius: .8rem; }
+        .code-wrap { position: relative; }
+        .copy-button { display: inline-flex; align-items: center; gap: .35rem; padding: .4rem .65rem; color: var(--docs-muted); background: var(--docs-surface); border: 1px solid var(--docs-ring); border-radius: .45rem; cursor: pointer; font: inherit; font-size: .78rem; }
+        .copy-button:hover { color: var(--docs-text); background: var(--docs-box); }
+        .code-wrap .copy-button { position: absolute; top: .6rem; right: .6rem; }
+        .copy-button svg { width: .9rem; height: .9rem; stroke: currentColor; }
         .markdown pre code { padding: 0; background: none; color: var(--docs-text); }
         .markdown table { display: block; overflow-x: auto; width: 100%; border-collapse: collapse; }
         .markdown th, .markdown td { padding: .65rem .8rem; text-align: left; border: 1px solid var(--docs-ring); }
         .markdown th { color: var(--docs-text); background: var(--docs-surface); }
         .markdown img { max-width: 100%; height: auto; border-radius: .75rem; }
         .back { display: inline-block; margin-bottom: 2rem; color: var(--docs-muted); font-size: .9rem; }
-        @media (max-width: 760px) { .docs-shell, .docs-shell.sidebar-collapsed { display: block; } .docs-sidebar { position: static; height: auto; max-height: none; border-right: 0; border-bottom: 1px solid var(--docs-ring); } .docs-shell.sidebar-collapsed .docs-sidebar { height: 4.75rem; overflow: hidden; } .docs-main { padding-top: 2rem; } }
+        @media (max-width: 760px) { .docs-shell, .docs-shell.sidebar-collapsed { display: block; } .docs-sidebar { position: static; height: auto; max-height: none; border-right: 0; border-bottom: 1px solid var(--docs-ring); } .docs-shell.sidebar-collapsed .docs-sidebar { height: 4.75rem; overflow: hidden; } .docs-main { padding-top: 2rem; } .eyebrow-row { align-items: flex-start; flex-direction: column; } }
     </style>
 </head>
 <body>
@@ -108,9 +115,15 @@
             @endforeach
         </nav>
     </aside>
-    <main class="docs-main">
-        <a class="back" href="{{ url('/home') }}">← Kembali ke aplikasi</a>
-        <div class="eyebrow">Wedding Flower Decorations</div>
+        <main class="docs-main">
+            <a class="back" href="{{ url('/home') }}">← Kembali ke aplikasi</a>
+        <div class="eyebrow-row">
+            <div class="eyebrow">Wedding Flower Decorations</div>
+            <button class="copy-button" type="button" data-copy-page>
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span>Salin halaman</span>
+            </button>
+        </div>
         <article class="markdown">{!! $document !!}</article>
     </main>
 </div>
@@ -120,6 +133,42 @@
         document.querySelectorAll('[data-doc-link]').forEach((link) => {
             link.hidden = query !== '' && !link.textContent.toLowerCase().includes(query);
         });
+    });
+
+    const copyText = async (text, button) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            const label = button.querySelector('span');
+            if (label) {
+                const previous = label.textContent;
+                label.textContent = 'Tersalin';
+                setTimeout(() => { label.textContent = previous; }, 1400);
+            }
+        } catch {
+            const area = document.createElement('textarea');
+            area.value = text;
+            document.body.appendChild(area);
+            area.select();
+            document.execCommand('copy');
+            area.remove();
+        }
+    };
+
+    document.querySelector('[data-copy-page]')?.addEventListener('click', (event) => {
+        copyText(document.querySelector('.markdown')?.innerText || '', event.currentTarget);
+    });
+
+    document.querySelectorAll('.markdown pre').forEach((pre) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'code-wrap';
+        pre.parentNode.insertBefore(wrapper, pre);
+        wrapper.appendChild(pre);
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.type = 'button';
+        button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>Salin kode</span>';
+        button.addEventListener('click', () => copyText(pre.innerText, button));
+        wrapper.appendChild(button);
     });
 </script>
 <script>
