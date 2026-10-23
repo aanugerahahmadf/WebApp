@@ -41,6 +41,28 @@ class DocumentationController extends Controller
         return $this->render($key, $documents);
     }
 
+    public function code(string $path): \Illuminate\Contracts\View\View
+    {
+        $relative = ltrim(rawurldecode($path), '/');
+        $file = realpath(base_path($relative));
+        $base = realpath(base_path());
+
+        if ($file === false || $base === false || ! Str::startsWith(str_replace('\\', '/', $file), str_replace('\\', '/', $base).'/')) {
+            throw new NotFoundHttpException;
+        }
+
+        $extension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+        if (! in_array($extension, ['php', 'js', 'ts', 'tsx', 'jsx', 'css', 'html', 'json', 'md'], true)) {
+            throw new NotFoundHttpException;
+        }
+
+        return view('Welcome.pages.documentation.code', [
+            'title' => basename($file),
+            'path' => str_replace('\\', '/', $relative),
+            'code' => file_get_contents($file) ?: '',
+        ]);
+    }
+
     /**
      * Build the shared page payload: selected document plus a sidebar grouped
      * by category. Grouping happens server-side so the Blade template only
@@ -201,6 +223,22 @@ class DocumentationController extends Controller
     {
         $file = base_path($documents[$key]['file']);
         $markdown = file_get_contents($file) ?: '';
+
+        // Optional code-card metadata:
+        // ```php title="app/Example.php"
+        // The marker is removed by the documentation page JavaScript.
+        $markdown = preg_replace_callback(
+            '/^(```+)([^\r\n]*)$/m',
+            static function (array $match): string {
+                if (! preg_match('/\btitle=(?:"([^"]+)"|\'([^\']+)\')/i', $match[2], $title)) {
+                    return $match[0];
+                }
+
+                return $match[1].preg_replace('/\s+title=(?:"[^"]+"|\'[^\']+\')/i', '', $match[2])
+                    ."\n__DOC_CODE_TITLE__:".($title[1] ?? $title[2]);
+            },
+            $markdown,
+        );
 
         // Keep internal Markdown links inside the documentation web.
         $markdown = preg_replace_callback(

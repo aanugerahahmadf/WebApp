@@ -60,6 +60,9 @@ Route::get('/legal/help', [WelcomeLegalWebController::class, 'help'])->name('leg
 
 // Dokumentasi teknis publik yang dirender langsung dari folder /docs.
 Route::get('/docs', [DocumentationController::class, 'index'])->name('docs.index');
+Route::get('/docs/code/{path}', [DocumentationController::class, 'code'])
+    ->where('path', '.*')
+    ->name('docs.code');
 Route::get('/docs/{path}', [DocumentationController::class, 'show'])
     ->where('path', '.*')
     ->name('docs.show');

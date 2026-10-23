@@ -83,6 +83,8 @@
         .code-wrap { position: relative; overflow: hidden; margin: 1.35rem 0; background: #111; border: 1px solid rgb(255 255 255 / .12); border-radius: .4rem; box-shadow: 0 12px 30px rgb(0 0 0 / .14); }
         .code-header { display: flex; align-items: center; justify-content: space-between; min-height: 2.65rem; padding: 0 .75rem; color: #a8a29e; background: #292524; border-bottom: 1px solid rgb(255 255 255 / .14); font-size: .84rem; }
         .code-title { display: inline-flex; align-items: center; gap: .65rem; margin: 0 auto; transform: translateX(1.8rem); }
+        .code-title a { color: #d6d3d1; text-decoration: none; }
+        .code-title a:hover { color: #fff; text-decoration: underline; }
         .code-dots { display: inline-flex; gap: .35rem; }
         .code-dots i { display: block; width: .62rem; height: .62rem; border-radius: 999px; }
         .code-dots i:nth-child(1) { background: #fbbf24; }
@@ -203,7 +205,13 @@
 
     document.querySelectorAll('.markdown pre').forEach((pre) => {
         const code = pre.querySelector('code');
-        const source = code?.textContent || pre.textContent || '';
+        let source = code?.textContent || pre.textContent || '';
+        let codeTitle = '';
+        const titleMarker = source.match(/^__DOC_CODE_TITLE__:(.+)\n?/);
+        if (titleMarker) {
+            codeTitle = titleMarker[1].trim();
+            source = source.replace(titleMarker[0], '');
+        }
         const wrapper = document.createElement('div');
         wrapper.className = 'code-wrap';
         pre.parentNode.insertBefore(wrapper, pre);
@@ -215,7 +223,16 @@
         const title = document.createElement('span');
         title.className = 'code-title';
         const language = code?.className.match(/language-([\w-]+)/)?.[1] || 'text';
-        title.textContent = language === 'php' ? 'PHP' : language === 'bash' || language === 'shell' ? 'Terminal' : language.toUpperCase();
+        const languageTitle = language === 'php' ? 'PHP' : language === 'bash' || language === 'shell' ? 'Terminal' : language.toUpperCase();
+        if (codeTitle) {
+            const link = document.createElement('a');
+            link.href = @json(url('/docs/code')) + '/' + codeTitle.split('/').map(encodeURIComponent).join('/');
+            link.textContent = codeTitle.split('/').pop();
+            link.title = 'Buka kode program: ' + codeTitle;
+            title.appendChild(link);
+        } else {
+            title.textContent = languageTitle;
+        }
         header.appendChild(dots);
         header.appendChild(title);
         wrapper.appendChild(header);
