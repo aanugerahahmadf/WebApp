@@ -1,6 +1,8 @@
-<div>
+<div x-data="{ editing: $wire.entangle('isEditing') }">
     <form wire:submit="save" class="fi-sc-form">
-        {{ $this->form }}
+        <fieldset x-bind:disabled="! editing" class="contents">
+            {{ $this->form }}
+        </fieldset>
 
         <div class="flex justify-end mt-4 mb-8">
             @if ($isEditing)
