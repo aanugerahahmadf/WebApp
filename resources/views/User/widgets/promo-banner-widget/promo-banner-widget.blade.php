@@ -1,7 +1,8 @@
 @php($banners = $this->getBanners())
 
-@if ($banners->isNotEmpty())
-    <section aria-label="{{ __('Banner promosi') }}" class="space-y-3">
+<div>
+    @if ($banners->isNotEmpty())
+        <section aria-label="{{ __('Banner promosi') }}" class="space-y-3">
         <div class="flex items-center justify-between gap-3">
             <h2 class="text-lg font-semibold text-gray-950 dark:text-white">
                 {{ __('Promo pilihan untuk Anda') }}
@@ -22,5 +23,6 @@
                 @if ($href)</a>@else</article>@endif
             @endforeach
         </div>
-    </section>
-@endif
+        </section>
+    @endif
+</div>
