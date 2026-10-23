@@ -136,6 +136,39 @@ class DocumentationController extends Controller
             ];
         }
 
+        // The mobile app and AI Core live beside this backend repository.
+        // Include their Markdown guides in the same public documentation
+        // portal, without copying or moving the source files.
+        foreach ([
+            'mobile-app' => base_path('../mobile_app'),
+            'ai-core' => base_path('../ai_core'),
+        ] as $category => $externalRoot) {
+            if (! is_dir($externalRoot)) {
+                continue;
+            }
+
+            $externalFiles = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($externalRoot, \FilesystemIterator::SKIP_DOTS),
+            );
+
+            foreach ($externalFiles as $file) {
+                if (! $file->isFile() || strtolower($file->getExtension()) !== 'md') {
+                    continue;
+                }
+
+                $relative = ltrim(str_replace('\\', '/', str_replace($externalRoot, '', $file->getPathname())), '/');
+                $key = $category.'/'.preg_replace('/\.md$/i', '', $relative);
+                $contents = file_get_contents($file->getPathname()) ?: '';
+                $documents[$key] = [
+                    'file' => '../'.basename($externalRoot).'/'.$relative,
+                    'title' => preg_match('/^#\s+(.+)$/m', $contents, $match)
+                        ? trim($match[1])
+                        : Str::headline(pathinfo($relative, PATHINFO_FILENAME)),
+                    'category' => Str::headline($category),
+                ];
+            }
+        }
+
         return $documents;
     }
 
