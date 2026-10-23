@@ -25,7 +25,7 @@
                             {{-- data-typo="subheading": tipografi per-peran; data-field: override per-field "content". --}}
                             <h3 class="mb-1 font-semibold text-gray-900 dark:text-white" data-typo="subheading">{{ $heading }}</h3>
                         @endif
-                        <p class="{{ ! empty($item['is_italic']) ? 'italic' : '' }}" data-typo="description">{{ $body }}</p>
+                        <p class="text-justify not-italic normal-case" style="text-align: justify !important; font-style: normal !important; text-transform: none !important;" data-typo="description">{{ $body }}</p>
                     </div>
                 @empty
                     <p>{{ __('Konten belum tersedia.') }}</p>
