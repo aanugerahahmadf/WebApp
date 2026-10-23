@@ -24,7 +24,9 @@ Berjalan sebagai aplikasi web Laravel, dengan **Capacitor Mobile**
 - [Real-time, Antrean, dan Notifikasi](#real-time-antrean-dan-notifikasi)
 - [Pengujian dan Pemeriksaan Kualitas](#pengujian-dan-pemeriksaan-kualitas)
 - [Tata Letak Proyek](#tata-letak-proyek)
-- [Keamanan, Deployment, Kontribusi, dan Lisensi](#keamanan-deployment-kontribusi-dan-lisensi)
+- [Keamanan dan Deployment](#keamanan-dan-deployment)
+- [Kontribusi](#kontribusi)
+- [Lisensi](#lisensi)
 - [Dokumentasi](#dokumentasi)
 - [Masalah yang Sering Muncul](#masalah-yang-sering-muncul)
 
