@@ -1256,12 +1256,12 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
 .fi-panel-user .profile-glass-page section.fi-section,
 .fi-panel-welcome .profile-glass-page .fi-section-content-ctn,
 .fi-panel-user .profile-glass-page .fi-section-content-ctn {
-    background: transparent !important;
-    background-image: none !important;
-    border-color: transparent !important;
+    background-color: var(--fi-glass-bg) !important;
+    background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
+    border: 1px solid var(--fi-glass-ring) !important;
     box-shadow: none !important;
-    -webkit-backdrop-filter: none !important;
-    backdrop-filter: none !important;
+    -webkit-backdrop-filter: var(--fi-glass-blur) !important;
+    backdrop-filter: var(--fi-glass-blur) !important;
     --tw-ring-color: transparent !important;
     --tw-ring-shadow: 0 0 #0000 !important;
     --tw-ring-offset-shadow: 0 0 #0000 !important;
