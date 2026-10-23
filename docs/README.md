@@ -31,6 +31,8 @@ Berikut adalah daftar semua dokumen teknis yang tersedia, terorganisir berdasark
 | 20 | [Panduan Pengujian (Lama)](pengujian/panduan-pengujian.md) | pengujian/panduan-pengujian.md | Batasan yang diketahui, cakupan test per fitur baru |
 | 21 | [Security Best Practices](security-best-practices.md) | security-best-practices.md | Praktik keamanan terbaik: environment, auth, data protection, API security, deployment checklist |
 | 22 | [Tipografi & Gaya Teks](tipografi/tipografi.md) | tipografi/tipografi.md | Dua lapisan tipografi form admin (per-peran AppTypography + per-field TextStyles), penyimpanan fm_app_settings, injeksi CSS trio panel, pemakai blade |
+| 23 | [Kebijakan Privasi](privacy-policy.md) | privacy-policy.md | Data akun, KYC, wajah, pesan, transaksi, pembayaran, AI/CBIR, hak pengguna, retensi, keamanan, dan kontak |
+| 24 | [Ketentuan Layanan](terms-of-service.md) | terms-of-service.md | Akun, katalog, pesanan, pembayaran, voucher, konten pengguna, KYC, larangan, hak kekayaan intelektual, penangguhan, dan sengketa |
 
 ---
 
@@ -130,7 +132,9 @@ platform tidak ada, aplikasi melanjutkan diam-diam dengan `.env` saja.
 [Deployment Web](deployment/web/web.md) |
 [Deployment Mobile](deployment/mobile/mobile.md) |
 [Deployment Desktop](deployment/desktop/desktop.md) |
-[Security Best Practices](security-best-practices.md)
+[Security Best Practices](security-best-practices.md) |
+[Kebijakan Privasi](privacy-policy.md) |
+[Ketentuan Layanan](terms-of-service.md)
 
 ---
 
