@@ -52,7 +52,7 @@ class AppFont
     private const CATALOG = __DIR__ . '/font-catalog.php';
 
     /** Keluarga bawaan aplikasi -- dipakai kalau setting kosong/tidak valid. */
-    public const DEFAULT_FAMILY = 'Google Sans Flex';
+    public const DEFAULT_FAMILY = 'Instrument Sans';
 
     private const CACHE_KEY = 'app_font_settings';
     private const CACHE_TTL = 60;
@@ -151,7 +151,7 @@ class AppFont
      */
     public static function family(): string
     {
-        return self::resolvedFamily(self::g('family'));
+        return self::DEFAULT_FAMILY;
     }
 
     /**
@@ -161,23 +161,13 @@ class AppFont
      */
     public static function adminFamily(): string
     {
-        return self::resolvedFamily(self::g('admin_family'));
+        return self::DEFAULT_FAMILY;
     }
 
     /** Daftar keluarga yang boleh dipilih (untuk select di halaman admin). */
     public static function families(): array
     {
-        static $catalog = null;
-        $catalog ??= (array) require self::CATALOG;
-
-        // Penjaga runtime: katalog hasil generator WAJIB memuat kelas
-        // bawaan. Kalau file katalog hilang/kosong, jatuh ke satu-satunya
-        // keluarga yang pasti terpasang.
-        if (! in_array(self::DEFAULT_FAMILY, array_values($catalog), true)) {
-            return [self::DEFAULT_FAMILY];
-        }
-
-        return array_values($catalog);
+        return [self::DEFAULT_FAMILY];
     }
 
     /**
@@ -329,6 +319,46 @@ class AppFont
     .fi-topbar {
         border-radius: var(--app-border-radius);
     }
+
+    /* Navigasi mengikuti tipografi header HOPE Indonesia. */
+    .fi-sidebar-item-label,
+    .fi-sidebar-group-label {
+        font-family: 'Instrument Sans', sans-serif !important;
+        font-size: 11px !important;
+        font-weight: 400 !important;
+        color: rgb(203 213 225) !important;
+    }
+
+    .fi-sidebar-group-label {
+        color: rgb(226 232 240) !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+    }
+
+    .fi-topbar-item-label {
+        font-family: 'Instrument Sans', sans-serif !important;
+        font-size: 14px !important;
+        font-weight: 400 !important;
+    }
+
+    .fi-dropdown-list-item,
+    .fi-dropdown-list-item * {
+        font-family: 'Instrument Sans', sans-serif !important;
+        font-size: 12px !important;
+    }
+
+    .fi-topbar-item-label {
+        color: #ffffff !important;
+    }
+
+    .fi-dropdown-list-item {
+        color: rgb(203 213 225) !important;
+    }
+
+    .fi-sidebar-item.fi-active .fi-sidebar-item-label,
+    .fi-topbar-item.fi-active .fi-topbar-item-label {
+        font-weight: 500 !important;
+    }
 </style>
 HTML;
         if ($bg !== '') {
@@ -350,6 +380,134 @@ HTML;
         //      di-cakup per scope ([data-page-style] [data-field]).
         $css .= \App\Support\PageStyles\PageStyles::styles();
         $css .= \App\Support\TextStyles\TextStyles::stylesheet();
+
+        // Satu keluarga font untuk seluruh UI panel: Filament, Livewire,
+        // resources, pages, widgets, forms, navigation, dan view kustom.
+        // Diletakkan PALING AKHIR agar tidak kalah oleh class Tailwind,
+        // CSS resource, atau aturan tipografi per-field.
+        $css .= <<<HTML
+<style data-app-instrument-sans-global>
+    html,
+    body,
+    body * {
+        font-family: 'Instrument Sans', sans-serif !important;
+    }
+
+    /* Catalog detail title: preserve normal casing and semibold weight. */
+    [data-field="catalogs.name"],
+    [data-field="catalogs.name"] * {
+        text-transform: none !important;
+        font-weight: 600 !important;
+    }
+
+    /* Ukuran judul/heading MEMAKAI BAWAAN FILAMENT (h1 halaman
+       text-2xl sm:text-3xl, section heading bawaan). Tidak ada
+       paksaan font-size px untuk h1-h4 di sini. */
+
+    /* Semua judul dan subjudul panel menggunakan semibold, bukan black/bold. */
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    h1[class],
+    h2[class],
+    h3[class],
+    h4[class],
+    h5[class],
+    h6[class],
+    h1 *,
+    h2 *,
+    h3 *,
+    h4 *,
+    h5 *,
+    h6 *,
+    h1[class] *,
+    h2[class] *,
+    h3[class] *,
+    h4[class] *,
+    h5[class] *,
+    h6[class] *,
+    .fi-header-heading,
+    .fi-simple-header-heading,
+    .fi-section-header-heading,
+    [data-typo="heading"],
+    [data-typo="heading"] * {
+        font-weight: 600 !important;
+    }
+
+    .fi-header-subheading,
+    .fi-simple-header-subheading,
+    .fi-section-header-description,
+    [data-typo="subheading"],
+    [data-typo="subheading"] * {
+        font-weight: 400 !important;
+    }
+
+    /* Harga katalog: ringkas dan regular, bukan bold/semibold. */
+    [data-testid="catalog-price"] .catalog-final-price {
+        font-size: 24px !important;
+        font-weight: 600 !important;
+    }
+
+    [data-field="catalogs.tier_price"],
+    [data-field="catalogs.tier_price"] * {
+        font-size: 20px !important;
+        font-weight: 600 !important;
+    }
+
+    /* Deskripsi global: 13px. */
+    .fi-header-subheading,
+    .fi-simple-header-subheading,
+    .fi-section-header-description,
+    [data-typo="description"],
+    [data-typo="description"] *,
+    [data-typo="subheading"],
+    [data-typo="subheading"] * {
+        font-size: 13px !important;
+    }
+
+    /* Button tidak memakai bold/black; teks tombol tetap regular dan 12px. */
+    button,
+    button[class],
+    button[class] *,
+    a.fi-btn,
+    a.fi-btn *,
+    .fi-btn,
+    .fi-btn *,
+    [role="button"],
+    [role="button"] * {
+        font-weight: 400 !important;
+        font-size: 12px !important;
+    }
+
+    /* Sidebar dan header mempertahankan ukuran aslinya, tidak ikut skala global. */
+    .fi-sidebar,
+    .fi-sidebar *,
+    .fi-topbar,
+    .fi-topbar * {
+        font-size: inherit !important;
+    }
+
+    .fi-sidebar-item-label {
+        font-size: 11px !important;
+    }
+
+    .fi-sidebar-group-label {
+        font-size: 13px !important;
+    }
+
+    .fi-topbar-item-label {
+        font-size: 14px !important;
+    }
+
+    .fi-dropdown-list-item,
+    .fi-dropdown-list-item * {
+        font-size: 12px !important;
+    }
+</style>
+HTML;
 
         return $css;
     }
