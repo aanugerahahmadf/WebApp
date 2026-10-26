@@ -13,6 +13,12 @@ Artisan::command('inspire', function (): void {
 Schedule::command('app:update-order-status')->everyMinute();
 Schedule::command('app:sync-bri-payments')->everyFiveMinutes();
 
+// Backup database harian hanya aktif bila deployment mengizinkannya secara
+// eksplisit; environment lokal tidak tiba-tiba menjalankan dump database.
+if ((bool) env('SECURITY_BACKUP_ENABLED', false)) {
+    Schedule::command('security:backup')->dailyAt('01:30')->withoutOverlapping();
+}
+
 // Jaga storage/ tetap kecil: pangkas log lama + sisa temp subprocess.
 // laravel.log pernah membengkak jadi 66 MB karena channel `single` tidak
 // pernah dirotasi. Foto review & katalog ditangani media:prune di bawah.
