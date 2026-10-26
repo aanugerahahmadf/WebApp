@@ -1974,20 +1974,25 @@ body.fi-panel-user [data-panel-background-media] video {
     padding: 14px 12px !important;
 }
 
-/* Kartu widget User/Welcome memakai resep kaca yang sama persis dengan
-   `.catalog-card` pada CombinedCatalogWidget. Container table/chart tidak
-   disentuh; hanya kartu visual widget yang disamakan. */
+/* Kartu ShortcutStats dan kartu statistik User/Guest mengikuti resep warna
+   surface katalog (bukan token kaca panel yang berbeda). Combined Catalog
+   memakai surface putih 88%, border 10%, shadow katalog, dan blur 12px. */
 body.fi-panel-welcome :is(.home-stat-card, .profile-stat-card),
 body.fi-panel-user :is(.home-stat-card, .profile-stat-card) {
-    background-color: var(--fi-glass-bg) !important;
-    background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
-    border: 1px solid var(--fi-glass-ring) !important;
-    -webkit-backdrop-filter: var(--fi-glass-blur) !important;
-    backdrop-filter: var(--fi-glass-blur) !important;
-    box-shadow:
-        inset 0 1px 0 rgb(255 255 255 / 0.35),
-        0 1px 2px rgb(0 0 0 / 0.05),
-        0 12px 28px -16px rgb(0 0 0 / 0.35) !important;
+    background: rgb(255 255 255 / 0.88) !important;
+    background-image: none !important;
+    border: 1px solid rgb(15 23 42 / 0.10) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    backdrop-filter: blur(12px) !important;
+    box-shadow: 0 12px 30px rgb(15 23 42 / 0.08) !important;
+}
+
+.dark body.fi-panel-welcome :is(.home-stat-card, .profile-stat-card),
+.dark body.fi-panel-user :is(.home-stat-card, .profile-stat-card) {
+    background: rgb(18 18 18 / 0.88) !important;
+    background-image: none !important;
+    border-color: rgb(255 255 255 / 0.08) !important;
+    box-shadow: 0 12px 30px rgb(15 23 42 / 0.08) !important;
 }
 
 /* Topbar memakai bobot regular, bukan semi-bold. Sidebar tetap mengikuti
