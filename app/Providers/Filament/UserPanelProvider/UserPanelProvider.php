@@ -276,6 +276,19 @@ class UserPanelProvider extends PanelProvider
                 fn (): string => view('Shared.components.notification-sound.notification-sound')->render(),
             )
             ->renderHook(
+                // GLOBAL SEARCH SEBAGAI MODAL (2026-10-27).
+                //
+                // Sama seperti panel Welcome: kotak pencarian di topbar
+                // hanyalah tombol pemicu, sedangkan field + hasilnya hidup
+                // di modal ini (BODY_END). Topbar memakai `backdrop-filter`,
+                // jadi modal yang dirender di dalamnya akan terpotong.
+                //
+                // Partial: resources/views/Shared/components/
+                // global-search-modal/global-search-modal.blade.php
+                PanelsRenderHook::BODY_END,
+                fn (): string => view('Shared.components.global-search-modal.global-search-modal')->render(),
+            )
+            ->renderHook(
                 // SHELL DESKTOP (Electron) -- app/Capacitor/DekstopApp.
                 //
                 // Panel User ini adalah isi dari aplikasi desktop "Dekorasi"

@@ -94,6 +94,10 @@ class Messages extends Component implements HasActions, HasForms
 
     public string $panelId = 'admin';
 
+    public bool $searchOpen = false;
+
+    public string $searchQuery = '';
+
     public bool $otherUserIsTyping = false;
 
     public string $typingUserName = '';
@@ -1219,6 +1223,34 @@ class Messages extends Component implements HasActions, HasForms
                     ->success()
                     ->send();
             });
+    }
+
+    public function toggleSearch(): void
+    {
+        $this->searchOpen = ! $this->searchOpen;
+
+        if (! $this->searchOpen) {
+            $this->searchQuery = '';
+        }
+    }
+
+    #[Computed]
+    public function visibleMessages(): Collection
+    {
+        if (! $this->selectedConversation || trim($this->searchQuery) === '') {
+            return $this->conversationMessages ?? collect();
+        }
+
+        $term = strtolower(trim($this->searchQuery));
+
+        return ($this->conversationMessages ?? collect())->filter(function ($message) use ($term) {
+            $text = strtolower((string) $message->message);
+            $meta = $message->meta ?? [];
+
+            return str_contains($text, $term)
+                || (! empty($meta['name']) && str_contains(strtolower((string) $meta['name']), $term))
+                || (! empty($meta['order_number']) && str_contains(strtolower((string) $meta['order_number']), $term));
+        })->values();
     }
 
     public function render(): Application|Factory|View|\Illuminate\View\View

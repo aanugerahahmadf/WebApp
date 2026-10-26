@@ -160,6 +160,31 @@
             }
 
             function openGlobalSearch() {
+                // Panel Admin DAN Welcome/User: pencarian sekarang berupa
+                // modal. Pemicunya tombol (sidebar admin, topbar storefront);
+                // klik tombol itu membuka modal global search. Kolom input
+                // baru bisa difokuskan setelah transisi modal, jadi fokusnya
+                // diberi jeda.
+                var modalTrigger = document.querySelector(
+                    '[data-admin-global-search-trigger], [data-app-global-search-trigger]',
+                );
+
+                if (modalTrigger) {
+                    modalTrigger.click();
+
+                    setTimeout(function () {
+                        var field = document.querySelector(
+                            '.fi-global-search-field input',
+                        );
+
+                        if (field) {
+                            field.focus();
+                        }
+                    }, 400);
+
+                    return true;
+                }
+
                 var search = document.querySelector('.fi-global-search');
                 var input = search ? search.querySelector('.fi-global-search-field input') : null;
 

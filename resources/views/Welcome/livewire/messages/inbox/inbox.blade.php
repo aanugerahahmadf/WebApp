@@ -31,7 +31,7 @@
                 <x-filament::icon icon="/images/icons/lifebuoy.svg" class="h-7 w-7 text-white" />
             </span>
             <div class="min-w-0">
-                <p class="font-bold leading-tight">{{ __('Selamat Datang di Customer Service!') }}</p>
+                <p class="font-semibold leading-tight">{{ __('Selamat Datang di Customer Service!') }}</p>
                 <div class="mt-0.5 flex items-center gap-1.5">
                     <span class="h-2 w-2 rounded-full" style="background-color: #7CFC9A;"></span>
                     <span class="text-sm text-white/90">{{ __('Tim kami sedang online') }}</span>
@@ -39,11 +39,13 @@
             </div>
         </div>
 
-        {{-- Search --}}
-        <x-filament::input.wrapper prefix-icon="/images/icons/search.svg" class="w-full">
-            <x-filament::input type="text" wire:model.live.debounce.300ms="search"
-                placeholder="{{ __('Cari percakapan...') }}" class="w-full" />
-        </x-filament::input.wrapper>
+        {{-- Search membuka modal supaya tidak memakan ruang inbox. --}}
+        <button type="button" class="flex w-full items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-start text-sm text-gray-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-400"
+            x-on:click="$dispatch('open-modal', { id: 'welcome-conversation-search' })">
+            <x-filament::icon icon="/images/icons/search.svg" class="h-5 w-5" />
+            <span>{{ __('Cari percakapan...') }}</span>
+        </button>
+        <livewire:fm-welcome-search />
 
         {{-- Name prompt for guests --}}
         @if ($needsName)
@@ -71,7 +73,7 @@
         {{-- Your conversations --}}
         @if ($conversations->isNotEmpty())
             <div class="flex items-center justify-between">
-                <p class="font-bold text-gray-950 dark:text-white">{{ __('Percakapan Anda') }}</p>
+                <p class="font-semibold text-gray-950 dark:text-white">{{ __('Percakapan Anda') }}</p>
                 <span class="text-xs text-gray-500 dark:text-gray-400">{{ $conversations->count() }}</span>
             </div>
 
@@ -104,7 +106,7 @@
                                         alt="{{ urlencode($conversation->inbox_title) }}" size="lg" />
                                     @if ($unread > 0)
                                         <span
-                                            class="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white"
+                                            class="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-semibold text-white"
                                             style="background-color: rgb(var(--primary-500));">
                                             {{ $unread > 99 ? '99+' : $unread }}
                                         </span>
@@ -114,7 +116,7 @@
                                 <span class="min-w-0 flex-1">
                                     <span @class([
                                         'block truncate text-sm',
-                                        'font-bold text-gray-950 dark:text-white' => $unread > 0,
+                                        'font-semibold text-gray-950 dark:text-white' => $unread > 0,
                                         'font-semibold text-gray-900 dark:text-gray-100' => $unread === 0,
                                     ])>{{ $conversation->inbox_title }}</span>
                                     <span @class([

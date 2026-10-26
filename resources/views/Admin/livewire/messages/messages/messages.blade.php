@@ -39,7 +39,7 @@
 
                     <div class="flex-1 overflow-hidden">
                         <div class="flex justify-between items-center gap-2">
-                            <p class="text-base font-bold truncate text-gray-900 dark:text-white">{{ $selectedConversation->inbox_title }}</p>
+                            <p class="text-base font-semibold truncate text-gray-900 dark:text-white">{{ $selectedConversation->inbox_title }}</p>
                         </div>
 
                         @if ($selectedConversation->title)
@@ -47,9 +47,26 @@
                                 {{ $selectedConversation->other_users->pluck('name')->implode(', ') }}</p>
                         @endif
                     </div>
+                    <button type="button" x-on:click="$dispatch('open-modal', { id: 'admin-message-search' })"
+                        class="rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-white/10"
+                        title="{{ __('Cari') }}">
+                        <x-filament::icon icon="/images/icons/search.svg" class="h-5 w-5" />
+                    </button>
                 </div>
             </div>
         </div>
+        <x-filament::modal width="xl" id="admin-message-search">
+            <x-slot name="heading">{{ __('Cari pesan...') }}</x-slot>
+            <x-filament::input.wrapper prefix-icon="/images/icons/search.svg">
+                <x-filament::input type="search" wire:model.live.debounce.300ms="searchQuery"
+                    placeholder="{{ __('Cari pesan...') }}" autofocus />
+            </x-filament::input.wrapper>
+            @if (trim($this->searchQuery) !== '')
+                <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                    {{ $this->visibleMessages->count() }} {{ __('hasil') }}
+                </p>
+            @endif
+        </x-filament::modal>
         <!-- Chat Header : End -->
         <!-- Chat Box : Start -->
         <div wire:poll.visible.{{ $pollInterval }}="pollMessages()" id="chatContainer"
@@ -212,20 +229,20 @@
                                          onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($meta['name']) }}&background=f3f4f6&color=a1a1aa&size=128'">
                                     <div class="flex-1 min-w-0">
                                         @if($isCancellation)
-                                            <p class="text-[9px] font-black tracking-tight leading-none mb-0.5" style="color:#fca5a5;">
+                                            <p class="text-[9px] font-semibold tracking-tight leading-none mb-0.5" style="color:#fca5a5;">
                                                 ❌ {{ __('PESANAN DIBATALKAN') }}
                                             </p>
                                         @elseif($isOrderCard || $isPaymentUpdate)
-                                            <p class="text-[9px] font-black tracking-tight leading-none mb-0.5" style="color:#facc15;">
+                                            <p class="text-[9px] font-semibold tracking-tight leading-none mb-0.5" style="color:#facc15;">
                                                 {{ __('Pesanan') }} #{{ $meta['order_number'] ?? '-' }}
                                             </p>
                                         @endif
-                                        <p class="text-sm font-bold truncate leading-tight" style="{{ $nameColor }}">{{ $meta['name'] }}</p>
-                                        <p class="text-xs font-black leading-none mt-0.5" style="{{ $nameColor }}">
+                                        <p class="text-sm font-semibold truncate leading-tight" style="{{ $nameColor }}">{{ $meta['name'] }}</p>
+                                        <p class="text-xs font-semibold leading-none mt-0.5" style="{{ $nameColor }}">
                                             Rp {{ number_format($meta['price'], 0, ',', '.') }}
                                         </p>
                                         @if($isCancellation)
-                                            <span class="inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold leading-none"
+                                            <span class="inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-semibold leading-none"
                                                   style="background-color:#dc2626;color:#fff;">
                                                 {{ $isRefunded ? __('Dana Dikembalikan') : __('Tidak Ada Refund') }}
                                             </span>
@@ -263,7 +280,7 @@
                                                     $payBadgeBg = $isPaidMeta ? '#16a34a' : '#dc2626';
                                                 }
                                             @endphp
-                                            <span class="inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold leading-none"
+                                            <span class="inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-semibold leading-none"
                                                   style="background-color:{{ $payBadgeBg }};color:#fff;">
                                                 {{ $payBadgeLabel }}
                                             </span>
@@ -281,13 +298,13 @@
                                                 : route('filament.admin.resources.orders.index');
                                         @endphp
                                         <a href="{{ $payViewUrl }}" wire:navigate
-                                           class="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
+                                           class="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
                                            style="background-color:#1c1917;color:#facc15;">
                                             {{ __('Lihat Detail') }}
                                         </a>
                                     @elseif(!$isOrderCard && !empty($meta['url']))
                                         <a href="{{ $meta['url'] }}" wire:navigate
-                                           class="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
+                                           class="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
                                            style="background-color:#1c1917;color:#facc15;">
                                             {{ __('Details') }}
                                         </a>
@@ -320,7 +337,7 @@
                                     {{-- Update card background jika live cancelled/deleted --}}
                                     @if($isLiveCancelled && !$isCancellation)
                                         <div class="px-2 pb-1">
-                                            <span class="inline-block px-2 py-0.5 rounded text-[9px] font-bold"
+                                            <span class="inline-block px-2 py-0.5 rounded text-[9px] font-semibold"
                                                   style="background-color:#dc2626;color:#fff;">
                                                 ❌ {{ $liveOrder === null ? __('PESANAN TELAH DIHAPUS') : __('PESANAN DIBATALKAN') }}
                                             </span>
@@ -335,13 +352,13 @@
                                             @endphp
                                             <a href="{{ $adminViewUrl }}"
                                                wire:navigate
-                                               class="flex-1 py-3 text-sm font-bold text-center transition-colors {{ $isCancelledCard ? 'rounded-b-xl' : 'rounded-bl-xl border-r border-gray-600' }}"
+                                               class="flex-1 py-3 text-sm font-semibold text-center transition-colors {{ $isCancelledCard ? 'rounded-b-xl' : 'rounded-bl-xl border-r border-gray-600' }}"
                                                style="background-color:#334155;color:#f1f5f9;">
                                                 {{ __('View Details') }}
                                             </a>
                                             @if(!$isCancelledCard)
                                                 <button wire:click="mountAction('changeOrder', {{ json_encode(['orderId' => $meta['order_id'] ?? null]) }})"
-                                                    class="flex-1 py-3 text-sm font-bold transition-colors rounded-br-xl"
+                                                    class="flex-1 py-3 text-sm font-semibold transition-colors rounded-br-xl"
                                                     style="background-color:#facc15;color:#111827;">
                                                     {{ __('Change Order') }}
                                                 </button>

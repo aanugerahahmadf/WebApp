@@ -10,7 +10,7 @@
     <div class="flex flex-col gap-4 mb-6">
         <div class="flex items-center justify-between">
             <div class="flex gap-4 items-center">
-                <p class="text-xl font-bold text-gray-950 dark:text-white">{{__('Inbox')}}</p>
+                <h1 class="fi-header-heading text-2xl font-semibold tracking-tight text-gray-950 dark:text-white sm:text-3xl">{{ __('Inbox') }}</h1>
                 @if ($this->unreadCount() > 0)
                     <x-filament::badge color="primary" size="sm">
                         {{ $this->unreadCount() }}
@@ -31,7 +31,7 @@
         <div class="w-full">
             <x-filament::input.wrapper suffix-icon="/images/icons/search.svg" class="w-full">
                 <x-filament::input type="text" placeholder="{{__('Search messages...')}}"
-                    x-on:click="$dispatch('open-modal', { id: 'search-conversation' })"
+                    x-on:click="$dispatch('open-modal', { id: 'admin-conversation-search' })"
                     class="w-full" />
             </x-filament::input.wrapper>
         </div>
@@ -93,7 +93,7 @@
                                     <div class="overflow-hidden">
                                         <p @class([
                                             'text-sm font-semibold truncate',
-                                            'text-gray-950 dark:text-white font-bold' => !$isRead
+                                            'text-gray-950 dark:text-white font-semibold' => !$isRead
                                         ])>{{ $conversation->inbox_title }}</p>
 
                                         @if ($latestMessage)
@@ -102,7 +102,7 @@
                                                 'text-gray-600' => $isRead,
                                                 'text-gray-950 dark:text-gray-200 font-medium' => !$isRead
                                             ])>
-                                                <span class="font-bold">
+                                                <span class="font-semibold">
                                                     {{ $latestMessage->user_id == $this->chatUserId() ? __('You:') : ($latestMessage->sender->name ?? __('User')) . ':' }}
                                                 </span>
                                                 @php

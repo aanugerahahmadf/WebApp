@@ -1,7 +1,7 @@
     @php
         $messagesPage = \App\Filament\User\Pages\MessagesPage\MessagesPage::class;
     @endphp
-<x-filament::modal width="xl" id="search-conversation">
+<x-filament::modal width="xl" id="user-conversation-search">
     <x-slot name="heading">
         {{__('Search Messages')}}
     </x-slot>
@@ -32,10 +32,10 @@
                                             <p class="text-sm font-semibold truncate">{{ $message->inbox->inbox_title }}</p>
                                             <p class="text-sm text-gray-600 truncate dark:text-gray-400">
                                                 @if ($message->user_id == auth()->id())
-                                                    <span class="font-bold">{{ __('You:') }}</span>
+                                                    <span class="font-semibold">{{ __('You:') }}</span>
                                                 @else
 
-                                                    <span class="font-bold">{{ $message->sender->name }}:</span>
+                                                    <span class="font-semibold">{{ $message->sender->name }}:</span>
                                                 @endif
                                                 {{ $message->message }}
                                             </p>

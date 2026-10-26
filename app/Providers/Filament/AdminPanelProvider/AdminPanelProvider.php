@@ -84,7 +84,7 @@ class AdminPanelProvider extends PanelProvider
                 OtpResetPassword::class
             )
             ->emailVerification(OtpEmailVerificationPrompt::class)
-            // ->sidebarFullyCollapsibleOnDesktop()
+            ->sidebarFullyCollapsibleOnDesktop()
             ->brandName(fn () => AppFont::brandName())
             ->brandLogo(fn () => AppFont::brandLogo())
             ->brandLogoHeight('5rem')
@@ -119,7 +119,8 @@ class AdminPanelProvider extends PanelProvider
                 'warning' => Color::Orange,
             ])
             ->defaultThemeMode(ThemeMode::System)
-            ->topNavigation()
+            ->topbar()
+            ->breadcrumbs(false)
             // ->maxContentWidth(MaxWidth::Full)
             ->spa()
             ->databaseNotifications()
@@ -127,6 +128,27 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(
                 PanelsRenderHook::BODY_END,
                 fn (): string => view('Shared.components.notification-sound.notification-sound')->render(),
+            )
+            ->renderHook(
+                // PENCARIAN GLOBAL ADMIN SEBAGAI MODAL (2026-10-26).
+                //
+                // Kotak pencarian di sidebar hanyalah PEMICU; field dan
+                // daftar hasilnya dirender di sini, di BODY_END. Modal tidak
+                // boleh diletakkan di dalam <aside class="fi-sidebar">:
+                // sidebar memakai `transform` (translate-x) sehingga anak
+                // `position: fixed` akan diposisikan relatif terhadap
+                // sidebar, bukan viewport -- modalnya menyempit selebar
+                // kolom.
+                //
+                // Isinya tetap komponen Filament `GlobalSearch`, jadi
+                // debounce, pencarian per resource, dan navigasi keyboard
+                // tidak berubah. Yang berubah hanya permukaannya: hasil
+                // tidak lagi berupa dropdown yang menimpa navigasi.
+                //
+                // Partial: resources/views/Admin/components/
+                // global-search-modal/global-search-modal.blade.php
+                PanelsRenderHook::BODY_END,
+                fn (): string => view('Admin.components.global-search-modal.global-search-modal')->render(),
             )
             ->renderHook(
                 // SHELL DESKTOP (Electron) -- app/Capacitor/DekstopAdminApp.
@@ -158,83 +180,57 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::SIMPLE_PAGE_END,
                 fn (): View|string => DesktopApp::shellPartial(),
             )
-            ->renderHook(
-                PanelsRenderHook::GLOBAL_SEARCH_AFTER,
-                // Switcher BAHASA + TEMA di Top Navigation / Header -- tablet,
-                // website desktop, dan APLIKASI DESKTOP.
-                //
-                // Di HP, mobile web Android/iOS, dan aplikasi mobile, switcher
-                // milik SIDEBAR (menu geser) -- dilayani hook
-                // SIDEBAR_NAV_START di bawah lewat predikat yang sama:
-                // AppPlatform::switchersBelongInSidebar().
-                //
-                // APLIKASI DESKTOP (Electron) TIDAK DI SIDEBAR: predikat itu
-                // tidak menghitung desktop app, karena sidebar aplikasi desktop
-                // diterjemahkan ke luar layar di layar lebar -- switcher di sana
-                // ter-render tapi tidak terlihat. Desktop app pakai topbar.
-                //
-                // Switcher TEMA ikut di hook ini -- sama seperti panel Welcome
-                // dan User -- supaya ketiganya memakai SATU permukaan yang
-                // sama: topbar (permukaan non-HP) atau sidebar (HP). Sebelumnya
-                // switcher tema panel admin ada di dalam USER MENU (dropdown
-                // avatar), jadi di aplikasi desktop dia tidak benar-benar
-                // "di topbar": dia tersembunyi satu klik di dalam dropdown,
-                // dan tidak ada di barisan kontrol topbar yang kelihatan.
-                //
-                // Karena switcher tema sekarang ada di topbar, switcher bawaan
-                // Filament (tiga ikon sun/moon/monitor) di user menu DIMATIKAN
-                // -- lihat override view
-                // resources/views/Admin/vendor/filament-panels/components/
-                // user-menu.blade.php. Dua switcher untuk satu pengaturan
-                // tidak boleh terjadi; test penjaga:
-                // tests/Feature/Shared/SwitcherPlacementTest/.
-                fn (): View|string => AppPlatform::switchersBelongInTopbar()
-                    ? view('Admin.filament-language-switcher.language-switcher.language-switcher')->render()
-                        .view('Shared.components.theme-switcher.theme-switcher')->render()
-                    : '',
-            )
+            // TIDAK ADA hook GLOBAL_SEARCH_AFTER di panel ini: switcher
+            // BAHASA + TEMA panel admin tidak lagi berada di topbar.
+            //
+            // Riwayat permukaan switcher panel admin (semua tanpa predikat
+            // platform, berlaku untuk HP, tablet, website desktop, dan
+            // aplikasi desktop):
+            //
+            //   1. topbar (hook GLOBAL_SEARCH_AFTER)
+            //   2. sebaris dengan logo di sidebar (hook SIDEBAR_NAV_START
+            //      dipanggil di dalam <header> sidebar)
+            //   3. DASAR sidebar, bersama blok profil (permintaan terakhir,
+            //      2026-10-25) -- hook SIDEBAR_NAV_START tetap, tapi
+            //      dipanggil dari blok `fi-sidebar-bawah` di override
+            //      sidebar/index.blade.php, SETELAH </nav>.
+            //
+            // Versi lama di header TIDAK dihapus, hanya dinonaktifkan lewat
+            // flag $switchersAtSidebarBottom di file override sidebar itu.
+            //
+            // Panel Welcome dan User TIDAK ikut: kedua panel itu masih
+            // memutuskan permukaan lewat AppPlatform::switchersBelong*().
+            //
+            // Switcher bawaan Filament (tiga ikon sun/moon/monitor) di user
+            // menu tetap DIMATIKAN -- lihat override view
+            // resources/views/Admin/vendor/filament-panels/components/
+            // user-menu.blade.php. Dua switcher untuk satu pengaturan tidak
+            // boleh terjadi; test penjaga:
+            // tests/Feature/Shared/SwitcherPlacementTest/ dan
+            // tests/Feature/Shared/ThemeSwitcherOnceTest/.
             ->renderHook(
                 PanelsRenderHook::SIDEBAR_NAV_START,
-                // Switcher tema + bahasa di menu geser (sidebar) -- HP dan
-                // mobile web Android/iOS, dan aplikasi mobile (Capacitor).
-                // Sama persis dengan WelcomePanelProvider dan
-                // UserPanelProvider, lewat predikat yang sama.
+                // Switcher tema + bahasa di SIDEBAR, di DASAR sidebar
+                // bersama blok profil -- SELALU, tanpa memandang platform.
                 //
-                // APLIKASI DESKTOP TIDAK DI SINI: predikat
-                // AppPlatform::switchersBelongInSidebar() tidak lagi menghitung
-                // desktop app, karena sidebar aplikasi desktop diterjemahkan ke
-                // luar layar di layar lebar -- switcher di sana ter-render tapi
-                // tidak terlihat. Desktop app pakai topbar.
+                // Riwayat: tadinya predikat AppPlatform::switchersBelongInSidebar()
+                // menaruhnya di topbar untuk tablet/desktop/app-desktop; lalu
+                // dipindah sebaris dengan logo; sekarang di dasar sidebar.
                 //
-                // Panel admin sebelumnya tidak punya switcher bahasa maupun
-                // tema di sidebar sama sekali; switcher temanya cuma ada di
-                // dalam user menu. Di HP topbar itu menyingkir (user menu
-                // tidak dirender untuk layar sempit), jadi tanpa hook ini
-                // panel admin tidak punya cara ganti tema maupun bahasa di HP.
-                //
-                // Partial themanya di Shared/ karena isinya tanpa panel; view
-                // bahasanya tetap milik Admin (warna aktifnya indigo,
+                // Partialsnya tetap sama: temanya di Shared/ (isinya tanpa
+                // panel), bahasanya view Admin (warna aktifnya indigo,
                 // mengikuti brand panel ini).
-                //
-                // Di tablet, website desktop, dan aplikasi desktop switcher
-                // tetap di topbar, jadi hook sidebar ini mengembalikan string
-                // kosong di sana -- AppPlatform::switchersBelongInSidebar()
-                // yang memutuskan, sama seperti ketiga hook lain, supaya tidak
-                // pernah dobel.
                 //
                 // Kedua switcher teleport ke <body>, jadi overflow sidebar
                 // tidak akan memotongnya.
                 //
-                // Tanpa wrapper sendiri, sama seperti di WelcomePanelProvider
-                // dan UserPanelProvider: barisnya adalah baris logo di dalam
-                // header sidebar, dan wrapper-nya (.fi-sidebar-switchers)
-                // dimiliki file override sidebar per panel --
-                // resources/views/{Panel}/vendor/filament-panels/components/
-                // sidebar/index.blade.php.
-                fn (): View|string => AppPlatform::switchersBelongInSidebar()
-                    ? view('Shared.components.theme-switcher.theme-switcher')->render()
-                        .view('Admin.filament-language-switcher.language-switcher.language-switcher')->render()
-                    : '',
+                // Tanpa wrapper sendiri: baris tempat keduanya berdiri
+                // (.fi-sidebar-switchers) dimiliki file override sidebar --
+                // resources/views/Admin/vendor/filament-panels/components/
+                // sidebar/index.blade.php -- dan di file itu pula hook ini
+                // dipanggil, di blok `fi-sidebar-bawah` setelah </nav>.
+                fn (): View|string => view('Admin.components.theme-switcher.theme-switcher')->render()
+                    .view('Admin.filament-language-switcher.language-switcher.language-switcher')->render(),
             )
             ->renderHook(
                 // KUSTOMIZER TAMPILAN WORDPRESS-STYLE: panel gaya dirender
@@ -316,8 +312,8 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make()->label(fn () => __('Beranda')),
                 NavigationGroup::make()->label(fn () => __('Data Master')),
                 NavigationGroup::make()->label(fn () => __('Transaksi')), 
-		NavigationGroup::make()->label(fn () => __('Pesan')),
                 NavigationGroup::make()->label(fn () => __('Pengaturan Sistem')),
+                NavigationGroup::make()->label(fn () => __('Pesan')),
             ])
             // TIDAK ada ->navigationItems() manual di sini.
             //
