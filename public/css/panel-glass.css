@@ -2066,6 +2066,27 @@ body.fi-panel-admin :is(
     color: #fbbf24 !important;
 }
 
+/* Item aktif tidak memakai kapsul putih/abu-abu atau blur tambahan.
+   Highlight aktif cukup ditandai oleh teks dan ikon kuning. */
+body.fi-panel-welcome :is(
+    .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
+    .fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-button
+),
+body.fi-panel-user :is(
+    .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
+    .fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-button
+),
+body.fi-panel-admin :is(
+    .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
+    .fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-button
+) {
+    background-color: transparent !important;
+    background-image: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+}
+
 /* Navigasi topbar dan sidebar harus tetap terang di Light, Dark maupun
    System. Mode tema hanya mengubah permukaan/background; teks navigasi tidak
    boleh kembali menjadi navy gelap di atas background foto yang gelap. */
