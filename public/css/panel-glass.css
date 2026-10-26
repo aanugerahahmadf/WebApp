@@ -1974,16 +1974,11 @@ body.fi-panel-user [data-panel-background-media] video {
     padding: 14px 12px !important;
 }
 
-/* Semua widget User/Welcome memakai bahan kaca yang sama dengan kartu pada
-   CombinedCatalogWidget. Beberapa stat widget sebelumnya membawa
-   background putih/abu-abu hardcoded dari kelas `home-stat-card`, sehingga
-   warnanya berbeda walaupun berada di panel yang sama. */
-body.fi-panel-welcome :is(.fi-wi-stats-overview-stat, .home-stat-card, .profile-stat-card),
-body.fi-panel-user :is(.fi-wi-stats-overview-stat, .home-stat-card, .profile-stat-card),
-body.fi-panel-welcome .fi-wi-table,
-body.fi-panel-user .fi-wi-table,
-body.fi-panel-welcome .fi-wi-chart > .fi-section,
-body.fi-panel-user .fi-wi-chart > .fi-section {
+/* Kartu widget User/Welcome memakai resep kaca yang sama persis dengan
+   `.catalog-card` pada CombinedCatalogWidget. Container table/chart tidak
+   disentuh; hanya kartu visual widget yang disamakan. */
+body.fi-panel-welcome :is(.home-stat-card, .profile-stat-card),
+body.fi-panel-user :is(.home-stat-card, .profile-stat-card) {
     background-color: var(--fi-glass-bg) !important;
     background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
     border: 1px solid var(--fi-glass-ring) !important;
