@@ -1974,6 +1974,18 @@ body.fi-panel-user [data-panel-background-media] video {
     padding: 14px 12px !important;
 }
 
+/* Pilihan bahasa di panel `.lang-dd` juga tidak memakai highlight putih saat
+   kursor digeser, diklik, atau fokus. */
+body.fi-panel-welcome .lang-dd button:is(:hover, :focus, :focus-visible, :active),
+body.fi-panel-user .lang-dd button:is(:hover, :focus, :focus-visible, :active),
+body.fi-panel-admin .lang-dd button:is(:hover, :focus, :focus-visible, :active) {
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+}
+
 /* Semua widget User/Welcome memakai blur/background yang sama persis dengan
    panel Language Switcher (`.lang-dd`). Combined Catalog dikecualikan
    karena sudah memiliki CSS internal sendiri. */
