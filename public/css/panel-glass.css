@@ -2005,6 +2005,28 @@ body.fi-panel-user :is(
     backdrop-filter: var(--fi-glass-blur) !important;
 }
 
+.dark body.fi-panel-welcome :is(
+    .home-stat-card,
+    .profile-stat-card,
+    .fi-wi-stats-overview-stat,
+    .fi-wi-chart > .fi-section,
+    .fi-wi-table:not(:has(.combined-catalog)),
+    .fi-wi-table:not(:has(.combined-catalog)) .fi-ta-record
+),
+.dark body.fi-panel-user :is(
+    .home-stat-card,
+    .profile-stat-card,
+    .fi-wi-stats-overview-stat,
+    .fi-wi-chart > .fi-section,
+    .fi-wi-table:not(:has(.combined-catalog)),
+    .fi-wi-table:not(:has(.combined-catalog)) .fi-ta-record
+) {
+    background: rgb(18 18 18 / 0.88) !important;
+    background-image: none !important;
+    border-color: rgb(255 255 255 / 0.08) !important;
+    box-shadow: 0 12px 30px rgb(15 23 42 / 0.08) !important;
+}
+
 /* Topbar memakai bobot regular, bukan semi-bold. Sidebar tetap mengikuti
    bobot navigasi sebelumnya. */
 body.fi-panel-welcome .fi-topbar :is(.fi-topbar-item-label, .fi-topbar-group-label),
