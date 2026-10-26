@@ -1974,11 +1974,24 @@ body.fi-panel-user [data-panel-background-media] video {
     padding: 14px 12px !important;
 }
 
-/* Kartu ShortcutStats dan kartu statistik User/Guest mengikuti resep warna
-   surface katalog (bukan token kaca panel yang berbeda). Combined Catalog
-   memakai surface putih 88%, border 10%, shadow katalog, dan blur 12px. */
-body.fi-panel-welcome :is(.home-stat-card, .profile-stat-card),
-body.fi-panel-user :is(.home-stat-card, .profile-stat-card) {
+/* Semua widget User/Welcome mengikuti resep surface katalog. Combined
+   Catalog sengaja dikecualikan karena sudah memiliki CSS internal sendiri. */
+body.fi-panel-welcome :is(
+    .home-stat-card,
+    .profile-stat-card,
+    .fi-wi-stats-overview-stat,
+    .fi-wi-chart > .fi-section,
+    .fi-wi-table:not(:has(.combined-catalog)),
+    .fi-wi-table:not(:has(.combined-catalog)) .fi-ta-record
+),
+body.fi-panel-user :is(
+    .home-stat-card,
+    .profile-stat-card,
+    .fi-wi-stats-overview-stat,
+    .fi-wi-chart > .fi-section,
+    .fi-wi-table:not(:has(.combined-catalog)),
+    .fi-wi-table:not(:has(.combined-catalog)) .fi-ta-record
+) {
     background: rgb(255 255 255 / 0.88) !important;
     background-image: none !important;
     border: 1px solid rgb(15 23 42 / 0.10) !important;
@@ -1987,8 +2000,22 @@ body.fi-panel-user :is(.home-stat-card, .profile-stat-card) {
     box-shadow: 0 12px 30px rgb(15 23 42 / 0.08) !important;
 }
 
-.dark body.fi-panel-welcome :is(.home-stat-card, .profile-stat-card),
-.dark body.fi-panel-user :is(.home-stat-card, .profile-stat-card) {
+.dark body.fi-panel-welcome :is(
+    .home-stat-card,
+    .profile-stat-card,
+    .fi-wi-stats-overview-stat,
+    .fi-wi-chart > .fi-section,
+    .fi-wi-table:not(:has(.combined-catalog)),
+    .fi-wi-table:not(:has(.combined-catalog)) .fi-ta-record
+),
+.dark body.fi-panel-user :is(
+    .home-stat-card,
+    .profile-stat-card,
+    .fi-wi-stats-overview-stat,
+    .fi-wi-chart > .fi-section,
+    .fi-wi-table:not(:has(.combined-catalog)),
+    .fi-wi-table:not(:has(.combined-catalog)) .fi-ta-record
+) {
     background: rgb(18 18 18 / 0.88) !important;
     background-image: none !important;
     border-color: rgb(255 255 255 / 0.08) !important;
