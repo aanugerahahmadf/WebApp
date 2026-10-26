@@ -2087,6 +2087,40 @@ body.fi-panel-admin :is(
     box-shadow: none !important;
 }
 
+/* Klik/fokus tombol navigasi tidak menampilkan kilau atau ring putih. */
+body.fi-panel-welcome :is(
+    .fi-sidebar .fi-sidebar-item-button:focus,
+    .fi-sidebar .fi-sidebar-item-button:focus-visible,
+    .fi-sidebar .fi-sidebar-item-button:active,
+    .fi-topbar .fi-topbar-item-button:focus,
+    .fi-topbar .fi-topbar-item-button:focus-visible,
+    .fi-topbar .fi-topbar-item-button:active
+),
+body.fi-panel-user :is(
+    .fi-sidebar .fi-sidebar-item-button:focus,
+    .fi-sidebar .fi-sidebar-item-button:focus-visible,
+    .fi-sidebar .fi-sidebar-item-button:active,
+    .fi-topbar .fi-topbar-item-button:focus,
+    .fi-topbar .fi-topbar-item-button:focus-visible,
+    .fi-topbar .fi-topbar-item-button:active
+),
+body.fi-panel-admin :is(
+    .fi-sidebar .fi-sidebar-item-button:focus,
+    .fi-sidebar .fi-sidebar-item-button:focus-visible,
+    .fi-sidebar .fi-sidebar-item-button:active,
+    .fi-topbar .fi-topbar-item-button:focus,
+    .fi-topbar .fi-topbar-item-button:focus-visible,
+    .fi-topbar .fi-topbar-item-button:active
+) {
+    outline: none !important;
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    --tw-ring-color: transparent !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+    --tw-ring-offset-shadow: 0 0 #0000 !important;
+}
+
 /* Navigasi topbar dan sidebar harus tetap terang di Light, Dark maupun
    System. Mode tema hanya mengubah permukaan/background; teks navigasi tidak
    boleh kembali menjadi navy gelap di atas background foto yang gelap. */
