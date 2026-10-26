@@ -2112,6 +2112,39 @@ body.fi-panel-admin :is(
     --tw-ring-offset-shadow: 0 0 #0000 !important;
 }
 
+/* Hover/mouseover pada navigasi dan item dropdown tidak membuat kotak putih
+   atau blur tambahan ketika kursor digeser di atasnya. */
+body.fi-panel-welcome :is(
+    .fi-sidebar .fi-sidebar-item-button:hover,
+    .fi-topbar .fi-topbar-item-button:hover,
+    .fi-topbar .fi-dropdown .fi-dropdown-panel a:hover,
+    .fi-topbar .fi-dropdown .fi-dropdown-panel button:hover,
+    .fi-sidebar .fi-dropdown .fi-dropdown-panel a:hover,
+    .fi-sidebar .fi-dropdown .fi-dropdown-panel button:hover
+),
+body.fi-panel-user :is(
+    .fi-sidebar .fi-sidebar-item-button:hover,
+    .fi-topbar .fi-topbar-item-button:hover,
+    .fi-topbar .fi-dropdown .fi-dropdown-panel a:hover,
+    .fi-topbar .fi-dropdown .fi-dropdown-panel button:hover,
+    .fi-sidebar .fi-dropdown .fi-dropdown-panel a:hover,
+    .fi-sidebar .fi-dropdown .fi-dropdown-panel button:hover
+),
+body.fi-panel-admin :is(
+    .fi-sidebar .fi-sidebar-item-button:hover,
+    .fi-topbar .fi-topbar-item-button:hover,
+    .fi-topbar .fi-dropdown .fi-dropdown-panel a:hover,
+    .fi-topbar .fi-dropdown .fi-dropdown-panel button:hover,
+    .fi-sidebar .fi-dropdown .fi-dropdown-panel a:hover,
+    .fi-sidebar .fi-dropdown .fi-dropdown-panel button:hover
+) {
+    background-color: transparent !important;
+    background-image: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+}
+
 /* Tombol Theme dan Language juga tidak menampilkan kotak putih ketika
    diklik atau mendapat focus. */
 body.fi-panel-welcome :is(
