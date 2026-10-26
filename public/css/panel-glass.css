@@ -2078,6 +2078,18 @@ body.fi-panel-admin :is(
     box-shadow: none !important;
 }
 
+/* Filament dropdown memakai `.fi-dropdown-list-item` dan menambahkan
+   bg-gray-50/dark:bg-white/5 pada hover/focus. Hilangkan lapisan putihnya. */
+body.fi-panel-welcome .fi-dropdown-list-item:is(:hover, :focus, :focus-visible, :active),
+body.fi-panel-user .fi-dropdown-list-item:is(:hover, :focus, :focus-visible, :active),
+body.fi-panel-admin .fi-dropdown-list-item:is(:hover, :focus, :focus-visible, :active) {
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+}
+
 /* Klik/fokus tombol navigasi tidak menampilkan kilau atau ring putih. */
 body.fi-panel-welcome :is(
     .fi-sidebar .fi-sidebar-item-button:focus,
