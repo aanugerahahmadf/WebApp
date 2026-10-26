@@ -53,6 +53,7 @@
 .fi-panel-welcome,
 .fi-panel-user,
 .fi-panel-admin {
+    --fi-chrome-bg: rgb(255 255 255 / 0.12) !important;
     --fi-glass-bg: rgb(255 255 255 / 0.20) !important;
     --fi-glass-ring: rgb(0 0 0 / 0.12) !important;
     --fi-glass-blur: blur(15px) saturate(180%) !important; /* Light: Blur 15 */
@@ -77,6 +78,7 @@
 .dark .fi-panel-welcome,
 .dark .fi-panel-user,
 .dark .fi-panel-admin {
+    --fi-chrome-bg: rgb(0 0 0 / 0.28) !important;
     --fi-glass-bg: rgb(12 12 15 / 0.20) !important;
     --fi-glass-ring: rgb(255 255 255 / 0.15) !important;
     --fi-glass-blur: blur(15px) saturate(180%) !important; /* Night: Blur 15 */
@@ -84,6 +86,324 @@
     --fi-box-bg: rgb(129 140 248 / 0.16) !important; /* indigo-400 */
     --fi-box-tint: rgb(129 140 248 / 0.10) !important;
     --fi-glass-input-fg: rgb(255 255 255 / 0.55) !important;
+}
+
+/* Welcome/User tidak memakai gambar background. Permukaan dasar mengikuti
+   tema secara langsung: cream pada Light dan hitam gelap pada Dark/System. */
+body.fi-panel-welcome,
+body.fi-panel-user {
+    background: #fffaf0 !important;
+    background-image: none !important;
+}
+
+.dark body.fi-panel-welcome,
+.dark body.fi-panel-user {
+    background: #0c0c0f !important;
+    background-image: none !important;
+}
+
+/* --- Sidebar Admin: latar TRANSPARAN, sama dengan topbar/header ------
+   Topbar Admin sudah transparan total (lihat override
+   resources/views/Admin/vendor/filament-panels/components/topbar/
+   index.blade.php), sedangkan sidebar masih memakai kaca tipis
+   --fi-chrome-bg: putih 12% di Light, hitam 28% di Dark.
+
+   Inline style pada <aside class="fi-sidebar"> mengambil warnanya dari
+   token itu:
+
+       background-color: var(--fi-chrome-bg) !important;
+
+   Inline `!important` tidak bisa dikalahkan selector CSS biasa, TAPI
+   nilai variabelnya bisa ditimpa. Karena itu yang dinolkan di sini
+   token-nya, bukan background-nya. Hasilnya sidebar benar-benar
+   transparan: yang terlihat hanya latar body (putih di Light, hitam di
+   Dark), persis seperti topbar.
+
+   Hanya panel Admin. Panel Welcome dan User tetap memakai kaca
+   --fi-chrome-bg seperti sebelumnya. */
+.fi-panel-admin,
+.dark .fi-panel-admin {
+    --fi-chrome-bg: transparent !important;
+}
+
+/* Lapisan kedua: header sidebar (tempat logo). Dibuat transparan juga
+   supaya tidak ada blok warna di bagian atas kolom. */
+body.fi-panel-admin .fi-sidebar,
+body.fi-panel-admin .fi-sidebar .fi-sidebar-header {
+    background-color: transparent !important;
+    background-image: none !important;
+}
+
+/* Overlay gelap drawer sidebar di ponsel/tablet.
+   Filament merender `.fi-sidebar-close-overlay` (bg-gray-950/50, dark
+   75%) DI BELAKANG sidebar. Karena sidebar Admin sekarang transparan,
+   overlay itu ikut terlihat menembus sidebar -- hasilnya latar sidebar
+   jauh lebih gelap daripada topbar, padahal blur-nya sama persis
+   (blur 12px + saturate 160%).
+
+   Sidebar Admin selebar layar di bawah 1024px, jadi overlay ini tidak
+   punya area kosong yang bisa diklik; tombol X di header sidebar tetap
+   ada. Disembunyikan supaya yang terlihat hanya konten halaman yang
+   diburamkan sidebar -- sama seperti topbar. */
+@media (max-width: 1023px) {
+    body.fi-panel-admin .fi-sidebar-close-overlay {
+        display: none !important;
+    }
+}
+
+/* --- Latar panel Admin: WARNA SOLID, bukan gambar/video --------------
+   Permintaan pemilik: panel Admin tidak lagi memakai background gambar.
+   Light = putih, Dark = hitam.
+
+   Gambarnya datang dari partial
+   Shared.components.panel-background.panel-background (setting
+   `background` di FmAppSetting), yang ikut di-render di layout Admin,
+   User, dan Welcome. Di sini lapisan itu DISEMBUNYIKAN hanya untuk
+   panel Admin, lalu body-nya diberi warna solid. Panel User dan Welcome
+   tidak tersentuh -- keduanya tetap memakai background dari setting.
+
+   Kenapa di file ini: file ini dimuat lewat <link> di
+   panels::styles.after, SETELAH CSS Vite/Filament. Jadi aturan ini
+   menang atas utility `bg-gray-50 dark:bg-gray-950` bawaan layout
+   Filament tanpa perlu mengubah blade, dan mengeditnya tidak menuntut
+   `npm run build`. */
+body.fi-panel-admin {
+    background-color: #ffffff !important;
+    background-image: none !important;
+}
+
+.dark body.fi-panel-admin {
+    background-color: #000000 !important;
+    background-image: none !important;
+}
+
+/* Lapisan gambar/video itu `position: fixed` menutupi seluruh layar.
+   Disembunyikan total supaya tidak ada gambar yang ikut tampil --
+   termasuk overlay-nya. */
+body.fi-panel-admin [data-panel-background] {
+    display: none !important;
+}
+
+/* Background image/video harus benar-benar tajam. Override ini sengaja
+   diletakkan di CSS global panel agar tetap menang walaupun nilai blur lama
+   masih tersimpan di database atau style inline dari partial background. */
+body.fi-panel-welcome [data-panel-background-media] img,
+body.fi-panel-welcome [data-panel-background-media] video,
+body.fi-panel-user [data-panel-background-media] img,
+body.fi-panel-user [data-panel-background-media] video {
+    filter: none !important;
+    -webkit-filter: none !important;
+}
+
+/* Top navigation Welcome: pada light mode label navigasi harus hitam dan
+   semi-bold. Panel Welcome memakai vendor topbar yang sama secara runtime,
+   tetapi aturan lama hanya menargetkan `.fi-panel-user`. */
+html:not(.dark) body.fi-panel-welcome .fi-topbar-item-label,
+html:not(.dark) body.fi-panel-welcome .fi-topbar-group-label {
+    color: #0f172a !important;
+    font-size: 12px !important;
+    font-weight: 400 !important;
+}
+
+html.dark body.fi-panel-welcome .fi-topbar-item-label,
+html.dark body.fi-panel-welcome .fi-topbar-group-label {
+    color: #d4d4d8 !important;
+    font-size: 12px !important;
+    font-weight: 400 !important;
+}
+
+html:not(.dark) body.fi-panel-user .fi-topbar-item-label,
+html:not(.dark) body.fi-panel-user .fi-topbar-group-label {
+    color: #0f172a !important;
+    font-size: 12px !important;
+    font-weight: 400 !important;
+}
+
+html.dark body.fi-panel-user .fi-topbar-item-label,
+html.dark body.fi-panel-user .fi-topbar-group-label {
+    color: #d4d4d8 !important;
+    font-size: 12px !important;
+    font-weight: 400 !important;
+}
+
+/* Admin sidebar + topbar mengikuti tipografi navigasi Welcome/User. */
+body.fi-panel-admin .fi-sidebar-item-label,
+body.fi-panel-admin .fi-sidebar-group-label,
+body.fi-panel-admin .fi-topbar-item-label,
+body.fi-panel-admin .fi-topbar-group-label {
+    font-family: 'Instrument Sans', sans-serif !important;
+    font-size: 12px !important;
+    font-weight: 400 !important;
+}
+
+html:not(.dark) body.fi-panel-admin .fi-sidebar-item-label,
+html:not(.dark) body.fi-panel-admin .fi-sidebar-group-label,
+html:not(.dark) body.fi-panel-admin .fi-topbar-item-label,
+html:not(.dark) body.fi-panel-admin .fi-topbar-group-label,
+html:not(.dark) body.fi-panel-admin .fi-sidebar-item-button,
+html:not(.dark) body.fi-panel-admin .fi-topbar-item-button,
+html:not(.dark) body.fi-panel-admin .fi-sidebar-item-button .fi-sidebar-item-label,
+html:not(.dark) body.fi-panel-admin .fi-sidebar-group-button .fi-sidebar-group-label,
+html:not(.dark) body.fi-panel-admin .fi-topbar-item-button .fi-topbar-item-label {
+    color: #0f172a !important;
+}
+
+html.dark body.fi-panel-admin .fi-sidebar-item-label,
+html.dark body.fi-panel-admin .fi-sidebar-group-label,
+html.dark body.fi-panel-admin .fi-topbar-item-label,
+html.dark body.fi-panel-admin .fi-topbar-group-label,
+html.dark body.fi-panel-admin .fi-sidebar-item-button,
+html.dark body.fi-panel-admin .fi-topbar-item-button,
+html.dark body.fi-panel-admin .fi-sidebar-item-button .fi-sidebar-item-label,
+html.dark body.fi-panel-admin .fi-sidebar-group-button .fi-sidebar-group-label,
+html.dark body.fi-panel-admin .fi-topbar-item-button .fi-topbar-item-label {
+    color: #d4d4d8 !important;
+}
+
+/* Teks pencarian pada trigger TopNavigation dan field modal memakai warna
+   yang sama, supaya perpindahan dari header ke modal tidak mengubah tampilan. */
+html:not(.dark) .fi-global-search-trigger-placeholder,
+html:not(.dark) .fi-global-search-modal .fi-global-search-field input,
+html:not(.dark) .fi-global-search-modal .fi-global-search-field input::placeholder {
+    color: #64748b !important;
+}
+
+html.dark .fi-global-search-trigger-placeholder,
+html.dark .fi-global-search-modal .fi-global-search-field input,
+html.dark .fi-global-search-modal .fi-global-search-field input::placeholder {
+    color: #94a3b8 !important;
+}
+
+/* Kontras teks header di atas background image yang berubah-ubah. */
+.fi-panel-welcome .fi-topbar-item-label,
+.fi-panel-welcome .fi-topbar-group-label,
+.fi-panel-user .fi-topbar-item-label,
+.fi-panel-user .fi-topbar-group-label {
+    text-shadow: 0 1px 2px rgb(255 255 255 / 0.28),
+        0 1px 3px rgb(0 0 0 / 0.22);
+}
+
+html:not(.dark) .fi-panel-welcome .fi-topbar-item-label,
+html:not(.dark) .fi-panel-welcome .fi-topbar-group-label,
+html:not(.dark) .fi-panel-user .fi-topbar-item-label,
+html:not(.dark) .fi-panel-user .fi-topbar-group-label {
+    color: #0f172a !important;
+}
+
+html.dark .fi-panel-welcome .fi-topbar-item-label,
+html.dark .fi-panel-welcome .fi-topbar-group-label,
+html.dark .fi-panel-user .fi-topbar-item-label,
+html.dark .fi-panel-user .fi-topbar-group-label {
+    color: #f8fafc !important;
+}
+
+html:not(.dark) .fi-global-search-trigger-placeholder,
+html:not(.dark) .fi-global-search-modal .fi-global-search-field input::placeholder {
+    color: #334155 !important;
+    text-shadow: 0 1px 2px rgb(255 255 255 / 0.35);
+}
+
+html.dark .fi-global-search-trigger-placeholder,
+html.dark .fi-global-search-modal .fi-global-search-field input::placeholder {
+    color: #e2e8f0 !important;
+    text-shadow: 0 1px 2px rgb(0 0 0 / 0.45);
+}
+
+/* Header Welcome/User seperti header hopeindonesiarp.id: transparan di atas
+   background image, tanpa permukaan putih dan tanpa blur kaca. */
+.fi-panel-welcome .fi-topbar.fi-topbar,
+.fi-panel-user .fi-topbar.fi-topbar,
+.fi-panel-welcome .fi-topbar > nav,
+.fi-panel-user .fi-topbar > nav {
+    background-color: transparent !important;
+    background-image: none !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    backdrop-filter: blur(8px) !important;
+    box-shadow: none !important;
+    border-color: transparent !important;
+}
+
+/* Hilangkan lapisan putih/hitam yang memudarkan background image. */
+body.fi-panel-welcome [data-panel-background]::before,
+body.fi-panel-user [data-panel-background]::before,
+body.fi-panel-welcome [data-panel-background]::after,
+body.fi-panel-user [data-panel-background]::after {
+    background: transparent !important;
+    opacity: 0 !important;
+}
+
+/* --- Latar gambar Welcome & User: arah warna mengikuti mode -----------
+   Permintaan pemilik: gambar latar harus terasa HITAM di mode Dark dan
+   PUTIH di mode Light.
+
+   Gambar yang diunggah tetap satu (setting `background` di
+   FmAppSetting::background()), jadi yang berubah adalah lapisan warna
+   di atas gambar, bukan berkas gambarnya. Lapisan ini SENGAJA terpisah
+   dari overlay yang diatur admin (--panel-overlay / --panel-overlay-opacity
+   di partial panel-background). Overlay admin tetap bekerja apa adanya;
+   lapisan di sini hanya menambah arah warna sesuai mode:
+
+     Light : putih, gambar terbaca terang
+     Dark  : hitam, gambar terbaca gelap
+
+   Kenapa ::before dan bukan ::after: ::after sudah dipakai overlay
+   admin dengan z-index 2. Lapisan mode ditaruh di z-index 1, tepat di
+   atas gambar/video dan di bawah overlay admin, sehingga keduanya
+   tidak saling menimpa.
+
+   Hanya panel Welcome dan User yang disentuh. Panel Admin tidak
+   terpengaruh karena lapisan gambarnya sudah disembunyikan total di
+   blok tepat di atas.
+
+   File ini dimuat lewat <link> SETELAH CSS Vite, jadi perubahan di sini
+   langsung berlaku setelah refresh -- tidak perlu `npm run build`. */
+body.fi-panel-welcome [data-panel-background]::before,
+body.fi-panel-user [data-panel-background]::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: #ffffff;
+    opacity: 0.62;
+    transition: background-color 200ms ease, opacity 200ms ease;
+}
+
+.dark body.fi-panel-welcome [data-panel-background]::before,
+.dark body.fi-panel-user [data-panel-background]::before {
+    background: #000000;
+    opacity: 0.70;
+}
+
+/* --- Pencarian global Admin di ponsel -------------------------------
+   Permintaan pemilik: di mobile, modal pencarian harus "pas di Search"
+   -- bukan kotak kecil yang mengambang di tengah layar.
+
+   Tombol Search di sidebar Admin berada di bawah header sidebar:
+   header 4rem (h-16) + jarak atas 1rem (pt-4) = 5rem dari atas layar.
+   Padding samping sidebar 1.5rem (px-6) juga disamakan di sini, sehingga
+   jendela modal menutupi kotak Search dengan posisi dan lebar yang sama
+   persis. Hasil pencarian lalu tumbuh ke bawah dari posisi itu.
+
+   Kenapa di file ini: sama seperti lapisan kaca lain, file ini dimuat
+   lewat <link> setelah CSS Vite, jadi penyesuaian posisi ini tidak
+   menuntut `npm run build`.
+
+   Di atas 640px modal tetap di tengah layar (perilaku Filament). */
+@media (max-width: 640px) {
+    .fi-panel-admin .fi-admin-global-search-dialog {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        justify-content: flex-start !important;
+        padding: 5rem 1.5rem 1.5rem !important;
+    }
+
+    .fi-panel-admin .fi-admin-global-search-window {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+    }
 }
 
 /* Gradasi warna dilepas dari SEMUA permukaan kaca (kapsul,
@@ -106,6 +426,36 @@
 .fi-panel-user .lang-dd,
 .fi-panel-admin .lang-dd {
     background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
+}
+
+/* Chrome memakai kaca translucent. Backdrop blur memecah detail konten yang
+   bergerak di belakang topbar/sidebar tanpa membuat navigasi menjadi putih
+   solid. */
+/* Topbar navigation text: light = black, night = white. This is deliberately
+   placed in the shared stylesheet so it wins over Filament's generated
+   `dark:text-*` utilities and over the panel-specific topbar partials. */
+html:not(.dark) body.fi-panel-welcome .fi-topbar .fi-topbar-item-label,
+html:not(.dark) body.fi-panel-welcome .fi-topbar .fi-topbar-group-label,
+html:not(.dark) body.fi-panel-user .fi-topbar .fi-topbar-item-label,
+html:not(.dark) body.fi-panel-user .fi-topbar .fi-topbar-group-label {
+    color: #0f172a !important;
+}
+
+html.dark body.fi-panel-welcome .fi-topbar .fi-topbar-item-label,
+html.dark body.fi-panel-welcome .fi-topbar .fi-topbar-group-label,
+html.dark body.fi-panel-user .fi-topbar .fi-topbar-item-label,
+html.dark body.fi-panel-user .fi-topbar .fi-topbar-group-label {
+    color: #ffffff !important;
+}
+
+.fi-panel-welcome .fi-topbar.fi-topbar,
+.fi-panel-user .fi-topbar.fi-topbar,
+.fi-panel-admin .fi-topbar.fi-topbar,
+.fi-panel-welcome .fi-sidebar,
+.fi-panel-user .fi-sidebar,
+.fi-panel-admin .fi-sidebar {
+    background-color: var(--fi-chrome-bg) !important;
+    background-image: none !important;
 }
 
 /* --- Modal ---------------------------------------------------------- */
@@ -572,6 +922,134 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
     box-shadow: none !important;
 }
 
+/* --- Panel date-picker: kaca yang sama dengan topbar & sidebar ------
+   Permintaan eksplisit: latar popup kalender harus SAMA dengan latar
+   header dan sidebar. Aturannya ada di file ini -- bukan di Shared.css
+   yang diproses Vite -- supaya penyesuaian kaca tidak menuntut build.
+
+   Resepnya dibaca dari token `--fi-glass-*` yang sama dengan permukaan
+   lain: bg 20% + tint 50% + blur 15 + border ring. Gradien lama
+   (--fi-glass-t1/t2/t3) TIDAK dipakai lagi di sini, karena blok
+   "Gradasi warna dilepas" di atas sudah menggantinya dengan tint.
+
+   Dua lapis yang harus ditimpa:
+
+   1. `.fi-fo-date-time-picker-panel`, yang membawa
+      `bg-white dark:bg-gray-900`.
+   2. `.fi-fo-date-time-picker-month-panel`, dropdown bulan/tahun di
+      dalamnya, yang membawa `bg-white dark:bg-gray-800`. Kalau
+      dibiarkan, lapisan pekat itu muncul sebagai kotak solid di tengah
+      panel yang berkaca.
+
+   Ring (`ring-1`) dan bayangan bawaan dilepas lalu diganti border
+   `--fi-glass-ring`, sama seperti `.fi-dropdown-panel` dan `.lang-dd`
+   di atas, supaya tepinya satu bahasa dengan permukaan kaca lain. */
+.fi-panel-welcome .fi-fo-date-time-picker-panel,
+.fi-panel-user .fi-fo-date-time-picker-panel,
+.fi-panel-admin .fi-fo-date-time-picker-panel,
+.fi-panel-welcome .fi-fo-date-time-picker-month-panel,
+.fi-panel-user .fi-fo-date-time-picker-month-panel,
+.fi-panel-admin .fi-fo-date-time-picker-month-panel {
+    background-color: var(--fi-glass-bg) !important;
+    background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
+
+    border: 1px solid var(--fi-glass-ring) !important;
+
+    /* -webkit- wajib: Android WebView dan iOS Safari tidak lagi mendukung
+       backdrop-filter tanpa prefiks itu. */
+    -webkit-backdrop-filter: var(--fi-glass-blur) !important;
+    backdrop-filter: var(--fi-glass-blur) !important;
+
+    --tw-ring-color: transparent !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+    --tw-ring-offset-shadow: 0 0 #0000 !important;
+    box-shadow: none !important;
+}
+
+/* --- Kalender checkout: kaca yang sama dengan topbar & sidebar -------
+   `CheckoutCalendarPicker` (dipakai di checkout User/Welcome dan sekarang
+   juga di form Order panel Admin) menulis panelnya sendiri di
+   resources/views/User/components/checkout-calendar-picker, dengan
+   `bg-white dark:bg-gray-900` + `shadow-2xl` + `ring-1`. Tanpa aturan
+   ini, panelnya tetap kotak navy pekat -- persis yang terlihat di
+   screenshot -- sementara header dan sidebar berkaca.
+
+   Yang ditimpa hanya permukaan panel. Trigger input sengaja TIDAK
+   diubah: ia memakai border primary saat terbuka sebagai penanda fokus,
+   dan menimpanya dengan border kaca akan menghilangkan penanda itu. */
+.fi-panel-welcome .fi-checkout-calendar-panel,
+.fi-panel-user .fi-checkout-calendar-panel,
+.fi-panel-admin .fi-checkout-calendar-panel {
+    background-color: var(--fi-glass-bg) !important;
+    background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
+
+    border: 1px solid var(--fi-glass-ring) !important;
+
+    -webkit-backdrop-filter: var(--fi-glass-blur) !important;
+    backdrop-filter: var(--fi-glass-blur) !important;
+
+    --tw-ring-color: transparent !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+    --tw-ring-offset-shadow: 0 0 #0000 !important;
+    box-shadow: none !important;
+}
+
+/* Trigger input kalender checkout. Latarnya harus sama dengan header
+   juga -- bukan hanya panelnya -- karena field inilah yang terlihat
+   lebih dulu di form. `box-shadow` sengaja TIDAK ditimpa: saat panel
+   terbuka, Alpine menambahkan `ring-1 ring-primary-600`, dan cincin
+   itulah penanda fokus yang tersisa setelah border kaca dipasang. */
+.fi-panel-welcome .fi-checkout-calendar-trigger,
+.fi-panel-user .fi-checkout-calendar-trigger,
+.fi-panel-admin .fi-checkout-calendar-trigger {
+    background-color: var(--fi-glass-bg) !important;
+    background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
+
+    border: 1px solid var(--fi-glass-ring) !important;
+
+    -webkit-backdrop-filter: var(--fi-glass-blur) !important;
+    backdrop-filter: var(--fi-glass-blur) !important;
+}
+
+/* --- Khusus panel Admin: field tanggal = header, bukan token kaca ------
+   Header dan sidebar panel Admin TIDAK memakai --fi-glass-bg + tint.
+   View topbar/sidebar-nya menulis sendiri:
+
+       background-color: transparent;
+       background-image: none;
+       backdrop-filter: blur(16px);
+
+   Jadi keduanya benar-benar transparan dan hanya memblur latar body
+   (body Admin = rgb(3 7 18)). Token kaca (0.20 + tint 50%) menambah
+   lapisan gelap DI ATAS body, sehingga field tanggal terlihat lebih
+   gelap daripada header -- itulah "background masih ke ubah".
+
+   Resep di bawah menyalin persis header Admin: transparan, tanpa
+   gradien, blur 16px. Hasil akhirnya sama dengan header di Light
+   maupun Dark. Border tipis tetap dipertahankan supaya batas field
+   masih terbaca; cincin primary saat panel terbuka tidak disentuh. */
+ .fi-panel-admin .fi-checkout-calendar-trigger,
+ .fi-panel-admin .fi-checkout-calendar-panel {
+    background-color: transparent !important;
+    background-image: none !important;
+
+    border: 1px solid var(--fi-glass-ring) !important;
+
+    -webkit-backdrop-filter: blur(16px) !important;
+     backdrop-filter: blur(16px) !important;
+ }
+
+/* Calendar popup berada di area konten. Pada mobile drawer navigasi harus
+   selalu berada di atasnya, sehingga popup tidak menutupi menu sidebar. */
+.fi-panel-welcome .fi-calendar-picker-panel,
+.fi-panel-user .fi-calendar-picker-panel,
+.fi-panel-admin .fi-calendar-picker-panel,
+.fi-panel-welcome .fi-checkout-calendar-panel,
+.fi-panel-user .fi-checkout-calendar-panel,
+.fi-panel-admin .fi-checkout-calendar-panel {
+    z-index: 30 !important;
+}
+
 /* --- Kotak Sidebar dan Top Navigation tanpa bayangan ------------------
    Kaca sidebar dan topnav sama sekali tidak memakai bayangan, termasuk
    glow putih di sekelilingnya yang pernah ada. Panelnya hanya terlihat
@@ -777,18 +1255,18 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
    tidak topbar dan sidebar pekat sementara modal tetap berkaca, dan panel
    di tengah layar jadi satu-satunya permukaan transparan. */
 @media (prefers-reduced-transparency: reduce) {
-    body.fi-panel-welcome :is(.fi-glass-modal, .fi-modal-window, .fi-section, .fi-wi-stats-overview-stat, .catalog-card, .fi-glass-panel),
-    body.fi-panel-user :is(.fi-glass-modal, .fi-modal-window, .fi-section, .fi-wi-stats-overview-stat, .catalog-card, .fi-glass-panel),
-    body.fi-panel-admin :is(.fi-glass-modal, .fi-modal-window, .fi-section, .fi-wi-stats-overview-stat, .catalog-card, .fi-glass-panel) {
+    body.fi-panel-welcome :is(.fi-glass-modal, .fi-modal-window, .fi-section, .fi-wi-stats-overview-stat, .catalog-card, .fi-glass-panel, .fi-fo-date-time-picker-panel, .fi-fo-date-time-picker-month-panel, .fi-checkout-calendar-panel, .fi-checkout-calendar-trigger),
+    body.fi-panel-user :is(.fi-glass-modal, .fi-modal-window, .fi-section, .fi-wi-stats-overview-stat, .catalog-card, .fi-glass-panel, .fi-fo-date-time-picker-panel, .fi-fo-date-time-picker-month-panel, .fi-checkout-calendar-panel, .fi-checkout-calendar-trigger),
+    body.fi-panel-admin :is(.fi-glass-modal, .fi-modal-window, .fi-section, .fi-wi-stats-overview-stat, .catalog-card, .fi-glass-panel, .fi-fo-date-time-picker-panel, .fi-fo-date-time-picker-month-panel, .fi-checkout-calendar-panel, .fi-checkout-calendar-trigger) {
         background-color: rgb(255 255 255 / 0.98) !important;
         background-image: none !important;
         -webkit-backdrop-filter: none !important;
         backdrop-filter: none !important;
     }
 
-    .dark body.fi-panel-welcome :is(.fi-glass-modal, .fi-modal-window, .fi-section, .fi-wi-stats-overview-stat, .catalog-card, .fi-glass-panel),
-    .dark body.fi-panel-user :is(.fi-glass-modal, .fi-modal-window, .fi-section, .fi-wi-stats-overview-stat, .catalog-card, .fi-glass-panel),
-    .dark body.fi-panel-admin :is(.fi-glass-modal, .fi-modal-window, .fi-section, .fi-wi-stats-overview-stat, .catalog-card, .fi-glass-panel) {
+    .dark body.fi-panel-welcome :is(.fi-glass-modal, .fi-modal-window, .fi-section, .fi-wi-stats-overview-stat, .catalog-card, .fi-glass-panel, .fi-fo-date-time-picker-panel, .fi-fo-date-time-picker-month-panel, .fi-checkout-calendar-panel, .fi-checkout-calendar-trigger),
+    .dark body.fi-panel-user :is(.fi-glass-modal, .fi-modal-window, .fi-section, .fi-wi-stats-overview-stat, .catalog-card, .fi-glass-panel, .fi-fo-date-time-picker-panel, .fi-fo-date-time-picker-month-panel, .fi-checkout-calendar-panel, .fi-checkout-calendar-trigger),
+    .dark body.fi-panel-admin :is(.fi-glass-modal, .fi-modal-window, .fi-section, .fi-wi-stats-overview-stat, .catalog-card, .fi-glass-panel, .fi-fo-date-time-picker-panel, .fi-fo-date-time-picker-month-panel, .fi-checkout-calendar-panel, .fi-checkout-calendar-trigger) {
         background-color: rgb(9 9 11 / 0.98) !important;
     }
 }
@@ -1251,11 +1729,20 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
  * panel-glass.css is loaded after the Vite stylesheets, so this exception
  * must live here. The generic `.fi-section` glass rule above otherwise
  * restores the navy card background on Settings and Edit Profile.
+ *
+ * PANEL ADMIN (2026-10-26): halaman /admin/edit-profile-page sekarang
+ * memakai pembungkus `.profile-glass-page` yang sama dengan panel User,
+ * jadi aturan ini WAJIB menyertakan `.fi-panel-admin`. Tanpa itu section
+ * Admin jatuh ke aturan generik `.fi-section` yang tidak memasang
+ * backdrop blur -- kartunya tampak pekat dan berbeda dari halaman profil
+ * User, padahal keduanya harus satu bahan.
  */
 .fi-panel-welcome .profile-glass-page section.fi-section,
 .fi-panel-user .profile-glass-page section.fi-section,
+.fi-panel-admin .profile-glass-page section.fi-section,
 .fi-panel-welcome .profile-glass-page .fi-section-content-ctn,
-.fi-panel-user .profile-glass-page .fi-section-content-ctn {
+.fi-panel-user .profile-glass-page .fi-section-content-ctn,
+.fi-panel-admin .profile-glass-page .fi-section-content-ctn {
     background-color: var(--fi-glass-bg) !important;
     background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
     border: 1px solid var(--fi-glass-ring) !important;
@@ -1270,12 +1757,323 @@ body.fi-panel-admin .catalog-card :is(.catalog-body, .catalog-info) {
 /* Settings cards: use the same glass material as the topbar and sidebar. */
 .fi-panel-welcome .profile-glass-page.settings-page section.fi-section,
 .fi-panel-user .profile-glass-page.settings-page section.fi-section,
+.fi-panel-admin .profile-glass-page.settings-page section.fi-section,
 .fi-panel-welcome .profile-glass-page.settings-page .fi-section-content-ctn,
-.fi-panel-user .profile-glass-page.settings-page .fi-section-content-ctn {
+.fi-panel-user .profile-glass-page.settings-page .fi-section-content-ctn,
+.fi-panel-admin .profile-glass-page.settings-page .fi-section-content-ctn {
     background-color: var(--fi-glass-bg) !important;
     background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
     border: 1px solid var(--fi-glass-ring) !important;
     box-shadow: none !important;
     -webkit-backdrop-filter: var(--fi-glass-blur) !important;
     backdrop-filter: var(--fi-glass-blur) !important;
+}
+
+/* --- Global Search sebagai modal: Welcome & User ----------------------
+   Permintaan pemilik (2026-10-27): klik kotak pencarian di topbar harus
+   membuka MODAL, dan kotak pencarian di dalam modal harus tampil sama
+   persis dengan kotak di topbar (kapsul gelap, ikon cyan, ikon kamera).
+
+   Topbar sekarang hanya memuat TOMBOL pemicu
+   (Shared.components.global-search-trigger). Field asli + hasil pencarian
+   berada di modal `app-global-search` yang dirender dari hook BODY_END
+   (lihat WelcomePanelProvider / UserPanelProvider).
+
+   Kenapa di file ini: dimuat lewat <link> setelah CSS Vite, jadi
+   penyesuaian visual ini tidak menuntut `npm run build`.
+   ------------------------------------------------------------------- */
+
+/* Tombol pemicu: wujudnya harus identik dengan field pencarian lama.
+   Ukuran 284px mengikuti lebar field sebelumnya di desktop; di layar
+   <=1023px Shared.css sudah membuat `.fi-global-search` mengisi ruang
+   sisa topbar. */
+.fi-global-search-trigger {
+    display: flex !important;
+    align-items: center;
+    width: 284px;
+    max-width: 100%;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 8px;
+    background: transparent !important;
+    color: inherit;
+    cursor: text;
+    text-align: start;
+    appearance: none;
+    -webkit-appearance: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.fi-global-search-trigger:focus-visible {
+    outline: 2px solid var(--fi-glass-ring);
+    outline-offset: 2px;
+}
+
+.fi-global-search-trigger-box {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 42px;
+    border: 1px solid var(--fi-glass-ring);
+    border-radius: 8px;
+    background: transparent;
+    box-shadow: none;
+    transition: border-color .15s ease;
+}
+
+.fi-global-search-trigger:hover .fi-global-search-trigger-box {
+    border-color: color-mix(in srgb, var(--fi-glass-ring), #ffffff 18%);
+}
+
+.fi-global-search-trigger-icon {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    padding-inline-start: 12px;
+}
+
+.fi-global-search-trigger-placeholder {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 8px;
+    color: #9ca3af;
+    font-size: 14px;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dark .fi-global-search-trigger-placeholder {
+    color: #94a3b8;
+}
+
+.fi-global-search-trigger-camera {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    margin-inline-end: 8px;
+}
+
+/* Jendela modal: kaca yang sama dengan modal Filament lain, tetapi
+   padding kontennya kecil supaya kotak pencarian hampir memenuhi
+   modal -- seperti kapsul pencarian di gambar. */
+.fi-panel-welcome .fi-global-search-modal-window,
+.fi-panel-user .fi-global-search-modal-window {
+    overflow: hidden;
+}
+
+.fi-panel-welcome .fi-global-search-modal-window .fi-modal-content,
+.fi-panel-user .fi-global-search-modal-window .fi-modal-content {
+    gap: 0 !important;
+    padding: 10px !important;
+}
+
+.fi-global-search-modal .fi-global-search,
+.fi-global-search-modal .fi-global-search > div,
+.fi-global-search-modal .fi-global-search-field {
+    width: 100% !important;
+    max-width: none !important;
+}
+
+/* Hasil pencarian: JANGAN lagi menjadi dropdown absolut. Di modal ia
+   ikut alur normal, sehingga jendela modal tumbuh ke bawah dan hasilnya
+   punya ruang sendiri -- bukan menimpa isi halaman. */
+.fi-global-search-modal .fi-global-search-results-ctn {
+    position: static !important;
+    inset: auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    max-height: min(52vh, 400px);
+    margin-top: 8px !important;
+    padding: 2px 0 !important;
+    border: 0 !important;
+    border-radius: 10px !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    overflow-y: auto;
+}
+
+/* Header grup hasil memakai latar pekat bawaan Filament (bg-gray-50 /
+   dark:bg-gray-900). Di atas kaca modal itu terlihat seperti potongan
+   kotak solid; dibuat transparan supaya menyatu.
+
+   `position: sticky` dimatikan: di dalam modal daftar hasilnya sendiri
+   yang bergulir, jadi header yang menempel akan menimpa judul hasil
+   pertama (terlihat seperti teks bertumpuk). Di modal, header cukup
+   ikut alur normal. */
+.fi-global-search-modal .fi-global-search-result-group > div {
+    position: static !important;
+}
+
+.fi-global-search-modal .fi-global-search-result-group > div,
+.fi-global-search-modal .fi-global-search-result-group h3 {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+/* `input[type="search"]` bawaan Chrome menampilkan tombol silang (x) di
+   ujung kanan begitu ada teks. Di gambar acuan sisi kanan HANYA berisi
+   ikon kamera, jadi tombol bawaan itu disembunyikan. Menghapus teks tetap
+   bisa lewat Backspace/Delete atau menyeleksi lalu menghapus. */
+.fi-global-search-field input[type="search"]::-webkit-search-cancel-button,
+.fi-global-search-field input[type="search"]::-webkit-search-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+    display: none;
+}
+
+/* Rating hasil global search harus mengikuti warna bintang katalog, bukan
+   warna abu-abu milik teks detail hasil. */
+.fi-global-search-modal .fi-global-search-rating,
+.fi-global-search-modal .fi-global-search-rating dd {
+    color: #fbbf24 !important;
+}
+
+/* Final background treatment: gambar tetap tajam, tetapi digelapkan dengan
+   overlay hitam transparan pada kedua mode agar konten lebih terbaca. */
+body.fi-panel-welcome [data-panel-background]::before,
+body.fi-panel-user [data-panel-background]::before,
+body.fi-panel-welcome [data-panel-background]::after,
+body.fi-panel-user [data-panel-background]::after {
+    background: #000000 !important;
+    opacity: 0 !important;
+}
+
+/* Light mode: gelap sedang, supaya gambar masih terlihat jelas. */
+html:not(.dark) body.fi-panel-welcome [data-panel-background]::before,
+html:not(.dark) body.fi-panel-user [data-panel-background]::before {
+    opacity: 0.32 !important;
+}
+
+/* Night mode: sedikit lebih gelap untuk menjaga kontras teks terang. */
+html.dark body.fi-panel-welcome [data-panel-background]::before,
+html.dark body.fi-panel-user [data-panel-background]::before {
+    opacity: 0.52 !important;
+}
+
+body.fi-panel-welcome [data-panel-background-media] img,
+body.fi-panel-welcome [data-panel-background-media] video,
+body.fi-panel-user [data-panel-background-media] img,
+body.fi-panel-user [data-panel-background-media] video {
+    filter: none !important;
+    -webkit-filter: none !important;
+}
+
+.fi-global-search-modal .fi-global-search-result-group > div {
+    border-color: var(--fi-glass-ring) !important;
+}
+
+.fi-global-search-modal .fi-global-search-no-results-message {
+    padding: 14px 12px !important;
+}
+
+/* Topbar memakai bobot regular, bukan semi-bold. Sidebar tetap mengikuti
+   bobot navigasi sebelumnya. */
+body.fi-panel-welcome .fi-topbar :is(.fi-topbar-item-label, .fi-topbar-group-label),
+body.fi-panel-user .fi-topbar :is(.fi-topbar-item-label, .fi-topbar-group-label),
+body.fi-panel-admin .fi-topbar :is(.fi-topbar-item-label, .fi-topbar-group-label) {
+    font-weight: 400 !important;
+}
+
+body.fi-panel-welcome .fi-topbar :is(.fi-topbar-item-button, .fi-topbar-group-button),
+body.fi-panel-user .fi-topbar :is(.fi-topbar-item-button, .fi-topbar-group-button),
+body.fi-panel-admin .fi-topbar :is(.fi-topbar-item-button, .fi-topbar-group-button) {
+    font-weight: 400 !important;
+}
+
+/* Navigasi topbar dan sidebar harus tetap terang di Light, Dark maupun
+   System. Mode tema hanya mengubah permukaan/background; teks navigasi tidak
+   boleh kembali menjadi navy gelap di atas background foto yang gelap. */
+body.fi-panel-welcome :is(.fi-topbar, .fi-sidebar) :is(
+    .fi-topbar-item-label,
+    .fi-topbar-group-label,
+    .fi-sidebar-item-label,
+    .fi-sidebar-group-label,
+    .fi-topbar-item-button,
+    .fi-topbar-group-button,
+    .fi-sidebar-item-button,
+    .fi-sidebar-group-button
+),
+body.fi-panel-user :is(.fi-topbar, .fi-sidebar) :is(
+    .fi-topbar-item-label,
+    .fi-topbar-group-label,
+    .fi-sidebar-item-label,
+    .fi-sidebar-group-label,
+    .fi-topbar-item-button,
+    .fi-topbar-group-button,
+    .fi-sidebar-item-button,
+    .fi-sidebar-group-button
+),
+body.fi-panel-admin :is(.fi-topbar, .fi-sidebar) :is(
+    .fi-topbar-item-label,
+    .fi-topbar-group-label,
+    .fi-sidebar-item-label,
+    .fi-sidebar-group-label,
+    .fi-topbar-item-button,
+    .fi-topbar-group-button,
+    .fi-sidebar-item-button,
+    .fi-sidebar-group-button
+) {
+    color: #f8fafc !important;
+    text-shadow: 0 1px 2px rgb(0 0 0 / 0.42);
+}
+
+body.fi-panel-welcome :is(.fi-topbar, .fi-sidebar) :is(
+    .fi-topbar-item-icon,
+    .fi-topbar-group-toggle-icon,
+    .fi-sidebar-item-icon,
+    .fi-sidebar-group-collapse-button
+),
+body.fi-panel-user :is(.fi-topbar, .fi-sidebar) :is(
+    .fi-topbar-item-icon,
+    .fi-topbar-group-toggle-icon,
+    .fi-sidebar-item-icon,
+    .fi-sidebar-group-collapse-button
+),
+body.fi-panel-admin :is(.fi-topbar, .fi-sidebar) :is(
+    .fi-topbar-item-icon,
+    .fi-topbar-group-toggle-icon,
+    .fi-sidebar-item-icon,
+    .fi-sidebar-group-collapse-button
+) {
+    color: #f8fafc !important;
+}
+
+/* Hilangkan seluruh warna ungu/indigo dari highlight navigasi. Semua kotak
+   aktif, hover, dan item dropdown memakai netral transparan. */
+.fi-panel-welcome,
+.fi-panel-user,
+.fi-panel-admin,
+body.fi-panel-welcome,
+body.fi-panel-user,
+body.fi-panel-admin {
+    --fi-box-bg: rgb(255 255 255 / 0.18) !important;
+    --fi-box-tint: rgb(255 255 255 / 0.08) !important;
+}
+
+.dark .fi-panel-welcome,
+.dark .fi-panel-user,
+.dark .fi-panel-admin,
+.dark body.fi-panel-welcome,
+.dark body.fi-panel-user,
+.dark body.fi-panel-admin {
+    --fi-box-bg: rgb(255 255 255 / 0.12) !important;
+    --fi-box-tint: rgb(255 255 255 / 0.05) !important;
+}
+
+/* Hilangkan blur ungu pada chrome navigasi. Permukaan dan warna teks tetap
+   dipertahankan, tetapi background image di belakang topbar/sidebar tidak
+   lagi diburamkan. */
+body.fi-panel-welcome :is(.fi-topbar, .fi-sidebar),
+body.fi-panel-user :is(.fi-topbar, .fi-sidebar),
+body.fi-panel-admin :is(.fi-topbar, .fi-sidebar) {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
 }

@@ -35,7 +35,7 @@
 
                     <div class="flex-1 overflow-hidden">
                         <div class="flex justify-between items-center gap-2">
-                            <p class="text-base font-bold truncate text-gray-900 dark:text-white">{{ $selectedConversation->inbox_title }}</p>
+                            <p class="text-base font-semibold truncate text-gray-900 dark:text-white">{{ $selectedConversation->inbox_title }}</p>
                         </div>
 
                         @if ($selectedConversation->title)
@@ -45,19 +45,7 @@
                     </div>
 
                     <div class="flex items-center gap-1 flex-shrink-0">
-                        @if ($this->searchOpen)
-                            <div class="flex items-center gap-2 mr-1">
-                                <input wire:model.live="searchQuery" type="search"
-                                    placeholder="{{ __('Cari pesan...') }}"
-                                    class="text-xs rounded-lg px-2.5 py-1.5 w-44 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-primary-500 focus:border-primary-500 outline-none">
-                                @if (trim($this->searchQuery) !== '')
-                                    <span class="text-[10px] font-bold text-primary-600 whitespace-nowrap">
-                                        {{ $this->visibleMessages->count() }} {{ __('hasil') }}
-                                    </span>
-                                @endif
-                            </div>
-                        @endif
-                        <button type="button" wire:click="toggleSearch()"
+                        <button type="button" x-on:click="$dispatch('open-modal', { id: 'welcome-message-search' })"
                             class="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-white/10 transition"
                             title="{{ __('Cari') }}">
                             <x-filament::icon icon="/images/icons/search.svg" class="w-5 h-5" />
@@ -67,6 +55,18 @@
                 </div>
             </div>
         </div>
+        <x-filament::modal width="xl" id="welcome-message-search">
+            <x-slot name="heading">{{ __('Cari pesan...') }}</x-slot>
+            <x-filament::input.wrapper prefix-icon="/images/icons/search.svg">
+                <x-filament::input type="search" wire:model.live.debounce.300ms="searchQuery"
+                    placeholder="{{ __('Cari pesan...') }}" autofocus />
+            </x-filament::input.wrapper>
+            @if (trim($this->searchQuery) !== '')
+                <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                    {{ $this->visibleMessages->count() }} {{ __('hasil') }}
+                </p>
+            @endif
+        </x-filament::modal>
         <!-- Chat Header : End -->
         <!-- Chat Box : Start -->
         <div wire:poll.visible.{{ $pollInterval }}="pollMessages()" id="chatContainer"
@@ -305,20 +305,20 @@
                                          onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($meta['name']) }}&background=f3f4f6&color=a1a1aa&size=128'">
                                     <div class="flex-1 min-w-0">
                                         @if($isCancellation)
-                                            <p class="text-[9px] font-black tracking-tight leading-none mb-0.5" style="color:#fca5a5;">
+                                            <p class="text-[9px] font-semibold tracking-tight leading-none mb-0.5" style="color:#fca5a5;">
                                                 ❌ {{ __('PESANAN DIBATALKAN') }}
                                             </p>
                                         @elseif($isOrderCard || $isPaymentUpdate)
-                                            <p class="text-[9px] font-black tracking-tight leading-none mb-0.5" style="color:#facc15;">
+                                            <p class="text-[9px] font-semibold tracking-tight leading-none mb-0.5" style="color:#facc15;">
                                                 {{ __('Pesanan') }} #{{ $meta['order_number'] ?? '-' }}
                                             </p>
                                         @endif
-                                        <p class="text-sm font-bold truncate leading-tight" style="{{ $nameColor }}">{{ $meta['name'] }}</p>
-                                        <p class="text-xs font-black leading-none mt-0.5" style="{{ $nameColor }}">
+                                        <p class="text-sm font-semibold truncate leading-tight" style="{{ $nameColor }}">{{ $meta['name'] }}</p>
+                                        <p class="text-xs font-semibold leading-none mt-0.5" style="{{ $nameColor }}">
                                             Rp {{ number_format($meta['price'], 0, ',', '.') }}
                                         </p>
                                         @if($isCancellation)
-                                            <span class="inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold leading-none"
+                                            <span class="inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-semibold leading-none"
                                                   style="background-color:#dc2626;color:#fff;">
                                                 {{ $isRefunded ? __('Dana Dikembalikan') : __('Tidak Ada Refund') }}
                                             </span>
@@ -356,7 +356,7 @@
                                                     $payBadgeBg = $isPaidMeta ? '#16a34a' : '#dc2626';
                                                 }
                                             @endphp
-                                            <span class="inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold leading-none"
+                                            <span class="inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-semibold leading-none"
                                                   style="background-color:{{ $payBadgeBg }};color:#fff;">
                                                 {{ $payBadgeLabel }}
                                             </span>
@@ -374,13 +374,13 @@
                                                 : \App\Filament\Welcome\Resources\OrderResource\OrderResource::getUrl('index', panel: 'welcome');
                                         @endphp
                                         <a href="{{ $payViewUrl }}" wire:navigate
-                                           class="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
+                                           class="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
                                            style="background-color:#1c1917;color:#facc15;">
                                             {{ __('Lihat Detail') }}
                                         </a>
                                     @elseif(!$isOrderCard && !empty($meta['url']))
                                         <a href="{{ $meta['url'] }}" wire:navigate
-                                           class="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
+                                           class="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
                                            style="background-color:#1c1917;color:#facc15;">
                                             {{ __('Details') }}
                                         </a>
@@ -414,7 +414,7 @@
                                     {{-- Update card background jika live cancelled/deleted --}}
                                     @if($isLiveCancelled && !$isCancellation)
                                         <div class="px-2 pb-1">
-                                            <span class="inline-block px-2 py-0.5 rounded text-[9px] font-bold"
+                                            <span class="inline-block px-2 py-0.5 rounded text-[9px] font-semibold"
                                                   style="background-color:#dc2626;color:#fff;">
                                                 ❌ {{ $liveOrder === null ? __('PESANAN TELAH DIHAPUS') : __('PESANAN DIBATALKAN') }}
                                             </span>
@@ -423,13 +423,13 @@
                                     <div class="flex">
                                             <a href="{{ $viewOrderUrl }}"
                                                wire:navigate
-                                               class="flex-1 py-3 text-sm font-bold text-center transition-colors {{ $isCancelledCard ? 'rounded-b-xl' : 'rounded-bl-xl border-r border-gray-600' }}"
+                                               class="flex-1 py-3 text-sm font-semibold text-center transition-colors {{ $isCancelledCard ? 'rounded-b-xl' : 'rounded-bl-xl border-r border-gray-600' }}"
                                                style="background-color:#334155;color:#f1f5f9;">
                                                 {{ __('Lihat Detail') }}
                                             </a>
                                             @if(!$isCancelledCard)
                                                 <button wire:click="mountAction('changeOrder', {{ json_encode(['orderId' => $meta['order_id'] ?? null]) }})"
-                                                    class="flex-1 py-3 text-sm font-bold transition-colors rounded-br-xl"
+                                                    class="flex-1 py-3 text-sm font-semibold transition-colors rounded-br-xl"
                                                     style="background-color:#facc15;color:#111827;">
                                                     {{ __('Ubah Pesanan') }}
                                                 </button>
@@ -458,7 +458,7 @@
                                                 'bg-black/5 border-gray-300 dark:bg-white/10 dark:border-white/30' => $isMine,
                                                 'bg-white/70 border-gray-400 dark:bg-gray-700 dark:border-gray-400' => !$isMine,
                                             ]) title="{{ __('Lihat pesan yang dibalas') }}">
-                                            <p class="text-[9px] font-bold opacity-70 mb-0.5">{{ $replyToMeta['sender_name'] ?? __('Pesan') }}</p>
+                                            <p class="text-[9px] font-semibold opacity-70 mb-0.5">{{ $replyToMeta['sender_name'] ?? __('Pesan') }}</p>
                                             <p class="text-[11px] truncate opacity-90">{{ $replyToMeta['message'] ?? '' }}</p>
                                         </button>
                                     @endif
@@ -744,7 +744,7 @@
                     @if ($this->replyTo)
                         <div class="flex items-center gap-2 mb-1 px-3 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 border-l-4 border-primary-500">
                             <div class="flex-1 min-w-0">
-                                <p class="text-[10px] font-bold text-primary-600 dark:text-primary-400">
+                                <p class="text-[10px] font-semibold text-primary-600 dark:text-primary-400">
                                     {{ __('Membalas') }} {{ $this->replyTo['sender_name'] ?? '' }}
                                 </p>
                                 <p class="text-xs truncate text-gray-600 dark:text-gray-300">{{ $this->replyTo['message'] ?? '' }}</p>

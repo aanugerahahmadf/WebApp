@@ -3,6 +3,7 @@
 ])
 
 <div
+    style="position: fixed !important; top: env(safe-area-inset-top, 0px) !important; left: 0 !important; right: 0 !important; width: 100% !important; height: 4rem !important; min-height: 4rem !important; z-index: 40 !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background-color: transparent !important; background-image: none !important; -webkit-backdrop-filter: blur(8px) !important; backdrop-filter: blur(8px) !important; overflow: visible !important; overflow-x: visible !important;"
     {{
         $attributes->class([
             'fi-topbar sticky top-0 z-20 overflow-x-clip',
@@ -10,7 +11,57 @@
         ])
     }}
 >
+    <style>
+        .fi-panel-welcome .fi-topbar-item-label {
+            font-family: 'Instrument Sans', sans-serif !important;
+            font-size: 14px !important;
+            font-weight: 400 !important;
+            color: rgb(51 65 85) !important;
+        }
+
+        /* Light mode: topbar labels must be dark, not white. */
+        html:not(.dark) .fi-panel-welcome .fi-topbar-item-label {
+            color: rgb(15 23 42) !important;
+        }
+
+        .fi-panel-welcome .fi-topbar-group-label {
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            color: rgb(30 41 59) !important;
+        }
+
+        html:not(.dark) .fi-panel-welcome .fi-topbar-group-label {
+            color: rgb(15 23 42) !important;
+        }
+
+        .dark .fi-panel-welcome .fi-topbar-item-label {
+            color: rgb(203 213 225) !important;
+        }
+
+        .dark .fi-panel-welcome .fi-topbar-group-label {
+            color: rgb(226 232 240) !important;
+        }
+
+        .fi-panel-welcome .fi-dropdown-list-item,
+        .fi-panel-welcome .fi-dropdown-list-item * {
+            font-family: 'Instrument Sans', sans-serif !important;
+            font-size: 12px !important;
+        }
+
+        .fi-panel-welcome .fi-dropdown-list-item {
+            color: rgb(51 65 85) !important;
+            font-weight: 400 !important;
+        }
+
+        .dark .fi-panel-welcome .fi-dropdown-list-item,
+        .dark .fi-panel-welcome .fi-dropdown-list-item-label {
+            color: rgb(203 213 225) !important;
+            font-weight: 400 !important;
+        }
+    </style>
+
     <nav
+        style="height: 4rem !important; min-height: 4rem !important; border-radius: 0 !important; background-color: transparent !important; background-image: none !important; border: 0 !important; box-shadow: none !important; --tw-ring-color: transparent !important; --tw-ring-shadow: 0 0 #0000 !important; --tw-ring-offset-shadow: 0 0 #0000 !important; overflow: visible !important; overflow-x: visible !important;"
         class="flex h-16 items-center gap-x-4 bg-white px-4 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 md:px-6 lg:px-8"
     >
         {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::TOPBAR_START) }}
@@ -18,13 +69,13 @@
         @php
             use App\Support\AppPlatform\AppPlatform;
 
-            // Tombol sidebar: selalu tampilkan. Di mobile membuka drawer navigasi
-            // bawaan Filament; di desktop (top navigation) otomatis disembunyikan
-            // oleh class 'lg:hidden' di bawah.
+            // Tombol sidebar: selalu tampilkan. Di ponsel membuka drawer navigasi
+            // bawaan Filament; mulai tablet (768px) otomatis disembunyikan oleh
+            // class 'lg:hidden' di bawah.
             //
             // APLIKASI DESKTOP: tombol tutup (X) di-sembunyikan. Di sana sidebar
             // adalah satu-satunya jalan ke navigasi -- topbar desktop app memakai
-            // topNavigation, jadi item navigasinya disembunyikan oleh 'hidden lg:flex'
+            // topNavigation, jadi item navigasinya disembunyikan oleh 'hidden md:flex'
             // dan tidak ada salinan lain di topbar. Kalau X di sini menutup sidebar,
             // pengguna dismissal navigasi dan tidak punya tombol untuk membukanya
             // lagi: jalan buntu. Tombol buka tetap dirender supaya sidebar yang
@@ -184,7 +235,10 @@
             {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::GLOBAL_SEARCH_BEFORE) }}
 
             @if (filament()->isGlobalSearchEnabled())
-                @livewire(Filament\Livewire\GlobalSearch::class)
+                {{-- Tombol, bukan input: klik membuka modal pencarian
+                     `app-global-search`. Lihat partial di bawah dan komentar
+                     panjangnya (kenapa hanya SATU instance GlobalSearch). --}}
+                @include('Shared.components.global-search-trigger.global-search-trigger')
             @endif
 
             {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::GLOBAL_SEARCH_AFTER) }}
@@ -235,7 +289,13 @@
                 @endif
 
 
-                <x-filament-panels::user-menu />
+                {{-- Avatar/profil di header disembunyikan di ponsel & tablet:
+                     profil lengkap ada di dasar sidebar (drawer). Di desktop
+                     (>=1024px) sidebar tidak dipakai, jadi avatar kembali ke
+                     topbar. --}}
+                <div class="hidden lg:flex">
+                    <x-filament-panels::user-menu />
+                </div>
             @endif
         </div>
 

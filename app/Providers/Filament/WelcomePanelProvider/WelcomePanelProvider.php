@@ -33,7 +33,6 @@ use App\Support\AppIcon\AppIcon;
 use App\Support\AppFont\AppFont;
 use App\Support\AppPlatform\AppPlatform;
 use App\Support\DesktopApp\DesktopApp;
-use App\Support\MobileNav\MobileNav;
 use App\Support\PanelGlassCss\PanelGlassCss;
 use App\Support\TopNavigation\TopNavigation;
 use Filament\Enums\ThemeMode;
@@ -256,11 +255,11 @@ class WelcomePanelProvider extends PanelProvider
             // adalah tempat pencarian global, user menu, switcher bahasa/tema,
             // dan tombol kembali -- semuanya dibutuhkan di setiap layar.
             //
-            // Sidebar dan bottom nav HP ikut aturan yang sama, tapi bukan
-            // dari sini: sidebar dikendalikan dari override view
+            // Sidebar HP ikut aturan yang sama, tapi bukan dari sini:
+            // sidebar dikendalikan dari override view
             // resources/views/User/vendor/filament-panels/components/sidebar/
-            // index.blade.php, dan bottom nav dari MobileNav::shouldRender().
-            // Ketiganya membaca TopNavigation::hasChrome() yang sama.
+            // index.blade.php. Keduanya membaca TopNavigation::hasChrome()
+            // yang sama.
             //
             // Closure, bukan `true`: Filament menyimpan argumen lalu
             // mengevaluasinya tiap kali hasTopNavigation()/hasTopbar() dipanggil
@@ -411,18 +410,28 @@ class WelcomePanelProvider extends PanelProvider
                 fn (): string => view('Livewire.Admin.page-customizer.scope-marker')->render(),
             )
             ->renderHook(
-                // Phone-only bottom navigation. MobileNav menekan bar ini di
-                // halaman auth dan di desktop; item-nya diambil dari
-                // config/app-platform.php (mobile_nav.items.welcome).
-                //
-                // `Auth::check()` tetap: semua tujuan bar ini account-shaped
-                // dan panel ini dibuka tamu -- bar hanya muncul yang sudah
-                // sign in.
                 PanelsRenderHook::BODY_END,
-                fn (): string => (string) (Auth::check() && MobileNav::shouldRender('welcome')
-                    ? view('Shared.components.mobile-bottom-nav.mobile-bottom-nav')->render()
-                    : '')
-                    . view('Shared.components.notification-sound.notification-sound')->render(),
+                fn (): string => view('Shared.components.notification-sound.notification-sound')->render(),
+            )
+            ->renderHook(
+                // GLOBAL SEARCH SEBAGAI MODAL (2026-10-27).
+                //
+                // Kotak pencarian di topbar hanyalah tombol pemicu
+                // (Shared.components.global-search-trigger). Field dan hasil
+                // pencariannya dirender di sini, di BODY_END, karena topbar
+                // memakai `backdrop-filter` -- anak `position: fixed` di
+                // dalamnya akan diposisikan relatif terhadap topbar dan
+                // modalnya terpotong.
+                //
+                // Isinya tetap komponen Filament `GlobalSearch`, jadi
+                // debounce, pencarian per resource, navigasi keyboard, dan
+                // tombol kamera CBIR tidak berubah. Yang berubah hanya
+                // permukaannya: hasil tidak lagi berupa dropdown.
+                //
+                // Partial: resources/views/Shared/components/
+                // global-search-modal/global-search-modal.blade.php
+                PanelsRenderHook::BODY_END,
+                fn (): string => view('Shared.components.global-search-modal.global-search-modal')->render(),
             )
             ->renderHook(
                 // SHELL DESKTOP (Electron) -- app/Capacitor/DekstopApp.

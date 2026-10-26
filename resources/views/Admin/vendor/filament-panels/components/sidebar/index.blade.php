@@ -5,89 +5,204 @@
 @php
     $openSidebarClasses = 'fi-sidebar-open w-[var(--sidebar-width)] translate-x-0 shadow-xl ring-1 ring-gray-950/5 dark:ring-white/10 rtl:-translate-x-0';
     $isRtl = __('filament-panels::layout.direction') === 'rtl';
+
+    // PERUBAHAN PERILAKU (2026-10-25, kedua): switcher bahasa + tema dan
+    // blok profil diminta "PALING BAWAH" di sidebar, bukan sebaris dengan
+    // logo. Flag ini menyalakan HANYA satu dari dua tempat itu supaya hook
+    // SIDEBAR_NAV_START tidak dipanggil dua kali (switcher dobel).
+    //
+    // Posisi 'header' lama TIDAK dihapus -- cukup ubah jadi false untuk
+    // mengembalikan switcher ke sebelah logo.
+    $switchersAtSidebarBottom = true;
 @endphp
 
     {{--
-        OFFSET TOP: SIDEBAR DIBAWAH KAPSUL TOPBAR, BUKAN DI BELAKANGNYA.
+        SIDEBAR ADMIN DATAR: TIDAK ADA KAPSUL, TIDAK ADA OFFSET.
 
-        MASALAH: kapsul topbar menutupi bagian atas sidebar.
+        Dulu sidebar digeser ke bawah sebesar var(--fi-capsule-stack) supaya
+        tidak tertutup kapsul topbar. Topbar sekarang datar di y=0, jadi
+        sidebar juga mulai di y=0 dan menyambung ke tepi layar.
 
-        Dua fakta yang bertemu di sini:
-
-          1. Kapsul topbar `position: fixed` (resources/css/Shared/Shared.css
-             blok 2), jadi keluar dari flow. Ruang kosongnya dikembalikan
-             lewat `padding-top` .fi-layout (blok 5).
-
-          2. Sidebar ini `fixed inset-y-0` + `h-screen`. `inset-y-0` berarti
-             top:0 -- dihitung dari PUNCAK LAYAR, dan `position: fixed` sama
-             sekali tidak memperhatikan `padding` leluhurnya. Sidebar tetap
-             mulai di y=0, PERSIS DI BAWAH kapsul, sementara kapsul punya
-             z-index 40 dan sidebar hanya 30. Baris paling atas sidebar
-             (header + logo + switcher) hilang di balik kapsul.
-
-        Kapan ini terlihat? Hanya ketika sidebar tampil sebagai KOLOM, bukan
-        sebagai drawer -- terutama APLIKASI DESKTOP, yang jendelanya tidak
-        punya minWidth sehingga bisa dikecilkan ke bawah 1024px, dan aturan
-        drawer-nya dikecualikan oleh :root:not(.native-desktop).
-
-        SOLUSINYA: `top` dan `height` geser sebesar var(--fi-capsule-stack) --
-        PERSIS nilai yang sama dengan `padding-top` .fi-layout. Angkanya satu
-        token di blok 1 Shared.css, jadi sidebar dijamin berhenti di garis
-        yang sama dengan kapsul. Inilah yang membuat header dan sidebar
-        SEIMBANG: keduanya mulai dari satu garis, bukan saling menindih.
-
-        Kenapa ditulis sebagai blok <style> di dalam view ini, bukan di CSS
-        panel:
-
-          - CSS tidak bisa menanyakan "apakah topbar-nya sedang ada". Di panel
-            tanpa chrome (Welcome/User di luar Home), topbar disembunyikan, dan
-            menggeser sidebar ke bawah hanya menyisakan ruang kosong di atasnya.
-            Blade bisa bertanya: filament()->hasTopbar().
-
-          - Offset HARUS bisa dibatalkan di mode drawer. Style inline tidak
-            bisa dikalahkan media query (kecuali !important, yang justru
-           berat karena ikut menimpa aturan panel lain). Blok <style>
-            di dalam view ini punya scope yang jelas: hanya saat sidebar ini
-            benar-benar dirender.
-
-        `@media (max-width: 1023px)` mengembalikan top/height ke 0/100%,
-        karena di bawah 1024px sidebar adalah drawer full-layar yang SENGAJA
-        menutupi kapsul -- tidak ada yang perlu dihindari di sana.
+        Yang membedakan hanya PERAN-nya, bukan bentuknya:
+          - ponsel (< 768px): drawer penuh layar
+          - tablet & desktop (>= 768px): kolom tetap di kiri
     --}}
     @if (filament()->hasTopbar())
         <style>
-            .fi-panel-welcome .fi-sidebar,
-            .fi-panel-user .fi-sidebar,
-            .fi-panel-admin .fi-sidebar {
-                top: var(--fi-capsule-stack);
-                bottom: 0;
-
-                /* Dua UJUNG ATAS tumpul. Sidebar menyambung ke kapsul
-                   tepat di atasnya, jadi bentuknya harus terbaca sebagai
-                   satu kesimpulan dari header, bukan dua kotak yang
-                   kebetulan bersentuhan. Bawahnya tetap siku: sidebar
-                   menyambung ke tepi layar dan tepi bawah layar, jadi
-                   membulatkan bawahnya akan membuatnya terlihat melayang. */
-                border-top-left-radius: var(--fi-capsule-radius);
-                border-top-right-radius: var(--fi-capsule-radius);
+            .fi-panel-admin .fi-sidebar-item-label,
+            .fi-panel-admin .fi-sidebar-group-label {
+                font-family: 'Instrument Sans', sans-serif !important;
+                font-size: 11px !important;
+                font-weight: 400 !important;
+                color: rgb(51 65 85) !important;
             }
 
-            @media (max-width: 1023px) {
-                :root:not(.native-desktop) .fi-panel-welcome .fi-sidebar,
-                :root:not(.native-desktop) .fi-panel-user .fi-sidebar,
-                :root:not(.native-desktop) .fi-panel-admin .fi-sidebar {
-                    top: 0;
-                    bottom: 0;
-                    border-top-left-radius: 0;
-                    border-top-right-radius: 0;
+            .fi-panel-admin .fi-sidebar-group-label {
+                color: rgb(30 41 59) !important;
+                font-size: 13px !important;
+                font-weight: 500 !important;
+            }
+
+            /* Badge navigasi harus identik dengan ukuran teks item menu.
+               `getNavigationBadgeColor()` tetap mengatur warna; aturan ini
+               hanya menyamakan tipografi badge dengan label sidebar Admin. */
+            .fi-panel-admin .fi-sidebar-item .fi-badge {
+                font-family: 'Instrument Sans', sans-serif !important;
+                font-size: 11px !important;
+                line-height: 1rem !important;
+                font-weight: 400 !important;
+            }
+
+            .fi-panel-admin .fi-sidebar-item .fi-badge * {
+                font-family: 'Instrument Sans', sans-serif !important;
+                font-size: 11px !important;
+                line-height: 1rem !important;
+                font-weight: 400 !important;
+            }
+
+            .dark .fi-panel-admin .fi-sidebar-item-label {
+                color: rgb(203 213 225) !important;
+            }
+
+            .dark .fi-panel-admin .fi-sidebar-group-label {
+                color: rgb(226 232 240) !important;
+            }
+
+            /* Topbar Admin memakai tipografi & warna yang sama dengan Sidebar
+               Admin. Label Top Navigation tetap berukuran normal; hanya item
+               dropdown yang dibuat kecil. */
+            .fi-panel-admin .fi-topbar-item-label {
+                font-family: 'Instrument Sans', sans-serif !important;
+                font-size: 14px !important;
+                font-weight: 400 !important;
+                color: rgb(51 65 85) !important;
+            }
+
+            .fi-panel-admin .fi-topbar-group-label {
+                font-size: 14px !important;
+                font-weight: 600 !important;
+                color: rgb(30 41 59) !important;
+            }
+
+            .fi-panel-admin .fi-topbar-item-button,
+            .fi-panel-admin .fi-topbar-item-button .fi-topbar-item-label,
+            .fi-panel-admin .fi-sidebar-item-button,
+            .fi-panel-admin .fi-sidebar-item-button .fi-sidebar-item-label,
+            .fi-panel-admin .fi-sidebar-group-button,
+            .fi-panel-admin .fi-sidebar-group-button .fi-sidebar-group-label {
+                color: rgb(51 65 85) !important;
+            }
+
+            .dark .fi-panel-admin .fi-topbar-item-label {
+                color: rgb(203 213 225) !important;
+            }
+
+            .dark .fi-panel-admin .fi-topbar-group-label {
+                color: rgb(226 232 240) !important;
+            }
+
+            .dark .fi-panel-admin .fi-topbar-item-button,
+            .dark .fi-panel-admin .fi-topbar-item-button .fi-topbar-item-label,
+            .dark .fi-panel-admin .fi-sidebar-item-button,
+            .dark .fi-panel-admin .fi-sidebar-item-button .fi-sidebar-item-label,
+            .dark .fi-panel-admin .fi-sidebar-group-button,
+            .dark .fi-panel-admin .fi-sidebar-group-button .fi-sidebar-group-label {
+                color: rgb(248 250 252) !important;
+            }
+
+            .fi-panel-admin .fi-dropdown-list-item,
+            .fi-panel-admin .fi-dropdown-list-item * {
+                font-family: 'Instrument Sans', sans-serif !important;
+                font-size: 12px !important;
+            }
+
+            .fi-panel-admin .fi-dropdown-list-item {
+                color: rgb(203 213 225) !important;
+                font-weight: 400 !important;
+            }
+
+            .fi-panel-admin .fi-topbar .fi-dropdown-list-item,
+            .fi-panel-admin .fi-topbar .fi-dropdown-list-item-label {
+                color: rgb(51 65 85) !important;
+                font-weight: 400 !important;
+            }
+
+            .dark .fi-panel-admin .fi-topbar .fi-dropdown-list-item,
+            .dark .fi-panel-admin .fi-topbar .fi-dropdown-list-item-label {
+                color: rgb(203 213 225) !important;
+                font-weight: 400 !important;
+            }
+
+            .fi-panel-admin .fi-sidebar-item.fi-active .fi-sidebar-item-label,
+            .fi-panel-admin .fi-topbar-item.fi-active .fi-topbar-item-label {
+                font-weight: 500 !important;
+            }
+
+            /* Sidebar Admin: kolom penuh dari ATAS layar, tanpa kapsul.
+               Tidak ada lagi cabang `@media` yang mengubah bentuk sidebar:
+               topbar datar di y=0, sidebar juga mulai di y=0 dan menyambung
+               ke tepi layar.
+
+               Yang membedakan hanya PERAN-nya, bukan bentuknya:
+                 - ponsel (< 768px): drawer penuh layar
+                 - tablet & desktop (>= 768px): kolom tetap di kiri */
+            .fi-panel-admin .fi-sidebar {
+                position: fixed !important;
+                top: 0 !important;
+                bottom: 0 !important;
+                height: auto !important;
+                max-height: none !important;
+                border-radius: 0 !important;
+            }
+
+            /* Tablet & desktop: sidebar adalah KOLOM, bukan drawer.
+               Tombol tutup mobile (X) dan overlay gelap adalah penanda
+               drawer -- keduanya disembunyikan, dan tombol ciutkan versi
+               desktop ditampilkan. Filament mengunci keduanya di `lg`
+               (1024px), sehingga di tablet (768-1023px) yang muncul justru
+               chrome mobile. Di sini ambangnya dibuat 768px. */
+            @media (min-width: 1024px) {
+                .fi-panel-admin .fi-sidebar-header .fi-sidebar-mobile-close-btn {
+                    display: none !important;
+                }
+
+                .fi-panel-admin .fi-sidebar-header .fi-sidebar-collapse-btn {
+                    display: flex !important;
+                }
+
+                .fi-panel-admin .fi-sidebar-close-overlay {
+                    display: none !important;
                 }
             }
+
+            /* Ponsel: drawer selebar layar seperti sebelumnya. */
+            @media (max-width: 1023px) {
+                .fi-panel-admin .fi-sidebar {
+                    width: 100vw !important;
+                    max-width: 100vw !important;
+                }
+            }
+
+            /* ------------------------------------------------------------
+               PENCARIAN GLOBAL: PEMICU DI SIDEBAR, HASIL DI MODAL (2026-10-26)
+
+               Kotak di bawah logo bukan lagi input Livewire, melainkan
+               tombol pemicu. Hasil pencarian dirender di dalam modal
+               `admin-global-search` (lihat AdminPanelProvider dan
+               resources/views/Admin/components/global-search-modal/
+               global-search-modal.blade.php). Dengan begitu daftar hasil
+               tidak lagi menimpa item navigasi sidebar.
+
+               Tidak ada lagi aturan lebar panel hasil di sini: panelnya
+               sekarang berada di dalam modal, bukan di dalam sidebar.
+               ------------------------------------------------------------ */
         </style>
     @endif
 
 {{-- format-ignore-start --}}
 <aside
     x-data="{}"
+    style="background-color: var(--fi-chrome-bg) !important; background-image: none !important; border: 0 !important; box-shadow: none !important; -webkit-backdrop-filter: blur(12px) saturate(160%) !important; backdrop-filter: blur(12px) saturate(160%) !important;"
     @if (filament()->isSidebarCollapsibleOnDesktop() && (! filament()->hasTopNavigation()))
         x-cloak
         x-bind:class="
@@ -121,24 +236,68 @@
 >
     <div class="overflow-x-clip">
         <header
-            class="fi-sidebar-header flex h-12 items-center bg-white px-6 ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 lg:shadow-sm"
+            style="background-color: transparent !important; background-image: none !important; border: 0 !important; box-shadow: none !important; --tw-ring-color: transparent !important; --tw-ring-shadow: 0 0 #0000 !important; --tw-ring-offset-shadow: 0 0 #0000 !important;"
+            class="fi-sidebar-header flex h-16 items-center bg-white px-6 ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 lg:shadow-sm"
         >
-            {{-- Header ini SENGAJA hanya berisi tombol kontrol (tutup / lebarkan /
-                 ciutkan). Logo dipindahkan ke baris switcher di bawah.
+            {{--
+                BARIS LOGO (2026-10-25, kedua).
+
+                Switcher bahasa + tema TIDAK lagi sebaris dengan logo:
+                permintaan terbaru menaruhnya di DASAR sidebar, bersama blok
+                profil. Posisi lama di header ini dinonaktifkan lewat flag
+                $switchersAtSidebarBottom (lihat @php di atas) -- TIDAK
+                dihapus, supaya mudah dikembalikan.
+            --}}
+            <div
+                x-show="$store.sidebar.isOpen"
+                x-transition:enter="lg:transition lg:delay-100"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                class="me-auto flex items-center gap-3"
+            >
+                @if ($homeUrl = filament()->getHomeUrl())
+                    <a {{ \Filament\Support\generate_href_html($homeUrl) }}>
+                        <x-filament-panels::logo />
+                    </a>
+                @else
+                    <x-filament-panels::logo />
+                @endif
+
+                {{--
+                    NONAKTIF (2026-10-25), JANGAN DIHAPUS: switcher bahasa +
+                    tema pindah ke DASAR sidebar (lihat blok `fi-sidebar-bawah`
+                    setelah </nav>). Markup dan hook-nya tetap di sini, hanya
+                    dinonaktifkan lewat $switchersAtSidebarBottom supaya mudah
+                    dikembalikan. Kalau keduanya dihidupkan sekaligus, switcher
+                    muncul dua kali untuk satu pengaturan.
+                --}}
+                @unless ($switchersAtSidebarBottom)
+                    <div class="fi-sidebar-switchers flex items-center gap-1.5">
+                        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::SIDEBAR_NAV_START) }}
+                    </div>
+                @endunless
+            </div>
+
+            {{-- Header sekarang berisi SATU baris: logo + switcher bahasa/tema
+                 di kiri, tombol kontrol (ciutkan / tutup) di kanan.
 
                  Alasannya: logo dan switcher tema + bahasa adalah dua kelompok
                  kontrol yang sama untuk satu orang -- identitas di kiri,
-                 preferensi di kanan. Ditumpuk dalam satu baris, keduanya
-                 terbaca sebagai satu blok. Logo sendirian di baris paling atas
-                 dengan switcher jauh di bawahnya justru terlihat mengambang
-                 dan terpisah.
+                 preferensi di sebelahnya. Ditumpuk di dua baris terpisah,
+                 keduanya terbaca sebagai dua blok yang mengambang; sebaris,
+                 mereka jadi satu blok utuh.
 
-                 `ms-auto` di tombol tutup dikembalikan ke miliknya sendiri,
-                 karena sekarang tidak ada elemen lain di header ini. --}}
+                 `me-auto` pada pembungkus logo + switcher yang mendorong
+                 tombol-tombol ke kanan; `ms-auto` masing-masing tombol
+                 dipertahankan supaya tetap benar walau logo disembunyikan
+                 (sidebar ciut -> pembungkus itu `x-show` false, tombol
+                 lebarkan tampil sendirian). --}}
             @if (filament()->isSidebarCollapsibleOnDesktop())
                 <x-filament::icon-button
                     color="gray"
-                    :icon="$isRtl ? '/images/icons/chevron_left.svg' : '/images/icons/chevron_right.svg'"
+                    {{-- Chevron lama dinonaktifkan; kontrol sidebar memakai
+                         hamburger seperti desain aplikasi. --}}
+                    icon="/images/icons/menu.svg"
                     {{-- @deprecated Use `panels::sidebar.expand-button.rtl` instead of `panels::sidebar.expand-button` for RTL. --}}
                     :icon-alias="$isRtl ? ['panels::sidebar.expand-button.rtl', 'panels::sidebar.expand-button'] : 'panels::sidebar.expand-button'"
                     icon-size="lg"
@@ -154,7 +313,9 @@
             @if (filament()->isSidebarCollapsibleOnDesktop() || filament()->isSidebarFullyCollapsibleOnDesktop())
                 <x-filament::icon-button
                     color="gray"
-                    :icon="$isRtl ? '/images/icons/chevron_right.svg' : '/images/icons/chevron_left.svg'"
+                    {{-- Chevron lama dinonaktifkan; kontrol sidebar memakai
+                         hamburger seperti desain aplikasi. --}}
+                    icon="/images/icons/menu.svg"
                     {{-- @deprecated Use `panels::sidebar.collapse-button.rtl` instead of `panels::sidebar.collapse-button` for RTL. --}}
                     :icon-alias="$isRtl ? ['panels::sidebar.collapse-button.rtl', 'panels::sidebar.collapse-button'] : 'panels::sidebar.collapse-button'"
                     icon-size="lg"
@@ -163,7 +324,7 @@
                     x-data="{}"
                     x-on:click="$store.sidebar.close()"
                     x-show="$store.sidebar.isOpen"
-                    class="ms-auto hidden lg:flex"
+                    class="fi-sidebar-collapse-btn ms-auto hidden lg:flex"
                 />
             @endif
 
@@ -180,35 +341,68 @@
             />
         </header>
 
-        {{-- BARIS LOGO + SWITCHER
+        {{--
+            PEMICU PENCARIAN GLOBAL -- TEPAT DI BAWAH LOGO (2026-10-26).
 
-             Dua perubahan terhadap view Filament, dan hanya dua:
+            Kotak ini HANYA tombol. Input dan hasil pencariannya sekarang
+            berada di dalam modal `admin-global-search` (dirender dari
+            AdminPanelProvider lewat hook BODY_END).
 
-             1. Logo pindah dari <header> ke sini, sebaris dengan switcher tema
-                dan bahasa. Kepala header sekarang hanya tombol tutup di kanan.
+            Kenapa modal: panel hasil bawaan Filament adalah dropdown
+            absolut. Di dalam sidebar ia menimpa item navigasi sehingga
+            dua lapisan teks bertumpuk -- persis yang dilaporkan pemilik.
+            Di modal, hasil punya ruang sendiri dan tidak menyentuh
+            navigasi.
 
-             2. Hook SIDEBAR_NAV_START -- yang tadinya dipanggil di dalam <nav>
-                -- dipanggil di sini, bukan di dalam wrapper-nya sendiri.
-                Hook tetap deciding KAPAN switcher tampil
-                (AppPlatform::switchersBelongInSidebar()); file ini yang
-                menentukan DI MANA posisinya. Kalau wrapper-nya ikut di
-                provider, keputusan tata letak akan tersebar di dua file yang
-                tidak saling tahu.
+            Livewire GlobalSearch tetap komponen Filament yang sama, jadi
+            debounce, pencarian per resource, dan navigasi keyboard tidak
+            berubah. Hanya tempatnya yang pindah.
 
-             Baris ini DI LUAR <nav> dengan sengaja: <nav> yang bisa di-scroll,
-             dan logo tidak boleh ikut hilang saat daftar menu digulir.
+            Hanya dirender kalau sidebar sedang TERBUKA. Dengan
+            ->sidebarFullyCollapsibleOnDesktop(), sidebar bisa menciut jadi
+            rel sempit; kotak pencarian selebar kolom tidak mungkin muat di
+            sana. `x-show` (bukan `x-cloak`) mengikuti pola logo di atas.
+        --}}
+        @if (filament()->isGlobalSearchEnabled())
+            <div
+                x-show="$store.sidebar.isOpen"
+                x-transition:enter="lg:transition lg:delay-100"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                class="fi-sidebar-search shrink-0 px-6 pt-4"
+            >
+                <button
+                    type="button"
+                    data-admin-global-search-trigger
+                    x-on:click="$dispatch('open-modal', { id: 'admin-global-search' })"
+                    aria-label="{{ __('filament-panels::global-search.field.label') }}"
+                    class="fi-admin-global-search-trigger flex w-full items-center gap-2 rounded-lg px-3 py-2 text-start text-sm text-gray-500 transition hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:text-gray-400 dark:hover:bg-white/5"
+                    style="border: 1px solid var(--fi-glass-ring); background-color: transparent;"
+                >
+                    <x-filament::icon
+                        alias="panels::global-search.field"
+                        icon="/images/icons/search.svg"
+                        class="h-5 w-5 shrink-0"
+                    />
 
-             Wrapper switcher (`ms-auto`) dirender tanpa syarat, jadi di tablet,
-             website desktop, dan APLIKASI DESKTOP -- tempat switcher tetap di
-             topbar dan hook ini mengembalikan string kosong -- logo tetap
-             terdorong ke kiri dan tidak ikut melebar.
+                    <span class="flex-1 truncate">
+                        {{ __('filament-panels::global-search.field.placeholder') }}
+                    </span>
+                </button>
+            </div>
+        @endif
 
-             Hook di sini HANYA untuk HP, mobile web, dan aplikasi mobile --
-             permukaan tempat switcher milik sidebar.
+        {{-- BARIS SWITCHER TERPINDAH KE DALAM <header> (SEKARANG NONAKTIF).
 
-             Hook dipanggil di sini, bukan me-render view switcher langsung,
-             supaya ketiga panel tetap memakai kode yang sama -- file ini
-             identik di Welcome/User/Admin.
+             Sebelumnya baris `fi-sidebar-switchers` berdiri sendiri di bawah
+             header, lalu dipindahkan sebaris ke dalam <header>. Perubahan
+             terakhir (2026-10-25): baris itu pindah LAGI ke dasar sidebar
+             (blok `fi-sidebar-bawah` setelah </nav>), bersama blok profil --
+             dan versi di header dinonaktifkan lewat $switchersAtSidebarBottom.
+
+             Wrapper lama TIDAK dipanggil dua kali dengan sengaja: membiarkan
+             keduanya aktif berarti hook SIDEBAR_NAV_START dirender dua kali
+             dan switcher muncul dua kali untuk satu pengaturan.
 
              CATATAN: file ini adalah salinan view Filament. Kalau
              filament/filament di-upgrade, bandingkan dulu dengan
@@ -216,28 +410,6 @@
              index.blade.php -- jangan ditimpa buta, blok di atas adalah
              satu-satunya beda yang disengaja.
         --}}
-        <div class="fi-sidebar-switchers flex items-center gap-2 px-6 pb-2">
-            <div
-                @if (filament()->isSidebarCollapsibleOnDesktop())
-                    x-show="$store.sidebar.isOpen"
-                    x-transition:enter="lg:transition lg:delay-100"
-                    x-transition:enter-start="opacity-0"
-                    x-transition:enter-end="opacity-100"
-                @endif
-            >
-                @if ($homeUrl = filament()->getHomeUrl())
-                    <a {{ \Filament\Support\generate_href_html($homeUrl) }}>
-                        <x-filament-panels::logo />
-                    </a>
-                @else
-                    <x-filament-panels::logo />
-                @endif
-            </div>
-
-            <div class="ms-auto flex items-center gap-2">
-                {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::SIDEBAR_NAV_START) }}
-            </div>
-        </div>
     </div>
 
     <nav
@@ -317,5 +489,53 @@
     </nav>
 
     {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::SIDEBAR_FOOTER) }}
+
+    {{--
+        BLOK DASAR SIDEBAR -- "PALING BAWAH BANGET" (2026-10-25).
+
+        Permintaan: profil, switcher bahasa, dan switcher tema berdiri di
+        ujung paling bawah sidebar, gaya Laravel Starter Kit:
+
+          - Blok profil: avatar + NAMA + username + email, satu tombol yang
+            membuka dropdown (edit profil / sign out). Trigger-nya ada di
+            override resources/views/Admin/vendor/filament-panels/components/
+            user-menu.blade.php.
+          - Di bawahnya, baris `fi-sidebar-switchers` (PENANDA posisi yang
+            dibaca tests/Feature/Shared/SwitcherPlacementTest) dengan hook
+            SIDEBAR_NAV_START -- satu-satunya tempat hook ini dirender
+            (versi di <header> dinonaktifkan lewat $switchersAtSidebarBottom).
+
+        `nav` di atasnya ber-flex-grow, jadi blok ini selalu terdorong ke
+        dasar -- persis seperti permintaan "paling bawah banget".
+
+        CATATAN: file ini adalah salinan view Filament. Kalau filament/filament
+        di-upgrade, bandingkan dulu dengan vendor/filament/filament/resources/
+        views/components/sidebar/index.blade.php -- jangan ditimpa buta.
+    --}}
+    @if ($switchersAtSidebarBottom)
+        <div
+            x-show="$store.sidebar.isOpen"
+            x-transition:enter="lg:transition lg:delay-100"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            class="fi-sidebar-bawah flex flex-col gap-3 border-t border-gray-950/5 px-6 pb-4 pt-4 dark:border-white/10"
+            style="border-top: 0 !important;"
+        >
+            <div class="fi-sidebar-switchers flex items-center gap-1.5">
+                {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::SIDEBAR_NAV_START) }}
+
+                {{-- Lonceng notifikasi database, DI SAMPING language switcher.
+                     Panel Admin memindahkannya ke sidebar; lonceng di topbar
+                     dinonaktifkan (lihat override topbar/index.blade.php).
+                     Panel Welcome/User TIDAK ikut: lonceng di sana tetap di
+                     topbar/header. --}}
+                @include('Shared.components.notification-bell.notification-bell')
+            </div>
+
+            {{-- `top-start`: pemicunya di dasar sidebar, jadi dropdown harus
+                 membuka ke ATAS -- `bottom-end` bawaan akan keluar layar. --}}
+            <x-filament-panels::user-menu placement="top-start" />
+        </div>
+    @endif
 </aside>
 {{-- format-ignore-end --}}
