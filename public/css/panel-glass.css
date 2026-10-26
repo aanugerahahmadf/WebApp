@@ -2121,6 +2121,41 @@ body.fi-panel-admin :is(
     --tw-ring-offset-shadow: 0 0 #0000 !important;
 }
 
+/* Tombol Theme dan Language juga tidak menampilkan kotak putih ketika
+   diklik atau mendapat focus. */
+body.fi-panel-welcome :is(
+    .fi-theme-switcher-btn:focus,
+    .fi-theme-switcher-btn:focus-visible,
+    .fi-theme-switcher-btn:active,
+    #filament-language-switcher:focus,
+    #filament-language-switcher:focus-visible,
+    #filament-language-switcher:active
+),
+body.fi-panel-user :is(
+    .fi-theme-switcher-btn:focus,
+    .fi-theme-switcher-btn:focus-visible,
+    .fi-theme-switcher-btn:active,
+    #filament-language-switcher:focus,
+    #filament-language-switcher:focus-visible,
+    #filament-language-switcher:active
+),
+body.fi-panel-admin :is(
+    .fi-theme-switcher-btn:focus,
+    .fi-theme-switcher-btn:focus-visible,
+    .fi-theme-switcher-btn:active,
+    #filament-language-switcher:focus,
+    #filament-language-switcher:focus-visible,
+    #filament-language-switcher:active
+) {
+    outline: none !important;
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    --tw-ring-color: transparent !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+    --tw-ring-offset-shadow: 0 0 #0000 !important;
+}
+
 /* Navigasi topbar dan sidebar harus tetap terang di Light, Dark maupun
    System. Mode tema hanya mengubah permukaan/background; teks navigasi tidak
    boleh kembali menjadi navy gelap di atas background foto yang gelap. */
