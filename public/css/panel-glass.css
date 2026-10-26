@@ -2042,26 +2042,17 @@ body.fi-panel-admin .fi-topbar :is(.fi-topbar-item-button, .fi-topbar-group-butt
 body.fi-panel-welcome :is(
     .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-label,
     .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
-    .fi-sidebar-nav-item > a.fi-active,
-    .fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-label,
-    .fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-button,
-    .fi-topbar .fi-topbar-group.fi-active .fi-topbar-group-label
+    .fi-sidebar-nav-item > a.fi-active
 ),
 body.fi-panel-user :is(
     .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-label,
     .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
-    .fi-sidebar-nav-item > a.fi-active,
-    .fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-label,
-    .fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-button,
-    .fi-topbar .fi-topbar-group.fi-active .fi-topbar-group-label
+    .fi-sidebar-nav-item > a.fi-active
 ),
 body.fi-panel-admin :is(
     .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-label,
     .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
-    .fi-sidebar-nav-item > a.fi-active,
-    .fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-label,
-    .fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-button,
-    .fi-topbar .fi-topbar-group.fi-active .fi-topbar-group-label
+    .fi-sidebar-nav-item > a.fi-active
 ) {
     color: #fbbf24 !important;
 }
