@@ -1974,8 +1974,9 @@ body.fi-panel-user [data-panel-background-media] video {
     padding: 14px 12px !important;
 }
 
-/* Semua widget User/Welcome mengikuti resep surface katalog. Combined
-   Catalog sengaja dikecualikan karena sudah memiliki CSS internal sendiri. */
+/* Semua widget User/Welcome memakai blur/background yang sama persis dengan
+   panel Language Switcher (`.lang-dd`). Combined Catalog dikecualikan
+   karena sudah memiliki CSS internal sendiri. */
 body.fi-panel-welcome :is(
     .home-stat-card,
     .profile-stat-card,
@@ -1992,34 +1993,16 @@ body.fi-panel-user :is(
     .fi-wi-table:not(:has(.combined-catalog)),
     .fi-wi-table:not(:has(.combined-catalog)) .fi-ta-record
 ) {
-    background: rgb(255 255 255 / 0.88) !important;
-    background-image: none !important;
-    border: 1px solid rgb(15 23 42 / 0.10) !important;
-    -webkit-backdrop-filter: blur(12px) !important;
-    backdrop-filter: blur(12px) !important;
-    box-shadow: 0 12px 30px rgb(15 23 42 / 0.08) !important;
-}
-
-.dark body.fi-panel-welcome :is(
-    .home-stat-card,
-    .profile-stat-card,
-    .fi-wi-stats-overview-stat,
-    .fi-wi-chart > .fi-section,
-    .fi-wi-table:not(:has(.combined-catalog)),
-    .fi-wi-table:not(:has(.combined-catalog)) .fi-ta-record
-),
-.dark body.fi-panel-user :is(
-    .home-stat-card,
-    .profile-stat-card,
-    .fi-wi-stats-overview-stat,
-    .fi-wi-chart > .fi-section,
-    .fi-wi-table:not(:has(.combined-catalog)),
-    .fi-wi-table:not(:has(.combined-catalog)) .fi-ta-record
-) {
-    background: rgb(18 18 18 / 0.88) !important;
-    background-image: none !important;
-    border-color: rgb(255 255 255 / 0.08) !important;
-    box-shadow: 0 12px 30px rgb(15 23 42 / 0.08) !important;
+    background-color: var(--fi-glass-bg) !important;
+    background-image: linear-gradient(
+        var(--fi-glass-angle),
+        var(--fi-glass-t1) 0%,
+        var(--fi-glass-t2) 45%,
+        var(--fi-glass-t3) 100%
+    ) !important;
+    border: 1px solid var(--fi-glass-ring) !important;
+    -webkit-backdrop-filter: var(--fi-glass-blur) !important;
+    backdrop-filter: var(--fi-glass-blur) !important;
 }
 
 /* Topbar memakai bobot regular, bukan semi-bold. Sidebar tetap mengikuti
