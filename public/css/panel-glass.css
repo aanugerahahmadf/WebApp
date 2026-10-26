@@ -1993,16 +1993,12 @@ body.fi-panel-user :is(
     .fi-wi-table:not(:has(.combined-catalog)),
     .fi-wi-table:not(:has(.combined-catalog)) .fi-ta-record
 ) {
-    background-color: var(--fi-glass-bg) !important;
-    background-image: linear-gradient(
-        var(--fi-glass-angle),
-        var(--fi-glass-t1) 0%,
-        var(--fi-glass-t2) 45%,
-        var(--fi-glass-t3) 100%
-    ) !important;
-    border: 1px solid var(--fi-glass-ring) !important;
-    -webkit-backdrop-filter: var(--fi-glass-blur) !important;
-    backdrop-filter: var(--fi-glass-blur) !important;
+    background: rgb(255 255 255 / 0.88) !important;
+    background-image: none !important;
+    border: 1px solid rgb(15 23 42 / 0.10) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    backdrop-filter: blur(12px) !important;
+    box-shadow: 0 12px 30px rgb(15 23 42 / 0.08) !important;
 }
 
 .dark body.fi-panel-welcome :is(
