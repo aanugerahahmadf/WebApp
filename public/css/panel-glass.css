@@ -1986,6 +1986,21 @@ body.fi-panel-admin .lang-dd button:is(:hover, :focus, :focus-visible, :active) 
     backdrop-filter: none !important;
 }
 
+/* Selector dibuat sama spesifiknya dengan rule lama `.fi-topbar
+   .fi-dropdown-list-item:hover` yang memberi tint putih pada item menu. */
+body.fi-panel-welcome .fi-topbar .fi-dropdown-list-item:is(:hover, :focus, :focus-visible, :active),
+body.fi-panel-user .fi-topbar .fi-dropdown-list-item:is(:hover, :focus, :focus-visible, :active),
+body.fi-panel-admin .fi-topbar .fi-dropdown-list-item:is(:hover, :focus, :focus-visible, :active),
+body.fi-panel-welcome .fi-sidebar .fi-dropdown-list-item:is(:hover, :focus, :focus-visible, :active),
+body.fi-panel-user .fi-sidebar .fi-dropdown-list-item:is(:hover, :focus, :focus-visible, :active),
+body.fi-panel-admin .fi-sidebar .fi-dropdown-list-item:is(:hover, :focus, :focus-visible, :active) {
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+}
+
 /* Semua widget User/Welcome memakai blur/background yang sama persis dengan
    panel Language Switcher (`.lang-dd`). Combined Catalog dikecualikan
    karena sudah memiliki CSS internal sendiri. */
