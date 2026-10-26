@@ -49,6 +49,8 @@ trait CatalogHasTiers
             ->label('')
             ->hiddenLabel()
             ->view("{$panel}.components.catalog-price.catalog-price", fn (Catalog $record) => [
+                'catalogName' => (string) $record->name,
+                'selectedTierId' => static::selectedTierId(),
                 'price' => (float) $record->price,
                 'discountPrice' => $record->discount_price !== null ? (float) $record->discount_price : null,
                 'tiers' => static::tierPayload($record),

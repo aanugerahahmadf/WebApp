@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Pages\Home;
 
-use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Support\AppIcon\AppIcon;
 use Filament\Pages\Dashboard as BaseDashboard;
 
@@ -24,7 +23,6 @@ use Filament\Pages\Dashboard as BaseDashboard;
  */
 class Home extends BaseDashboard
 {
-    use HasDynamicBreadcrumbs;
 
     protected static string $routePath = 'home';
 
@@ -65,11 +63,8 @@ class Home extends BaseDashboard
         return __('Beranda');
     }
 
-    public function getBreadcrumbs(): array
+        public function getBreadcrumbs(): array
     {
-        return [
-            ...$this->breadcrumbParentCrumb(),
-            $this->getTitle(),
-        ];
+        return [];
     }
 }

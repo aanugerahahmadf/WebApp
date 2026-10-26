@@ -2,7 +2,7 @@
 .fi-resource-flowerdecorationscatalog .fi-header-heading {
     font-size: 2rem !important;
     line-height: 2.25rem !important;
-    font-weight: 800 !important;
+    font-weight: 600 !important;
 }
 
 /* Global Scrollbar Hiding & Performance Strategy
@@ -51,7 +51,7 @@ body {
     background-color: rgb(var(--primary-500, 234 179 8));
     color: #fff;
     font-size: 0.625rem;
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1;
     display: inline-flex;
     align-items: center;
@@ -194,7 +194,7 @@ select:focus[data-flux-control] {
     .fi-ta-record .text-primary-600,
 .fi-ta-record [style*="color"] {
         font-size: 12px !important;
-        font-weight: 700 !important;
+        font-weight: 600 !important;
     }
 }
 
@@ -409,7 +409,7 @@ select:focus[data-flux-control] {
 
 
 
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
     .user-home-stats .fi-wi-stats-overview-stats-ctn,
 .fi-wi-stats-overview-stats-ctn:has(.home-stat-card),
 .fi-wi-stats-overview-stats-ctn:has(.home-stat-welcome) {
@@ -989,6 +989,16 @@ body.cbir-browse-modal-open .fi-bottom-nav {
 }
 
 
+/* Bottom nav adalah navigasi PONSEL. Tablet (>= 768px) memakai topbar
+   desktop seperti laptop dan panel Admin, jadi bar ini tidak boleh ikut
+   tampil di sana. */
+@media (min-width: 768px) {
+    .fi-bottom-nav {
+        display: none !important;
+    }
+}
+
+
 
 
 /* ─── NativePHP WebView: Fix Filament Wizard rendering ───────────────────────
@@ -1463,21 +1473,16 @@ body.cbir-browse-modal-open .fi-bottom-nav {
     }
 }
 
-/* CATATAN: offset `top` sidebar TIDAK ditulis di CSS ini, tapi inline di tiap
-   override sidebar:
+/* CATATAN: bentuk chrome (topbar + sidebar) sekarang DATAR dan ditulis inline
+   di tiap override:
+     resources/views/{User,Welcome,Admin}/vendor/filament-panels/components/
+     topbar/index.blade.php
      resources/views/{User,Welcome,Admin}/vendor/filament-panels/components/
      sidebar/index.blade.php
 
-   Alasannya, keputusannya bukan soal lebar layar, tapi soal APAKAH topbar-nya
-   sedang ada. Kalau topbar disembunyikan (panel tanpa chrome di luar Home),
-   menggeser sidebar ke bawah hanya menyisakan ruang kosong di atasnya. CSS tidak
-   bisa menanyakan "ada topbar atau tidak" -- blade bisa, lewat
-   filament()->hasTopbar().
-
-   Yang tetap di sini cuma angkanya: --fi-capsule-stack (blok 1), sama persis
-   dengan padding-top .fi-layout di blok 5. Blade membacanya lewat var(), jadi
-   sidebar berhenti di garis yang sama dengan kapsul dan tidak mungkin meleset
-   kalau kapsul nanti lebih tinggi. */
+   Tidak ada lagi offset `top` sebesar --fi-capsule-stack dan tidak ada sudut
+   kapsul: topbar dan sidebar sama-sama mulai di y=0. Aturan di blok 2/5/6
+   hanya tinggal nilai bawaan yang selalu ditimpa inline tersebut. */
 /* --- 7. GLOBAL SEARCH: tengah & melebar di HP SAJA ------------------
  *
  * Permintaan: di aplikasi mobile Android/iOS dan website mobile
@@ -1579,9 +1584,16 @@ body.cbir-browse-modal-open .fi-bottom-nav {
  *
  * SCOPE SENGAJA TIDAK GLOBAL: yang diberi kaca hanya dropdown yang lahir
  * dari topbar atau sidebar. Dropdown di dalam konten halaman (action
- * tabel, filter, select, date-picker, color-picker) TIDAK ikut -- itu
- * menu utilitas yang padat teks, bukan bagian dari "chrome" navigasi, dan
+ * tabel, filter, select, color-picker) TIDAK ikut -- itu menu utilitas
+ * yang padat teks, bukan bagian dari "chrome" navigasi, dan
  * menghilangkannya jadi transparan hanya mengurangi keterbacaan.
+ *
+ * SATU PENGECUALIAN: panel date-picker. Permintaannya eksplisit -- latar
+ * popup kalender harus sama dengan latar header dan sidebar -- tetapi
+ * aturannya TIDAK ditulis di sini. File ini diproses Vite, jadi setiap
+ * penyesuaian kaca akan menuntut build. Panel date-picker karena itu
+ * ditangani di public/css/panel-glass.css, yang dimuat lewat <link>
+ * setelah stylesheet Vite dan memakai token `--fi-glass-*` yang sama.
  *
  * `ring-1` dan `shadow-lg` bawaan Filament pada panel sengaja dibiarkan:
  * di atas kaca keduanya justru yang bikin panel terbaca sebagai lapisan
@@ -1744,4 +1756,17 @@ body.cbir-browse-modal-open .fi-bottom-nav {
 .fi-panel-user .fi-sidebar-item-icon,
 .fi-panel-welcome .fi-sidebar-item-icon {
     flex-shrink: 0;
+}
+
+/* Navigation badge harus mempunyai ukuran teks yang sama dengan label menu.
+   Filament memberi badge class `text-xs` sendiri (12px), sementara label
+   sidebar kita 11px. Samakan secara eksplisit agar angka badge tidak tampak
+   lebih besar daripada nama menunya. */
+.fi-panel-admin .fi-sidebar-item .fi-badge,
+.fi-panel-user .fi-sidebar-item .fi-badge,
+.fi-panel-welcome .fi-sidebar-item .fi-badge {
+    font-family: 'Instrument Sans', sans-serif !important;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+    font-weight: 400 !important;
 }

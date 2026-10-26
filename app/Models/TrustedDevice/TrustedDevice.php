@@ -74,6 +74,10 @@ class TrustedDevice extends Model
      */
     public function displayLabel(): string
     {
-        return $this->device_name ?: __('Perangkat tidak dikenal');
+        $label = $this->device_name ?: __('Perangkat tidak dikenal');
+
+        // Device names lama tersimpan dengan connector Bahasa Indonesia.
+        // Normalisasi saat ditampilkan agar ikut locale aktif.
+        return str_replace(' di ', ' '.__('di').' ', $label);
     }
 }

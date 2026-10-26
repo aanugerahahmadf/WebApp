@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Pages\DataExportPage;
 
-use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Services\DataExportService\DataExportService;
 use App\Support\AppIcon\AppIcon;
 use Filament\Actions\Action;
@@ -28,7 +27,6 @@ use Illuminate\Support\Facades\Auth;
  */
 class DataExportPage extends Page
 {
-    use HasDynamicBreadcrumbs;
 
     protected static string $view = 'Admin.pages.data-export-page.data-export-page';
 
@@ -77,12 +75,9 @@ class DataExportPage extends Page
         return 11;
     }
 
-    public function getBreadcrumbs(): array
+        public function getBreadcrumbs(): array
     {
-        return [
-            ...$this->breadcrumbParentCrumb(),
-            $this->getTitle(),
-        ];
+        return [];
     }
 
     public function form(Form $form): Form

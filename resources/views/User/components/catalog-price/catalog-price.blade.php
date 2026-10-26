@@ -19,7 +19,7 @@
 <div
     x-data="{
         tiers: {{ \Illuminate\Support\Js::from($tierPayload) }},
-        selectedId: null,
+        selectedId: {{ $selectedTierId ?? 'null' }},
         catalog: { price: {{ $final }}, listPrice: {{ (float) $price }}, discounted: {{ $discountPrice && $discountPrice > 0 ? 'true' : 'false' }} },
         get selected() { return this.tiers.find(t => t.id === this.selectedId) ?? null; },
         get price() { return this.selected ? this.selected.price : this.catalog.price; },
@@ -33,12 +33,19 @@
         },
     }"
     x-on:tier-chosen.window="if ($event.detail && Number($event.detail.catalogId) === {{ (int) $catalogId }}) { selectedId = Number($event.detail.tierId); }"
-    class="flex items-baseline flex-wrap mb-6"
+    class="flex items-center justify-start gap-3 flex-wrap mb-4"
     data-testid="catalog-price"
     data-field="catalogs.price"
 >
+    <div
+        class="tracking-tight normal-case leading-tight text-2xl font-semibold !text-gray-950 dark:!text-white"
+        data-typo="heading"
+        data-field="catalogs.name"
+    >{{ __($catalogName) }}</div>
+
+    <div class="flex items-baseline flex-wrap">
     <span
-        class="catalog-final-price text-2xl font-black drop-shadow-sm"
+        class="catalog-final-price text-2xl font-semibold drop-shadow-sm"
 style="color: #facc15;"
         x-text="format(price)"
 ></span>
@@ -48,4 +55,5 @@ style="color: #facc15;"
         x-show="discounted"
         x-text="discounted ? format(listPrice) : ''"
     ></span>
+    </div>
 </div>

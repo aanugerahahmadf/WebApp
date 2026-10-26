@@ -27,7 +27,7 @@
     background: rgba(16, 185, 129, 0.9);
     color: white;
     font-size: 8px;
-    font-weight: 800;
+    font-weight: 600;
     padding: 2px 5px;
     border-radius: 4px;
     backdrop-filter: blur(4px);
@@ -42,7 +42,7 @@
     color: #9ca3af;
     font-size: 7px;
     text-transform: uppercase;
-    font-weight: 700;
+    font-weight: 600;
     padding: 1px 4px;
     border-radius: 3px;
     backdrop-filter: blur(2px);
@@ -50,9 +50,9 @@
 
 .cbir-info{padding:6px;flex:1;display:flex;flex-direction:column;gap:2px;overflow:hidden;}
 .cbir-cat-container{height:18px;overflow:hidden;margin-bottom:2px;display:flex;align-items:center;}
-.cbir-cat{display:inline-block;font-size:9px;font-weight:700;line-height:1;padding:2px 4px;border-left-width:2px;border-left-style:solid;background:transparent;color:#9ca3af;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cbir-cat{display:inline-block;font-size:9px;font-weight: 600;line-height:1;padding:2px 4px;border-left-width:2px;border-left-style:solid;background:transparent;color:#9ca3af;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .cbir-name{font-size:10px;font-weight:500;line-height:1.3;color:#e5e7eb;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;height: 2.6rem;}
-.cbir-price{font-size:11px;font-weight:700;color:#eab308;margin:1px 0;line-height:1.2;}
+.cbir-price{font-size:11px;font-weight: 600;color:#eab308;margin:1px 0;line-height:1.2;}
 
 </style>
 
@@ -61,7 +61,7 @@
         <div class="flex items-center justify-between mb-3 px-1">
             <div class="flex items-center gap-2">
                 <x-filament::icon icon="/images/icons/sparkles.svg" class="w-4 h-4 text-amber-500" />
-                <span class="text-sm font-bold text-gray-300">{{ __('Hasil Pencarian') }}</span>
+                <span class="text-sm font-semibold text-gray-300">{{ __('Hasil Pencarian') }}</span>
                 <x-filament::badge color="gray" size="xs">
                     {{ count($results) }}
                 </x-filament::badge>
@@ -70,7 +70,7 @@
                 wire:click="clearVisualSearch"
                 color="danger"
                 size="xs"
-                class="cursor-pointer font-bold no-underline hover:no-underline focus:underline select-none outline-none"
+                class="cursor-pointer font-semibold no-underline hover:no-underline focus:underline select-none outline-none"
                 style="-webkit-tap-highlight-color: transparent;"
             >
                 {{ __('Reset') }}
@@ -109,7 +109,7 @@
                         <span class="cbir-similarity-badge" style="background:{{ $matchColor }};">{{ __('Match') }}</span>
                         <img src="{{ $img }}" alt="{{ $data['name'] ?? '' }}" loading="lazy"
                              onerror="this.src='{{ asset('images/placeholders/image-placeholder.svg') }}'">
-                        @if($pct)<span class="cbir-badge-discount" style="position:absolute;top:3px;right:3px;background:#eab308;color:#000;font-size:9px;font-weight:900;padding:1px 4px;border-radius:3px;line-height:1.4;">-{{ $pct }}%</span>@endif
+                        @if($pct)<span class="cbir-badge-discount" style="position:absolute;top:3px;right:3px;background:#eab308;color:#000;font-size:9px;font-weight: 600;padding:1px 4px;border-radius:3px;line-height:1.4;">-{{ $pct }}%</span>@endif
                         <span class="cbir-type-badge">{{ __($type) }}</span>
                     </div>
                     
@@ -142,7 +142,7 @@
                                 $stockLabel = $stock <= 0 ? __('Habis') : $stock.' '.__('Tersedia');
                                 $stockColor = $stock <= 0 ? '#ef4444' : ($stock <= 3 ? '#f59e0b' : '#6b7280');
                             @endphp
-                            <span style="font-size:9px;color:{{ $stockColor }}; font-weight: {{ $stock <= 3 ? '700' : '400' }};">
+                            <span style="font-size:9px;color:{{ $stockColor }}; font-weight: {{ $stock <= 3 ? '600' : '400' }};">
                                 {{ $stockLabel }}
                             </span>
                         </div>

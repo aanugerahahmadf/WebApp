@@ -38,7 +38,28 @@ class ViewCatalog extends ViewRecord
     {
         parent::mount($record);
 
-        $this->selectedTierId = $this->record->tiers()->value('id');
+        $this->selectedTierId = $this->resolveInitialTierId();
+    }
+
+    /**
+     * Tier awal: `?tier=` dari breadcrumb/tautan checkout kalau valid, lalu
+     * tier standar, lalu tier pertama. Selalu ada supaya breadcrumb di halaman
+     * ini maupun checkout tidak pernah kehilangan nama paket.
+     */
+    protected function resolveInitialTierId(): ?int
+    {
+        $requested = (int) request()->query('tier', 0);
+
+        if ($requested > 0 && $this->record->tiers()->whereKey($requested)->exists()) {
+            return $requested;
+        }
+
+        $standard = $this->record->tiers()
+            ->where('name_translations->en', 'Standard Flower Decoration Package')
+            ->value('id')
+            ?? $this->record->tiers()->value('id');
+
+        return $standard !== null ? (int) $standard : null;
     }
 
     /**
@@ -61,10 +82,26 @@ class ViewCatalog extends ViewRecord
 
     public function getBreadcrumbs(): array
     {
-        return [
+        $crumbs = [
             Home::getUrl() => __('Beranda'),
-            ...parent::getBreadcrumbs(),
+            CatalogResource::getUrl() => CatalogResource::getBreadcrumb(),
         ];
+
+        $tier = $this->selectedTier();
+
+        if ($tier === null) {
+            $crumbs[] = __($this->record->name);
+
+            return $crumbs;
+        }
+
+        $crumbs[CatalogResource::getUrl('view', ['record' => $this->record])] = __($this->record->name);
+
+        // Nama tier jadi crumb terakhir (halaman saat ini) dan ikut berubah
+        // saat pengguna memilih pill tier lain.
+        $crumbs[] = $tier->name;
+
+        return $crumbs;
     }
 
     protected function getHeaderActions(): array

@@ -4,7 +4,6 @@ namespace App\Filament\Admin\Resources\DeveloperStudioResource\Pages\CreateDevel
 
 use App\Filament\Admin\Concerns\HandlesFileUpload\HandlesFileUpload;
 use App\Filament\Admin\Resources\DeveloperStudioResource\DeveloperStudioResource;
-use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Models\DeveloperStudio\DeveloperStudioEndpoint;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -36,7 +35,6 @@ use Illuminate\Support\Facades\Storage;
 class CreateDeveloperStudio extends CreateRecord
 {
     use HandlesFileUpload;
-    use HasDynamicBreadcrumbs;
 
     protected static string $resource = DeveloperStudioResource::class;
 
@@ -648,11 +646,8 @@ PHP;
         return __('Buat Modul');
     }
 
-    public function getBreadcrumbs(): array
+        public function getBreadcrumbs(): array
     {
-        return [
-            ...$this->breadcrumbParentCrumb(),
-            DeveloperStudioResource::getUrl('index') => DeveloperStudioResource::getNavigationLabel(),
-        ];
+        return [];
     }
 }

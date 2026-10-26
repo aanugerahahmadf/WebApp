@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Pages\FontSettingsPage;
 
-use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Support\AppIcon\AppIcon;
 use Filament\Pages\Page;
 
@@ -19,7 +18,6 @@ use Filament\Pages\Page;
  */
 class FontSettingsPage extends Page
 {
-    use HasDynamicBreadcrumbs;
 
     protected static string $view = 'Admin.pages.font-settings.font-settings-page';
 
@@ -58,11 +56,8 @@ class FontSettingsPage extends Page
         return 'tipografi';
     }
 
-    public function getBreadcrumbs(): array
+        public function getBreadcrumbs(): array
     {
-        return [
-            ...$this->breadcrumbParentCrumb(),
-            $this->getTitle(),
-        ];
+        return [];
     }
 }

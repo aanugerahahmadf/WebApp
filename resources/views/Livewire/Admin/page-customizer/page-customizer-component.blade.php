@@ -7,7 +7,7 @@
              admin yang suka menekan sempan-tombol; Reset mengembalikan
              halaman aktif ke semuanya ikut tema. --}}
         <div class="mt-6 flex justify-end gap-3">
-            <x-filament::button type="button" color="gray" wire:click="resetPage" icon="heroicon-m-arrow-path">
+            <x-filament::button type="button" color="gray" wire:click="resetPage" icon="/images/icons/refresh.svg">
                 {{ __('Reset') }}
             </x-filament::button>
 

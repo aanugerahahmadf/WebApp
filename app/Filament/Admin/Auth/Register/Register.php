@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Auth\Register;
 
-use App\Filament\Admin\Auth\Concerns\HasAuthBreadcrumbs;
 use Filament\Pages\Auth\Register as BaseRegister;
 
 /**
@@ -16,7 +15,6 @@ use Filament\Pages\Auth\Register as BaseRegister;
  */
 class Register extends BaseRegister
 {
-    use HasAuthBreadcrumbs;
 
     public function getHeading(): string
     {

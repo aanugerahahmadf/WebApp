@@ -3,6 +3,21 @@
 namespace App\Filament\Admin\Widgets\StatsOverview;
 
 use App\Enums\OrderPaymentStatus\OrderPaymentStatus;
+use App\Filament\Admin\Resources\AdminResource\AdminResource;
+use App\Filament\Admin\Resources\CatalogResource\CatalogResource;
+use App\Filament\Admin\Resources\DiscountResource\DiscountResource;
+use App\Filament\Admin\Resources\HelpResource\HelpResource;
+use App\Filament\Admin\Resources\OrderResource\OrderResource;
+use App\Filament\Admin\Resources\PaymentGatewayResource\PaymentGatewayResource;
+use App\Filament\Admin\Resources\PaymentMethodResource\PaymentMethodResource;
+use App\Filament\Admin\Resources\PrivacyPolicyResource\PrivacyPolicyResource;
+use App\Filament\Admin\Resources\ReferenceOptionResource\ReferenceOptionResource;
+use App\Filament\Admin\Resources\ReportResource\ReportResource;
+use App\Filament\Admin\Resources\ReviewResource\ReviewResource;
+use App\Filament\Admin\Resources\TransactionResource\TransactionResource;
+use App\Filament\Admin\Resources\UserResource\UserResource;
+use App\Filament\Admin\Resources\VoucherResource\VoucherResource;
+use App\Filament\Admin\Resources\WishlistResource\WishlistResource;
 use App\Models\Admin\Admin;
 use App\Models\Catalog\Catalog;
 use App\Models\Category\Category;
@@ -73,93 +88,118 @@ class StatsOverview extends StatsOverviewWidget
             Stat::make(__('Total Produk'), (string) $counts['catalogs'])
                 ->description(__('Produk aktif'))
                 ->descriptionIcon('/images/icons/flower.svg')
-                ->color('primary'),
+                ->color('primary')
+                ->url(CatalogResource::getUrl(panel: 'admin')),
 
             Stat::make(__('Total Paket'), (string) $counts['packages'])
                 ->description(__('Nama paket dekorasi'))
                 ->descriptionIcon('/images/icons/gift.svg')
-                ->color('primary'),
+                ->color('primary')
+                // Paket tidak punya resource sendiri: tier di kelola di
+                // RelationManager dalam halaman katalog. Jadi kartu ini
+                // membuka daftar katalog, tempat paket bisa diakses.
+                ->url(CatalogResource::getUrl(panel: 'admin')),
 
             Stat::make(__('Total Kategori'), (string) $counts['categories'])
                 ->description(__('Kategori produk'))
                 ->descriptionIcon('/images/icons/bookmark.svg')
-                ->color('primary'),
+                ->color('primary')
+                // Sama seperti paket: kategori adalah RelationManager di
+                // halaman katalog, bukan resource terpisah.
+                ->url(CatalogResource::getUrl(panel: 'admin')),
 
             Stat::make(__('Total Pengguna'), (string) $counts['users'])
                 ->description(__('Terdaftar di aplikasi'))
                 ->descriptionIcon('/images/icons/users.svg')
-                ->color('info'),
+                ->color('info')
+                ->url(UserResource::getUrl(panel: 'admin')),
 
             Stat::make(__('Total Admin Tim'), (string) $counts['admins'])
                 ->description(__('Akun tim internal'))
                 ->descriptionIcon('/images/icons/admin-shield.svg')
-                ->color('info'),
+                ->color('info')
+                ->url(AdminResource::getUrl(panel: 'admin')),
 
             Stat::make(__('Total Ulasan'), (string) $counts['reviews'])
                 ->description(__('Ulasan dari pelanggan'))
                 ->descriptionIcon('/images/icons/star.svg')
-                ->color('info'),
+                ->color('info')
+                ->url(ReviewResource::getUrl(panel: 'admin')),
 
             Stat::make(__('Total Laporan'), (string) $counts['reports'])
                 ->description(__('Laporan dari pengguna'))
                 ->descriptionIcon('/images/icons/report.svg')
-                ->color('warning'),
+                ->color('warning')
+                ->url(ReportResource::getUrl(panel: 'admin')),
 
             Stat::make(__('Opsi Referensi'), (string) $counts['reference_options'])
                 ->description(__('Tipe dan nilai acuan'))
                 ->descriptionIcon('/images/icons/reference.svg')
-                ->color('gray'),
+                ->color('gray')
+                ->url(ReferenceOptionResource::getUrl(panel: 'admin')),
 
             Stat::make(__('Pusat Bantuan'), (string) $counts['helps'])
                 ->description(__('Artikel pusat bantuan'))
                 ->descriptionIcon('/images/icons/help.svg')
-                ->color('gray'),
+                ->color('gray')
+                ->url(HelpResource::getUrl(panel: 'admin')),
 
             Stat::make(__('Total Kebijakan'), (string) $counts['policies'])
                 ->description(__('Dokumen legal aplikasi'))
                 ->descriptionIcon('/images/icons/wedding-policy.svg')
-                ->color('gray'),
+                ->color('gray')
+                // Angkanya gabungan tiga dokumen; kartu membuka yang pertama
+                // (Privacy Policy) dan sisanya ada di menu grup yang sama.
+                ->url(PrivacyPolicyResource::getUrl(panel: 'admin')),
 
             // ── TRANSAKSI ──────────────────────────────────────────────
             Stat::make(__('Total Pesanan'), (string) $counts['orders'])
                 ->description(__('Pesanan pelanggan'))
                 ->descriptionIcon('/images/icons/bag.svg')
-                ->color('success'),
+                ->color('success')
+                ->url(OrderResource::getUrl(panel: 'admin')),
 
             Stat::make(__('Belum dibayar'), (string) $counts['unpaid_orders'])
                 ->description(__('Total Pesanan'))
                 ->descriptionIcon('/images/icons/clock.svg')
-                ->color('danger'),
+                ->color('danger')
+                ->url(OrderResource::getUrl(panel: 'admin')),
 
             Stat::make(__('Total Transaksi'), (string) $counts['transactions'])
                 ->description(__('Riwayat pembayaran'))
                 ->descriptionIcon('/images/icons/transaction.svg')
-                ->color('success'),
+                ->color('success')
+                ->url(TransactionResource::getUrl(panel: 'admin')),
 
             Stat::make(__('Total Voucher'), (string) $counts['vouchers'])
                 ->description(__('Kode promo tersedia'))
                 ->descriptionIcon('/images/icons/voucher.svg')
-                ->color('success'),
+                ->color('success')
+                ->url(VoucherResource::getUrl(panel: 'admin')),
 
             Stat::make(__('Total Diskon'), (string) $counts['discounts'])
                 ->description(__('Penawaran harga'))
                 ->descriptionIcon('/images/icons/discount.svg')
-                ->color('success'),
+                ->color('success')
+                ->url(DiscountResource::getUrl(panel: 'admin')),
 
             Stat::make(__('Metode Pembayaran'), (string) $counts['payment_methods'])
                 ->description(__('Metode pembayaran tersedia'))
                 ->descriptionIcon('/images/icons/payment-method.svg')
-                ->color('warning'),
+                ->color('warning')
+                ->url(PaymentMethodResource::getUrl(panel: 'admin')),
 
             Stat::make(__('Payment Gateway'), (string) $counts['payment_gateways'])
                 ->description(__('Kanal pembayaran daring'))
                 ->descriptionIcon('/images/icons/payment-gateway.svg')
-                ->color('warning'),
+                ->color('warning')
+                ->url(PaymentGatewayResource::getUrl(panel: 'admin')),
 
             Stat::make(__('Total Wishlist'), (string) $counts['wishlists'])
                 ->description(__('Produk tersimpan'))
                 ->descriptionIcon('/images/icons/wishlist.svg')
-                ->color('gray'),
+                ->color('gray')
+                ->url(WishlistResource::getUrl(panel: 'admin')),
         ];
     }
 

@@ -1,4 +1,4 @@
-﻿@php
+@php
     $statePath = $getStatePath();
     $minDate = $getMinDate();
     $maxDate = $getMaxDate();
@@ -46,7 +46,7 @@
     >
         {{-- Display trigger --}}
         <div
-            class="fi-fo-text-input w-full flex items-center overflow-hidden rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-950 shadow-sm dark:border-gray-600 dark:bg-gray-900 dark:text-white cursor-pointer select-none"
+            class="fi-checkout-calendar-trigger fi-fo-text-input w-full flex items-center overflow-hidden rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-950 shadow-sm dark:border-gray-600 dark:bg-gray-900 dark:text-white cursor-pointer select-none"
             :class="{ 'ring-1 ring-primary-600 border-primary-600': showPanel }"
             @click="togglePanel()"
             role="button"
@@ -68,7 +68,7 @@
             x-transition:leave-start="opacity-100"
             x-transition:leave-end="opacity-0"
             x-cloak
-            class="absolute z-50 mt-2 w-72 origin-top rounded-lg border border-gray-200 bg-white p-3 shadow-2xl ring-1 ring-gray-950/5 dark:border-gray-700 dark:bg-gray-900 dark:ring-white/10"
+            class="fi-checkout-calendar-panel z-50 mt-2 w-full origin-top rounded-lg border border-gray-200 bg-white p-3 shadow-2xl ring-1 ring-gray-950/5 dark:border-gray-700 dark:bg-gray-900 dark:ring-white/10 sm:absolute sm:w-72"
         >
             {{-- Header: Prev / Month & Year buttons / Next --}}
             <div class="flex items-center justify-between">
@@ -128,7 +128,7 @@
                                     :class="{
                                         'pointer-events-none cursor-not-allowed': cell.isPast || cell.disabled,
                                         'opacity-35 font-normal text-gray-400 dark:text-gray-600': cell.isPast,
-                                        'font-bold text-primary-600 dark:text-primary-400': cell.selected && !cell.isPast,
+                                        'font-semibold text-primary-600 dark:text-primary-400': cell.selected && !cell.isPast,
                                         'font-semibold text-primary-600 dark:text-primary-400': cell.isToday && !cell.selected && !cell.isPast,
                                         'font-semibold text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100': !cell.isToday && !cell.selected && !cell.isPast && !cell.disabled,
                                         'font-normal opacity-30 text-gray-400 dark:text-gray-600': cell.disabled && !cell.isPast,
@@ -161,7 +161,7 @@
                             class="flex h-12 items-center justify-center text-xs bg-transparent transition disabled:cursor-not-allowed disabled:opacity-40"
                             :class="[
                                 index === viewMonth
-                                    ? 'font-bold text-primary-600 dark:text-primary-400'
+                                    ? 'font-semibold text-primary-600 dark:text-primary-400'
                                     : (isMonthDisabled(index)
                                         ? 'text-gray-400 dark:text-gray-600'
                                         : 'font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100')
@@ -192,7 +192,7 @@
                             class="flex h-9 items-center justify-center text-xs bg-transparent transition disabled:cursor-not-allowed disabled:opacity-40"
                             :class="[
                                 year === viewYear
-                                    ? 'font-bold text-primary-600 dark:text-primary-400'
+                                    ? 'font-semibold text-primary-600 dark:text-primary-400'
                                     : (isYearDisabled(year)
                                         ? 'text-gray-400 dark:text-gray-600'
                                         : 'font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100')
@@ -225,7 +225,11 @@
             <script>
                 function checkoutCalendarPicker(config) {
                     return {
-                        state: null,
+                        // Keep the Livewire entangled value. Previously this
+                        // was reset to null, so the calendar displayed the
+                        // selected date locally but Filament still validated
+                        // booking_date as empty when Next was clicked.
+                        state: config.state ?? null,
                         minDate: config.minDate,
                         maxDate: config.maxDate,
                         minDateParsed: null,

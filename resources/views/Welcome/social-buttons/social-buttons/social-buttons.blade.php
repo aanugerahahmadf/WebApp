@@ -183,14 +183,14 @@
                 x-transition:leave-start="opacity-100 translate-x-0"
                 x-transition:leave-end="opacity-0 -translate-x-full" class="space-y-4">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-xl font-bold text-primary-500">
+                    <h2 class="text-xl font-semibold text-primary-500">
                         {{ __($termsRecord?->title ?? 'Perjanjian Pengguna') }}</h2>
                 </div>
 
                 <div class="space-y-6 text-left py-2 max-h-[60vh] overflow-y-auto no-scrollbar">
                     @forelse ($termsRecord?->content ?? [] as $i => $item)
                         <article class="space-y-2">
-                            <h3 class="text-sm font-bold uppercase tracking-wide text-gray-900 dark:text-gray-100">
+                            <h3 class="text-sm font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
                                 {{ $i + 1 }}. {{ __($item['heading']) }}</h3>
                             <p class="text-sm leading-relaxed text-gray-600 dark:text-gray-400 text-justify">
                                 {!! nl2br(e(__($item['body']))) !!}</p>
@@ -229,7 +229,7 @@
                                 <img src="/images/icons/arrow_left.svg" class="w-6 h-6" />
                             </button>
                         </template>
-                        <h2 class="text-xl font-bold text-primary-500">
+                        <h2 class="text-xl font-semibold text-primary-500">
                             {{ __($privacyRecord?->title ?? 'Kebijakan Privasi') }}</h2>
                     </div>
                 </div>
@@ -237,7 +237,7 @@
                 <div class="space-y-6 text-left py-2 max-h-[60vh] overflow-y-auto no-scrollbar">
                     @forelse ($privacyRecord?->content ?? [] as $i => $item)
                         <article class="space-y-2">
-                            <h3 class="text-sm font-bold uppercase tracking-wide text-gray-900 dark:text-gray-100">
+                            <h3 class="text-sm font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
                                 {{ $i + 1 }}. {{ __($item['heading']) }}</h3>
                             <p class="text-sm leading-relaxed text-gray-600 dark:text-gray-400 text-justify">
                                 {!! nl2br(e(__($item['body']))) !!}</p>
@@ -276,7 +276,7 @@
                                 <img src="/images/icons/arrow_left.svg" class="w-6 h-6" />
                             </button>
                         </template>
-                        <h2 class="text-xl font-bold text-primary-500">
+                        <h2 class="text-xl font-semibold text-primary-500">
                             {{ __($weddingPolicyRecord?->title ?? 'Kebijakan Aplikasi') }}</h2>
                     </div>
                 </div>
@@ -284,7 +284,7 @@
                 <div class="space-y-6 text-left py-2 max-h-[60vh] overflow-y-auto no-scrollbar">
                     @forelse ($weddingPolicyRecord?->content ?? [] as $i => $item)
                         <article class="space-y-2">
-                            <h3 class="text-sm font-bold uppercase tracking-wide text-gray-900 dark:text-gray-100">
+                            <h3 class="text-sm font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-100">
                                 {{ $i + 1 }}. {{ __($item['heading']) }}</h3>
                             <p class="text-sm leading-relaxed text-gray-600 dark:text-gray-400 text-justify">
                                 {!! nl2br(e(__($item['body']))) !!}</p>

@@ -2,13 +2,11 @@
 
 namespace App\Filament\Admin\Pages\ApiKeyManagerPage;
 
-use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Support\AppIcon\AppIcon;
 use Filament\Pages\Page;
 
 class ApiKeyManagerPage extends Page
 {
-    use HasDynamicBreadcrumbs;
 
     protected static string $view = 'Admin.pages.api-key-manager.api-key-manager-page';
 
@@ -36,11 +34,8 @@ class ApiKeyManagerPage extends Page
         return 'api-keys';
     }
 
-    public function getBreadcrumbs(): array
+        public function getBreadcrumbs(): array
     {
-        return [
-            ...$this->breadcrumbParentCrumb(),
-            $this->getTitle(),
-        ];
+        return [];
     }
 }

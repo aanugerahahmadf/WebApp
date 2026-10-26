@@ -5,35 +5,35 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{{ __('Notifikasi Pembayaran') }}</title>
 <style>
-  body  { margin:0; padding:0; background:#f5f5f5; font-family:'Google Sans Flex',sans-serif; font-size:14px; color:#333; }
+  body  { margin:0; padding:0; background:#f5f5f5; font-family:'Instrument Sans',sans-serif; font-size:14px; color:#333; }
   .wrap { max-width:600px; margin:24px auto; background:#fff; border:1px solid #e0e0e0; }
 
   .logo-bar { text-align:center; padding:24px 0 20px; border-bottom:1px solid #e0e0e0; }
   .logo-bar img { height:48px; width:auto; }
-  .logo-bar .app-name { font-size:20px; font-weight:bold; color:#111; }
+  .logo-bar .app-name { font-size:20px; font-weight: 600; color:#111; }
 
   .body { padding:28px 32px; }
   .body p { margin:0 0 12px; line-height:1.6; font-size:14px; }
 
-  .status-bar { padding:10px 16px; font-size:13px; font-weight:bold; margin-bottom:20px; border-radius:3px; }
+  .status-bar { padding:10px 16px; font-size:13px; font-weight: 600; margin-bottom:20px; border-radius:3px; }
   .status-paid    { background:#e8f5e9; color:#2e7d32; border-left:4px solid #43a047; }
   .status-pending { background:#fff8e1; color:#e65100; border-left:4px solid #ffb300; }
   .status-failed  { background:#ffebee; color:#c62828; border-left:4px solid #e53935; }
 
-  .section-title { font-size:12px; font-weight:bold; color:#111; text-transform:uppercase;
+  .section-title { font-size:12px; font-weight: 600; color:#111; text-transform:uppercase;
                    letter-spacing:0.5px; border-bottom:2px solid #111; padding-bottom:6px;
                    margin:20px 0 14px; }
 
   table.detail { width:100%; border-collapse:collapse; margin-bottom:20px; }
   table.detail td { padding:7px 0; font-size:13px; border-bottom:1px solid #f0f0f0; }
   table.detail td.key { color:#666; width:45%; }
-  table.detail td.val { font-weight:bold; color:#111; }
+  table.detail td.val { font-weight: 600; color:#111; }
 
 
 
   .btn-wrap { text-align:center; margin:24px 0 8px; }
   .btn { display:inline-block; background:#111; color:#fff !important; text-decoration:none;
-         padding:11px 32px; border-radius:3px; font-size:13px; font-weight:bold; }
+         padding:11px 32px; border-radius:3px; font-size:13px; font-weight: 600; }
 
   .footer { background:#f5f5f5; padding:16px 32px; font-size:11px; color:#999;
             border-top:1px solid #e0e0e0; text-align:center; line-height:1.8; }
@@ -125,9 +125,9 @@ $logoSrc = $logoSrc      ?? null;
         </td>
         <td style="padding:12px 12px 12px 0; vertical-align:top;">
           <div style="font-size:11px; color:#888; margin-bottom:2px;">{{ $itemType }}</div>
-          <div style="font-size:14px; font-weight:bold; color:#111; margin-bottom:4px;">{{ $itemName }}</div>
+          <div style="font-size:14px; font-weight: 600; color:#111; margin-bottom:4px;">{{ $itemName }}</div>
           <div style="font-size:11px; color:#888;">{{ $itemCat }} &times; {{ $qty }}</div>
-          <div style="font-size:15px; font-weight:bold; color:#111; margin-top:6px;">Rp {{ number_format($itemPrice, 0, ',', '.') }}</div>
+          <div style="font-size:15px; font-weight: 600; color:#111; margin-top:6px;">Rp {{ number_format($itemPrice, 0, ',', '.') }}</div>
         </td>
       </tr>
     </table>

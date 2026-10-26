@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Pages\TerminalPage;
 
-use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Support\AppIcon\AppIcon;
 use App\Support\Terminal\ArtisanCommandInput;
 use Filament\Forms\Components\Select;
@@ -25,7 +24,6 @@ use Symfony\Component\Console\Output\BufferedOutput;
  */
 class TerminalPage extends Page
 {
-    use HasDynamicBreadcrumbs;
 
     protected static string $view = 'Admin.pages.terminal-page.terminal-page';
 
@@ -126,12 +124,9 @@ class TerminalPage extends Page
         return __('Pengaturan Sistem');
     }
 
-    public function getBreadcrumbs(): array
+        public function getBreadcrumbs(): array
     {
-        return [
-            ...$this->breadcrumbParentCrumb(),
-            $this->getTitle(),
-        ];
+        return [];
     }
 
     public function form(Form $form): Form

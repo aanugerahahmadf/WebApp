@@ -81,14 +81,25 @@ class PaymentMethod extends Model
     {
         return static::activeQuery()
             ->get()
-            ->mapWithKeys(fn (PaymentMethod $m) => [
-                $m->id => trim(implode(' · ', array_filter([
+            ->mapWithKeys(function (PaymentMethod $m): array {
+                if ($m->type === 'virtual_account') {
+                    $user = auth()->user();
+                    $name = trim((string) ($user?->full_name ?: $user?->username));
+
+                    return [$m->id => trim(implode(' · ', array_filter([
+                        $m->bank_name ?: 'BRI',
+                        $name !== '' ? __('Atas nama :name', ['name' => $name]) : null,
+                        __('Nomor VA unik dibuat otomatis setelah pesanan dibuat'),
+                    ])))];
+                }
+
+                return [$m->id => trim(implode(' · ', array_filter([
                     $m->bank_name,
                     $m->account_holder,
                     $m->account_number ? (string) $m->account_number : null,
                     $m->type === 'cash' ? __('Bayar saat layanan tiba') : null,
-                ]))) ?: \Illuminate\Support\Str::limit((string) $m->instructions, 90),
-            ])
+                ]))) ?: \Illuminate\Support\Str::limit((string) $m->instructions, 90)];
+            })
             ->all();
     }
 

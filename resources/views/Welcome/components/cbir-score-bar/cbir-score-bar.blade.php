@@ -14,7 +14,7 @@
              style="width: {{ $pct }}%">
         </div>
     </div>
-    <span class="text-[10px] font-bold {{ $textColor }}">
+    <span class="text-[10px] font-semibold {{ $textColor }}">
         {{ $pct }}% MIRIP
     </span>
 </div>

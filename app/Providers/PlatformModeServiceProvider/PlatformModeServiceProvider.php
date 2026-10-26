@@ -10,6 +10,7 @@ use App\Support\Platform\PlatformCommandDetector\PlatformCommandDetector;
 use App\Support\Platform\ProductionValidator\ProductionValidator;
 use App\Support\Platform\RuntimePlatformDetector\RuntimePlatformDetector;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -112,6 +113,13 @@ class PlatformModeServiceProvider extends ServiceProvider
         /** @var PlatformAssetManager $assetManager */
         $assetManager = $this->app->make(PlatformAssetManager::class);
         $assetManager->configure($mode);
+
+        // Keep Laravel's @vite directive in sync with the platform-specific
+        // output configured in vite.config.js. Without this, @vite looks in
+        // public/build while the active manifest lives in public/build/web
+        // (or build/mobile/build/desktop), causing a 500 when a page requests
+        // an entry that is not present in the stale root manifest.
+        Vite::useBuildDirectory($assetManager->getBuildDirectory());
 
         // Development-only logging — only emit in local environment
         if ($this->app->environment('local')) {

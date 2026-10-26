@@ -4,7 +4,6 @@ namespace App\Filament\Admin\Resources\DatabaseStudioResource\Pages\CreateDataba
 
 use App\Filament\Admin\Concerns\HandlesFileUpload\HandlesFileUpload;
 use App\Filament\Admin\Resources\DatabaseStudioResource\DatabaseStudioResource;
-use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -32,7 +31,6 @@ use Throwable;
 class CreateDatabaseStudio extends CreateRecord
 {
     use HandlesFileUpload;
-    use HasDynamicBreadcrumbs;
 
     protected static string $resource = DatabaseStudioResource::class;
 
@@ -449,11 +447,8 @@ class CreateDatabaseStudio extends CreateRecord
         return __('Buat Migration / Seeder / Factory');
     }
 
-    public function getBreadcrumbs(): array
+        public function getBreadcrumbs(): array
     {
-        return [
-            ...$this->breadcrumbParentCrumb(),
-            DatabaseStudioResource::getUrl('index') => DatabaseStudioResource::getNavigationLabel(),
-        ];
+        return [];
     }
 }

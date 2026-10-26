@@ -270,7 +270,7 @@ class DeviceTrustService
             $where = null;
         }
 
-        return filled($where) ? "{$browser} di {$where}" : $browser;
+        return filled($where) ? "{$browser} ".__('di')." {$where}" : $browser;
     }
 
     /**

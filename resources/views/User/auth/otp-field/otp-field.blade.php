@@ -65,7 +65,7 @@
             @input="handleInput($event, {{ $i }})"
             @keydown="handleKeydown($event, {{ $i }})"
             @focus="activeInput = {{ $i }}"
-            class="w-10 h-12 text-center text-xl font-bold border-2 rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:border-primary-600 focus:ring-primary-600 dark:focus:border-primary-500 transition-all duration-200 uppercase"
+            class="w-10 h-12 text-center text-xl font-semibold border-2 rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:border-primary-600 focus:ring-primary-600 dark:focus:border-primary-500 transition-all duration-200 uppercase"
         />
     @endfor
 </div>

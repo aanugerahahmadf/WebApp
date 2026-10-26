@@ -19,14 +19,14 @@
             <label for="agreement-checkbox"
                 class="cursor-pointer">{{ __('Dengan mencentang Setuju & Bergabung atau Lanjutkan, Anda menyetujui') }}</label>
             <x-filament::link color="primary" tag="button" type="button"
-                class="text-sm font-bold hover:underline focus:underline active:underline"
+                class="text-sm font-semibold hover:underline focus:underline active:underline"
                 @click.stop="$dispatch('open-agreement', { mode: 'terms' })">{{ __('Perjanjian Pengguna') }}</x-filament::link>,
             <x-filament::link color="primary" tag="button" type="button"
-                class="text-sm font-bold hover:underline focus:underline active:underline"
+                class="text-sm font-semibold hover:underline focus:underline active:underline"
                 @click.stop="$dispatch('open-agreement', { mode: 'privacy' })">{{ __('Kebijakan Privasi') }}</x-filament::link>
             <span>{{ __('dan') }}</span>
             <x-filament::link color="primary" tag="button" type="button"
-                class="text-sm font-bold hover:underline focus:underline active:underline"
+                class="text-sm font-semibold hover:underline focus:underline active:underline"
                 @click.stop="$dispatch('open-agreement', { mode: 'wedding_policy' })">{{ __('Kebijakan Aplikasi') }}</x-filament::link>.
         </div>
     </div>

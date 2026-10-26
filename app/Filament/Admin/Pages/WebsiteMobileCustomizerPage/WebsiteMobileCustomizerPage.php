@@ -2,13 +2,11 @@
 
 namespace App\Filament\Admin\Pages\WebsiteMobileCustomizerPage;
 
-use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Support\AppIcon\AppIcon;
 use Filament\Pages\Page;
 
 class WebsiteMobileCustomizerPage extends Page
 {
-    use HasDynamicBreadcrumbs;
 
     protected static string $view = 'Admin.pages.website-mobile-customizer.website-mobile-customizer-page';
 
@@ -36,11 +34,8 @@ class WebsiteMobileCustomizerPage extends Page
         return 'website-mobile-customizer';
     }
 
-    public function getBreadcrumbs(): array
+        public function getBreadcrumbs(): array
     {
-        return [
-            ...$this->breadcrumbParentCrumb(),
-            $this->getTitle(),
-        ];
+        return [];
     }
 }

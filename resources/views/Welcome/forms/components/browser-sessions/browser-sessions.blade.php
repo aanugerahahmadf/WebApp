@@ -21,7 +21,7 @@
                                 {{-- Filament v3 Selection Bar Style --}}
                                 <div class="flex-1 flex items-center justify-between gap-x-3 px-3 py-1.5 rounded-lg bg-primary-50 dark:bg-primary-500/10 border border-primary-200 dark:border-primary-500/30">
                                     <div class="flex items-center gap-x-3">
-                                        <span class="text-sm font-bold text-primary-700 dark:text-primary-400">
+                                        <span class="text-sm font-semibold text-primary-700 dark:text-primary-400">
                                             {{ __(':count terpilih', ['count' => $selectedCount]) }}
                                         </span>
                                         <div class="h-4 w-px bg-primary-200 dark:bg-primary-500/30"></div>
@@ -154,7 +154,7 @@
                                             icon="/images/icons/sign_out.svg"
                                             wire:click="deleteSession('{{ $session->id }}')"
                                             wire:confirm="{{ __('Apakah Anda yakin ingin keluar dari sesi ini?') }}"
-                                            class="text-xs font-bold"
+                                            class="text-xs font-semibold"
                                         >
                                             {{ __('Keluar') }}
                                         </x-filament::button>

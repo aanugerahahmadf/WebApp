@@ -4,15 +4,15 @@
     <meta charset="utf-8">
     <style>
         @page { margin: 38px 42px; }
-        body { font-family: 'Google Sans Flex', sans-serif; color: #1f2937; font-size: 10.5px; line-height: 1.45; }
+        body { font-family: 'Instrument Sans', sans-serif; color: #1f2937; font-size: 10.5px; line-height: 1.45; }
         .header { border-bottom: 3px solid #d4a017; padding-bottom: 14px; margin-bottom: 22px; }
-        .brand { color: #a16207; font-size: 12px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; }
+        .brand { color: #a16207; font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
         h1 { font-size: 22px; margin: 5px 0 3px; color: #111827; }
         .muted { color: #6b7280; }
         h2 { font-size: 12px; margin: 22px 0 8px; color: #92400e; text-transform: uppercase; }
         table { width: 100%; border-collapse: collapse; }
         td { border: 1px solid #e5e7eb; padding: 9px 10px; vertical-align: top; }
-        td.label { width: 34%; background: #fffbeb; color: #78350f; font-weight: bold; }
+        td.label { width: 34%; background: #fffbeb; color: #78350f; font-weight: 600; }
         .notes { white-space: pre-line; min-height: 45px; }
         .footer { margin-top: 28px; border-top: 1px solid #e5e7eb; padding-top: 10px; color: #6b7280; font-size: 9px; }
     </style>

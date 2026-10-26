@@ -121,6 +121,7 @@ return [
     'Ulasan' => 'Reviews',
     'Penilaian Paket' => 'Package Rating',
     'Penilaian Produk' => 'Catalog Rating',
+    'Penilaian Katalog' => 'Catalog Rating',
     'Tidak ada ulasan untuk filter ini.' => 'No reviews for this filter.',
     'Pengguna' => 'User',
 

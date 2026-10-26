@@ -428,95 +428,60 @@
 
 
 
-/* ─── Full-Width Mobile Sidebar & Navigation (WELCOME PANEL ONLY) ─── */
-/* Admin panel menggunakan sidebar bawaan Filament — tidak di-override di sini */
+/* ─── Mobile Drawer Sidebar (WELCOME PANEL, PONSEL SAJA) ─── */
 
-/* 1023px, not 1024px: matches config('app-platform.mobile_nav.breakpoint') and
- * the same @media in Shared/Shared.css, Shared/Mobile.css and Admin.css, so the
- * drawer, the bottom bar and the card tables all switch over on the same pixel.
+/*
+ * Ponsel dan tablet (< 1024px) memakai drawer responsive.
  *
- * SEMUA selector di blok ini diawali `:root:not(.native-desktop)`.
+ * Filament mengunci peralihan drawer/kolom di `lg` (1024px), sehingga
+ * Ambang di sini 1023px: tablet mengikuti layout mobile.
  *
- * Alasannya sama persis dengan blok Global Search di Shared/Shared.css:
- * jendela aplikasi desktop (Electron) tidak punya `minWidth`, jadi bisa
- * dikecilkan ke lebar apa saja termasuk di bawah 1024px. Tanpa guard itu,
- * sidebar desktop app ikut memakai versi mobile -- `width: 100vw` --
- * dan menutupi seluruh layar, padahal yang diminta untuk laptop/aplikasi
- * desktop adalah ukuran sidebar BAWAAN Filament (`var(--sidebar-width)`).
- *
- * `@media` SAJA tidak cukup untuk membedakannya dari laptop biasa, sebab
- * keduanya bisa punya lebar yang sama. Yang membedakan bukan lebarnya,
- * tapi tempat aplikasi berjalan: kelas `.native-desktop` dipasang ke
- * <html> oleh User/Welcome.components.platform-runtime-script (registered
- * di HEAD_START oleh PlatformSupportServiceProvider), jadi sudah ada
- * sebelum sidebar dirender -- kalau skripnya baru jalan di akhir <body>,
- * sidebar akan sempat melebar penuh lalu menyusut sendiri di depan mata.
- *
- * Di sisi lain: 1024px ke atas tidak pernah cocok dengan `@media` di
- * bawah, jadi laptop dan desktop website otomatis aman tanpa tambahan.
+ * Semua selector tetap diawali `:root:not(.native-desktop)`: jendela
+ * aplikasi desktop (Electron) tidak punya minWidth dan bisa dikecilkan ke
+ * bawah 768px, tetapi di sana layout harus tetap versi desktop.
  */
 @media (max-width: 1023px) {
-    /* Sidebar drawer welcome panel: full width, slide-in from left */
-    :root:not(.native-desktop) .fi-panel-welcome .fi-sidebar {
+    /* Drawer selebar layar, di atas topbar. */
+    .fi-panel-welcome .fi-sidebar {
         width: 100vw !important;
         max-width: 100vw !important;
-        --tw-translate-x: -100% !important;
-        transform: translateX(-100%) !important;
-        transition: transform 0.3s ease-in-out !important;
         z-index: 40 !important;
     }
 
-
-    :root:not(.native-desktop) .fi-panel-welcome .fi-sidebar.fi-sidebar-open {
-        --tw-translate-x: 0 !important;
-        transform: translateX(0) !important;
-    }
-
-
-    /* Overlay welcome panel */
-    :root:not(.native-desktop) .fi-panel-welcome .fi-sidebar-close-overlay {
+    /* Overlay di bawah drawer, di atas konten. */
+    .fi-panel-welcome .fi-sidebar-close-overlay {
         z-index: 35 !important;
     }
 
-
     /*
-     * Fix: overflow-x-clip on .fi-layout creates a new stacking context
-     * that clips fixed-position children (like the overlay) on some browsers.
-     * Only apply to welcome panel — admin panel uses Filament default.
-     * Note: overflow:visible is removed here because the topbar now uses
-     * position:fixed which is immune to ancestor overflow values.
+     * overflow-x-clip pada .fi-layout membuat stacking context baru yang
+     * memotong anak `position: fixed` (overlay) di sebagian browser.
      */
-    :root:not(.native-desktop) .fi-panel-welcome .fi-layout {
+    .fi-panel-welcome .fi-layout {
         overflow-x: visible !important;
     }
 
-
-    /* Remove horizontal margins from navigation items (welcome panel) */
-    :root:not(.native-desktop) .fi-panel-welcome .fi-sidebar-nav-item > a,
-:root:not(.native-desktop) .fi-panel-welcome .fi-sidebar-group {
+    /* Item navigasi mengisi lebar drawer. */
+    .fi-panel-welcome .fi-sidebar-nav-item > a,
+    .fi-panel-welcome .fi-sidebar-group {
         margin-left: 0 !important;
         margin-right: 0 !important;
         border-radius: 0 !important;
     }
 
-
-    /* Make navigation group headers full width (welcome panel) */
-    :root:not(.native-desktop) .fi-panel-welcome .fi-sidebar-group-button {
+    .fi-panel-welcome .fi-sidebar-group-button {
         padding-left: 1.5rem !important;
         padding-right: 1.5rem !important;
         width: 100% !important;
     }
 
-
-    /* Active item full width (welcome panel) */
-    :root:not(.native-desktop) .fi-panel-welcome .fi-sidebar-nav-item > a.fi-active {
+    .fi-panel-welcome .fi-sidebar-nav-item > a.fi-active {
         border-radius: 0 !important;
     }
 
-
-    /* Show close button in sidebar header on mobile (welcome panel) */
-    :root:not(.native-desktop) .fi-panel-welcome .fi-sidebar-header .fi-sidebar-mobile-close-btn {
-        display: flex !important;
+    /* Ruang untuk bottom nav supaya item terakhir tidak tertutup. */
+    .fi-panel-welcome .fi-sidebar-nav {
+        padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px)) !important;
     }
 }
 
@@ -587,7 +552,7 @@
     display: inline-block;
     min-width: 1.35rem;
     font-size: 0.5625rem;
-    font-weight: 800;
+    font-weight: 600;
     letter-spacing: 0.02em;
     line-height: 1;
     vertical-align: 0.05em;
@@ -809,7 +774,6 @@ KEPALA HALAMAN MESSAGES -- label + breadcrumb
     align-items: center;
     gap: 0.5rem 1rem;
     margin-bottom: 0.75rem;
-    padding-inline: 1rem;
 }
 
 

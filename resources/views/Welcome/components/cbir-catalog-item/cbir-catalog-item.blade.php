@@ -66,14 +66,14 @@
 
         {{-- Badge similarity --}}
         @if($score > 0)
-            <span style="position:absolute;top:3px;left:3px;background:#eab308;color:#000;font-size:8px;font-weight:900;padding:1px 4px;border-radius:3px;line-height:1.4;">
+            <span style="position:absolute;top:3px;left:3px;background:#eab308;color:#000;font-size:8px;font-weight: 600;padding:1px 4px;border-radius:3px;line-height:1.4;">
                 {{ $pct }}%
             </span>
         @endif
 
         {{-- Badge discount --}}
         @if($discountPct)
-            <span style="position:absolute;top:3px;right:3px;background:#ef4444;color:#fff;font-size:8px;font-weight:900;padding:1px 4px;border-radius:3px;line-height:1.4;">
+            <span style="position:absolute;top:3px;right:3px;background:#ef4444;color:#fff;font-size:8px;font-weight: 600;padding:1px 4px;border-radius:3px;line-height:1.4;">
                 -{{ $discountPct }}%
             </span>
         @endif
@@ -86,7 +86,7 @@
         <div style="height:18px;overflow:hidden;margin-bottom:2px;display:flex;align-items:center;">
             @if($category)
                 <span class="catalog-cat"
-                      style="display:inline-block;font-size:9px;font-weight:700;line-height:1;padding:2px 4px;border-left:2px solid {{ $catColor }};color:{{ $catColor }};background:transparent;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                      style="display:inline-block;font-size:9px;font-weight: 600;line-height:1;padding:2px 4px;border-left:2px solid {{ $catColor }};color:{{ $catColor }};background:transparent;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                     {{ __($category) }}
                 </span>
             @endif
@@ -101,7 +101,7 @@
 
         {{-- Price — fixed height 2.2rem (harga + harga coret) --}}
         <div style="height:2.2rem;display:flex;flex-direction:column;justify-content:flex-start;gap:0;margin-bottom:3px;">
-            <span style="font-size:11px;font-weight:700;color:#eab308;line-height:1.2;display:block;">
+            <span style="font-size:11px;font-weight: 600;color:#eab308;line-height:1.2;display:block;">
                 Rp{{ number_format($fp, 0, ',', '.') }}
             </span>
             <span style="font-size:9px;color:#6b7280;text-decoration:line-through;line-height:1.2;display:block;min-height:1rem;">

@@ -13,7 +13,7 @@
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: 'Google Sans Flex', sans-serif;
+            font-family: 'Instrument Sans', sans-serif;
             background: #f8fafc;
             color: #1e293b;
             line-height: 1.7;
@@ -30,7 +30,7 @@
         }
         .header h1 {
             font-size: 22px;
-            font-weight: 700;
+            font-weight: 600;
             color: #0f172a;
         }
         .header .updated {
@@ -50,7 +50,7 @@
         }
         .section h2 {
             font-size: 14px;
-            font-weight: 700;
+            font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: #0f172a;

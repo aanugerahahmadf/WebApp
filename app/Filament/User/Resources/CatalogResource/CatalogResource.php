@@ -75,12 +75,25 @@ class CatalogResource extends Resource
     {
         $price = $record->discount_price > 0 ? $record->discount_price : $record->price;
 
-        return [
+        // Rating di hasil pencarian HARUS bintang, tanpa angka sama sekali
+        // (aturan tampilan storefront). Nilai rata-rata dibulatkan ke bintang
+        // penuh; sisa slot diisi bintang kosong supaya skalanya tetap 5 dan
+        // tidak pernah muncul "3.7" atau "4,4".
+        $rating = $record->reviews()->avg('rating');
+        $filledStars = $rating === null ? 0 : max(0, min(5, (int) round((float) $rating)));
+        $stars = str_repeat('★', $filledStars).str_repeat('☆', 5 - $filledStars);
+
+        $details = [
             __('Kategori') => __($record->category?->name ?? '-'),
             __('Harga') => 'Rp '.number_format($price, 0, ',', '.'),
             __('Stok') => $record->stock.' '.__('Item'),
-            __('Rating') => number_format($record->reviews()->avg('rating') ?: 5, 1).' ⭐',
         ];
+
+        if ($rating !== null) {
+            $details[__('Rating')] = $stars;
+        }
+
+        return $details;
     }
 
     public static function getGlobalSearchResultUrl(Model $record): ?string
@@ -348,22 +361,8 @@ class CatalogResource extends Resource
                                             }),
                                     ])->fullWidth()->extraAttributes(['class' => '!mb-3']),
 
-                                    // CATALOG NAME -- data-typo="heading"
-                                    // (peran Judul) + data-field per-field
-                                    // override: pengaturan font/ukuran/kapital
-                                    // yang diatur admin dari form resource
-                                    // IKUT tampil di sini.
-                                    Infolists\Components\TextEntry::make('name')
-                                        ->formatStateUsing(fn ($state) => __($state))
-                                        ->label('')
-                                        ->hiddenLabel()
-                                        ->weight('black')
-                                        ->size('2xl')
-                                        ->extraAttributes([
-                                            'class' => 'tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-400 mb-2 uppercase leading-tight',
-                                            'data-typo' => 'heading',
-                                            'data-field' => 'catalogs.name',
-                                        ]),
+                                     // CATALOG NAME + PRICE (one horizontal block)
+                                     static::catalogPriceEntry(),
 
                                     // RATING & DISKON BADGE (mobile _buildRatingBadge parity)
                                     Group::make([
@@ -391,9 +390,7 @@ class CatalogResource extends Resource
                                     // PRICE DISPLAY
                                     // Alpine-backed so it swaps to the selected
                                     // tier's price the moment a tier pill is clicked.
-                                    static::catalogPriceEntry(),
-
-                                    // DESCRIPTION
+                                     // DESCRIPTION
                                     Infolists\Components\Section::make(__('Tentang Catalog Ini'))
                                         ->compact()
                                         ->schema([
@@ -452,7 +449,10 @@ class CatalogResource extends Resource
                                                 'class' => 'w-full py-2 text-sm rounded-xl shadow-sm transition-all',
                                                 'data-chrome' => 'catalogs.button',
                                             ])
-                                            ->url(fn ($record) => static::getUrl('checkout', ['record' => $record->id])),
+                                            ->url(fn ($record, Component $livewire) => static::getUrl('checkout', array_filter([
+                                                'record' => $record->id,
+                                                'tier' => $livewire->selectedTierId ?? null,
+                                            ]))),
 
                                         Action::make('add_to_cart_detail')
                                             ->label(__('Masukkan ke Keranjang'))

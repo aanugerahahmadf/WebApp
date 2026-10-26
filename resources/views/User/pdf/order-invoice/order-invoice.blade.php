@@ -16,7 +16,7 @@
  */
 body * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-    font-family: 'Google Sans Flex', sans-serif;
+    font-family: 'Instrument Sans', sans-serif;
     font-size: 12px;
     color: #333;
     background: #fff;
@@ -29,7 +29,7 @@ body {
 .header-table td { vertical-align: top; }
 .company-name { font-size: 16px; font-weight: 600; color: #111; }
 .company-sub  { font-size: 10px; color: #777; margin-top: 3px; }
-.invoice-label { font-size: 24px; font-weight: 800; color: #111; text-align: right; }
+.invoice-label { font-size: 24px; font-weight: 600; color: #111; text-align: right; }
 .invoice-meta  { font-size: 10px; color: #666; text-align: right; margin-top: 4px; line-height: 1.7; }
 
 /* ── Divider ── */

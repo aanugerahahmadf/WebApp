@@ -22,10 +22,13 @@
     ];
 
     $currentEmoji = $emojiFlags[$currentLocale] ?? '🌐';
+    // Tampilkan nama bahasa lengkap pada tombol, bukan kode "ID" / "UK".
+    // Jadi locale Indonesia tampil sebagai "Bahasa Indonesia".
     $currentLabel = match ($currentLocale) {
-        'en_US' => 'US',
-        'en' => 'UK',
-        default => strtoupper($currentLocale),
+        'id' => 'Indonesia',
+        'en' => 'English',
+        'en_US' => 'English (US)',
+        default => $locals[$currentLocale]['label'] ?? strtoupper($currentLocale),
     };
 
     $activeColorClass = 'text-[#6366f1]';
@@ -34,18 +37,29 @@
 
 {{-- Rendered for Admin panel topbar/layout --}}
 <div x-data="{
-        isLanguageSwitcherOpen: false,
+         isLanguageSwitcherOpen: false,
+         closeTimer: null,
         currentLocale: @js($currentLocale),
         localeFlags: @js(collect($locals)->mapWithKeys(fn (array $language, string $locale) => [$locale => $language['flag'] ?? 'gb'])),
-        canReloadAfterLanguageChange: @js($canReloadAfterLanguageChange),
         toggleDropdown() {
             this.isLanguageSwitcherOpen = !this.isLanguageSwitcherOpen;
             if (this.isLanguageSwitcherOpen) {
                 this.$nextTick(() => this.positionDropdown());
             }
         },
-        closeDropdown() { this.isLanguageSwitcherOpen = false },
-        localeLabel(locale) { return locale === 'en' ? 'UK' : locale.toUpperCase() },
+         closeDropdown() {
+             clearTimeout(this.closeTimer);
+             this.closeTimer = setTimeout(() => this.isLanguageSwitcherOpen = false, 120);
+         },
+         openDropdown() {
+             clearTimeout(this.closeTimer);
+             this.isLanguageSwitcherOpen = true;
+             this.$nextTick(() => this.positionDropdown());
+         },
+         localeLabel(locale) {
+             const labels = @js(collect($locals)->mapWithKeys(fn (array $language, string $locale) => [$locale => match ($locale) { 'id' => 'Indonesia', 'en' => 'English', default => __($language['label']), }]));
+             return labels[locale] || locale.toUpperCase();
+         },
         async changeLanguage(locale) {
             if (locale === this.currentLocale) {
                 this.closeDropdown();
@@ -68,7 +82,7 @@
                 this.currentLocale = locale;
                 this.closeDropdown();
 
-                if (this.canReloadAfterLanguageChange) window.location.reload();
+                window.location.reload();
             } catch (error) {
                 console.error('Unable to change language.', error);
             }
@@ -89,7 +103,7 @@
             panel.style.left = left + 'px';
             panel.style.top = top + 'px';
         },
-    }" class="relative inline-block text-left" x-on:click.outside="closeDropdown()">
+    }" class="relative inline-block text-left" x-on:mouseenter="openDropdown()" x-on:mouseleave="closeDropdown()" x-on:click.outside="closeDropdown()">
 
     {{-- Trigger Button --}}
     <button type="button" id="filament-language-switcher" x-ref="langButton" x-on:click="toggleDropdown()"
@@ -101,19 +115,19 @@
         <div class="w-6 h-4 bg-cover bg-center rounded-sm shadow-sm border border-gray-200 dark:border-gray-700 shrink-0"
             x-bind:style="`background-image: url('https://cdn.jsdelivr.net/gh/hampusborgos/country-flags@main/svg/${localeFlags[currentLocale] || 'gb'}.svg')`">
         </div>
-            <span @class(['text-xs font-bold uppercase tracking-wider', $activeColorClass]) x-text="localeLabel(currentLocale)">
+            <span @class(['text-xs font-semibold', $activeColorClass]) x-text="localeLabel(currentLocale)">
             {{ $currentLabel }}
         </span>
     </button>
 
     {{-- Dropdown Panel --}}
     <template x-teleport="body">
-        <div x-ref="langPanel" x-show="isLanguageSwitcherOpen"
+        <div x-ref="langPanel" x-show="isLanguageSwitcherOpen" x-on:mouseenter="openDropdown()" x-on:mouseleave="closeDropdown()"
             x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95"
             x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75"
             x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
             class="lang-dd fixed rounded-lg shadow-2xl divide-y ring-1 bg-white divide-gray-100 ring-gray-950/10 dark:bg-gray-900 dark:divide-white/5 dark:ring-white/20"
-            style="z-index:100000; min-width:220px; max-height:220px; overflow-y:scroll; scrollbar-width:none; -ms-overflow-style:none;"
+            style="position:fixed; z-index:100000; min-width:220px; max-height:220px; overflow-y:scroll; scrollbar-width:none; -ms-overflow-style:none;"
             x-cloak>
         <style>
             .lang-dd::-webkit-scrollbar {
@@ -132,7 +146,7 @@
                     'group flex items-center w-full justify-between gap-3 whitespace-nowrap rounded-md p-2 text-sm outline-none transition-all',
                     'text-gray-950 dark:text-white hover:bg-gray-50 dark:hover:bg-white/5',
                 ])>
-                    <span class="truncate flex-1 text-start" x-bind:class="currentLocale === '{{ $key }}' ? '{{ $activeColorClass }} font-bold' : ''">{{ __($language['label']) }}</span>
+                    <span class="truncate flex-1 text-start" x-bind:class="currentLocale === '{{ $key }}' ? '{{ $activeColorClass }} font-semibold' : ''">{{ __($language['label']) }}</span>
                     <div class="w-6 h-4 shrink-0 bg-cover bg-center rounded-sm border border-gray-200 dark:border-gray-700 shadow-sm"
                         style="background-image: url('https://cdn.jsdelivr.net/gh/hampusborgos/country-flags@main/svg/{{ $flag }}.svg');">
                     </div>

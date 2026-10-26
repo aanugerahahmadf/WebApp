@@ -74,7 +74,7 @@
     <meta name="robots" content="noindex, nofollow">
     <meta name="color-scheme" content="light dark">
 
-    {{-- Font aplikasi: @font-face Google Sans Flex tanpa query database
+    {{-- Font aplikasi: @font-face Instrument Sans tanpa query database
          (link CSS statis, bukan AppFont::styles() yang membaca Setting). --}}
     <link rel="stylesheet" href="/css/app-font.css">
 
@@ -186,7 +186,7 @@
             padding: clamp(16px, 4vw, 40px);
             padding-bottom: max(clamp(16px, 4vw, 40px), env(safe-area-inset-bottom));
 
-            font-family: 'Google Sans Flex', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+            font-family: 'Instrument Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif;
             color: var(--gx-fg);
             background-color: var(--gx-bg-bottom);
             background-image:
@@ -361,7 +361,7 @@
         .gx-code {
             margin: 0;
             font-size: clamp(4rem, 16vw, 7.5rem);
-            font-weight: 800;
+            font-weight: 600;
             line-height: 0.9;
             letter-spacing: -0.05em;
             background-image: linear-gradient(135deg, rgb(var(--gx-accent-rgb-1)) 0%, rgb(var(--gx-accent-rgb-2)) 48%, rgb(var(--gx-accent-rgb-1)) 100%);
@@ -376,7 +376,7 @@
         .gx-title {
             margin: 10px 0 0;
             font-size: clamp(1.3rem, 4.2vw, 1.75rem);
-            font-weight: 700;
+            font-weight: 600;
             line-height: 1.25;
             letter-spacing: -0.015em;
             color: var(--gx-fg);

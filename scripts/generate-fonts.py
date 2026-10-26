@@ -65,6 +65,7 @@ FAMILY_PREFIXES = sorted(
         "AsapSharp": "Asap Sharp",
         "GoogleSans": "Google Sans",
         "GoogleSansFlex": "Google Sans Flex",
+        "InstrumentSans": "Instrument Sans",
         "OpenSans": "Open Sans",
         "Roboto": "Roboto",
     }.items(),

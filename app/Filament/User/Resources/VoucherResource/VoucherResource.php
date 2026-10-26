@@ -33,7 +33,14 @@ class VoucherResource extends Resource
 
     public static function getGloballySearchableAttributes(): array
     {
-        return ['code', 'description', 'discount_amount', 'min_purchase'];
+        // HANYA kolom asli tabel `vouchers`.
+        //
+        // `discount_amount` dan `min_purchase` adalah accessor Eloquent yang
+        // dihitung dari relasi `discount`, bukan kolom database. Kalau ikut
+        // dimasukkan ke daftar ini, query pencarian global memakai kolom yang
+        // tidak ada (`no such column: vouchers.discount_amount`) dan SELURUH
+        // pencarian global gagal -- bukan hanya hasil voucher.
+        return ['code', 'description'];
     }
 
     public static function getGlobalSearchResultTitle(Model $record): string
@@ -43,7 +50,7 @@ class VoucherResource extends Resource
 
     public static function getGlobalSearchResultDetails(Model $record): array
     {
-        $discount = $record->discount_type === DiscountType::PERCENTAGE
+        $discount = $record->discount_type === DiscountType::PERCENTAGE->value
             ? number_format($record->discount_amount, 0).'%'
             : 'Rp '.number_format($record->discount_amount, 0, ',', '.');
 
@@ -136,7 +143,7 @@ class VoucherResource extends Resource
                     // -- NOMINAL BESAR DI TENGAH --
                     Tables\Columns\TextColumn::make('discount_amount')
                         ->formatStateUsing(function ($state, Voucher $record) {
-                            if ($record->discount_type === DiscountType::PERCENTAGE) {
+                            if ($record->discount_type === DiscountType::PERCENTAGE->value) {
                                 return number_format((float) $state, 0).'%';
                             }
 
@@ -149,7 +156,7 @@ class VoucherResource extends Resource
 
                     // -- JENIS VOUCHER & MIN BELANJA DI TENGAH --
                     Tables\Columns\TextColumn::make('type_label')
-                        ->state(fn (Voucher $record) => $record->discount_type === DiscountType::PERCENTAGE ? __('VOUCHER DISKON') : __('VOUCHER CASHBACK'))
+                        ->state(fn (Voucher $record) => $record->discount_type === DiscountType::PERCENTAGE->value ? __('VOUCHER DISKON') : __('VOUCHER CASHBACK'))
                         ->weight(FontWeight::Bold)
                         ->size(Tables\Columns\TextColumn\TextColumnSize::ExtraSmall)
                         ->color('primary')

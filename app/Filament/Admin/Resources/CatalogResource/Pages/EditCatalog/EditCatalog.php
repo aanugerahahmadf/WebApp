@@ -83,12 +83,9 @@ class EditCatalog extends EditRecord
         return $this->record->name;
     }
 
-    public function getBreadcrumbs(): array
+        public function getBreadcrumbs(): array
     {
-        return [
-            Home::getUrl() => __('Beranda'),
-            ...parent::getBreadcrumbs(),
-        ];
+        return [];
     }
 
     protected function getHeaderActions(): array
@@ -98,7 +95,7 @@ class EditCatalog extends EditRecord
                 ->label(__('Kembali'))
                 ->url(fn () => static::getResource()::getUrl('index'))
                 ->color('gray')->button()
-                ->icon('heroicon-s-arrow-left'),
+                ->icon('/images/icons/arrow_left.svg'),
 
             Actions\DeleteAction::make(),
         ];

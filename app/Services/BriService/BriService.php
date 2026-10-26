@@ -400,8 +400,11 @@ class BriService
         }
 
         $partnerServiceId = config('bri.va_partner_service_id', '8808');
-        // customerNo: unik sampai 20 digit, berasal dari id transaksi + acak.
-        $customerNo = str_pad((string) $transaction->id, 10, '0', STR_PAD_LEFT).substr((string) time(), -6);
+        // customerNo: unik per transaksi dan berbeda untuk setiap pengguna.
+        // BRI membatasi customerNo, jadi gunakan 6 digit transaction id +
+        // 10 digit acak. Rekening admin tidak pernah dipakai sebagai VA.
+        $customerNo = str_pad((string) ($transaction->id % 1_000_000), 6, '0', STR_PAD_LEFT)
+            .str_pad((string) random_int(0, 9_999_999_999), 10, '0', STR_PAD_LEFT);
         $virtualAccountNo = $partnerServiceId.$customerNo;
         $virtualAccountName = $this->virtualAccountHolderName($transaction->user);
         $expiry = now()->addHours((int) config('bri.va_expiry_hours', 24));

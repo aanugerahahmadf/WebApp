@@ -66,7 +66,7 @@
                                 {{ $order->event_date }}
                             </span>
                         </div>
-                        <span class="text-sm font-bold text-gray-900 dark:text-white">
+                        <span class="text-sm font-semibold text-gray-900 dark:text-white">
                             Rp {{ number_format($order->total_price, 0, ',', '.') }}
                         </span>
                     </div>

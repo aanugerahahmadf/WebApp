@@ -1345,9 +1345,19 @@ class CatalogSeeder extends Seeder
 
         foreach ($catalogs as $catalog) {
             foreach ($tiers as $tier) {
-                $discountPrice = $tier['discount_pct'] > 0
-                    ? (int) round($tier['price'] * (100 - $tier['discount_pct']) / 100)
-                    : null;
+                // Standard adalah harga dasar milik katalog ini, bukan satu
+                // angka global untuk semua katalog. Harga katalog hanya
+                // dipakai saat mengisi tier Standard; halaman publik/admin
+                // tetap membaca harga dari package tier tersebut.
+                $tierPrice = $tier['tier_key'] === 'standard'
+                    ? (float) $catalog->price
+                    : (float) $tier['price'];
+
+                $discountPrice = $tier['tier_key'] === 'standard'
+                    ? ($catalog->discount_price !== null ? (float) $catalog->discount_price : null)
+                    : ($tier['discount_pct'] > 0
+                        ? (int) round($tierPrice * (100 - $tier['discount_pct']) / 100)
+                        : null);
 
                 Package::updateOrCreate(
                     // Slug menyertakan tier_key supaya setiap katalog punya
@@ -1368,7 +1378,7 @@ class CatalogSeeder extends Seeder
                             'id' => $tier['desc_id'],
                             'en' => $tier['desc_en'],
                         ],
-                        'price' => $tier['price'],
+                        'price' => $tierPrice,
                         'discount_price' => $discountPrice,
                         'stock' => 10,
                         'is_active' => true,

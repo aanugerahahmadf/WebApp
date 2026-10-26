@@ -3,7 +3,7 @@
 ])
 
 <div
-    {{ $attributes->class(['fi-page-sub-navigation-sidebar-ctn hidden w-72 flex-col md:flex']) }}
+    {{ $attributes->class(['fi-page-sub-navigation-sidebar-ctn hidden w-72 flex-col lg:flex']) }}
 >
     {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::PAGE_SUB_NAVIGATION_SIDEBAR_BEFORE, scopes: $this->getRenderHookScopes()) }}
 

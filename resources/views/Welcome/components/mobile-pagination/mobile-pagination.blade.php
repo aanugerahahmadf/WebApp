@@ -22,7 +22,7 @@
     min-width: 3rem;
     height: 3rem;
     font-size: 1.1rem;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
     border: none;
     background: transparent;

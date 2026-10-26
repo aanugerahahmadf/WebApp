@@ -5,7 +5,6 @@ namespace App\Filament\Admin\Resources\DatabaseStudioResource\Pages\ListDatabase
 use App\Filament\Admin\Resources\CatalogResource\CatalogResource;
 use App\Filament\Admin\Resources\DatabaseStudioResource\DatabaseStudioResource;
 use App\Filament\Admin\Exports\MigrationExporter\MigrationExporter;
-use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\Shared\Concerns\HasStandardActions\HasStandardActions;
 use App\Models\DatabaseStudio\Migration;
 use Filament\Forms\Components\Select;
@@ -35,7 +34,6 @@ use Throwable;
  */
 class ListDatabaseStudio extends \Filament\Resources\Pages\ListRecords
 {
-    use HasDynamicBreadcrumbs;
     use HasStandardActions;
 
     /**
@@ -560,11 +558,8 @@ class ListDatabaseStudio extends \Filament\Resources\Pages\ListRecords
         return response()->download($path, $filename);
     }
 
-    public function getBreadcrumbs(): array
+        public function getBreadcrumbs(): array
     {
-        return [
-            ...$this->breadcrumbParentCrumb(),
-            DatabaseStudioResource::getUrl('index') => DatabaseStudioResource::getNavigationLabel(),
-        ];
+        return [];
     }
 }

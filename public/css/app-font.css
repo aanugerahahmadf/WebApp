@@ -1421,6 +1421,95 @@
     font-display: swap;
 }
 
+/* Instrument Sans */
+@font-face {
+    font-family: 'Instrument Sans';
+    src: url("/fonts/Instrument_Sans/InstrumentSans-Italic-VariableFont_wdth,wght.ttf") format("truetype-variations");
+    font-weight: 100 1000;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Instrument Sans';
+    src: url("/fonts/Instrument_Sans/InstrumentSans-VariableFont_wdth,wght.ttf") format("truetype-variations");
+    font-weight: 100 1000;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Instrument Sans Bold */
+@font-face {
+    font-family: 'Instrument Sans Bold';
+    src: url("/fonts/Instrument_Sans/static/InstrumentSans-Bold.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Instrument Sans Bold Italic */
+@font-face {
+    font-family: 'Instrument Sans Bold Italic';
+    src: url("/fonts/Instrument_Sans/static/InstrumentSans-BoldItalic.ttf") format("truetype-variations");
+    font-weight: 700;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Instrument Sans Italic */
+@font-face {
+    font-family: 'Instrument Sans Italic';
+    src: url("/fonts/Instrument_Sans/static/InstrumentSans-Italic.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Instrument Sans Medium */
+@font-face {
+    font-family: 'Instrument Sans Medium';
+    src: url("/fonts/Instrument_Sans/static/InstrumentSans-Medium.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Instrument Sans Medium Italic */
+@font-face {
+    font-family: 'Instrument Sans Medium Italic';
+    src: url("/fonts/Instrument_Sans/static/InstrumentSans-MediumItalic.ttf") format("truetype-variations");
+    font-weight: 500;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Instrument Sans Regular */
+@font-face {
+    font-family: 'Instrument Sans Regular';
+    src: url("/fonts/Instrument_Sans/static/InstrumentSans-Regular.ttf") format("truetype-variations");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Instrument Sans SemiBold */
+@font-face {
+    font-family: 'Instrument Sans SemiBold';
+    src: url("/fonts/Instrument_Sans/static/InstrumentSans-SemiBold.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Instrument Sans SemiBold Italic */
+@font-face {
+    font-family: 'Instrument Sans SemiBold Italic';
+    src: url("/fonts/Instrument_Sans/static/InstrumentSans-SemiBoldItalic.ttf") format("truetype-variations");
+    font-weight: 600;
+    font-style: italic;
+    font-display: swap;
+}
+
 /* Open Sans */
 @font-face {
     font-family: 'Open Sans';

@@ -2,9 +2,7 @@
 
 namespace App\Filament\Admin\Pages\EditProfilePage;
 
-use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Livewire\Admin\PersonalInfoComponentSuperAdmin\PersonalInfoComponentSuperAdmin;
-use App\Livewire\Admin\UsernameComponent\UsernameComponent;
 use App\Support\AppIcon\AppIcon;
 use Filament\Pages\Page;
 
@@ -17,7 +15,6 @@ use Filament\Pages\Page;
  */
 class EditProfilePage extends Page
 {
-    use HasDynamicBreadcrumbs;
 
     protected static string $view = 'Admin.pages.edit-profile.edit-profile';
 
@@ -40,9 +37,15 @@ class EditProfilePage extends Page
      */
     public function getRegisteredCustomProfileComponents(): array
     {
+        // UsernameComponent TIDAK lagi didaftarkan (2026-10-26): field
+        // username sudah pindah ke dalam section "Informasi Profil" di
+        // PersonalInfoComponentSuperAdmin, sama seperti panel User.
+        //
+        // Class app/Livewire/Admin/UsernameComponent/UsernameComponent.php
+        // dan view-nya SENGAJA tidak dihapus -- kalau section terpisah itu
+        // dibutuhkan lagi, cukup daftarkan ulang di sini.
         $components = [
             PersonalInfoComponentSuperAdmin::class,
-            UsernameComponent::class,
         ];
 
         return collect($components)
@@ -51,11 +54,8 @@ class EditProfilePage extends Page
             ->all();
     }
 
-    public function getBreadcrumbs(): array
+        public function getBreadcrumbs(): array
     {
-        return [
-            ...$this->breadcrumbParentCrumb(),
-            $this->getTitle(),
-        ];
+        return [];
     }
 }

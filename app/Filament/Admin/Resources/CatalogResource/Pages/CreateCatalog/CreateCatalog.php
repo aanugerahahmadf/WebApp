@@ -68,12 +68,9 @@ class CreateCatalog extends CreateRecord
         CatalogResource::saveTiers($this->record, $this->form->getRawState());
     }
 
-    public function getBreadcrumbs(): array
+        public function getBreadcrumbs(): array
     {
-        return [
-            Home::getUrl() => __('Beranda'),
-            ...parent::getBreadcrumbs(),
-        ];
+        return [];
     }
 
     protected function getHeaderActions(): array
@@ -83,7 +80,7 @@ class CreateCatalog extends CreateRecord
                 ->label(__('Kembali'))
                 ->url(fn () => static::getResource()::getUrl('index'))
                 ->color('gray')->button()
-                ->icon('heroicon-s-arrow-left'),
+                ->icon('/images/icons/arrow_left.svg'),
         ];
     }
 }

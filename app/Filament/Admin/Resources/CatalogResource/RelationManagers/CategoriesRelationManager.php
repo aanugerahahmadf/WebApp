@@ -88,7 +88,7 @@ class CategoriesRelationManager extends RelationManager
                     ->helperText(__('Cukup tulis namanya. URL slug dan tipe kategori diisi otomatis dari nama ini.'))
                     ->required()
                     ->maxLength(255)
-                    ->prefixIcon('heroicon-s-bookmark'),
+                    ->prefixIcon('/images/icons/bookmark.svg'),
             ]);
     }
 
@@ -102,7 +102,7 @@ class CategoriesRelationManager extends RelationManager
                     ->searchable()
                     ->sortable()
                     ->weight('bold')
-                    ->icon('heroicon-s-bookmark')
+                    ->icon('/images/icons/bookmark.svg')
                     ->description(fn (Category $record): string => (string) $record->slug),
 
                 Tables\Columns\TextColumn::make('catalogs_count')
@@ -116,7 +116,7 @@ class CategoriesRelationManager extends RelationManager
                 // admin tidak tahu kategori mana yang sudah terpasang.
                 Tables\Columns\IconColumn::make('dipakai')
                     ->label(__('Kategori Katalog Ini'))
-                    ->icon(fn (Category $record): string => $record->is($this->getCatalog()->category) ? 'heroicon-s-check-badge' : 'heroicon-s-minus')
+                    ->icon(fn (Category $record): string => $record->is($this->getCatalog()->category) ? '/images/icons/check_badge.svg' : '/images/icons/minus.svg')
                     ->color(fn (Category $record): string => $record->is($this->getCatalog()->category) ? 'success' : 'gray')
                     ->getStateUsing(fn (Category $record): bool => $record->is($this->getCatalog()->category)),
             ])
@@ -139,13 +139,13 @@ class CategoriesRelationManager extends RelationManager
                 Tables\Actions\ExportAction::make()
                     ->exporter(CategoryExporter::class)
                     ->label(__('Ekspor Data'))
-                    ->icon('heroicon-s-arrow-down-tray')
+                    ->icon('/images/icons/download.svg')
                     ->color('success'),
             ])
             ->actions([
                 Tables\Actions\Action::make('pakai')
                     ->label(__('Pakai untuk Katalog Ini'))
-                    ->icon('heroicon-s-link')
+                    ->icon('/images/icons/link.svg')
                     ->color('primary')
                     ->button()
                     ->size('lg')

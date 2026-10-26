@@ -201,9 +201,10 @@ export default defineConfig(({ mode }) => {
             // Absolute output path; laravel-vite-plugin also uses buildDirectory
             // (relative to public/) — both must point to the same location.
             outDir:   config.publicBuild,
-            // Emit a manifest.json so Laravel / PlatformAssetManager can map
-            // entry-point paths to their hashed file names (Req 4.6).
-            manifest: true,
+            // Laravel's Vite resolver reads <buildDir>/manifest.json. Using a
+            // named manifest prevents Vite 7 from placing it under .vite,
+            // which otherwise causes a production 500 for @vite entries.
+            manifest: 'manifest.json',
             rollupOptions: {
                 output: {
                     // Let Rollup decide chunk splitting automatically.

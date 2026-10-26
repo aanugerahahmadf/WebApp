@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Auth\SignIn;
 
-use App\Filament\Admin\Auth\Concerns\HasAuthBreadcrumbs;
 use App\Models\Admin\Admin;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Component;
@@ -28,7 +27,6 @@ use Illuminate\Validation\ValidationException;
  */
 class SignIn extends BaseLogin
 {
-    use HasAuthBreadcrumbs;
 
     public function getHeading(): string|Htmlable
     {
@@ -45,12 +43,9 @@ class SignIn extends BaseLogin
         return $this->getHeading();
     }
 
-    public function getBreadcrumbs(): array
+        public function getBreadcrumbs(): array
     {
-        return [
-            route('filament.admin.auth.login') => __('Sign In'),
-            $this->getAuthBreadcrumbsCurrentLabel(),
-        ];
+        return [];
     }
 
     public function registerAction(): Action

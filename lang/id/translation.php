@@ -121,6 +121,7 @@ return [
     'Ulasan' => 'Ulasan',
     'Penilaian Paket' => 'Penilaian Paket',
     'Penilaian Produk' => 'Penilaian Produk',
+    'Penilaian Katalog' => 'Penilaian Katalog',
     'Tidak ada ulasan untuk filter ini.' => 'Tidak ada ulasan untuk filter ini.',
     'Pengguna' => 'Pengguna',
 

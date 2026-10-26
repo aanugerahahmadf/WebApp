@@ -60,7 +60,10 @@ class LanguageController extends Controller
         if ($user) {
             try {
                 UserLanguage::updateOrCreate(
-                    ['model_id' => (string) $user->id, 'model_type' => get_class($user)],
+                    // User uses a legacy morph map. Store the same morph type
+                    // that SetLocale reads, otherwise the selected language
+                    // appears to save but is lost on the next request.
+                    ['model_id' => (string) $user->id, 'model_type' => $user->getMorphClass()],
                     ['lang' => $locale]
                 );
 

@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Pages\MessagesPage;
 
-use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Models\Inbox\Inbox;
 use App\Support\AppIcon\AppIcon;
 use Filament\Pages\Page;
@@ -25,7 +24,6 @@ use Illuminate\Support\Facades\DB;
  */
 class MessagesPage extends Page
 {
-    use HasDynamicBreadcrumbs;
 
     protected static string $view = 'Admin.pages.messages.messages';
 
@@ -119,18 +117,8 @@ class MessagesPage extends Page
         return false;
     }
 
-    public function getBreadcrumbs(): array
+        public function getBreadcrumbs(): array
     {
-        $breadcrumbs = [
-            ...$this->breadcrumbParentCrumb(),
-        ];
-
-        $breadcrumbs[static::getUrl()] = static::getNavigationLabel();
-
-        if ($this->selectedConversation) {
-            $breadcrumbs[] = $this->selectedConversation->inbox_title ?: __('Pesan');
-        }
-
-        return $breadcrumbs;
+        return [];
     }
 }

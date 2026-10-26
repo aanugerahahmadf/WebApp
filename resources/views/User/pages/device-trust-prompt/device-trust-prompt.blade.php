@@ -48,11 +48,15 @@
                 </div>
             </x-filament::section>
         @else
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div
+                class="grid grid-cols-1 gap-4 sm:grid-cols-2"
+                style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem;"
+            >
                 <button
                     wire:click="confirmItIsMe"
                     type="button"
                     class="w-full rounded-lg bg-emerald-600 px-4 py-3 text-base font-semibold text-white hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2"
+                    style="display: block; width: 100%; border: 0; border-radius: .5rem; background-color: rgb(5 150 105); padding: .75rem 1rem; color: #fff; font-weight: 400; text-align: center;"
                 >
                     {{ __('Ya, Ini Saya') }}
                 </button>
@@ -62,6 +66,7 @@
                     wire:confirm="{{ __('Semua sesi lain dan token aplikasi HP akan dikeluarkan. Lanjutkan?') }}"
                     type="button"
                     class="w-full rounded-lg bg-rose-600 px-4 py-3 text-base font-semibold text-white hover:bg-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2"
+                    style="display: block; width: 100%; border: 0; border-radius: .5rem; background-color: rgb(225 29 72); padding: .75rem 1rem; color: #fff; font-weight: 400; text-align: center;"
                 >
                     {{ __('Bukan Saya') }}
                 </button>

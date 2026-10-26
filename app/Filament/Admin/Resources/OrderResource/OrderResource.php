@@ -11,6 +11,7 @@ use App\Filament\Admin\Resources\OrderResource\Pages\ViewOrder\ViewOrder;
 use App\Filament\Admin\Resources\OrderResource\RelationManagers\TransactionsRelationManager\TransactionsRelationManager;
 use App\Filament\Shared\Concerns\HasModelColumns\HasModelColumns;
 use App\Filament\Shared\Concerns\HasStandardActions\HasStandardActions;
+use App\Forms\Components\CheckoutCalendarPicker\CheckoutCalendarPicker;
 use App\Models\Order\Order;
 use App\Support\AppIcon\AppIcon;
 use Filament\Forms\Form;
@@ -67,7 +68,24 @@ class OrderResource extends Resource
 
     public static function form(Form $form): Form
     {
-        return $form->schema(static::formSchema());
+        $schema = static::formSchema();
+
+        /* `booking_date` memakai CheckoutCalendarPicker -- kalender yang
+           sama dengan halaman checkout User/Welcome -- bukan DatePicker
+           bawaan Filament. Skema generik dari HasModelColumns tetap
+           dipakai untuk kolom lain; hanya field ini yang diganti. */
+        foreach ($schema as $index => $component) {
+            if (
+                method_exists($component, 'getName')
+                && $component->getName() === 'booking_date'
+            ) {
+                $schema[$index] = CheckoutCalendarPicker::make('booking_date')
+                    ->label(__('Tanggal Acara'))
+                    ->required();
+            }
+        }
+
+        return $form->schema($schema);
     }
 
     public static function table(Table $table): Table
@@ -92,7 +110,7 @@ class OrderResource extends Resource
                     ->label(__('Status Pembayaran'))
                     ->badge(),
                 TextColumn::make('booking_date')
-                    ->label(__('Tanggal(fn'))
+                    ->label(__('Tanggal Acara'))
                     ->date()
                     ->sortable(),
                 TextColumn::make('created_at')

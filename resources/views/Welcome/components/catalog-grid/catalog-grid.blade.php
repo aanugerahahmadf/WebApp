@@ -16,17 +16,17 @@
 @media(min-width:1025px){.catalog-card{width:calc(16.666% - 5px);}}
 .catalog-img{position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;background:var(--catalog-img-bg, #f3f4f6);flex-shrink:0;}
 .catalog-img img{width:100%;height:100%;object-fit:cover;display:block;}
-.catalog-badge-discount{position:absolute;top:3px;right:3px;background:#eab308;color:#000;font-size:9px;font-weight:900;padding:1px 4px;border-radius:3px;line-height:1.4;}
+.catalog-badge-discount{position:absolute;top:3px;right:3px;background:#eab308;color:#000;font-size:9px;font-weight: 600;padding:1px 4px;border-radius:3px;line-height:1.4;}
 .catalog-info{padding:5px 5px 6px;flex:1;display:flex;flex-direction:column;gap:2px;overflow:hidden;}
-.catalog-cat{display:inline-block;font-size:9px;font-weight:700;line-height:1;padding:2px 4px;border-left-width:2px;border-left-style:solid;background:transparent;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.catalog-cat{display:inline-block;font-size:9px;font-weight: 600;line-height:1;padding:2px 4px;border-left-width:2px;border-left-style:solid;background:transparent;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .catalog-name{font-size:10px;font-weight:500;line-height:1.3;color:var(--catalog-name-color, #111827);margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .catalog-price-row{display:flex;align-items:baseline;gap:3px;flex-wrap:wrap;margin:0;}
-.catalog-price{font-size:11px;font-weight:700;color:#d97706;margin:0;line-height:1.2;}
+.catalog-price{font-size:11px;font-weight:600;color:#d97706;margin:0;line-height:1.2;}
 .catalog-price-original{font-size:9px;color:var(--catalog-muted, #9ca3af);text-decoration:line-through;margin:0;line-height:1.2;}
 .catalog-footer{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:3px;}
 .catalog-stock-ok{font-size:9px;color:#10b981;font-weight:500;}
-.catalog-stock-low{font-size:9px;color:#f59e0b;font-weight:700;}
-.catalog-stock-out{font-size:9px;color:#ef4444;font-weight:700;}
+.catalog-stock-low{font-size:9px;color:#f59e0b;font-weight: 600;}
+.catalog-stock-out{font-size:9px;color:#ef4444;font-weight: 600;}
 
 /* Light mode */
 @media(prefers-color-scheme: light){
@@ -70,8 +70,14 @@
 <div class="catalog-grid">
 @foreach($records as $record)
 @php
-    $fp  = $record->discount_price > 0 ? $record->discount_price : ($record->final_price ?? $record->price);
-    $pct = $record->discount_price > 0 ? round(($record->price - $record->discount_price) / $record->price * 100) : null;
+    $standardTier = $record->tiers()
+        ->where('name_translations->en', 'Standard Flower Decoration Package')
+        ->first() ?? $record->tiers()->first();
+    $standardPrice = $standardTier?->price ?? $record->price;
+    $fp  = $standardTier?->final_price ?? ($record->discount_price > 0 ? $record->discount_price : ($record->final_price ?? $record->price));
+    $pct = $standardTier && $standardPrice > $fp
+        ? round(($standardPrice - $fp) / $standardPrice * 100)
+        : ($record->discount_price > 0 ? round(($record->price - $record->discount_price) / $record->price * 100) : null);
     // $urlResolver (opsional): closure yang mengembalikan URL kartu.
     // Default-nya halaman detail katalog. Dipakai halaman "Tulis Ulasan"
     // supaya kartunya MENGGUNAKAN komponen yang sama (ukuran + isi identik
@@ -106,7 +112,7 @@
         <div style="height:2.2rem;display:flex;flex-direction:column;justify-content:flex-start;gap:0;margin-bottom:3px;">
             <span class="catalog-price">Rp{{ number_format($fp, 0, ',', '.') }}</span>
             <span class="catalog-price-original" style="min-height:1rem;">
-                @if($pct)Rp{{ number_format($record->price, 0, ',', '.') }}@endif
+                @if($pct)Rp{{ number_format($standardTier ? $standardPrice : $record->price, 0, ',', '.') }}@endif
             </span>
         </div>
         <div class="catalog-footer">
