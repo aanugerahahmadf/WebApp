@@ -2037,6 +2037,35 @@ body.fi-panel-admin .fi-topbar :is(.fi-topbar-item-button, .fi-topbar-group-butt
     font-weight: 400 !important;
 }
 
+/* Item navigasi yang sedang aktif (contoh: Home) memakai kuning brand,
+   bukan putih seperti item navigasi lainnya. */
+body.fi-panel-welcome :is(
+    .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-label,
+    .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
+    .fi-sidebar-nav-item > a.fi-active,
+    .fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-label,
+    .fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-button,
+    .fi-topbar .fi-topbar-group.fi-active .fi-topbar-group-label
+),
+body.fi-panel-user :is(
+    .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-label,
+    .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
+    .fi-sidebar-nav-item > a.fi-active,
+    .fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-label,
+    .fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-button,
+    .fi-topbar .fi-topbar-group.fi-active .fi-topbar-group-label
+),
+body.fi-panel-admin :is(
+    .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-label,
+    .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
+    .fi-sidebar-nav-item > a.fi-active,
+    .fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-label,
+    .fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-button,
+    .fi-topbar .fi-topbar-group.fi-active .fi-topbar-group-label
+) {
+    color: #fbbf24 !important;
+}
+
 /* Navigasi topbar dan sidebar harus tetap terang di Light, Dark maupun
    System. Mode tema hanya mengubah permukaan/background; teks navigasi tidak
    boleh kembali menjadi navy gelap di atas background foto yang gelap. */
