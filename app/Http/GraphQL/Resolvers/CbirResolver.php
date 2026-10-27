@@ -16,6 +16,11 @@ class CbirResolver
      */
     public function stats($root, array $args, GraphQLContext $context)
     {
+        $user = $context->user();
+        if (! $user || ! $user->hasRole('admin')) {
+            throw new \Exception('Unauthorized');
+        }
+
         // ─── gRPC terlebih dahulu ─────────────────────────────────────
         // `AiCoreGrpcClient::stats()` memanggil `GetStats` di server gRPC.
         // HTTP `/status` (Flask) dipakai sebagai cadangan kalau server gRPC

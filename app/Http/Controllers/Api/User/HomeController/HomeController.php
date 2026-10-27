@@ -85,11 +85,11 @@ class HomeController extends Controller
                 ],
             ]);
         } catch (\Throwable $e) {
-            Log::error('Home API Error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Log::error('Home API Error', ['exception' => $e::class]);
 
             return response()->json([
                 'status' => 'error',
-                'message' => $e->getMessage(),
+                'message' => __('Terjadi kesalahan pada server.'),
             ], 500);
         }
     }

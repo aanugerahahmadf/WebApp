@@ -106,9 +106,19 @@ class MessagesPage extends Page
 
     public function mount(?int $id = null): void
     {
-        $this->selectedConversation = $id
-            ? Inbox::query()->findOrFail($id, ['*'])
-            : null;
+        if (! $id) {
+            $this->selectedConversation = null;
+            return;
+        }
+
+        $inbox = Inbox::query()->findOrFail($id, ['*']);
+        abort_unless(
+            in_array((int) auth()->id(), array_map('intval', (array) $inbox->user_ids), true),
+            403,
+            __('Anda tidak memiliki akses ke percakapan ini.')
+        );
+
+        $this->selectedConversation = $inbox;
     }
 
     /**

@@ -239,9 +239,9 @@
                                             FontWeight::Light, 'light' => 'font-light',
                                             FontWeight::Medium, 'medium' => 'font-medium',
                                             FontWeight::SemiBold, 'semibold' => 'font-semibold',
-                                            FontWeight::Bold, 'bold' => 'font-bold',
-                                            FontWeight::ExtraBold, 'extrabold' => 'font-extrabold',
-                                            FontWeight::Black, 'black' => 'font-black',
+                                            FontWeight::Bold, 'bold' => 'font-semibold',
+                                            FontWeight::ExtraBold, 'extrabold' => 'font-semibold',
+                                            FontWeight::Black, 'black' => 'font-semibold',
                                             default => $weight,
                                         },
                                         match ($fontFamily) {

@@ -36,7 +36,7 @@
                                             {{ $isDone
                                                 ? 'bg-primary-600 text-white dark:bg-primary-500'
                                                 : ($isNext
-                                                    ? 'border-2 border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400 font-bold'
+                                                    ? 'border-2 border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400 font-semibold'
                                                     : 'border-2 border-gray-300 text-gray-500 dark:border-gray-600 dark:text-gray-400') }}">
                                     @if ($isDone)
                                         <x-filament::icon

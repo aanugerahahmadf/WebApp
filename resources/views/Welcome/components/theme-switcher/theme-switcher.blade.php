@@ -24,7 +24,11 @@
             theme = localStorage.getItem('theme') || @js(filament()->getDefaultThemeMode()->value)
         "
     >
-        <x-filament::dropdown placement="bottom-end" teleport>
+        <x-filament::dropdown
+            placement="bottom-end"
+            x-on:mouseenter="clearTimeout($el._hoverTimer); open($event)"
+            x-on:mouseleave="$el._hoverTimer = setTimeout(() => close($event), 220)"
+        >
             <x-slot name="trigger">
                 <button
                     type="button"
@@ -56,7 +60,7 @@
                         >
                             <x-filament::icon :icon="$icon" class="h-5 w-5 shrink-0 text-gray-400 dark:text-gray-500" />
 
-                            <span class="truncate flex-1 text-start" x-bind:class="theme === '{{ $theme }}' ? 'text-[#fbbf24] font-bold' : ''">
+                            <span class="truncate flex-1 text-start" x-bind:class="theme === '{{ $theme }}' ? 'text-[#fbbf24] font-semibold' : ''">
                                 {{ ['light' => __('Light'), 'dark' => __('Dark'), 'system' => __('System')][$theme] }}
                             </span>
                         </button>

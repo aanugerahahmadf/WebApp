@@ -199,13 +199,18 @@ class AiCoreGrpcClient
 
         try {
             /** @var array{0: Message, 1: object} $result */
+            $metadata = [];
+            if ($key = config('services.ai_core_api_key')) {
+                $metadata['x-ai-core-key'] = [$key];
+            }
+
             $result = $this->client()
                 // `timeout` milik php-grpc dihitung dalam MIKRODETIK, bukan
                 // milidetik dan bukan detik. Terukur di extension 1.81:
                 // 30 -> gagal ~14 ms, 30000 -> gagal ~32 ms, 120000 -> gagal
                 // ~128 ms, sedangkan 5000000 -> sukses. Karena itu nilai
                 // konfigurasi (ms) dikali 1000 di sini, satu-satunya tempat.
-                ->{$method}($request, [], ['timeout' => $this->timeoutMs * 1000])
+                ->{$method}($request, $metadata, ['timeout' => $this->timeoutMs * 1000])
                 ->wait();
 
             [$response, $status] = $result;
@@ -240,9 +245,11 @@ class AiCoreGrpcClient
     private function client(): CbirServiceClient
     {
         if ($this->client === null) {
-            $this->client = new CbirServiceClient($this->host, [
-                'credentials' => ChannelCredentials::createInsecure(),
-            ]);
+            $credentials = config('services.ai_core_grpc_tls', false)
+                ? ChannelCredentials::createSsl()
+                : ChannelCredentials::createInsecure();
+
+            $this->client = new CbirServiceClient($this->host, ['credentials' => $credentials]);
         }
 
         return $this->client;

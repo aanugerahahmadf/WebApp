@@ -4,7 +4,9 @@ namespace App\Support\AppFont;
 
 use App\Models\FmAppSetting\FmAppSetting;
 use App\Support\LocalFontProvider\LocalFontProvider;
-use Filament\FontProviders\BunnyFontProvider;
+use App\Support\PageStyles\PageStyles;
+use App\Support\TextStyles\TextStyles;
+use App\Support\ViewerFont\ViewerFont;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -26,8 +28,9 @@ use Illuminate\Support\Facades\Cache;
  */
 class AppFont
 {
-    public const VALID_WEIGHTS = [100,200,300,400,500,600,700,800,900];
-    public const VALID_RADIUS   = [0,2,4,6,8,10,12,16,20,24,32];
+    public const VALID_WEIGHTS = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+
+    public const VALID_RADIUS = [0, 2, 4, 6, 8, 10, 12, 16, 20, 24, 32];
 
     /**
      * Keluarga huruf yang boleh dipilih admin.
@@ -49,12 +52,13 @@ class AppFont
      * (FontSettingsComponent + WebsiteMobileCustomizerResource) --
      * select-nya searchable, ratusan pilihan tetap nyaman.
      */
-    private const CATALOG = __DIR__ . '/font-catalog.php';
+    private const CATALOG = __DIR__.'/font-catalog.php';
 
     /** Keluarga bawaan aplikasi -- dipakai kalau setting kosong/tidak valid. */
     public const DEFAULT_FAMILY = 'Instrument Sans';
 
     private const CACHE_KEY = 'app_font_settings';
+
     private const CACHE_TTL = 60;
 
     /**
@@ -74,7 +78,7 @@ class AppFont
      *   font. Dan gejalanya menyesatkan, karena error-nya muncul sebagai
      *   "no such table" yang sama persis di mana-mana.
      *
-   *   Font/brand adalah pengaturan presentasi. Default-nya di-hardcode di
+     *   Font/brand adalah pengaturan presentasi. Default-nya di-hardcode di
      *   bawah, nilainya sama persis dengan fallback di setiap accessor, jadi
      *   hasil akhirnya di sini identik dengan hasil saat tabel ada tapi
      *   kosong. Tidak ada yang berubah secara visual.
@@ -109,7 +113,7 @@ class AppFont
     private static function defaults(): array
     {
         return [
-            'family'       => self::DEFAULT_FAMILY,
+            'family' => self::DEFAULT_FAMILY,
             'admin_family' => self::DEFAULT_FAMILY,
             'size' => 16,
             'weight' => 400,
@@ -181,38 +185,63 @@ class AppFont
     private static function resolvedFamily(mixed $value): string
     {
         $v = trim((string) ($value ?? ''));
+
         return in_array($v, self::families(), true) ? $v : self::DEFAULT_FAMILY;
     }
 
-    public static function size(): int { return max(10, min(32, (int) (self::g('size',16)))); }
-    public static function weight(): int {
-        $v = (int) self::g('weight',400);
-        if (! in_array($v, self::VALID_WEIGHTS, true)) return 400;
+    public static function size(): int
+    {
+        return max(10, min(32, (int) (self::g('size', 16))));
+    }
+
+    public static function weight(): int
+    {
+        $v = (int) self::g('weight', 400);
+        if (! in_array($v, self::VALID_WEIGHTS, true)) {
+            return 400;
+        }
+
         return max($v, 300);
     }
-    public static function color(): string {
-        $v = (string) self::g('color','#1f2937');
+
+    public static function color(): string
+    {
+        $v = (string) self::g('color', '#1f2937');
+
         return preg_match('/^#[0-9a-fA-F]{6}$/', $v) ? $v : '#1f2937';
     }
-    public static function accentColor(): string {
-        $v = (string) self::g('accent_color','#6366f1');
+
+    public static function accentColor(): string
+    {
+        $v = (string) self::g('accent_color', '#6366f1');
+
         return preg_match('/^#[0-9a-fA-F]{6}$/', $v) ? $v : '#6366f1';
     }
-    public static function bgColor(): string {
-        $v = trim((string) self::g('bg_color',''));
+
+    public static function bgColor(): string
+    {
+        $v = trim((string) self::g('bg_color', ''));
+
         return ($v === '' || preg_match('/^#[0-9a-fA-F]{6}$/', $v)) ? $v : '';
     }
-    public static function radius(): int {
-        $v = (int) self::g('radius',8);
+
+    public static function radius(): int
+    {
+        $v = (int) self::g('radius', 8);
         if (! in_array($v, self::VALID_RADIUS, true)) {
             return 8;
         }
+
         return $v;
     }
-    public static function transform(): string {
-        $v = (string) self::g('transform','none');
-        return in_array($v, ['none','capitalize','uppercase','lowercase'], true) ? $v : 'none';
+
+    public static function transform(): string
+    {
+        $v = (string) self::g('transform', 'none');
+
+        return in_array($v, ['none', 'capitalize', 'uppercase', 'lowercase'], true) ? $v : 'none';
     }
+
     public static function brandName(): string
     {
         $v = trim((string) self::g('brand_name', 'Dekorasi Bunga Pernikahan'));
@@ -234,10 +263,14 @@ class AppFont
     public static function brandLogo(): string
     {
         $v = trim((string) self::g('brand_logo', '/images/logo.png'));
+
         return $v === '' ? '/images/logo.png' : $v;
     }
 
-    public static function customCss(): string { return (string) self::g('custom_css',''); }
+    public static function customCss(): string
+    {
+        return (string) self::g('custom_css', '');
+    }
 
     /**
      * Provider font panel: SENGAJA TIDAK MENGUNDUH APA PUN.
@@ -249,15 +282,17 @@ class AppFont
      * CDN mati begitu aplikasi dipakai offline.
      */
     public static function provider(): string
-    { return LocalFontProvider::class; }
+    {
+        return LocalFontProvider::class;
+    }
 
     /**
      * CSS + <link> font untuk satu panel.
      *
-     * @param string|null $panel 'admin' = keluarga panel admin
-     *        (adminFamily, Dekstop Admin App); null/APAPUN yang lain =
-     *        keluarga storefront (ViewerFont::current() -- Website,
-     *        Dekstop App, dan halaman publik semuanya storefront).
+     * @param  string|null  $panel  'admin' = keluarga panel admin
+     *                              (adminFamily, Dekstop Admin App); null/APAPUN yang lain =
+     *                              keluarga storefront (ViewerFont::current() -- Website,
+     *                              Dekstop App, dan halaman publik semuanya storefront).
      *
      * Kenapa storefront pakai `ViewerFont::current()` dan bukan `family()`:
      * `family()` = default GLOBAL yang diatur admin; `ViewerFont` =
@@ -267,28 +302,28 @@ class AppFont
      */
     public static function styles(?string $panel = null): string
     {
-        $family    = htmlspecialchars(
+        $family = htmlspecialchars(
             $panel === 'admin'
                 ? self::adminFamily()
-                : \App\Support\ViewerFont\ViewerFont::current(),
+                : ViewerFont::current(),
             ENT_QUOTES,
             'UTF-8'
         );
-        $weight    = self::weight();
-        $size      = self::size();
-        $color     = self::color();
+        $weight = self::weight();
+        $size = self::size();
+        $color = self::color();
         $transform = self::transform();
-        $accent    = self::accentColor();
-        $bg        = self::bgColor();
-        $radius    = self::radius();
-        $cssExtra  = self::customCss();
+        $accent = self::accentColor();
+        $bg = self::bgColor();
+        $radius = self::radius();
+        $cssExtra = self::customCss();
 
         // @font-face Google Sans Flex (TTF variable lokal) tidak berada di
         // sini -- satu sumber: public/css/app-font.css. Tautannya
         // di-version bust mtime supaya browser memuat ulang setelah berkas
         // font/css diganti.
         $cssPath = public_path('css/app-font.css');
-        $cssVer  = is_file($cssPath) ? filemtime($cssPath) : '1';
+        $cssVer = is_file($cssPath) ? filemtime($cssPath) : '1';
 
         $bgDecl = $bg !== '' ? "background-color: {$bg};" : '';
         $css = <<<HTML
@@ -365,7 +400,7 @@ HTML;
             $css .= "\n<style data-app-bg>\n    body { background-color: {$bg} !important; }\n</style>\n";
         }
         if (trim($cssExtra) !== '') {
-            $css .= "\n<style data-app-custom-css>\n" . $cssExtra . "\n</style>\n";
+            $css .= "\n<style data-app-custom-css>\n".$cssExtra."\n</style>\n";
         }
 
         // LAPISAN GAYA HALAMAN -- sistem WordPress-style: diatur dari
@@ -378,19 +413,43 @@ HTML;
         //      untuk halaman B.
         //   2. TextStyles   -- gaya per-field, WAJIB SETELAH #1, juga
         //      di-cakup per scope ([data-page-style] [data-field]).
-        $css .= \App\Support\PageStyles\PageStyles::styles();
-        $css .= \App\Support\TextStyles\TextStyles::stylesheet();
+        $css .= PageStyles::styles();
+        $css .= TextStyles::stylesheet();
 
         // Satu keluarga font untuk seluruh UI panel: Filament, Livewire,
         // resources, pages, widgets, forms, navigation, dan view kustom.
         // Diletakkan PALING AKHIR agar tidak kalah oleh class Tailwind,
         // CSS resource, atau aturan tipografi per-field.
-        $css .= <<<HTML
+        $css .= <<<'HTML'
 <style data-app-instrument-sans-global>
     html,
     body,
     body * {
         font-family: 'Instrument Sans', sans-serif !important;
+    }
+
+    /* SEMUA BOLD JADI SEMIBOLD.
+       Sumber bold yang tidak tertangkap saat membersihkan resources:
+       kelas yang dibuat Filament dari FontWeight::Bold/ExtraBold/Black,
+       tag <b>/<strong>, dan style inline dari paket pihak ketiga. Aturan
+       ini yang menahannya supaya hasil akhirnya selalu 600, bukan 700+. */
+    b,
+    strong,
+    .font-bold,
+    .font-bold *,
+    .font-extrabold,
+    .font-extrabold *,
+    .font-black,
+    .font-black *,
+    [style*="font-weight: bold"],
+    [style*="font-weight:bold"],
+    [style*="font-weight: 700"],
+    [style*="font-weight:700"],
+    [style*="font-weight: 800"],
+    [style*="font-weight:800"],
+    [style*="font-weight: 900"],
+    [style*="font-weight:900"] {
+        font-weight: 600 !important;
     }
 
     /* Catalog detail title: preserve normal casing and semibold weight. */
@@ -509,8 +568,59 @@ HTML;
 </style>
 HTML;
 
+        // HALAMAN AUTH (Admin & User) -- Instrument Sans dari
+        // assets/fonts/Instrument_Sans/, dan tidak ada bold: semua yang
+        // tadinya 700/800/900 menjadi semibold 600.
+        //
+        // Kenapa terpisah dari blok global di atas:
+        //   - Aturan global menulis `body *`, jadi halaman auth sebenarnya
+        //     sudah ikut Instrument Sans. Tapi itu tidak menjamin apa pun:
+        //     admin bisa mengganti keluarga font lewat halaman Font Settings,
+        //     dan blok global adalah satu-satunya yang menahannya. Untuk
+        //     halaman auth kita pakai penanda sendiri (`data-auth-page`, dari
+        //     layout `simple`) supaya jenis huruf dan tebalnya eksplisit.
+        //   - `.font-bold` dari Tailwind (dan `b`/`strong`) tetap 700 di
+        //     elemen non-heading, mis. nama brand dan modal syarat. Di halaman
+        //     auth semuanya harus semibold.
+        //
+        // Selektor `[style*="font-weight..."]` menangkap tebal yang ditulis
+        // inline oleh komponen pihak ketiga; tanpa itu, satu `style="font-weight:
+        // 700"` akan lolos dari aturan kelas.
+        $css .= <<<'HTML'
+<style data-auth-typography>
+    [data-auth-page],
+    [data-auth-page] *,
+    [data-auth-page] *::before,
+    [data-auth-page] *::after {
+        font-family: 'Instrument Sans', sans-serif !important;
+    }
+
+    [data-auth-page] b,
+    [data-auth-page] strong,
+    [data-auth-page] .font-bold,
+    [data-auth-page] .font-bold *,
+    [data-auth-page] .font-extrabold,
+    [data-auth-page] .font-extrabold *,
+    [data-auth-page] .font-black,
+    [data-auth-page] .font-black *,
+    [data-auth-page] [style*="font-weight: bold"],
+    [data-auth-page] [style*="font-weight:bold"],
+    [data-auth-page] [style*="font-weight: 700"],
+    [data-auth-page] [style*="font-weight:700"],
+    [data-auth-page] [style*="font-weight: 800"],
+    [data-auth-page] [style*="font-weight:800"],
+    [data-auth-page] [style*="font-weight: 900"],
+    [data-auth-page] [style*="font-weight:900"] {
+        font-weight: 600 !important;
+    }
+</style>
+HTML;
+
         return $css;
     }
 
-    public static function forgetCache(): void { Cache::forget(self::CACHE_KEY); }
+    public static function forgetCache(): void
+    {
+        Cache::forget(self::CACHE_KEY);
+    }
 }

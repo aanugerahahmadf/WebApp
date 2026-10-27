@@ -57,8 +57,7 @@ class SocialiteController extends Controller
             ->redirect()
             ->getTargetUrl();
 
-        Log::info("[Socialite Mobile App] Auth URL: $authUrl");
-        Log::info("[Socialite Mobile App] Callback URL: $callbackUrl");
+        Log::info('[Socialite Mobile App] OAuth redirect prepared', ['provider' => $provider]);
 
         if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
             return response()->json([
@@ -76,7 +75,7 @@ class SocialiteController extends Controller
             config(["services.$provider.redirect" => route('auth.callback', $provider)]);
             $socialUser = Socialite::driver($provider)->user();
         } catch (\Exception $e) {
-            Log::error("[Socialite] Web callback error: {$e->getMessage()}");
+            Log::error('[Socialite] Web callback error', ['exception' => $e::class]);
 
             return redirect()->route('filament.welcome.auth.login')
                 ->with('error', __('Gagal mengambil data dari :provider.', ['provider' => ucfirst($provider)]));
@@ -101,14 +100,14 @@ class SocialiteController extends Controller
 
     public function callbackMobileScheme(string $provider, Request $request)
     {
-        Log::info('[Socialite] Legacy scheme callback received', $request->only(['code', 'error']));
+        Log::info('[Socialite] Legacy scheme callback received');
 
         return $this->callback($provider, $request);
     }
 
     public function callbackMobile(string $provider, Request $request)
     {
-        Log::info('[Socialite] Legacy mobile callback received', $request->only(['code', 'error']));
+        Log::info('[Socialite] Legacy mobile callback received');
 
         return $this->callback($provider, $request);
     }
@@ -157,7 +156,6 @@ class SocialiteController extends Controller
 
         if ($user) {
             $rawUser = $socialUser->getRaw();
-            Log::info("[Socialite Debug] Raw Google User Data for {$user->email}: ".json_encode($rawUser));
 
             $fullName = $socialUser->getName() ?? $user->full_name;
             $updates['full_name'] = $fullName;
@@ -212,7 +210,6 @@ class SocialiteController extends Controller
         }
 
         $rawUser = $socialUser->getRaw();
-        Log::info('[Socialite Debug] Creating New User from Google: '.json_encode($rawUser));
 
         try {
             $fullName = $socialUser->getName() ?? $username;
@@ -273,7 +270,7 @@ class SocialiteController extends Controller
 
             return $user;
         } catch (\Exception $e) {
-            Log::error("[Socialite] User creation failed: {$e->getMessage()}");
+            Log::error('[Socialite] User creation failed', ['exception' => $e::class]);
 
             return null;
         }

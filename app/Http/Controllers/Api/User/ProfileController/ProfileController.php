@@ -46,7 +46,7 @@ class ProfileController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal mengambil profil pengguna'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }
@@ -188,7 +188,7 @@ class ProfileController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal memperbarui profil'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }
@@ -242,7 +242,7 @@ class ProfileController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal memperbarui avatar'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }
@@ -317,7 +317,7 @@ class ProfileController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal mengubah kata sandi'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }
@@ -379,7 +379,7 @@ class ProfileController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal mengambil data dashboard'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }
@@ -448,7 +448,7 @@ class ProfileController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal mengambil riwayat pesanan'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }
@@ -485,7 +485,7 @@ class ProfileController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal memperbarui Nomor KTP'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }
@@ -561,7 +561,7 @@ class ProfileController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal mengunggah foto KTP'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }
@@ -633,7 +633,7 @@ class ProfileController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal mengunggah foto selfie'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }
@@ -706,7 +706,7 @@ class ProfileController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal mengunggah face scan'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }
@@ -787,7 +787,7 @@ class ProfileController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal mengambil data kelengkapan profil'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }
@@ -843,7 +843,7 @@ class ProfileController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal mengambil wishlist'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }

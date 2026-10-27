@@ -269,7 +269,9 @@ class WelcomePanelProvider extends PanelProvider
             ->topbar(TopNavigation::always())
             ->spa()
             ->unsavedChangesAlerts(false)
-            ->collapsibleNavigationGroups()
+            // Grup menu otomatis terbuka saat diarahkan kursor di desktop dan
+            // tertutup saat kursor keluar; perangkat sentuh tetap klik-toggle.
+            ->collapsibleNavigationGroups(true)
             ->globalSearch()
             ->renderHook(
                 // Switcher bahasa di Top Navigation bawaan Filament, untuk

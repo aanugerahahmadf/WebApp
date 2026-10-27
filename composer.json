@@ -172,7 +172,8 @@
                 "laravel/pail",
                 "jeddsaliba/filament-messages",
                 "joaopaulolndev/filament-edit-profile",
-                "tomatophp/filament-language-switcher"
+                "tomatophp/filament-language-switcher",
+                "dotswan/filament-map-picker"
             ]
         }
     },

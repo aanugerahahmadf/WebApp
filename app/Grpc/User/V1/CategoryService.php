@@ -3,7 +3,7 @@
 namespace App\Grpc\User\V1;
 
 use App\Http\GraphQL\Resolvers\CategoryResolver;
-use App\Models\Category\Category;
+use App\Models\Category\Category as CategoryModel;
 use Illuminate\Support\Facades\Log;
 use Spiral\RoadRunner\GRPC\ContextInterface;
 
@@ -12,6 +12,7 @@ use Spiral\RoadRunner\GRPC\ContextInterface;
  */
 class CategoryService extends BaseGrpcService
 {
+    public const NAME = 'wedding.user.v1.CategoryService';
     private CategoryResolver $categoryResolver;
     
     public function __construct(CategoryResolver $categoryResolver)
@@ -22,10 +23,10 @@ class CategoryService extends BaseGrpcService
     /**
      * Get category by ID
      */
-    public function GetCategory(GetCategoryRequest $request, ContextInterface $context): Category
+    public function GetCategory(ContextInterface $context, GetCategoryRequest $request): Category
     {
         try {
-            $category = Category::findOrFail($request->id);
+            $category = CategoryModel::findOrFail($request->id);
             return $this->transformCategory($category);
         } catch (\Throwable $e) {
             $error = $this->handleError($e, 'GetCategory');
@@ -36,10 +37,10 @@ class CategoryService extends BaseGrpcService
     /**
      * Get category by slug
      */
-    public function GetCategoryBySlug(GetCategoryBySlugRequest $request, ContextInterface $context): Category
+    public function GetCategoryBySlug(ContextInterface $context, GetCategoryBySlugRequest $request): Category
     {
         try {
-            $category = Category::where('slug', $request->slug)->firstOrFail();
+            $category = CategoryModel::where('slug', $request->slug)->firstOrFail();
             return $this->transformCategory($category);
         } catch (\Throwable $e) {
             $error = $this->handleError($e, 'GetCategoryBySlug');
@@ -50,10 +51,10 @@ class CategoryService extends BaseGrpcService
     /**
      * List categories with pagination
      */
-    public function ListCategories(ListCategoriesRequest $request, ContextInterface $context): CategoryListResponse
+    public function ListCategories(ContextInterface $context, ListCategoriesRequest $request): CategoryListResponse
     {
         try {
-            $query = Category::query();
+            $query = CategoryModel::query();
             
             if ($request->active) {
                 $query->where('is_active', true);
@@ -84,10 +85,10 @@ class CategoryService extends BaseGrpcService
     /**
      * Get all categories (no pagination)
      */
-    public function GetAllCategories(GetAllCategoriesRequest $request, ContextInterface $context): CategoryListResponse
+    public function GetAllCategories(ContextInterface $context, GetAllCategoriesRequest $request): CategoryListResponse
     {
         try {
-            $query = Category::query();
+            $query = CategoryModel::query();
             
             if ($request->active) {
                 $query->where('is_active', true);
@@ -108,7 +109,7 @@ class CategoryService extends BaseGrpcService
     /**
      * Get category tree
      */
-    public function GetCategoryTree(GetCategoryTreeRequest $request, ContextInterface $context): CategoryTreeResponse
+    public function GetCategoryTree(ContextInterface $context, GetCategoryTreeRequest $request): CategoryTreeResponse
     {
         try {
             $tree = $this->categoryResolver->tree(null, [], $context);
@@ -125,7 +126,7 @@ class CategoryService extends BaseGrpcService
     /**
      * Get categories with counts
      */
-    public function GetCategoriesWithCounts(GetCategoriesWithCountsRequest $request, ContextInterface $context): CategoryWithCountsResponse
+    public function GetCategoriesWithCounts(ContextInterface $context, GetCategoriesWithCountsRequest $request): CategoryWithCountsResponse
     {
         try {
             $categories = $this->categoryResolver->withCounts(null, ['active' => $request->active], $context);
@@ -166,7 +167,7 @@ class CategoryService extends BaseGrpcService
      */
     private function transformCategoryTree(array $node): CategoryTree
     {
-        $category = Category::find($node['id']);
+        $category = CategoryModel::find($node['id']);
         $children = isset($node['children']) ? array_map([$this, 'transformCategoryTree'], $node['children']) : [];
         
         return new CategoryTree([
@@ -180,7 +181,7 @@ class CategoryService extends BaseGrpcService
      */
     private function transformCategoryWithCounts(array $data): CategoryWithCounts
     {
-        $category = Category::find($data['category_id'] ?? $data['id']);
+        $category = CategoryModel::find($data['category_id'] ?? $data['id']);
         
         return new CategoryWithCounts([
             'category' => $category ? $this->transformCategory($category) : new Category(['id' => (string) ($data['category_id'] ?? $data['id'])]),

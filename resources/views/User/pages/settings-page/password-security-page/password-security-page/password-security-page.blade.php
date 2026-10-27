@@ -25,7 +25,7 @@
                     Warna gelap-terang (bukan abu-abu) supaya kontrasnya
                     sama di light, dark, dan mode sistem.
                 --}}
-                <h2 class="mb-3 text-lg font-bold tracking-wide text-gray-950 dark:text-white">
+                <h2 class="mb-3 text-lg font-semibold tracking-wide text-gray-950 dark:text-white">
                     {{ $group['label'] }}
                 </h2>
 

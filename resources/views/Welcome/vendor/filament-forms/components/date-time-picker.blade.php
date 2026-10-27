@@ -116,18 +116,18 @@
                                 {{-- CUSTOM: Mengganti Native Select dengan Custom Alpine Dropdown --}}
                                 <div x-data="{ open: false }" class="relative grow">
                                     <button @click="open = !open" type="button"
-                                        class="flex items-center gap-1 text-sm font-bold text-gray-950 dark:text-white hover:opacity-70 transition">
+                                        class="flex items-center gap-1 text-sm font-semibold text-gray-950 dark:text-white hover:opacity-70 transition">
                                         <span x-text="months[focusedMonth]"></span>
                                         <img src="/images/icons/chevron_down.svg" class="w-4 h-4 opacity-50" />
                                     </button>
 
                                     <div x-show="open" @click.away="open = false" x-transition
-                                        class="absolute left-0 top-full z-50 mt-2 min-w-[140px] max-h-[250px] overflow-y-auto rounded-xl bg-white p-1 shadow-2xl ring-1 ring-gray-950/5 dark:bg-gray-800 dark:ring-white/10"
+                                        class="fi-fo-date-time-picker-month-panel absolute left-0 top-full z-50 mt-2 min-w-[140px] max-h-[250px] overflow-y-auto rounded-xl bg-white p-1 shadow-2xl ring-1 ring-gray-950/5 dark:bg-gray-800 dark:ring-white/10"
                                         style="scrollbar-width: thin;">
                                         <template x-for="(month, index) in months">
                                             <button @click="focusedMonth = index; open = false" type="button"
                                                 class="w-full rounded-lg px-3 py-2 text-left text-sm transition hover:bg-gray-50 dark:hover:bg-white/5"
-                                                x-bind:class="{ 'bg-primary-50 text-primary-600 font-bold dark:bg-primary-400/10 dark:text-primary-400': focusedMonth === index }">
+                                                x-bind:class="{ 'bg-primary-50 text-primary-600 font-semibold dark:bg-primary-400/10 dark:text-primary-400': focusedMonth === index }">
                                                 <span x-text="month"></span>
                                             </button>
                                         </template>
@@ -135,7 +135,7 @@
                                 </div>
 
                                 <input type="number" inputmode="numeric" x-model.debounce="focusedYear"
-                                    class="w-16 border-none bg-transparent p-0 text-right text-sm font-bold text-gray-950 focus:ring-0 dark:text-white" />
+                                    class="w-16 border-none bg-transparent p-0 text-right text-sm font-semibold text-gray-950 focus:ring-0 dark:text-white" />
                             </div>
 
                             <div class="grid grid-cols-7 gap-1">

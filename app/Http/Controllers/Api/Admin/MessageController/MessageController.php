@@ -69,7 +69,7 @@ class MessageController extends Controller
                 'per_page' => $inboxes->perPage(), 'total' => $inboxes->total(),
             ]]);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil percakapan'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil percakapan'), 'error' => null], 500);
         }
     }
 
@@ -138,7 +138,7 @@ class MessageController extends Controller
         } catch (ValidationException $e) {
             return response()->json(['status' => 'error', 'message' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal mengirim pesan'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal mengirim pesan'), 'error' => null], 500);
         }
     }
 

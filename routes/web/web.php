@@ -21,6 +21,7 @@ use App\Http\Controllers\Welcome\DocumentationController\DocumentationController
 use App\Http\Controllers\Welcome\ReportPdfController\ReportPdfController as WelcomeReportPdfController;
 use App\Http\Middleware\SetLocale\SetLocale;
 use App\Http\Middleware\SuperAdmin\SuperAdmin;
+use App\Http\Controllers\ChatCall\ChatCallController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -53,6 +54,19 @@ use Illuminate\Support\Facades\Route;
 // -----------------------------------------------------------------------------
 // SHARED / WELCOME — halaman publik (storefront)
 // -----------------------------------------------------------------------------
+// Native app boot screen. Capacitor starts here so Android, iOS, and Electron
+// can prepare the session/data before showing the first panel page.
+Route::get('/app-loading', function (\Illuminate\Http\Request $request) {
+    $target = (string) $request->query('target', '/home');
+
+    // Never allow the boot screen to redirect to an external URL.
+    if (! str_starts_with($target, '/') || str_starts_with($target, '//')) {
+        $target = '/home';
+    }
+
+    return view('Shared.pages.app-loading.app-loading', compact('target'));
+})->middleware(SetLocale::class)->name('app.loading');
+
 // Legal Pages — HTML untuk mobile browser / HP fisik (scope Welcome).
 Route::get('/legal/terms', [WelcomeLegalWebController::class, 'terms'])->name('legal.terms');
 Route::get('/legal/privacy', [WelcomeLegalWebController::class, 'privacy'])->name('legal.privacy');
@@ -202,7 +216,6 @@ Route::get('/clerk/login', [ClerkLoginController::class, 'login'])
 Route::get('/media/{path}', [MediaController::class, 'serve'])
     ->where('path', '.*')->name('media.serve');
 
-require __DIR__.'/../debug/debug.php';
 
 // -----------------------------------------------------------------------------
 // USER — PDF & dokumen (auth; pemilik atau super_admin)
@@ -336,6 +349,17 @@ Route::redirect('/welcome', '/home');
 // Query string tetap ikut karena Route::redirect meneruskannya.
 Route::redirect('/login', '/signin');
 Route::redirect('/register', '/signup');
+
+// First-party WebRTC signaling for the three web chat panels. The controller
+// resolves the current web/admin session or the Welcome guest cookie.
+Route::prefix('chat-calls')->group(function (): void {
+    Route::post('/', [ChatCallController::class, 'start']);
+    Route::get('/{inboxId}/active', [ChatCallController::class, 'active']);
+    Route::get('/{token}', [ChatCallController::class, 'state']);
+    Route::post('/{token}/signal', [ChatCallController::class, 'signal']);
+    Route::post('/{token}/accept', [ChatCallController::class, 'accept']);
+    Route::post('/{token}/end', [ChatCallController::class, 'end']);
+});
 
 // Alias /user/* yang TIDAK bisa ikut catch-all di bawah, karena padanannya
 // di root bernama berbeda (register -> signup, login -> signin). Tanpa ini

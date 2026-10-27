@@ -6,7 +6,7 @@
     wire:ignore
     :attributes="
         \Filament\Support\prepare_inherited_attributes($attributes)
-            ->class(['fi-page-sub-navigation-tabs hidden md:flex'])
+            ->class(['fi-page-sub-navigation-tabs hidden lg:flex'])
     "
 >
     @foreach ($navigation as $navigationGroup)

@@ -38,11 +38,23 @@ const launcherPath = resolve(appRoot, 'src/js/launcher.js');
 // ── capacitor.config.json ───────────────────────────────────────────────────
 const config = JSON.parse(readFileSync(configPath, 'utf8'));
 
-config.server = { ...(config.server ?? {}), url: raw };
+// Native builds open a translated loading page first. It warms the target
+// page while showing progress, then redirects to the exact URL supplied here.
+const target = new URL(raw);
+const boot = new URL('/app-loading', target.origin);
+boot.searchParams.set('target', `${target.pathname}${target.search}` || '/home');
+const bootUrl = boot.toString();
+
+config.server = { ...(config.server ?? {}), url: bootUrl };
 
 // Plain http only works against a dev host; production must be https so the
 // WebView gets a secure context (service workers, camera, secure cookies).
 const isLocalDev = /^http:\/\//i.test(raw);
+
+if (isLocalDev && !/^http:\/\/(localhost|127\.0\.0\.1|10\.0\.2\.2|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/i.test(raw)) {
+    console.error('HTTP hanya diizinkan untuk host development lokal/private. Gunakan HTTPS untuk deployment.');
+    process.exit(1);
+}
 
 config.server.cleartext = isLocalDev;
 
@@ -60,7 +72,7 @@ writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`, 'utf8');
 const launcher = readFileSync(launcherPath, 'utf8');
 const updated = launcher.replace(
     /const PANEL_URL = '[^']*';/,
-    `const PANEL_URL = '${raw}';`,
+    `const PANEL_URL = '${bootUrl}';`,
 );
 
 if (updated === launcher) {
@@ -72,6 +84,7 @@ if (updated === launcher) {
 writeFileSync(launcherPath, updated, 'utf8');
 
 console.log(`Panel URL set to ${raw}`);
+console.log(`Native boot URL: ${bootUrl}`);
 console.log(isLocalDev
     ? 'Cleartext http enabled — fine for a LAN/emulator dev host only.'
     : 'https enforced.');

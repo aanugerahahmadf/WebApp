@@ -58,7 +58,10 @@
         breadcrumb sudah berakhir dengan kata yang sama ("Inbox"), jadi dua-duanya
         hanya mengulang teks yang sama dalam dua ukuran berbeda.
     --}}
-    <div class="messages-page-head">
+        <div
+            class="messages-page-head w-full"
+            style="box-sizing: border-box; padding-inline: 200px;"
+        >
         <div class="messages-page-crumbs-row">
             @if (filled($messagesBreadcrumbs))
                 <div class="messages-page-crumbs">

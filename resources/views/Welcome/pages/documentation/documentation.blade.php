@@ -33,14 +33,14 @@
             --docs-code: rgb(15 23 42 / .52);
         }
         * { box-sizing: border-box; }
-        body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 15% 0%, rgb(99 102 241 / .16), transparent 34rem), var(--docs-bg); color: var(--docs-text); font-family: 'Google Sans', ui-sans-serif, system-ui, sans-serif; }
+        body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 15% 0%, rgb(99 102 241 / .16), transparent 34rem), var(--docs-bg); color: var(--docs-text); font-family: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif; }
         a { color: var(--docs-accent); text-decoration: none; }
         a:hover { text-decoration: underline; }
         .docs-shell { display: grid; grid-template-columns: 280px minmax(0, 1fr); min-height: 100vh; transition: grid-template-columns .2s ease; }
         .docs-shell.sidebar-collapsed { grid-template-columns: 76px minmax(0, 1fr); }
         .docs-sidebar { position: sticky; top: 0; height: 100vh; overflow-y: auto; scrollbar-width: none; padding: 1.5rem 1rem; background-color: var(--docs-surface); background-image: linear-gradient(var(--docs-tint), var(--docs-tint)); border-right: 1px solid var(--docs-ring); backdrop-filter: blur(15px) saturate(180%); -webkit-backdrop-filter: blur(15px) saturate(180%); }
         .docs-sidebar::-webkit-scrollbar { display: none; }
-        .brand { display: flex; align-items: center; gap: .65rem; margin: 0 .6rem 1.5rem; color: var(--docs-text); font-weight: 700; font-size: 1.1rem; }
+        .brand { display: flex; align-items: center; gap: .65rem; margin: 0 .6rem 1.5rem; color: var(--docs-text); font-weight: 600; font-size: 1.1rem; }
         .brand:hover { text-decoration: none; }
         .brand-mark { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: .7rem; background: var(--docs-box); color: var(--docs-accent); }
         .brand-mark svg { width: 1.15rem; height: 1.15rem; stroke: currentColor; }
@@ -53,7 +53,7 @@
         .search { width: 100%; padding: .7rem .8rem; margin-bottom: 1.25rem; color: var(--docs-text); background: var(--docs-surface); border: 1px solid var(--docs-ring); border-radius: .55rem; outline: none; font: inherit; }
         .search::placeholder { color: var(--docs-muted); }
         .search:focus { border-color: var(--docs-accent); }
-        .group { display: flex; align-items: center; gap: .4rem; margin: 1.15rem .35rem .45rem; color: var(--docs-group); font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+        .group { display: flex; align-items: center; gap: .4rem; margin: 1.15rem .35rem .45rem; color: var(--docs-group); font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
         .group svg { width: .85rem; height: .85rem; flex: 0 0 .85rem; color: var(--doc-color); stroke: currentColor; fill: color-mix(in srgb, var(--doc-color) 16%, transparent); }
         .nav-link { display: flex; align-items: center; gap: .55rem; padding: .48rem .65rem; border-radius: .55rem; color: var(--docs-muted); font-size: .88rem; }
         .nav-link svg { width: .95rem; height: .95rem; flex: 0 0 .95rem; color: var(--doc-color); stroke: currentColor; }
@@ -73,7 +73,7 @@
         .nav-group:not(:hover):not(:focus-within):not(.has-active) .group { cursor: pointer; }
         .docs-main { width: min(100%, 980px); padding: 3.5rem clamp(1.25rem, 5vw, 5rem); }
         .eyebrow-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .75rem; }
-        .eyebrow { color: var(--docs-accent); font-size: .78rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+        .eyebrow { color: var(--docs-accent); font-size: .78rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
         .markdown { line-height: 1.75; font-size: 1rem; text-align: justify; }
         .markdown, .markdown * { user-select: text; -webkit-user-select: text; }
         .markdown h1 { margin: .35rem 0 1.5rem; color: var(--docs-text); font-size: clamp(2rem, 5vw, 3.25rem); line-height: 1.1; }

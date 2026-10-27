@@ -5,7 +5,6 @@ namespace App\Filament\Admin\Resources\DeveloperStudioResource\Pages\ListDevelop
 use App\Filament\Admin\Exports\DeveloperStudioEndpointExporter\DeveloperStudioEndpointExporter;
 use App\Filament\Admin\Resources\DeveloperStudioResource\DeveloperStudioResource;
 use App\Filament\Concerns\InteractsWithGraphQLAndGrpc\InteractsWithGraphQLAndGrpc;
-use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\Shared\Concerns\HasStandardActions\HasStandardActions;
 use App\Models\DeveloperStudio\DeveloperStudioEndpoint;
 use Filament\Forms\Components\Textarea;
@@ -27,7 +26,6 @@ use Illuminate\Support\Facades\Artisan;
  */
 class ListDeveloperStudio extends \Filament\Resources\Pages\ListRecords
 {
-    use HasDynamicBreadcrumbs;
     use HasStandardActions;
 
     use InteractsWithGraphQLAndGrpc;
@@ -291,11 +289,8 @@ class ListDeveloperStudio extends \Filament\Resources\Pages\ListRecords
         return response()->download($path, $filename);
     }
 
-    public function getBreadcrumbs(): array
+        public function getBreadcrumbs(): array
     {
-        return [
-            ...$this->breadcrumbParentCrumb(),
-            DeveloperStudioResource::getUrl('index') => DeveloperStudioResource::getNavigationLabel(),
-        ];
+        return [];
     }
 }

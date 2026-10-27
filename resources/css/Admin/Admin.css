@@ -73,17 +73,60 @@
     overflow-x: visible !important;
 }
 .fi-panel-admin .fi-layout {
-    padding-top: 3.5rem !important;
+    /* Topbar fixed 4rem sudah dikompensasi oleh padding-top .fi-main-ctn
+       di view layout Admin. Menambah padding di sini membuat konten
+       turun dua kali. */
+    padding-top: 0 !important;
 }
 
-@media (max-width: 768px) {.fi-panel-admin .fi-topbar {
+
+/*
+ * Keep the desktop sidebar pinned while the page content is scrolled.
+ * Filament adds `lg:sticky` to the sidebar when it is collapsible, but the
+ * panel's scroll container can make that sticky position move with the page.
+ * The menu itself already has its own `overflow-y-auto`, so only the content
+ * area should scroll.
+ *
+ * `top: 0` -- BUKAN --fi-capsule-stack. Topbar Admin datar dan menempel
+ * di tepi atas layar, jadi sidebar juga mulai di y=0. Tidak ada cabang
+ * `@media` di sini: sidebar berbentuk sama di lebar layar mana pun.
+ */
+.fi-panel-admin .fi-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+}
+
+@media (max-width: 1023px) {
+    .fi-panel-admin .fi-topbar {
         padding-top: var(--inset-top, env(safe-area-inset-top, 0px)) !important;
+    }
+
+    /* Drawer mobile harus berada DI ATAS topbar.
+       Tanpa aturan ini topbar (fixed, z-index 40) menutupi header sidebar
+       tempat logo berada -- yang terlihat justru search bar dan tombol X
+       topbar, sehingga logo seperti hilang tertimpa. Sidebar hanya
+       dinaikkan saat benar-benar terbuka; saat tertutup ia tetap di
+       belakang supaya topbar bisa diklik. */
+    .fi-panel-admin .fi-sidebar.fi-sidebar-open {
+        z-index: 50 !important;
+    }
+
+    /* Drawer menutup seluruh layar dan punya tombol tutup sendiri, jadi
+       topbar tidak diperlukan selama drawer terbuka. Disembunyikan total
+       supaya search bar tidak tembus di belakang header sidebar yang
+       memakai latar transparan. */
+    .fi-panel-admin .fi-topbar.fi-admin-topbar-sidebar-open {
+        display: none !important;
     }
 }
 
 
 /* --- Sidebar Navigation Group Chevron Rotation Animation (admin panel) ---
- * Filament uses heroicon-m-chevron-up + Alpine -rotate-180 when collapsed.
+ * Filament uses the chevron-up icon + Alpine -rotate-180 when collapsed.
  * Default (expanded):  rotate(0)   → ^ chevron up
  * Collapsed:           rotate(180) → v chevron down  (via Alpine -rotate-180)
  * We just ensure smooth transition and that the Alpine class works correctly.
@@ -107,90 +150,24 @@
 
 
 /* ═══════════════════════════════════════════════════════════════════════
-   ADMIN PANEL — Mobile Sidebar Full Width + Scroll Fix
-   Sidebar admin: full width di mobile (Android/iOS app & mobile browser).
+   ADMIN PANEL — Select kode negara di layar kecil
+
+   Dulu blok ini juga berisi satu set aturan "sidebar mobile": width
+   100vw, transform translateX(-100%), z-index, margin item, padding
+   bawah, dan override overflow .fi-layout. Semuanya dilepas.
+
+   Alasan: sidebar Admin sekarang SATU bentuk di semua lebar layar --
+   kolom tetap selebar --sidebar-width, mulai dari y=0, tanpa sudut.
+   Aturan 100vw/translate itu membuat sidebar berubah wujud hanya
+   karena jendela dipersempit (dan di aplikasi desktop, jendela 912px
+   sudah di bawah 1024px), sehingga sidebar dan header tidak lagi
+   sejajar. Filament sudah menangani drawer-nya sendiri.
    ═══════════════════════════════════════════════════════════════════════ */
 
-/*
- * SEMUA selector di blok ini diawali `:root:not(.native-desktop)`.
- *
- * Alasannya sama dengan blok Global Search di Shared/Shared.css dan blok
- * sidebar di Welcome.css / User.css: jendela aplikasi desktop (Electron)
- * tidak punya `minWidth`, jadi bisa dikecilkan ke lebar apa saja termasuk
- * di bawah 1024px. Tanpa guard itu, sidebar desktop app ikut memakai versi
- * mobile -- `width: 100vw` -- dan menutupi seluruh layar, padahal untuk
- * laptop/aplikasi desktop yang diminta adalah ukuran sidebar BAWAAN
- * Filament (`var(--sidebar-width)`).
- *
- * `@media` SAJA tidak cukup: laptop biasa dan jendela aplikasi desktop bisa
- * punya lebar yang sama. Yang membedakan adalah tempat aplikasi
- * berjalan, lewat kelas `.native-desktop` yang dipasang ke <html> oleh
- * platform-runtime-script tiap panel (registered di HEAD_START oleh
- * PlatformSupportServiceProvider) sehingga sudah ada sebelum sidebar
- * dirender.
- */
+/* Bendera + nama negara pada Select kode negara WhatsApp.
+   Labelnya HTML dari App\Support\Phone\CountryCallingCodeOptions::all().
+   Dicerminkan dari User.css / Welcome.css supaya ketiganya sama. */
 @media (max-width: 1023px) {
-    /* Full width sidebar — sama seperti user panel */
-    :root:not(.native-desktop) .fi-panel-admin .fi-sidebar {
-        width: 100vw !important;
-        max-width: 100vw !important;
-        --tw-translate-x: -100% !important;
-        transform: translateX(-100%) !important;
-        transition: transform 0.3s ease-in-out !important;
-        z-index: 40 !important;
-    }
-
-
-    :root:not(.native-desktop) .fi-panel-admin .fi-sidebar.fi-sidebar-open {
-        --tw-translate-x: 0 !important;
-        transform: translateX(0) !important;
-    }
-
-
-    /* Overlay admin panel */
-    :root:not(.native-desktop) .fi-panel-admin .fi-sidebar-close-overlay {
-        z-index: 35 !important;
-    }
-
-
-    /*
-     * Fix overflow-x-clip pada .fi-layout agar overlay fixed tidak terpotong.
-     */
-    :root:not(.native-desktop) .fi-panel-admin .fi-layout {
-        overflow-x: visible !important;
-        overflow: visible !important;
-    }
-
-
-    /* Nav items full width */
-    :root:not(.native-desktop) .fi-panel-admin .fi-sidebar-nav-item > a,
-:root:not(.native-desktop) .fi-panel-admin .fi-sidebar-group {
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-        border-radius: 0 !important;
-    }
-
-
-    :root:not(.native-desktop) .fi-panel-admin .fi-sidebar-group-button {
-        padding-left: 1.5rem !important;
-        padding-right: 1.5rem !important;
-        width: 100% !important;
-    }
-
-
-    :root:not(.native-desktop) .fi-panel-admin .fi-sidebar-nav-item > a.fi-active {
-        border-radius: 0 !important;
-    }
-
-
-    /* Padding bawah agar item terakhir tidak tertutup footer */
-    :root:not(.native-desktop) .fi-panel-admin .fi-sidebar-nav {
-        padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px)) !important;
-    }
-
-    /* Bendera + nama negara pada Select kode negara WhatsApp.
-       Labelnya HTML dari App\Support\Phone\CountryCallingCodeOptions::all().
-       Dicerminkan dari User.css / Welcome.css supaya ketiganya sama. */
     :root:not(.native-desktop) .fi-panel-admin .country-flag {
         display: inline-block;
         font-size: 1.05rem;
@@ -204,7 +181,7 @@
         display: inline-block;
         min-width: 1.35rem;
         font-size: 0.5625rem;
-        font-weight: 800;
+        font-weight: 600;
         letter-spacing: 0.02em;
         line-height: 1;
         vertical-align: 0.05em;

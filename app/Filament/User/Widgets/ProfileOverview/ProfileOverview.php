@@ -57,7 +57,7 @@ class ProfileOverview extends BaseWidget
                 ]),
 
             Stat::make(__('Katalog Dekorasi Bunga'), '')
-                ->icon('AppIcon::ORDER')
+                ->icon(AppIcon::ORDER)
                 ->color('warning')
                 ->extraAttributes([
                     'class' => 'home-stat-card profile-stat-card cursor-pointer hover:scale-105 transition-transform h-full',

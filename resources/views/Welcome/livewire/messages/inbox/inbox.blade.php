@@ -154,8 +154,9 @@
                     wire:click="startChatWithCategory('{{ $action['key'] }}')" wire:loading.attr="disabled"
                     class="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-3 text-left transition hover:bg-gray-50 disabled:opacity-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
                     <span
-                        class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl {{ $action['color'] }}">
-                        <x-filament::icon :icon="$action['icon']" class="h-5 w-5" />
+                        class="cs-action-icon flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl {{ $action['color'] }}">
+                        <img src="{{ $action['icon'] }}" alt="" aria-hidden="true"
+                            class="block h-5 w-5 shrink-0 object-contain" />
                     </span>
                     <span class="min-w-0 flex-1">
                         <span class="block font-semibold text-gray-950 dark:text-white">{{ $action['title'] }}</span>

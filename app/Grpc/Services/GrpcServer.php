@@ -39,14 +39,19 @@ class GrpcServer
         // Remove 'Bearer ' prefix if present
         $token = str_replace('Bearer ', '', $token);
 
-        $token = \Illuminate\Support\Facades\Hash::check($token, $token);
-        $sanctumToken = \Laravel\Sanctum\Sanctum::findToken($token);
+        // Sanctum::findToken() hashes and resolves the plain-text token.
+        // Do not call Hash::check() here: it returns a boolean, which used to
+        // replace the token before Sanctum received it and made every gRPC
+        // authenticated request fail (or accidentally query token "1").
+        $sanctumToken = \Laravel\Sanctum\PersonalAccessToken::findToken($token);
 
         if (!$sanctumToken) {
             return null;
         }
 
-        return $sanctumToken->tokenable;
+        $user = $sanctumToken->tokenable;
+
+        return $user instanceof \App\Models\User\User ? $user : null;
     }
 
     protected function errorResponse(ServerCall $call, string $message, int $code = Status::UNAUTHENTICATED)

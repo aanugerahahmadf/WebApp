@@ -36,7 +36,24 @@ return [
     ],
 
     'ai_core_url' => env('AI_CORE_URL', 'http://127.0.0.1:5000'),
+    'ai_core_api_key' => env('AI_CORE_API_KEY'),
     'ai_core_timeout' => env('AI_CORE_TIMEOUT', 15),
+    'ai_chat_context_messages' => env('AI_CHAT_CONTEXT_MESSAGES', 16),
+
+    // Free, self-hosted conversational model. Ollama must run on the same
+    // machine; disabled by default so the deterministic fallback remains
+    // available during development and tests.
+    'ai_local_enabled' => env('AI_LOCAL_ENABLED', false),
+    'ai_local_url' => env('AI_LOCAL_URL', 'http://127.0.0.1:11434'),
+    'ai_local_model' => env('AI_LOCAL_MODEL', 'qwen2.5:3b'),
+    'ai_local_timeout' => env('AI_LOCAL_TIMEOUT', 90),
+
+    'turn' => [
+        'url' => env('TURN_SERVER_URL', 'turn:127.0.0.1:3478'),
+        'username' => env('TURN_USERNAME', 'weddingapp'),
+        'credential' => env('TURN_CREDENTIAL', 'change-me-now'),
+        'realm' => env('TURN_REALM', 'wedding.local'),
+    ],
     'cbir_min_similarity' => env('CBIR_MIN_SIMILARITY', 30.0),
     'cbir_api_url' => env('CBIR_API_URL', 'http://127.0.0.1:5000'),
 

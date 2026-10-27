@@ -17,6 +17,11 @@ class GraphQLController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        if (! $request->isMethod('post')) {
+            return response()->json(['errors' => [['message' => 'GraphQL POST is required.']]], 405)
+                ->header('Allow', 'POST');
+        }
+
         $query = $request->input('query');
         $variables = $request->input('variables', []);
         $operationName = $request->input('operationName');
@@ -46,15 +51,9 @@ class GraphQLController extends Controller
         // - nuwave/lighthouse
         // - rebing/graphql-laravel
         //
-        // For now, we'll return a placeholder response
-
         return response()->json([
-            'data' => [
-                'message' => 'GraphQL endpoint is configured. Please install a GraphQL library to process queries.',
-                'query_received' => substr($query, 0, 100) . '...',
-                'variables_count' => count($variables),
-            ],
-        ]);
+            'errors' => [['message' => 'GraphQL request could not be processed.']],
+        ], 501);
     }
 
     /**

@@ -37,7 +37,7 @@ class HelpController extends Controller
                 'per_page' => $helps->perPage(), 'total' => $helps->total(),
             ]]);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil halaman bantuan'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil halaman bantuan'), 'error' => null], 500);
         }
     }
 
@@ -61,7 +61,7 @@ class HelpController extends Controller
         } catch (ValidationException $e) {
             return response()->json(['status' => 'error', 'message' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal membuat halaman bantuan'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal membuat halaman bantuan'), 'error' => null], 500);
         }
     }
 
@@ -86,7 +86,7 @@ class HelpController extends Controller
         } catch (ValidationException $e) {
             return response()->json(['status' => 'error', 'message' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal memperbarui halaman bantuan'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal memperbarui halaman bantuan'), 'error' => null], 500);
         }
     }
 

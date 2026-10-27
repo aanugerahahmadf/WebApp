@@ -3,7 +3,6 @@
 namespace App\Filament\Admin\Resources\CatalogResource\Pages\ListCatalogs;
 
 use App\Filament\Admin\Resources\CatalogResource\CatalogResource;
-use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Support\AdminAccess\AdminAccess;
 use App\Support\AppIcon\AppIcon;
 use Filament\Navigation\NavigationItem;
@@ -12,7 +11,6 @@ use Livewire\Attributes\Url;
 
 class ListCatalogs extends \Filament\Resources\Pages\ListRecords
 {
-    use HasDynamicBreadcrumbs;
 
     protected static string $resource = CatalogResource::class;
 
@@ -96,11 +94,8 @@ class ListCatalogs extends \Filament\Resources\Pages\ListRecords
         return AdminAccess::allows('view_catalog');
     }
 
-    public function getBreadcrumbs(): array
+        public function getBreadcrumbs(): array
     {
-        return [
-            ...$this->breadcrumbParentCrumb(),
-            CatalogResource::getUrl('index') => CatalogResource::getNavigationLabel(),
-        ];
+        return [];
     }
 }

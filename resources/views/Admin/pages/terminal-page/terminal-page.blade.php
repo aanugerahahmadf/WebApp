@@ -73,10 +73,10 @@
                 >
                     {{-- Prompt (Kali Linux style) --}}
                     <div class="mb-1 select-all">
-                        <span class="text-emerald-400">┌──(</span><span class="text-blue-400 font-bold">admin</span><span class="text-emerald-400">)─[</span><span class="text-yellow-300">~/artisan</span><span class="text-emerald-400">]</span>
+                        <span class="text-emerald-400">┌──(</span><span class="text-blue-400 font-semibold">admin</span><span class="text-emerald-400">)─[</span><span class="text-yellow-300">~/artisan</span><span class="text-emerald-400">]</span>
                     </div>
                     <div class="mb-4">
-                        <span class="text-emerald-400">└─</span><span class="text-red-400 font-bold">$</span>
+                        <span class="text-emerald-400">└─</span><span class="text-red-400 font-semibold">$</span>
                         <span class="text-white ml-1">php artisan {{ $lastCommand }}</span>
                     </div>
 
@@ -91,7 +91,7 @@
                     <div class="mt-4 pt-3 border-t border-gray-800 flex items-center justify-between">
                         <span class="text-gray-600 text-xs">
                             {{ __('Kode keluar') }}:
-                            <span class="{{ $exitCode === 0 ? 'text-green-500' : 'text-red-500' }} font-bold">{{ $exitCode }}</span>
+                            <span class="{{ $exitCode === 0 ? 'text-green-500' : 'text-red-500' }} font-semibold">{{ $exitCode }}</span>
                         </span>
                         <span class="text-gray-700 text-xs">
                             {{ now()->format('Y-m-d H:i:s') }}

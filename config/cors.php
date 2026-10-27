@@ -15,7 +15,7 @@ return [
 
     'paths' => ['api/*', 'sanctum/csrf-cookie', 'up'],
 
-    'allowed_methods' => ['*'],
+    'allowed_methods' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 
     // `array_unique`/`array_filter` dipakai karena FRONTEND_URL dan ADMIN_URL
     // bisa menunjuk origin yang sama (kasus umum: satu domain untuk web, API,
@@ -32,7 +32,7 @@ return [
 
     'allowed_origins_patterns' => [],
 
-    'allowed_headers' => ['*'],
+    'allowed_headers' => ['Accept', 'Authorization', 'Content-Type', 'Origin', 'X-CSRF-TOKEN', 'X-Requested-With', 'X-LOCALE'],
 
     'exposed_headers' => [],
 

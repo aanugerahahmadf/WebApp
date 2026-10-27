@@ -117,7 +117,7 @@ class ReviewController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal mengirim ulasan'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }
@@ -209,7 +209,7 @@ class ReviewController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal mengambil ulasan'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }
@@ -255,7 +255,7 @@ class ReviewController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal mengambil ulasan'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }
@@ -311,7 +311,7 @@ class ReviewController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal mengambil ringkasan ulasan'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }
@@ -353,7 +353,7 @@ class ReviewController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal memproses vote'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }
@@ -407,7 +407,7 @@ class ReviewController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal mengirim balasan'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }
@@ -443,7 +443,7 @@ class ReviewController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal menghapus balasan'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }
@@ -477,7 +477,7 @@ class ReviewController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal mengambil ulasan Anda'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }
@@ -516,7 +516,7 @@ class ReviewController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal mengambil ulasan pengguna'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }
@@ -619,7 +619,7 @@ class ReviewController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal memperbarui ulasan'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }
@@ -655,7 +655,7 @@ class ReviewController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal menghapus ulasan'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }

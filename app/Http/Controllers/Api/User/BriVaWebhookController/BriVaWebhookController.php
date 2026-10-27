@@ -18,9 +18,8 @@ class BriVaWebhookController extends Controller
         $rawBody = $request->getContent();
 
         Log::info('[BRI-VA] Notifikasi pembayaran diterima', [
-            'signature' => $request->header('X-SIGNATURE'),
-            'timestamp' => $request->header('X-TIMESTAMP'),
-            'body' => $rawBody,
+            'timestamp_present' => $request->hasHeader('X-TIMESTAMP'),
+            'signature_present' => $request->hasHeader('X-SIGNATURE'),
         ]);
 
         $payload = json_decode($rawBody, true);
@@ -72,7 +71,7 @@ class BriVaWebhookController extends Controller
             return $this->ack('Amount mismatch');
         }
 
-        if (strtoupper($status) === 'PAID' || $status === '00' || $paidAmount > 0) {
+        if (strtoupper($status) === 'PAID' || $status === '00') {
             $isQris = isset($payload['originalPartnerReferenceNo']) || $reference !== '';
             $transaction->markAsSuccess();
             $transaction->update([

@@ -37,12 +37,16 @@ class OrderResolver
      */
     public function byNumber($root, array $args, GraphQLContext $context)
     {
+        $user = $context->user();
+        if (! $user) {
+            throw new \Exception('Authentication required');
+        }
+
         $order = Order::where('order_number', $args['orderNumber'])
             ->with(['catalog', 'package', 'catalog.category', 'package.category', 'voucher', 'payment', 'user'])
             ->firstOrFail();
         
         // Check authorization
-        $user = $context->user();
         if ($user && !$user->hasRole('admin') && $order->user_id !== $user->id) {
             throw new \Exception('Unauthorized');
         }

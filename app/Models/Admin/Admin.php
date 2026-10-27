@@ -7,6 +7,7 @@ use Filament\Models\Contracts\HasAvatar;
 use Filament\Models\Contracts\HasName;
 use Filament\Panel;
 use App\Support\AvatarUrl\AvatarUrl;
+use App\Support\AdminAccess\AdminAccess;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -90,16 +91,7 @@ class Admin extends Authenticatable implements FilamentUser, HasAvatar, HasName
      *
      * @var list<string>
      */
-    public const ADMIN_ROLES = [
-        'super_admin',
-        'data_lens',
-        'data_analyst',
-        'cyber_security',
-        'database',
-        'content_manager',
-        'order_manager',
-        'finance_manager',
-    ];
+    public const ADMIN_ROLES = AdminAccess::ADMIN_ROLES;
 
     /**
      * Role tim internal yang boleh masuk ke panel USER / WELCOME dan mobile app.
@@ -216,7 +208,7 @@ class Admin extends Authenticatable implements FilamentUser, HasAvatar, HasName
 
         if ($panelId === 'admin') {
             return $this->active_status
-                && $this->hasAnyRole(self::ADMIN_ROLES);
+                && $this->hasAnyRole(AdminAccess::ADMIN_ROLES);
         }
 
         if ($panelId === 'user' || $panelId === 'welcome') {
@@ -308,6 +300,7 @@ class Admin extends Authenticatable implements FilamentUser, HasAvatar, HasName
             // yang akan hash otomatis. JANGAN Hash::make di sini (double-hash).
             // 2FA TIDAK PERNAH aktif untuk admin team — dimatikan eksplisit.
             $user->forceFill([
+                'username' => $this->storefrontUsername($user),
                 'password' => $password,
                 'active_status' => true,
                 'two_factor_type' => \MixCode\FilamentMulti2fa\Enums\TwoFactorAuthType::None->value,
@@ -325,6 +318,7 @@ class Admin extends Authenticatable implements FilamentUser, HasAvatar, HasName
             // Password MENTAH — model User punya cast 'password' => 'hashed'
             // 2FA TIDAK PERNAH aktif untuk admin team.
             $existing->forceFill([
+                'username' => $this->storefrontUsername($existing),
                 'password' => $password,
                 'active_status' => true,
                 'two_factor_type' => \MixCode\FilamentMulti2fa\Enums\TwoFactorAuthType::None->value,
@@ -338,13 +332,7 @@ class Admin extends Authenticatable implements FilamentUser, HasAvatar, HasName
             return $existing;
         }
 
-        $base = \Illuminate\Support\Str::slug($this->username, '.') ?: 'staff';
-        $candidate = $base.'.staff';
-        $i = 2;
-
-        while (\App\Models\User\User::where('username', $candidate)->exists()) {
-            $candidate = $base.'.staff'.$i++;
-        }
+        $candidate = $this->storefrontUsername();
 
         $user = \App\Models\User\User::create([
             'full_name' => $this->full_name,
@@ -376,6 +364,26 @@ class Admin extends Authenticatable implements FilamentUser, HasAvatar, HasName
         $this->forceFill(['user_id' => $user->id])->save();
 
         return $user;
+    }
+
+    /**
+     * The linked storefront identity uses the admin username as-is. The old
+     * `.staff` suffix made the profile show `superadmin.staff`, even though
+     * the canonical admin login is `superadmin`.
+     */
+    private function storefrontUsername(?\App\Models\User\User $current = null): string
+    {
+        $base = \Illuminate\Support\Str::slug((string) $this->username, '.') ?: 'staff';
+        $candidate = $base;
+        $suffix = 2;
+
+        while (\App\Models\User\User::where('username', $candidate)
+            ->when($current, fn ($query) => $query->where('id', '!=', $current->getKey()))
+            ->exists()) {
+            $candidate = $base.'.'.$suffix++;
+        }
+
+        return $candidate;
     }
 
     /**

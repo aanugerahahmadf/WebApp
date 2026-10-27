@@ -57,14 +57,14 @@
             @class([
                 'flex flex-col gap-8' => $subNavigation,
                 match ($subNavigationPosition) {
-                    SubNavigationPosition::Start, SubNavigationPosition::End => 'md:flex-row md:items-start',
+                    SubNavigationPosition::Start, SubNavigationPosition::End => 'lg:flex-row lg:items-start',
                     default => null,
                 } => $subNavigation,
                 'h-full' => $fullHeight,
             ])
         >
             @if ($subNavigation)
-                <div class="contents md:hidden">
+                <div class="contents lg:hidden">
                     {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::PAGE_SUB_NAVIGATION_SELECT_BEFORE, scopes: $this->getRenderHookScopes()) }}
                 </div>
 
@@ -72,7 +72,7 @@
                     :navigation="$subNavigation"
                 />
 
-                <div class="contents md:hidden">
+                <div class="contents lg:hidden">
                     {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::PAGE_SUB_NAVIGATION_SELECT_AFTER, scopes: $this->getRenderHookScopes()) }}
                 </div>
 

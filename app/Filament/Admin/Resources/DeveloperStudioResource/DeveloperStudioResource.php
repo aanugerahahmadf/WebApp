@@ -8,6 +8,7 @@ use App\Filament\Concerns\InteractsWithGraphQLAndGrpc\InteractsWithGraphQLAndGrp
 use App\Models\DeveloperStudio\DeveloperStudioEndpoint;
 use App\Services\GraphQLExecutor\GraphQLExecutor;
 use App\Support\AppIcon\AppIcon;
+use App\Support\AdminAccess\AdminAccess;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -37,6 +38,26 @@ class DeveloperStudioResource extends Resource
     protected static ?string $navigationIcon = AppIcon::CODE;
 
     protected static ?int $navigationSort = 204;
+
+    public static function canViewAny(): bool
+    {
+        return AdminAccess::allows('view_system_inventory', 'view_documentation');
+    }
+
+    public static function canCreate(): bool
+    {
+        return AdminAccess::allows('manage_deployments', 'manage_documentation');
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return AdminAccess::allows('manage_deployments', 'manage_documentation');
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return AdminAccess::allows('manage_deployments', 'manage_documentation');
+    }
 
     public static function getNavigationLabel(): string
     {

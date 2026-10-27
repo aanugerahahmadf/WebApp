@@ -20,7 +20,7 @@
                 <div class="absolute bottom-0 left-0 w-10 h-10 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2"></div>
 
                 <div class="relative z-10">
-                    <div class="text-2xl font-bold mb-0.5">
+                    <div class="text-2xl font-semibold mb-0.5">
                         @if($isPercentage)
                             {{ number_format($discountAmount, 0, ',', '.') }}%
                         @else
@@ -44,7 +44,7 @@
                     @endif
 
                     <div class="flex items-center justify-between mt-2 pt-2 border-t border-white/20">
-                        <code class="text-xs font-mono font-bold tracking-wider">{{ $voucher->code }}</code>
+                        <code class="text-xs font-mono font-semibold tracking-wider">{{ $voucher->code }}</code>
                         <button
                             type="button"
                             onclick="navigator.clipboard.writeText('{{ $voucher->code }}').then(() => { this.textContent = '{{ __("Copied!") }}'; setTimeout(() => { this.textContent = 'Copy'; }, 1500); })"

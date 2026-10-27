@@ -65,7 +65,7 @@ class OrderController extends Controller
                 ],
             ]);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil pesanan'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil pesanan'), 'error' => null], 500);
         }
     }
 
@@ -111,7 +111,7 @@ class OrderController extends Controller
         } catch (ValidationException $e) {
             return response()->json(['status' => 'error', 'message' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal memperbarui status pesanan'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal memperbarui status pesanan'), 'error' => null], 500);
         }
     }
 

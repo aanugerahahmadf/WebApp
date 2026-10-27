@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Auth\OtpEmailVerificationPrompt;
 
-use App\Filament\Admin\Auth\Concerns\HasAuthBreadcrumbs;
 use App\Models\Admin\Admin;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -27,7 +26,6 @@ use Illuminate\Support\Facades\Mail;
  */
 class OtpEmailVerificationPrompt extends EmailVerificationPrompt
 {
-    use HasAuthBreadcrumbs;
     use InteractsWithFormActions;
 
     public ?array $data = [];

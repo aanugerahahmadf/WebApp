@@ -126,7 +126,7 @@
                             class="flex h-12 items-center justify-center text-xs bg-transparent transition disabled:cursor-not-allowed disabled:opacity-40"
                             :class="[
                                 index === viewMonth
-                                    ? 'font-bold text-primary-600 dark:text-primary-400'
+                                    ? 'font-semibold text-primary-600 dark:text-primary-400'
                                     : (semiboldAll || !isMonthDisabled(index))
                                         ? 'font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100'
                                         : 'text-gray-400 dark:text-gray-600'
@@ -157,7 +157,7 @@
                             class="flex h-8 items-center justify-center text-xs bg-transparent transition disabled:cursor-not-allowed disabled:opacity-40"
                             :class="[
                                 year === viewYear
-                                    ? 'font-bold text-primary-600 dark:text-primary-400'
+                                    ? 'font-semibold text-primary-600 dark:text-primary-400'
                                     : (semiboldAll || !isYearDisabled(year))
                                         ? 'font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100'
                                         : 'text-gray-400 dark:text-gray-600'
@@ -195,7 +195,7 @@
                                 class="flex h-8 w-8 items-center justify-center text-sm bg-transparent transition disabled:cursor-not-allowed disabled:opacity-30"
 :class="{
                                     'pointer-events-none': cell.disabled,
-                                    'font-bold text-primary-600 dark:text-primary-400': cell.selected,
+                                    'font-semibold text-primary-600 dark:text-primary-400': cell.selected,
                                     'font-semibold text-primary-600 dark:text-primary-400': cell.isToday && !cell.selected,
                                     'font-semibold text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100': !cell.isToday && !cell.selected && !cell.disabled,
                                     'font-semibold text-gray-400 dark:text-gray-600': !cell.isToday && !cell.selected && cell.disabled && semiboldAll,

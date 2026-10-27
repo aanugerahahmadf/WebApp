@@ -759,7 +759,7 @@ class PageCustomizer extends Component implements HasForms
             ''   => __('Ikuti Tema'),
             'sm' => __('Tipis (sm)'),
             'md' => __('Sedang (md)'),
-            'lg' => __('Tegunngsa (lg)'),
+            'lg' => __('Tebal (lg)'),
         ];
     }
 }

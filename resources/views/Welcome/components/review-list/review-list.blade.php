@@ -42,7 +42,7 @@
                         @endfor
                     </div>
                     @if (filled($review->title))
-                        <p class="mt-1 break-words text-sm font-bold">{{ $review->title }}</p>
+                        <p class="mt-1 break-words text-sm font-semibold">{{ $review->title }}</p>
                     @endif
                     @if ($hasComment)
                         <p class="mt-0.5 whitespace-pre-line break-words text-sm">{{ $review->comment }}</p>

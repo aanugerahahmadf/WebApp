@@ -2,9 +2,9 @@
 
 namespace App\Filament\Admin\Pages\DataExportPage;
 
-use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Services\DataExportService\DataExportService;
 use App\Support\AppIcon\AppIcon;
+use App\Support\AdminAccess\AdminAccess;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
@@ -28,11 +28,15 @@ use Illuminate\Support\Facades\Auth;
  */
 class DataExportPage extends Page
 {
-    use HasDynamicBreadcrumbs;
 
     protected static string $view = 'Admin.pages.data-export-page.data-export-page';
 
     protected static ?string $navigationIcon = AppIcon::EXPORT;
+
+    public static function canAccess(): bool
+    {
+        return AdminAccess::allows('export_data');
+    }
 
     /**
      * Key dataset yang dicentang.
@@ -77,12 +81,9 @@ class DataExportPage extends Page
         return 11;
     }
 
-    public function getBreadcrumbs(): array
+        public function getBreadcrumbs(): array
     {
-        return [
-            ...$this->breadcrumbParentCrumb(),
-            $this->getTitle(),
-        ];
+        return [];
     }
 
     public function form(Form $form): Form

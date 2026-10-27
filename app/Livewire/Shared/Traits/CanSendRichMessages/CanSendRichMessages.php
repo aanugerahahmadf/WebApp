@@ -188,7 +188,7 @@ trait CanSendRichMessages
         $chatUser = method_exists($this, 'chatUser') ? $this->chatUser() : Auth::user();
 
         if (! ChatStaff::isStaff($chatUser)) {
-            SendBotReply::dispatch($newMessage->id)->delay(now()->addSeconds(5));
+            SendBotReply::dispatch($newMessage->id);
         }
 
         $this->conversationMessages?->prepend($newMessage);

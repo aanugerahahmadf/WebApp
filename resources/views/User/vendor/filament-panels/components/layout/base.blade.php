@@ -135,6 +135,8 @@
     >
         {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::BODY_START, scopes: $livewire?->getRenderHookScopes()) }}
 
+        @include('Shared.components.panel-background.panel-background')
+
         {{ $slot }}
 
         @livewire(Filament\Livewire\Notifications::class)

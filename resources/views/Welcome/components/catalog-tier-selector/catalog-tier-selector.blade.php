@@ -105,7 +105,7 @@
             <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400">
                 <img src="/images/icons/squares.svg" class="w-4 h-4" />
             </span>
-            <h3 class="text-sm font-bold text-gray-900 dark:text-white" data-typo="subheading" data-field="catalogs.tier_name">
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-white" data-typo="subheading" data-field="catalogs.tier_name">
                 {{ __('Pilih Paket Dekorasi') }}
             </h3>
         </div>
@@ -136,11 +136,11 @@
                 <div>
                     <div class="flex items-start justify-between gap-3 flex-wrap">
                         <div class="min-w-0">
-                            <p class="text-xl font-bold text-gray-900 dark:text-white leading-tight" x-text="selected.name" data-typo="heading" data-field="catalogs.tier_name"></p>
+                            <p class="text-xl font-semibold text-gray-900 dark:text-white leading-tight" x-text="selected.name" data-typo="heading" data-field="catalogs.tier_name"></p>
                             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 leading-relaxed" x-text="selected.description || '—'" data-typo="description" data-field="catalogs.tier_description"></p>
                         </div>
                         <div class="text-right shrink-0">
-                            <p class="text-xl font-black" style="color: #facc15;" x-text="format(selected.price)" data-field="catalogs.tier_price"></p>
+                            <p class="text-xl font-semibold" style="color: #facc15;" x-text="format(selected.price)" data-field="catalogs.tier_price"></p>
                             <p
                                 x-show="selected.discounted"
                                 class="text-xs text-gray-400 line-through"

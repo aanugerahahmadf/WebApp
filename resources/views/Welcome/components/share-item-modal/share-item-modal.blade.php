@@ -6,7 +6,7 @@
 
 <div class="space-y-4">
     <div class="rounded-xl border border-white/10 bg-white/5 p-4">
-        <div class="text-lg font-bold text-gray-900 dark:text-white">{{ $name }}</div>
+        <div class="text-lg font-semibold text-gray-900 dark:text-white">{{ $name }}</div>
         <div class="text-sm font-semibold text-success-600 dark:text-success-400 mt-0.5">{{ $price }}</div>
     </div>
 

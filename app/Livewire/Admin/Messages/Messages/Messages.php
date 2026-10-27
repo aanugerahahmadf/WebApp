@@ -23,6 +23,7 @@ use App\Models\Catalog\Catalog;
 use App\Models\Voucher\Voucher;
 use App\Support\AppPlatform\AppPlatform;
 use App\Support\ChatStaff\ChatStaff;
+use App\Support\ChatParticipantName\ChatParticipantName;
 use App\Services\CBIRService\CBIRService;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
@@ -167,7 +168,7 @@ class Messages extends Component implements HasActions, HasForms
             if (Cache::has("typing_{$inboxId}_{$uid}")) {
                 $this->otherUserIsTyping = true;
                 $typingUser = $this->selectedConversation->other_users->firstWhere('id', $uid);
-                $this->typingUserName = $typingUser?->name ?? '';
+                $this->typingUserName = ChatParticipantName::for($typingUser);
                 break;
             }
         }
@@ -318,7 +319,7 @@ class Messages extends Component implements HasActions, HasForms
                 // balasan otomatis tidak dipicu -- aturan lama "pengirim admin
                 // tidak memicu bot" tetap berlaku lewat isStaffMixed().
                 if (! ChatStaff::isStaffMixed(auth()->user())) {
-                    SendBotReply::dispatch($newMessage->id)->delay(now()->addSeconds(5));
+                    SendBotReply::dispatch($newMessage->id);
                 }
 
                 $this->conversationMessages->prepend($newMessage);

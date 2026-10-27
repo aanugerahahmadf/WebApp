@@ -125,7 +125,7 @@ class UserController extends Controller
                 ],
             ]);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil data pengguna'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil data pengguna'), 'error' => null], 500);
         }
     }
 
@@ -220,7 +220,7 @@ class UserController extends Controller
         } catch (ValidationException $e) {
             return response()->json(['status' => 'error', 'message' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal membuat pengguna'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal membuat pengguna'), 'error' => null], 500);
         }
     }
 
@@ -255,7 +255,7 @@ class UserController extends Controller
         } catch (ValidationException $e) {
             return response()->json(['status' => 'error', 'message' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal memperbarui pengguna'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal memperbarui pengguna'), 'error' => null], 500);
         }
     }
 
@@ -320,7 +320,7 @@ class UserController extends Controller
 
             return response()->json(['status' => 'success', 'message' => __('KYC disetujui')]);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal menyetujui KYC'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal menyetujui KYC'), 'error' => null], 500);
         }
     }
 
@@ -343,7 +343,7 @@ class UserController extends Controller
         } catch (ValidationException $e) {
             return response()->json(['status' => 'error', 'message' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal menolak KYC'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal menolak KYC'), 'error' => null], 500);
         }
     }
 }

@@ -257,10 +257,9 @@ test('the checkout renders the address field on the catalog record', function ()
         ->toContain(e(__('Gunakan Lokasi Saya')));
 });
 
-test('the maps script is only requested when an api key is configured', function (): void {
-    // Tanpa key,autocomplete dan peta dinonaktifkan -- tapi GPS, ketik manual,
-    // dan tombol simpan tetap harus ada. Meminta script Google tanpa key hanya
-    // menambah request yang pasti gagal.
+test('the address controls remain functional without a paid maps api key', function (): void {
+    // Komponen memakai Leaflet/OpenStreetMap/Nominatim, jadi Edit, GPS,
+    // pencarian, dan peta tetap tersedia tanpa Google billing.
     config(['services.google.maps_key' => '']);
 
     $catalog = Catalog::factory()->create(['stock' => 5]);
@@ -270,9 +269,12 @@ test('the maps script is only requested when an api key is configured', function
         ->getContent();
 
     expect($html)
-        ->not->toContain('checkout-address.js', escape: false)
-        // Peringatan degradation-nya tetap muncul, dan kontrol manual tetap ada.
-        ->toContain(e(__('Pencarian alamat otomatis belum aktif (GOOGLE_MAPS_API_KEY kosong). Ketik manual saja.')))
+        // Production Vite emits a hashed filename (for example
+        // checkout-address-ABC123.js), so assert the compiled entry rather
+        // than the un-hashed source filename.
+        ->toContain('checkout-address-', escape: false)
+        ->toContain('data-checkout-address-map', escape: false)
+        ->not->toContain('GOOGLE_MAPS_API_KEY kosong', escape: false)
         ->toContain('data-checkout-address-street', escape: false)
         ->toContain(e(__('Gunakan Lokasi Saya')));
 });

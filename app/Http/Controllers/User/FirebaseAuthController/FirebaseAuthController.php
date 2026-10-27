@@ -67,7 +67,6 @@ class FirebaseAuthController extends Controller
     {
         try {
             $response = Http::timeout(15)
-                ->withoutVerifying()
                 ->post('https://identitytoolkit.googleapis.com/v1/accounts:lookup?key='.$apiKey, [
                     'idToken' => $idToken,
                 ]);
@@ -78,7 +77,7 @@ class FirebaseAuthController extends Controller
         }
 
         if ($response->failed()) {
-            Log::warning('[FirebaseAuth] accounts:lookup failed: '.$response->body());
+            Log::warning('[FirebaseAuth] accounts:lookup failed', ['status' => $response->status()]);
 
             return null;
         }
@@ -103,7 +102,7 @@ class FirebaseAuthController extends Controller
         $emailVerified = (bool) ($profile['emailVerified'] ?? false);
 
         if (! $email && ! $localId) {
-            Log::warning('[FirebaseAuth] profile missing email and localId', $profile);
+            Log::warning('[FirebaseAuth] profile missing email and localId');
 
             return null;
         }

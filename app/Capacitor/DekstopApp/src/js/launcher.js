@@ -11,7 +11,7 @@
  */
 
 /** @type {string} Panel root, i.e. `server.url` from capacitor.config.json. */
-const PANEL_URL = 'http://127.0.0.1:8000/home';
+const PANEL_URL = 'https://wedding-flower-decorations.whop.site/app-loading?target=%2Fhome';
 
 /** How long to wait for the panel before showing the retry UI. */
 const PROBE_TIMEOUT_MS = 12000;

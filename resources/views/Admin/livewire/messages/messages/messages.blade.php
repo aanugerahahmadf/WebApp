@@ -33,6 +33,9 @@
                     @php
                         $avatar = $selectedConversation->primary_avatar;
                         $alt = urlencode($selectedConversation->inbox_title);
+                        $callPhone = $selectedConversation->other_users->first()?->phone
+                            ?? $selectedConversation->other_users->first()?->whatsapp;
+                        $callPhone = $callPhone ? preg_replace('/[^0-9+]/', '', $callPhone) : null;
                     @endphp
 
                     <x-filament::avatar src="{{ $avatar }}" alt="{{ $alt }}" size="lg" />
@@ -47,6 +50,11 @@
                                 {{ $selectedConversation->other_users->pluck('name')->implode(', ') }}</p>
                         @endif
                     </div>
+                    <button type="button" x-on:click="$dispatch('open-modal', { id: 'admin-message-call' })"
+                            class="rounded-lg p-2 text-green-600 transition hover:bg-green-50 hover:text-green-700 dark:hover:bg-green-900/20"
+                            title="{{ __('Telepon') }}" aria-label="{{ __('Telepon') }}">
+                            <x-filament::icon icon="/images/icons/phone.svg" class="h-5 w-5" />
+                    </button>
                     <button type="button" x-on:click="$dispatch('open-modal', { id: 'admin-message-search' })"
                         class="rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-white/10"
                         title="{{ __('Cari') }}">
@@ -66,6 +74,10 @@
                     {{ $this->visibleMessages->count() }} {{ __('hasil') }}
                 </p>
             @endif
+        </x-filament::modal>
+        <x-filament::modal width="lg" id="admin-message-call">
+            <x-slot name="heading">{{ __('Panggilan') }}</x-slot>
+            @include('Shared.components.chat-call.chat-call', ['inboxId' => $selectedConversation->id, 'modalId' => 'admin-message-call'])
         </x-filament::modal>
         <!-- Chat Header : End -->
         <!-- Chat Box : Start -->

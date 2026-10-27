@@ -12,7 +12,33 @@
         'subheading' => null,
     ])
 
-    <div class="fi-simple-layout flex min-h-screen flex-col items-center">
+    {{-- Penanda halaman auth: dipakai AppFont::styles() untuk memaksa
+         Instrument Sans + semibold (tanpa bold) hanya di halaman auth. --}}
+    <div
+        @if ($isAuthenticationPage) data-auth-page @endif
+        class="fi-simple-layout flex min-h-screen flex-col items-center"
+    >
+        @if ($isAuthenticationPage)
+            <style data-auth-transparent-surfaces>
+                [data-auth-page] .fi-simple-main,
+                [data-auth-page] .fi-simple-main-ctn,
+                [data-auth-page] section.fi-section,
+                [data-auth-page] .fi-section-content-ctn,
+                [data-auth-page] .fi-fo-wizard,
+                [data-auth-page] .fi-fo-wizard-header {
+                    background: transparent !important;
+                    background-color: transparent !important;
+                    background-image: none !important;
+                    box-shadow: none !important;
+                    --tw-ring-shadow: 0 0 #0000 !important;
+                }
+
+                [data-auth-page] .fi-simple-main {
+                    border: 0 !important;
+                    border-radius: 0 !important;
+                }
+            </style>
+        @endif
         @unless ($isAuthenticationPage)
             <div
                 class="absolute end-0 top-0 flex h-16 items-center gap-x-4 pe-4 md:pe-6 lg:pe-8 z-20"

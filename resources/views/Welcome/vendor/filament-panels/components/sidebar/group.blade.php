@@ -15,6 +15,10 @@
 
 <li
     x-data="{ label: @js($subNavigation ? "sub_navigation_{$label}" : $label) }"
+    @if ($collapsible)
+        x-on:pointerenter="if ($event.pointerType !== 'touch' && $store.sidebar.groupIsCollapsed(label)) $store.sidebar.toggleCollapsedGroup(label)"
+        x-on:pointerleave="if ($event.pointerType !== 'touch' && ! $store.sidebar.groupIsCollapsed(label)) $store.sidebar.toggleCollapsedGroup(label)"
+    @endif
     data-group-label="{{ $subNavigation ? "sub_navigation_{$label}" : $label }}"
     {{
         $attributes->class([
@@ -47,7 +51,6 @@
                      Chevron tidak diberi listener sendiri dengan sengaja:
                      dengan begitu kursor yang berhenti tepat di chevron
                      tidak memicu toggle kedua di atas toggle pertama. --}}
-                x-on:pointerenter="if ($event.pointerType !== 'touch') $store.sidebar.toggleCollapsedGroup(label)"
             @endif
             @if ($sidebarCollapsible)
                 x-show="$store.sidebar.isOpen"

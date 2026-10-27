@@ -2,9 +2,9 @@
 
 namespace App\Filament\Admin\Pages\MessagesPage;
 
-use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Models\Inbox\Inbox;
 use App\Support\AppIcon\AppIcon;
+use App\Support\AdminAccess\AdminAccess;
 use Filament\Pages\Page;
 use Filament\Support\Enums\MaxWidth;
 use Illuminate\Contracts\Support\Htmlable;
@@ -25,7 +25,6 @@ use Illuminate\Support\Facades\DB;
  */
 class MessagesPage extends Page
 {
-    use HasDynamicBreadcrumbs;
 
     protected static string $view = 'Admin.pages.messages.messages';
 
@@ -34,6 +33,11 @@ class MessagesPage extends Page
     protected static ?string $activeNavigationIcon = AppIcon::MESSAGES;
 
     protected static ?int $navigationSort = 1;
+
+    public static function canAccess(): bool
+    {
+        return AdminAccess::allows('manage_support_tickets');
+    }
 
     public ?Inbox $selectedConversation;
 
@@ -119,18 +123,8 @@ class MessagesPage extends Page
         return false;
     }
 
-    public function getBreadcrumbs(): array
+        public function getBreadcrumbs(): array
     {
-        $breadcrumbs = [
-            ...$this->breadcrumbParentCrumb(),
-        ];
-
-        $breadcrumbs[static::getUrl()] = static::getNavigationLabel();
-
-        if ($this->selectedConversation) {
-            $breadcrumbs[] = $this->selectedConversation->inbox_title ?: __('Pesan');
-        }
-
-        return $breadcrumbs;
+        return [];
     }
 }

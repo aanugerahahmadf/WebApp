@@ -392,6 +392,16 @@ class BriService
      */
     public function createVirtualAccount(Transaction $transaction): ?array
     {
+        $transaction->loadMissing(['user', 'order']);
+        $user = $transaction->user;
+        if (! $user || ! $transaction->order) {
+            Log::warning('[BRI] createVirtualAccount batal: transaksi tidak memiliki user/order', [
+                'transaction_id' => $transaction->id,
+            ]);
+
+            return null;
+        }
+
         $token = $this->snapAccessToken();
         if (! $token) {
             Log::warning('[BRI] createVirtualAccount batal: tidak ada B2B token untuk transaksi #'.$transaction->id);
@@ -400,10 +410,14 @@ class BriService
         }
 
         $partnerServiceId = config('bri.va_partner_service_id', '8808');
-        // customerNo: unik sampai 20 digit, berasal dari id transaksi + acak.
-        $customerNo = str_pad((string) $transaction->id, 10, '0', STR_PAD_LEFT).substr((string) time(), -6);
+        // customerNo harus mengikat VA ke user dan transaksi. Jangan memakai
+        // rekening settlement merchant (mis. 421...) sebagai nomor VA.
+        // 10 digit user + 6 digit transaksi tetap numeric dan deterministik,
+        // sehingga retry tidak membuat identitas pembayaran yang berbeda.
+        $customerNo = str_pad((string) ($user->getKey() % 10_000_000_000), 10, '0', STR_PAD_LEFT)
+            .str_pad((string) ($transaction->getKey() % 1_000_000), 6, '0', STR_PAD_LEFT);
         $virtualAccountNo = $partnerServiceId.$customerNo;
-        $virtualAccountName = $this->virtualAccountHolderName($transaction->user);
+        $virtualAccountName = $this->virtualAccountHolderName($user);
         $expiry = now()->addHours((int) config('bri.va_expiry_hours', 24));
 
         $body = json_encode([
@@ -411,8 +425,8 @@ class BriService
             'customerNo' => $customerNo,
             'virtualAccountNo' => $virtualAccountNo,
             'virtualAccountName' => $virtualAccountName,
-            'virtualAccountEmail' => $transaction->user?->email,
-            'virtualAccountPhone' => $transaction->user?->whatsapp,
+            'virtualAccountEmail' => $user->email,
+            'virtualAccountPhone' => $user->whatsapp,
             'trxId' => $transaction->reference_number,
             'totalAmount' => [
                 'value' => number_format((float) $transaction->total_amount, 2, '.', ''),
@@ -452,23 +466,57 @@ class BriService
             }
 
             $vaData = $data['virtualAccountData'] ?? [];
+            $providerVaNo = trim((string) ($vaData['virtualAccountNo'] ?? ''));
+            $providerVaName = trim((string) ($vaData['virtualAccountName'] ?? ''));
+            // Some sandbox responses omit virtualAccountName even though the
+            // request was accepted. The submitted, authenticated user's name
+            // is the safe fallback; never fall back to the merchant account.
+            if ($providerVaName === '') {
+                $providerVaName = $virtualAccountName;
+            }
+
+            if ($providerVaNo === '') {
+                Log::error('[BRI] create-va response tidak berisi nomor/nama VA', [
+                    'transaction_id' => $transaction->id,
+                    'response_code' => $data['responseCode'] ?? null,
+                ]);
+
+                return null;
+            }
+
+            // Jangan menerima nomor VA yang tidak sesuai user/order atau
+            // identitas kosong. Nomor final selalu berasal dari provider.
+            if (mb_strtolower($providerVaName) !== mb_strtolower($virtualAccountName)) {
+                Log::error('[BRI] create-va mengembalikan nama VA berbeda dari user', [
+                    'transaction_id' => $transaction->id,
+                ]);
+
+                return null;
+            }
 
             $transaction->update([
-                'virtual_account_no' => $vaData['virtualAccountNo'] ?? $virtualAccountNo,
+                'virtual_account_no' => $providerVaNo,
                 'virtual_account_expiry' => $vaData['expiredDate'] ?? $expiry,
                 'payment_gateway' => 'bri_va',
                 'payment_method' => 'Virtual Account BRI',
                 'metadata' => array_merge($transaction->metadata ?? [], [
-                    'bri_va' => $data,
+                    'bri_va' => [
+                        'virtualAccountNo' => $providerVaNo,
+                        'virtualAccountName' => $providerVaName,
+                        'expiredDate' => $vaData['expiredDate'] ?? null,
+                        'responseCode' => $data['responseCode'] ?? null,
+                    ],
                 ]),
             ]);
 
             return [
                 'virtual_account_no' => $transaction->virtual_account_no,
                 // Nama yang akan tampil di aplikasi BRI = nama pemesan.
-                'virtual_account_name' => $vaData['virtualAccountName'] ?? $virtualAccountName,
+                'virtual_account_name' => $providerVaName,
                 'virtual_account_expiry' => $transaction->virtual_account_expiry ? $transaction->virtual_account_expiry->format('Y-m-d\TH:i:sP') : null,
-                // Rekening tujuan: dana otomatis masuk ke sini.
+                // Settlement destination is returned for trusted backend
+                // consumers and tests only. Customer payment-method data is
+                // explicitly redacted by OrderController.
                 'account_number' => config('bri.account_number'),
                 'account_holder' => config('bri.account_holder'),
             ];

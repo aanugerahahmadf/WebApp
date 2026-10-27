@@ -178,7 +178,7 @@ class PersonalInfoComponent extends Component implements HasForms
             ->success()
             ->send();
 
-        Log::info('PersonalInfoComponent: WhatsApp OTP sent', ['whatsapp' => $phone]);
+        Log::info('PersonalInfoComponent: WhatsApp OTP sent');
     }
 
     public function startEditing(): void

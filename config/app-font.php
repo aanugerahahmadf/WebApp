@@ -35,12 +35,12 @@
 return [
 
     /*
-     * Keluarga huruf. Selalu Google Sans Flex -- TTF variable resmi dari
-     * Google, diinstal lokal di public/fonts/Google_Sans_Flex/ (lihat
+     * Keluarga huruf. Instrument Sans -- TTF variable lokal di
+     * public/fonts/Instrument_Sans/ (lihat
      * App\Support\AppFont). Nilai env hanya tersisa untuk kebutuhan khusus;
      * `AppFont::family()` sengaja DIKUNCI dan tidak membaca nilai ini lagi.
      */
-    'family' => env('APP_FONT_FAMILY', 'Google Sans Flex'),
+    'family' => env('APP_FONT_FAMILY', 'Instrument Sans'),
 
     /*
      * Berat bawaan, 100 sampai 900 dalam kelipatan 100.

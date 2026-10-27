@@ -41,7 +41,7 @@ class AdminStatsOverviewTest extends TestCase
     }
 
     /**
-     * @return array<int, \Filament\Widgets\StatsOverviewWidget\Stat>
+     * @return array<int, Stat>
      */
     private function stats(): array
     {
@@ -120,6 +120,50 @@ class AdminStatsOverviewTest extends TestCase
             (string) Package::query()->distinct()->count('name'),
             $values['Total Paket'],
         );
+    }
+
+    /**
+     * Setiap kartu HARUS bisa diklik dan menuju halaman admin yang relevan.
+     *
+     * Peta label -> path ini sengaja ditulis eksplisit, bukan dihitung dari
+     * nama resource: "Total Paket" dan "Total Kategori" tidak punya resource
+     * sendiri (keduanya RelationManager di halaman katalog), dan "Total
+     * Kebijakan" adalah gabungan tiga dokumen. Kalau suatu saat resource baru
+     * dibuat, test ini yang memaksa peta di widget ikut diperbarui.
+     */
+    public function test_every_card_links_to_its_admin_page(): void
+    {
+        $expected = [
+            'Total Produk' => '/admin/catalogs',
+            'Total Paket' => '/admin/catalogs',
+            'Total Kategori' => '/admin/catalogs',
+            'Total Pengguna' => '/admin/users',
+            'Total Admin Tim' => '/admin/admins',
+            'Total Ulasan' => '/admin/reviews',
+            'Total Laporan' => '/admin/reports',
+            'Opsi Referensi' => '/admin/reference-options',
+            'Pusat Bantuan' => '/admin/helps',
+            'Total Kebijakan' => '/admin/privacy-policies',
+            'Total Pesanan' => '/admin/orders',
+            'Belum dibayar' => '/admin/orders',
+            'Total Transaksi' => '/admin/transactions',
+            'Total Voucher' => '/admin/vouchers',
+            'Total Diskon' => '/admin/discounts',
+            'Metode Pembayaran' => '/admin/payment-methods',
+            'Payment Gateway' => '/admin/payment-gateways',
+            'Total Wishlist' => '/admin/wishlists',
+        ];
+
+        foreach ($this->stats() as $stat) {
+            $label = (string) $stat->getLabel();
+
+            $this->assertArrayHasKey($label, $expected, "Kartu '{$label}' belum punya tujuan klik.");
+
+            $url = $stat->getUrl();
+
+            $this->assertNotNull($url, "Kartu '{$label}' tidak punya URL.");
+            $this->assertSame(url($expected[$label]), $url, "Kartu '{$label}' menuju halaman yang salah.");
+        }
     }
 
     /**

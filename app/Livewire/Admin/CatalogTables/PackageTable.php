@@ -177,7 +177,7 @@ class PackageTable extends Component implements HasForms, HasTable
     {
         return [
             Forms\Components\Section::make(__('Nama Paket'))
-                ->icon('heroicon-s-gift')
+                ->icon('/images/icons/gift.svg')
                 ->schema([
 /*
                      * `TextInput`, bukan `Select`.
@@ -241,7 +241,7 @@ class PackageTable extends Component implements HasForms, HasTable
 
                             $set('sort_order', $tier['index']);
                         })
-                        ->prefixIcon('heroicon-s-tag'),
+                        ->prefixIcon('/images/icons/tag.svg'),
 
                     /*
                      * Field tersembunyi, WAJIB ada di schema.
@@ -325,7 +325,7 @@ class PackageTable extends Component implements HasForms, HasTable
                      ->searchable()
                      ->sortable()
                      ->weight('bold')
-                     ->icon('heroicon-s-gift')
+                     ->icon('/images/icons/gift.svg')
                      ->extraAttributes(['data-typo' => 'heading', 'data-field' => 'catalogs.tier_name'])
                      ->description(fn (?Package $record): string => $this->statusHint($record, $expected)),
             ])
@@ -334,7 +334,7 @@ class PackageTable extends Component implements HasForms, HasTable
                     ->label(__('Tambah Paket'))
                     ->modalHeading(__('Paket Baru'))
                     // Ikon plus, sama dengan "Add Catalog" di tabel katalog.
-                    ->icon('heroicon-s-plus')
+                    ->icon('/images/icons/plus.svg')
                     ->visible(fn (): bool => $this->canManage())
                     // WAJIB: tanpa baris ini modalnya kosong. Lihat
                     // `packageSchema()` untuk penjelasan kenapa method
@@ -366,7 +366,7 @@ class PackageTable extends Component implements HasForms, HasTable
                 Tables\Actions\ExportAction::make()
                     ->exporter(PackageExporter::class)
                     ->label(__('Ekspor Data'))
-                    ->icon('heroicon-s-arrow-down-tray')
+                    ->icon('/images/icons/download.svg')
                     ->color('success'),
             ])
             ->actions([

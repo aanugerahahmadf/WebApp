@@ -3,7 +3,6 @@
 namespace App\Filament\Admin\Resources\AdminResource\Pages\ManageAdmins;
 
 use App\Filament\Admin\Resources\AdminResource\AdminResource;
-use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\Shared\Concerns\HasStandardActions\HasStandardActions;
 use Filament\Resources\Pages\ManageRecords;
 use Filament\Tables\Table;
@@ -27,7 +26,6 @@ class ManageAdmins extends ManageRecords
     // "Tambah" + "Ekspor" ada di HEADER TABEL, bukan header halaman.
     use HasStandardActions;
 
-    use HasDynamicBreadcrumbs;
 
     protected static string $resource = AdminResource::class;
 
@@ -58,11 +56,8 @@ class ManageAdmins extends ManageRecords
             ->headerActions($actions);
     }
 
-    public function getBreadcrumbs(): array
+        public function getBreadcrumbs(): array
     {
-        return [
-            ...$this->breadcrumbParentCrumb(),
-            __('Admin Tim'),
-        ];
+        return [];
     }
 }

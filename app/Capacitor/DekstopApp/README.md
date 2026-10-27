@@ -56,13 +56,17 @@ Electron, compile `electron/main.ts`, lalu membuka jendela.
 
 ### Halaman yang dibuka
 
-`server.url` di `capacitor.config.json` adalah sumber kebenaran:
+`server.url` di `capacitor.config.json` adalah sumber kebenaran. Native app
+pertama-tama membuka `/app-loading?target=...`, lalu melakukan warm-up request
+dan mengarahkan pengguna ke halaman target:
 
 ```json
-"server": { "url": "http://127.0.0.1:8000/home" }
+"server": { "url": "http://127.0.0.1:8000/app-loading?target=%2Fhome" }
 ```
 
-Desktop, Android, dan iOS semuanya memakai nilai yang sama.
+Desktop, Android, dan iOS semuanya memakai nilai yang sama. Gunakan
+`npm run set:url -- <url-target>` untuk mengubah target; loading screen tetap
+dipasang otomatis di depan target tersebut.
 
 ### Kenapa `main.ts` menimpa `CAPACITOR_ELECTRON_DEV_SERVER_URL`
 

@@ -9,6 +9,7 @@
     {{-- The sidebar is after the page content in the markup to fix issues with page content overlapping dropdown content from the sidebar. --}}
     <div
         class="fi-layout flex min-h-screen w-full flex-row-reverse overflow-x-clip"
+        style="padding-top: calc(4rem + env(safe-area-inset-top, 0px)) !important;"
     >
         <div
             @if (filament()->isSidebarCollapsibleOnDesktop())
@@ -46,7 +47,7 @@
 
             <main
                 @class([
-                    'fi-main mx-auto h-full w-full px-4 md:px-6 lg:px-8',
+                    'fi-main mx-auto h-full w-full px-4 pt-4 md:px-6 lg:px-8',
                     match ($maxContentWidth ??= (filament()->getMaxContentWidth() ?? MaxWidth::SevenExtraLarge)) {
                         MaxWidth::ExtraSmall, 'xs' => 'max-w-xs',
                         MaxWidth::Small, 'sm' => 'max-w-sm',

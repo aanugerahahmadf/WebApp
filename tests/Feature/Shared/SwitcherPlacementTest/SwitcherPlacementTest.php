@@ -12,12 +12,28 @@ use Tests\TestCase;
 /**
  * PENJAGA: switcher bahasa + switcher tema di surface yang benar.
  *
- * ATURAN (satu aturan, berlaku untuk ketiga panel):
+ * ATURAN:
  *
- *   - Mobile responsive (browser HP Android/iOS) dan APLIKASI MOBILE
- *     (Capacitor Android/iOS)  -> switcher di SIDEBAR (menu geser).
- *   - APLIKASI DESKTOP (Electron) -> switcher di TOPBAR / HEADER.
- *   - Tablet dan website desktop    -> switcher di TOPBAR.
+ *   PANEL STOREFRONT (Welcome / User):
+ *     - Mobile responsive (browser HP Android/iOS) dan APLIKASI MOBILE
+ *       (Capacitor Android/iOS)  -> switcher di SIDEBAR (menu geser).
+ *     - APLIKASI DESKTOP (Electron) -> switcher di TOPBAR / HEADER.
+ *     - Tablet dan website desktop    -> switcher di TOPBAR.
+ *
+ *   PANEL ADMIN:
+ *     - SEMUA platform (HP, tablet, website desktop, aplikasi desktop)
+ *       -> switcher di DASAR sidebar, bersama blok profil.
+ *
+ *     Perubahan perilaku (2026-10-25, KEDUA): panel admin tadinya ikut aturan
+ *     storefront -- topbar untuk semua permukaan non-HP; lalu dipindah ke
+ *     sidebar sebaris dengan logo; permintaan terakhir menaruh profil +
+ *     switcher bahasa + tema di ujung PALING BAWAH sidebar (gaya Laravel
+ *     Starter Kit: avatar + nama + username + email). Hook
+ *     GLOBAL_SEARCH_AFTER tetap tidak ada; hook SIDEBAR_NAV_START dirender
+ *     dari blok `fi-sidebar-bawah` di override sidebar (setelah </nav)).
+ *     Versi lama di header TIDAK dihapus, hanya dinonaktifkan lewat flag
+ *     $switchersAtSidebarBottom. Panel Welcome dan User tidak ikut: keduanya
+ *     masih memakai AppPlatform::switchersBelong*().
  *
  * Gejala yang pernah muncul dan tidak boleh kembali:
  *
@@ -31,6 +47,8 @@ use Tests\TestCase;
  *   2. Switcher dobel.
  *      Hook topbar dan hook sidebar harus memakai predikat yang sama
  *      (AppPlatform::switchersBelongInTopbar() / switchersBelongInSidebar()).
+ *      Di panel admin hal itu tidak bisa lagi terjadi karena hook topbar
+ *      sudah dihapus -- yang tersisa satu hook sidebar tanpa predikat.
  *
  *   3. Panel admin menyimpan switcher temanya di user menu (dropdown
  *      avatar), bukan di topbar -- jadi di aplikasi desktop dia tidak
@@ -156,15 +174,43 @@ final class SwitcherPlacementTest extends TestCase
     }
 
     #[DataProvider('desktopAppSurfaces')]
-    public function test_the_desktop_app_puts_both_switchers_in_the_topbar_of_the_admin_panel(RuntimePlatform $platform): void
+    public function test_the_desktop_app_puts_both_switchers_in_the_sidebar_of_the_admin_panel(RuntimePlatform $platform): void
     {
+        // PERUBAHAAN PERILAKU (2026-10-25): panel admin tadinya menaruh
+        // switcher di topbar untuk semua permukaan non-HP, sama seperti
+        // storefront. Permintaannya memindahkan keduanya ke sidebar di
+        // samping logo, jadi aplikasi desktop admin ikut pindah.
         $html = $this->adminHtml($platform);
 
-        $this->assertSame('topbar', self::surface($html, self::LANGUAGE_NEEDLE));
-        $this->assertSame('topbar', self::surface($html, self::THEME_NEEDLE));
+        $this->assertSame('sidebar', self::surface($html, self::LANGUAGE_NEEDLE));
+        $this->assertSame('sidebar', self::surface($html, self::THEME_NEEDLE));
 
         $this->assertSame(1, substr_count($html, self::LANGUAGE_NEEDLE));
         $this->assertSame(1, substr_count($html, self::THEME_NEEDLE));
+    }
+
+    #[DataProvider('desktopAppSurfaces')]
+    public function test_the_desktop_app_does_not_leave_switchers_in_the_admin_topbar(RuntimePlatform $platform): void
+    {
+        // Hook GLOBAL_SEARCH_AFTER panel admin sudah dihapus. Kalau ada
+        // sisa yang menaruh switcher di topbar, switcher jadi dobel --
+        // satu di topbar, satu lagi di sidebar.
+        $html = $this->adminHtml($platform);
+
+        $sidebarRow = strpos($html, 'fi-sidebar-switchers');
+
+        $this->assertNotFalse($sidebarRow, 'Baris switcher sidebar harus tetap ada.');
+
+        $this->assertGreaterThan(
+            $sidebarRow,
+            strpos($html, self::LANGUAGE_NEEDLE),
+            'Switcher bahasa tidak boleh lagi muncul SEBELUM baris sidebar (artinya di topbar).',
+        );
+        $this->assertGreaterThan(
+            $sidebarRow,
+            strpos($html, self::THEME_NEEDLE),
+            'Switcher tema tidak boleh lagi muncul SEBELUM baris sidebar (artinya di topbar).',
+        );
     }
 
     public static function desktopAppSurfaces(): array
@@ -212,6 +258,101 @@ final class SwitcherPlacementTest extends TestCase
 
         $this->assertSame('topbar', self::surface($html, self::LANGUAGE_NEEDLE));
         $this->assertSame('topbar', self::surface($html, self::THEME_NEEDLE));
+    }
+
+    public function test_the_desktop_website_puts_the_admin_switchers_in_the_sidebar(): void
+    {
+        // Panel admin tidak ikut aturan storefront: walau permukaannya
+        // website desktop, switchernya tetap di sidebar.
+        $html = $this->adminHtml(RuntimePlatform::WebsiteWindows);
+
+        $this->assertSame('sidebar', self::surface($html, self::LANGUAGE_NEEDLE));
+        $this->assertSame('sidebar', self::surface($html, self::THEME_NEEDLE));
+
+        $this->assertSame(1, substr_count($html, self::LANGUAGE_NEEDLE));
+        $this->assertSame(1, substr_count($html, self::THEME_NEEDLE));
+    }
+
+    public function test_the_admin_switchers_sit_at_the_bottom_of_the_sidebar_below_the_navigation(): void
+    {
+        // PERUBAHAN PERILAKU (2026-10-25, KEDUA): switcher + blok profil
+        // diminta "paling bawah" di sidebar. Jadi:
+        //   - baris switcher keluar dari <header> (header kembali hanya
+        //     berisi logo + tombol kontrol; markup lamanya dinonaktifkan
+        //     lewat flag $switchersAtSidebarBottom, bukan dihapus);
+        //   - hook SIDEBAR_NAV_START kini dirender SETELAH </nav>, di blok
+        //     `fi-sidebar-bawah`, bersama blok profil (fi-user-menu).
+        $html = $this->adminHtml(RuntimePlatform::WebsiteWindows);
+
+        // </nav> PERTAMA setelah <aside> adalah penutup nav sidebar -- nav
+        // topbar berada sebelum aside, jadi pencarian harus dimulai dari
+        // awal aside (class-nya `fi-sidebar fixed ...`).
+        $asideStart = strpos($html, 'fi-sidebar fixed');
+
+        $this->assertNotFalse($asideStart, 'Aside sidebar harus dirender.');
+
+        $navEnd = strpos($html, '</nav>', (int) $asideStart);
+
+        $this->assertNotFalse($navEnd, 'Penutup </nav> sidebar harus ada.');
+
+        $languagePos = strpos($html, self::LANGUAGE_NEEDLE);
+        $themePos = strpos($html, self::THEME_NEEDLE);
+
+        $this->assertNotFalse($languagePos, 'Switcher bahasa harus dirender.');
+        $this->assertNotFalse($themePos, 'Switcher tema harus dirender.');
+
+        $this->assertGreaterThan(
+            $navEnd,
+            $languagePos,
+            'Switcher bahasa harus berada DI BAWAH </nav> (dasar sidebar).',
+        );
+        $this->assertGreaterThan(
+            $navEnd,
+            $themePos,
+            'Switcher tema harus berada DI BAWAH </nav> (dasar sidebar).',
+        );
+
+        // Blok profil (avatar + nama + username + email) berdiri di tempat
+        // yang sama, bersama kedua switcher.
+        $userMenuPos = strpos($html, 'fi-user-menu');
+
+        $this->assertNotFalse($userMenuPos, 'Blok profil (user menu) harus dirender.');
+        $this->assertGreaterThan(
+            $navEnd,
+            $userMenuPos,
+            'Blok profil harus berada di dasar sidebar, bersama switcher.',
+        );
+
+        $this->assertLessThan(
+            $userMenuPos,
+            $languagePos,
+            'Switcher bahasa harus berada DI ATAS blok profil.',
+        );
+        $this->assertLessThan(
+            $userMenuPos,
+            $themePos,
+            'Switcher tema harus berada DI ATAS blok profil.',
+        );
+
+        // SATU masing-masing: versi lama di header tidak boleh ikut aktif.
+        $this->assertSame(1, substr_count($html, self::LANGUAGE_NEEDLE));
+        $this->assertSame(1, substr_count($html, self::THEME_NEEDLE));
+
+        // Logo tetap di header, dan switcher TIDAK ada di sana lagi.
+        $headerStart = strpos($html, 'fi-sidebar-header');
+        $headerEnd = strpos($html, '</header>', (int) $headerStart);
+
+        $this->assertNotFalse($headerStart, 'Header sidebar harus dirender.');
+        $this->assertNotFalse($headerEnd, 'Penutup </header> sidebar harus ada.');
+
+        $header = substr($html, (int) $headerStart, $headerEnd - (int) $headerStart);
+
+        $this->assertStringContainsString('fi-logo', $header);
+        $this->assertStringNotContainsString(
+            self::THEME_NEEDLE,
+            $header,
+            'Switcher tidak boleh lagi dirender di header sidebar -- hanya di dasar.',
+        );
     }
 
     // ── ADMIN: tidak boleh pakai strip tiga ikon milik Filament ─────────

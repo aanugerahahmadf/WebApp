@@ -44,7 +44,7 @@
             @if ($vaNumber)
                 <div class="rounded-lg border-2 border-gray-300 bg-white p-4 dark:border-gray-600 dark:bg-gray-900">
                     <div class="text-sm text-gray-600 dark:text-gray-400">{{ __('Nomor Virtual Account') }}</div>
-                    <div class="font-mono text-xl font-bold tracking-wider select-all">{{ $vaNumber }}</div>
+                    <div class="font-mono text-xl font-semibold tracking-wider select-all">{{ $vaNumber }}</div>
                 </div>
                 <div class="flex items-center justify-between text-sm">
                     <span class="text-gray-600 dark:text-gray-400">{{ __('Atas Nama') }}</span>
@@ -109,7 +109,7 @@
             <div
                 x-data="paymentCountdown('{{ $deadline->format('Y-m-d H:i:s') }}')"
                 x-init="init()"
-                class="text-2xl font-bold tabular-nums text-warning-700 dark:text-warning-300"
+                class="text-2xl font-semibold tabular-nums text-warning-700 dark:text-warning-300"
                 x-text="display"
             ></div>
             <div class="mt-1 text-xs text-gray-600 dark:text-gray-400">{{ __('Batas akhir') }}: {{ $deadline->translatedFormat('d F Y H:i') }}</div>

@@ -53,7 +53,7 @@ class TiersRelationManager extends RelationManager
         return $form->schema([
             Forms\Components\Section::make(__('Paket & Keterkaitan'))
                 ->description(__('Nama, deskripsi, dan harga paket. Paket ini muncul sebagai pilihan di halaman detail Catalog, tepat di atas tombol Order now / Add to Cart.'))
-                ->icon('heroicon-s-gift')
+                ->icon('/images/icons/gift.svg')
                 ->schema([
                     Forms\Components\Select::make('name')
                         ->label(__('Nama Paket'))
@@ -113,7 +113,7 @@ class TiersRelationManager extends RelationManager
 
                             $set('name_translations', $translations);
                         })
-                        ->prefixIcon('heroicon-s-tag'),
+                        ->prefixIcon('/images/icons/tag.svg'),
 
                     /*
                      * Field tersembunyi untuk `name_translations`.
@@ -139,14 +139,14 @@ class TiersRelationManager extends RelationManager
                         ->maxValue(99)
                         ->step(1)
                         ->default(1)
-                        ->prefixIcon('heroicon-s-bars-3'),
+                        ->prefixIcon('/images/icons/menu.svg'),
 
                     Forms\Components\TextInput::make('slug')
                         ->label(__('Slug'))
                         ->required()
                         ->unique(ignorable: fn (?Model $record) => $record)
                         ->maxLength(255)
-                        ->prefixIcon('heroicon-s-link'),
+                        ->prefixIcon('/images/icons/link.svg'),
 
                     /*
                      * DESKRIPSI TIDAK DIEDIT DI SINI -- sengaja.
@@ -169,7 +169,7 @@ class TiersRelationManager extends RelationManager
                 ])->columns(2),
 
             Forms\Components\Section::make(__('Harga'))
-                ->icon('heroicon-s-currency-dollar')
+                ->icon('/images/icons/dollar.svg')
                 ->schema([
                     Forms\Components\TextInput::make('price')
                         ->label(__('Harga Paket'))
@@ -193,7 +193,7 @@ class TiersRelationManager extends RelationManager
                         ->numeric()
                         ->default(10)
                         ->minValue(0)
-                        ->prefixIcon('heroicon-s-archive-box'),
+                        ->prefixIcon('/images/icons/archive_box.svg'),
 
                     /*
                      * TagsInput "Fitur Paket" DIHAPUS -- sama dengan field
@@ -225,7 +225,7 @@ class TiersRelationManager extends RelationManager
                     ->searchable()
                     ->sortable()
                     ->weight('bold')
-                    ->icon('heroicon-s-gift')
+                    ->icon('/images/icons/gift.svg')
                     ->extraAttributes(['data-typo' => 'heading', 'data-field' => 'catalogs.tier_name'])
                     ->description(fn ($record): string => $this->statusHint($record, $expected)),
 
@@ -235,7 +235,7 @@ class TiersRelationManager extends RelationManager
                     ->sortable()
                     ->alignment('end')
                     ->extraAttributes(['data-field' => 'catalogs.tier_price'])
-                    ->icon('heroicon-s-banknotes'),
+                    ->icon('/images/icons/banknotes.svg'),
 
                 Tables\Columns\TextColumn::make('discount_price')
                     ->label(__('Harga Diskon'))

@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Auth\OtpRequestPasswordReset;
 
-use App\Filament\Admin\Auth\Concerns\HasAuthBreadcrumbs;
 use App\Filament\Admin\Auth\VerifyOtp\VerifyOtp;
 use App\Models\Admin\Admin;
 use Filament\Actions\Action;
@@ -29,7 +28,6 @@ use Illuminate\Support\Facades\Mail;
  */
 class OtpRequestPasswordReset extends BaseRequestPasswordReset
 {
-    use HasAuthBreadcrumbs;
 
     public function getHeading(): string|Htmlable
     {

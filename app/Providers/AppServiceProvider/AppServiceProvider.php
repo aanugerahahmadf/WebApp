@@ -104,6 +104,8 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
 use Spatie\Backup\BackupServiceProvider;
@@ -273,6 +275,27 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        RateLimiter::for('api', function ($request) {
+            return Limit::perMinute(config('security.rate_limits.api', 120))
+                ->by($request->user()?->getAuthIdentifier() ?: $request->ip());
+        });
+
+        RateLimiter::for('auth', function ($request) {
+            return Limit::perMinute(config('security.rate_limits.auth', 10))
+                ->by(strtolower((string) $request->input('email')).'|'.$request->ip());
+        });
+
+        RateLimiter::for('admin', function ($request) {
+            return Limit::perMinute(config('security.rate_limits.admin', 60))
+                ->by($request->user()?->getAuthIdentifier() ?: $request->ip());
+        });
+
+        RateLimiter::for('guest-chat', function ($request) {
+            $guestId = (string) $request->input('guest_id', '');
+            return Limit::perMinute(config('security.rate_limits.guest_chat', 20))
+                ->by(hash('sha256', $guestId.'|'.$request->ip()));
+        });
+
         // IkoN vendor Filament ikut BERWARNA: alias internal (tombol aksi
         // bawaan, editor file upload, boolean, notifikasi, filter tabel...)
         // dan SEMUA nama Heroicon yang di-hardcode vendor ditimpa dengan

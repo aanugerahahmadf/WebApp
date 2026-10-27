@@ -4,10 +4,10 @@
 
     Filament merender ikon internal (tombol aksi, notifikasi database,
     tombol tutup modal, pagination, dsb.) lewat komponen anonim ini.
-    Sebelum ditimpa, nama ikon seperti 'heroicon-m-x-mark' jatuh ke
-    `@svg()` -- yang langsung merender VEKTOR Heroicon bawaan paket
+    Sebelum ditimpa, nama ikon bawaan Filament jatuh ke
+    `@svg()` -- yang langsung merender VEKTOR bawaan paket
     blade-icons -- TANPA pernah melalui `FilamentIcon::resolve()`. Itu
-    yang membuat ikon "masih heroicons" di beberapa tempat (panel
+    yang membuat ikon "masih bawaan" di beberapa tempat (panel
     notifikasi, tombol close) meskipun alias sudah didaftarkan: alias
     hanya menutup ikon yang PUNYA `icon-alias`, bukan nama literal.
 
@@ -15,7 +15,7 @@
     diterjemahkan `AppIcon::named()` menjadi path aset
     `/images/icons/<file>.svg` (vektor Material Symbols Google yang
     diwarnai template). Path selalu mengandung '/', jadi komponen
-    merendernya sebagai `<img>` -- bukan vektor Heroicon.
+    merendernya sebagai `<img>` -- bukan vektor bawaan.
 
     Nama yang tidak ada di peta dikembalikan apa adanya, jadi perilaku
     yang rendah risiko. Sumber asli komponen tidak berubah selain

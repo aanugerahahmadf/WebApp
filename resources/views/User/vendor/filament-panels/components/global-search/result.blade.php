@@ -24,7 +24,10 @@
         @if ($details)
             <dl class="mt-1">
                 @foreach ($details as $label => $value)
-                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                    <div @class([
+                        'text-sm text-gray-500 dark:text-gray-400',
+                        'fi-global-search-rating' => str_contains(strtolower((string) $label), 'rating'),
+                    ])>
                         @if ($isAssoc ??= \Illuminate\Support\Arr::isAssoc($details))
                             <dt class="inline font-medium">{{ $label }}:</dt>
                         @endif

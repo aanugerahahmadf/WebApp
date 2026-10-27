@@ -16,6 +16,11 @@ class ReviewResolver
      */
     public function stats($root, array $args, GraphQLContext $context)
     {
+        $user = $context->user();
+        if (! $user || ! $user->hasRole('admin')) {
+            throw new \Exception('Unauthorized');
+        }
+
         $query = Review::query();
         
         if (isset($args['catalogId'])) {

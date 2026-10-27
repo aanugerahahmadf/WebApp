@@ -21,12 +21,12 @@
                         icon="/images/icons/download.svg"
                         color="primary"
                         size="xl"
-                        class="w-full sm:w-auto px-10 rounded-2xl shadow-lg transition-transform hover:scale-[1.02] active:scale-95 text-lg font-bold"
+                        class="w-full sm:w-auto px-10 rounded-2xl shadow-lg transition-transform hover:scale-[1.02] active:scale-95 text-lg font-semibold"
                     >
                         {{ __('SIMPAN QRIS') }}
                     </x-filament::button>
                     
-                    <p class="text-[10px] text-center text-gray-400 dark:text-gray-500 font-bold uppercase tracking-[0.2em]">
+                    <p class="text-[10px] text-center text-gray-400 dark:text-gray-500 font-semibold uppercase tracking-[0.2em]">
                         {{ __('Pindai atau unduh gambar ini') }}
                     </p>
                 </div>
@@ -40,10 +40,10 @@
     >
         <x-slot name="heading">
             <div class="flex items-center justify-between w-full pr-4">
-                <span class="text-xs font-bold uppercase tracking-widest text-primary-600 dark:text-primary-400">
+                <span class="text-xs font-semibold uppercase tracking-widest text-primary-600 dark:text-primary-400">
                     {{ __('Detail Transfer') }}
                 </span>
-                <x-filament::badge color="primary" size="sm" class="font-bold">
+                <x-filament::badge color="primary" size="sm" class="font-semibold">
                     {{ $method->name }}
                 </x-filament::badge>
             </div>
@@ -51,7 +51,7 @@
 
         <div class="flex flex-col gap-5 py-2">
             <div class="flex flex-col gap-1 text-center sm:text-left">
-                <span class="text-3xl font-bold tracking-[0.2em] text-gray-950 dark:text-white select-all">
+                <span class="text-3xl font-semibold tracking-[0.2em] text-gray-950 dark:text-white select-all">
                     {{ $method->account_number ?? '-' }}
                 </span>
                 <span class="text-sm font-semibold text-gray-500 dark:text-gray-400 flex items-center justify-center sm:justify-start gap-2">

@@ -222,7 +222,7 @@ class CatalogResource extends Resource
                 // dengan nama, urutan, dan slug yang sudah benar.
                 Forms\Components\Section::make(__('Pilihan Paket'))
                     ->description(__('Lima paket di bawah ini muncul sebagai pilihan di halaman detail katalog, tepat di atas tombol Order now / Add to Cart. Isi harga dan deskripsinya; bullet Fitur Paket tampil sebagai daftar centang di halaman pelanggan.'))
-                    ->icon('heroicon-s-gift')
+                    ->icon('/images/icons/gift.svg')
                     ->collapsible()
                     ->collapsed()
                     ->schema(
@@ -818,7 +818,7 @@ class CatalogResource extends Resource
              * memanggil `applyEagerLoading()` sendiri, jadi penggantiannya ke
              * view di atas membuat eager loading ini wajib ditulis manual.
              */
-            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with('media'))
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['media', 'tiers']))
             ->columns([
                 /*
                  * ID DI PALING KIRI.
@@ -842,7 +842,7 @@ class CatalogResource extends Resource
                     ->label(__('Nama Katalog'))
                     ->searchable()
                     ->sortable()
-                    ->icon('heroicon-s-sparkles'),
+                    ->icon('/images/icons/sparkles.svg'),
                 Tables\Columns\TextColumn::make('category.name')
                     ->label(__('Kategori'))
                     ->badge()
@@ -861,16 +861,32 @@ class CatalogResource extends Resource
                 Tables\Columns\TextColumn::make('price')
                     ->label(__('Harga'))
                     ->money('IDR')
+                    ->getStateUsing(function (Catalog $record): float {
+                        $standardTier = $record->tiers->first(
+                            fn (Package $tier): bool => data_get($tier->name_translations, 'en') === 'Standard Flower Decoration Package'
+                        ) ?? $record->tiers->first();
+
+                        return (float) ($standardTier?->price ?? $record->price);
+                    })
                     ->sortable()
                     ->alignment('end')
-                    ->icon('heroicon-s-banknotes'),
+                    ->icon('/images/icons/banknotes.svg'),
                 Tables\Columns\TextColumn::make('discount_price')
                     ->label(__('Harga Diskon'))
                     ->money('IDR')
+                    ->getStateUsing(function (Catalog $record): ?float {
+                        $standardTier = $record->tiers->first(
+                            fn (Package $tier): bool => data_get($tier->name_translations, 'en') === 'Standard Flower Decoration Package'
+                        ) ?? $record->tiers->first();
+
+                        return $standardTier?->discount_price !== null
+                            ? (float) $standardTier->discount_price
+                            : ($record->discount_price !== null ? (float) $record->discount_price : null);
+                    })
                     ->sortable()
                     ->alignment('end')
                     ->color('success')
-                    ->icon('heroicon-s-tag')
+                    ->icon('/images/icons/tag.svg')
                     ->toggleable(isToggledHiddenByDefault: false),
                 Tables\Columns\TextColumn::make('stock')
                     ->label(__('Stok'))
@@ -903,12 +919,12 @@ class CatalogResource extends Resource
                 Tables\Actions\ExportAction::make()
                     ->exporter(CatalogExporter::class)
                     ->label(__('Ekspor Data'))
-                    ->icon('heroicon-s-arrow-down-tray')
+                    ->icon('/images/icons/download.svg')
                     ->color('success'),
 
                 Tables\Actions\CreateAction::make()
                     ->label(__('Tambah Catalog'))
-                    ->icon('heroicon-s-plus')
+                    ->icon('/images/icons/plus.svg')
                     ->successNotification(
                         Notification::make()
                             ->success()

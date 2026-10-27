@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GraphQL\GraphQLController;
+use App\Http\Middleware\GraphQLMiddleware;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,11 +15,9 @@ use App\Http\Controllers\GraphQL\GraphQLController;
 |
 */
 
-Route::group(['prefix' => 'graphql', 'middleware' => ['api']], function () {
+Route::group(['prefix' => 'graphql', 'middleware' => ['api', GraphQLMiddleware::class]], function () {
     // GraphQL endpoint
     Route::post('/', [GraphQLController::class, 'index']);
-    Route::get('/', [GraphQLController::class, 'index']);
-
     // GraphQL Playground (only in non-production)
     if (config('graphql.playground.enabled', false)) {
         Route::get('/playground', [GraphQLController::class, 'playground']);

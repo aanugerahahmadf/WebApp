@@ -28,20 +28,9 @@ trait HasAuthBreadcrumbs
         return rtrim('/'.$panel->getPath(), '/').$panel->getLoginRouteSlug();
     }
 
-    public function getBreadcrumbs(): array
+        public function getBreadcrumbs(): array
     {
-        $parent = $this->resolveAuthParentCrumb();
-
-        $current = $this->getAuthBreadcrumbsCurrentLabel();
-
-        if ($parent !== null) {
-            return [
-                $parent['url'] => $parent['label'],
-                $current,
-            ];
-        }
-
-        return [$current];
+        return [];
     }
 
     protected function getAuthBreadcrumbsCurrentLabel(): string

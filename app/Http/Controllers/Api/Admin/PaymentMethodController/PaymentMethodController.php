@@ -33,7 +33,7 @@ class PaymentMethodController extends Controller
                 'per_page' => $methods->perPage(), 'total' => $methods->total(),
             ]]);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil metode pembayaran'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil metode pembayaran'), 'error' => null], 500);
         }
     }
 
@@ -69,7 +69,7 @@ class PaymentMethodController extends Controller
         } catch (ValidationException $e) {
             return response()->json(['status' => 'error', 'message' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal membuat metode pembayaran'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal membuat metode pembayaran'), 'error' => null], 500);
         }
     }
 
@@ -97,7 +97,7 @@ class PaymentMethodController extends Controller
         } catch (ValidationException $e) {
             return response()->json(['status' => 'error', 'message' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal memperbarui metode pembayaran'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal memperbarui metode pembayaran'), 'error' => null], 500);
         }
     }
 

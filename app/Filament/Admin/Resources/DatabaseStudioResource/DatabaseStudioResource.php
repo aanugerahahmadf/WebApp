@@ -6,6 +6,7 @@ use App\Filament\Shared\Concerns\HasModelColumns\HasModelColumns;
 use App\Filament\Shared\Concerns\HasStandardActions\HasStandardActions;
 use App\Models\DatabaseStudio\Migration;
 use App\Support\AppIcon\AppIcon;
+use App\Support\AdminAccess\AdminAccess;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
@@ -27,6 +28,26 @@ class DatabaseStudioResource extends Resource
     protected static ?string $navigationIcon = AppIcon::DATABASE;
 
     protected static ?int $navigationSort = 205;
+
+    public static function canViewAny(): bool
+    {
+        return AdminAccess::allows('view_database');
+    }
+
+    public static function canCreate(): bool
+    {
+        return AdminAccess::allows('manage_database_migrations', 'manage_migrations');
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return AdminAccess::allows('manage_database_migrations', 'manage_migrations');
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return AdminAccess::allows('manage_database_migrations', 'manage_migrations');
+    }
 
     public static function getNavigationLabel(): string
     {

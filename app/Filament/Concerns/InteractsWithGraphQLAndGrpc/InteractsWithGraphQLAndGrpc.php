@@ -43,7 +43,7 @@ trait InteractsWithGraphQLAndGrpc
                 'data' => null,
                 'errors' => [
                     [
-                        'message' => $e->getMessage(),
+                        'message' => __('Terjadi kesalahan internal.'),
                     ],
                 ],
             ];

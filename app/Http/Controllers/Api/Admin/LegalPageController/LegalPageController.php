@@ -28,7 +28,7 @@ class LegalPageController extends Controller
                 'per_page' => $pages->perPage(), 'total' => $pages->total(),
             ]]);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil halaman legal'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil halaman legal'), 'error' => null], 500);
         }
     }
 
@@ -57,7 +57,7 @@ class LegalPageController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['status' => 'error', 'message' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal membuat halaman legal'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal membuat halaman legal'), 'error' => null], 500);
         }
     }
 
@@ -77,7 +77,7 @@ class LegalPageController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['status' => 'error', 'message' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal memperbarui halaman legal'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal memperbarui halaman legal'), 'error' => null], 500);
         }
     }
 
@@ -98,7 +98,7 @@ class LegalPageController extends Controller
         try {
             return response()->json(['status' => 'success', 'data' => TermsOfService::all()]);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil terms of service'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil terms of service'), 'error' => null], 500);
         }
     }
 
@@ -125,7 +125,7 @@ class LegalPageController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['status' => 'error', 'message' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal membuat terms of service'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal membuat terms of service'), 'error' => null], 500);
         }
     }
 
@@ -144,7 +144,7 @@ class LegalPageController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['status' => 'error', 'message' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal memperbarui terms of service'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal memperbarui terms of service'), 'error' => null], 500);
         }
     }
 
@@ -165,7 +165,7 @@ class LegalPageController extends Controller
         try {
             return response()->json(['status' => 'success', 'data' => PrivacyPolicy::all()]);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil privacy policy'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil privacy policy'), 'error' => null], 500);
         }
     }
 
@@ -192,7 +192,7 @@ class LegalPageController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['status' => 'error', 'message' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal membuat privacy policy'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal membuat privacy policy'), 'error' => null], 500);
         }
     }
 
@@ -211,7 +211,7 @@ class LegalPageController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['status' => 'error', 'message' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal memperbarui privacy policy'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal memperbarui privacy policy'), 'error' => null], 500);
         }
     }
 
@@ -232,7 +232,7 @@ class LegalPageController extends Controller
         try {
             return response()->json(['status' => 'success', 'data' => WeddingDecorationPolicy::all()]);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil wedding decoration policy'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil wedding decoration policy'), 'error' => null], 500);
         }
     }
 
@@ -259,7 +259,7 @@ class LegalPageController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['status' => 'error', 'message' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal membuat wedding decoration policy'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal membuat wedding decoration policy'), 'error' => null], 500);
         }
     }
 
@@ -278,7 +278,7 @@ class LegalPageController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['status' => 'error', 'message' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal memperbarui wedding decoration policy'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal memperbarui wedding decoration policy'), 'error' => null], 500);
         }
     }
 

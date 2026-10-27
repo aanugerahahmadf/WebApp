@@ -25,6 +25,19 @@ class PersonalInfoComponentSuperAdmin extends Component implements HasForms
 
     public ?array $data = [];
 
+    /**
+     * Mode baca vs mode sunting -- pola yang sama dengan panel User.
+     *
+     * Halaman profil terbuka dalam keadaan TERKUNCI: semua field disabled
+     * dan yang tampil hanya tombol "Edit". Field baru bisa diubah setelah
+     * tombol itu ditekan, lalu tombolnya berganti jadi "Save Changes".
+     *
+     * Server tetap penjaga terakhir: save() langsung keluar kalau
+     * $isEditing masih false, jadi field yang dipaksa aktif dari DevTools
+     * pun tidak bisa menyimpan apa pun.
+     */
+    public bool $isEditing = false;
+
     protected static int $sort = 1;
 
     public static function getSort(): int
@@ -58,6 +71,10 @@ class PersonalInfoComponentSuperAdmin extends Component implements HasForms
                 'mid_name' => $midName,
                 'last_name' => $lastName,
                 'full_name' => $fullName,
+                // Username ikut di section Profile Information (permintaan
+                // 2026-10-26). Sebelumnya ia berdiri sendiri di section
+                // "Username" yang terpisah di bawah form.
+                'username' => $user->username,
                 ...WhatsappField::state($user->whatsapp),
             ]);
         }
@@ -65,13 +82,15 @@ class PersonalInfoComponentSuperAdmin extends Component implements HasForms
 
     public function form(Form $form): Form
     {
+        $user = Auth::user();
+
         return $form
             ->statePath('data')
             ->schema([
                 Section::make(__('Informasi Profil'))
                     ->aside()
                     ->icon('/images/icons/user_circle.svg')
-                    ->description(__('Perbarui foto profil, nama, dan nomor WhatsApp Anda.'))
+                    ->description(__('Perbarui foto profil, nama, username, dan nomor WhatsApp Anda.'))
                     ->schema([
                         FileUpload::make('avatar_url')
                             ->label(__(''))
@@ -89,6 +108,7 @@ class PersonalInfoComponentSuperAdmin extends Component implements HasForms
                             ])
                             ->extraFieldWrapperAttributes(['class' => 'avatar-upload-centered'])
                             ->alignCenter()
+                            ->disabled(fn (): bool => ! $this->isEditing)
                             ->columnSpanFull(),
                         TextInput::make('email')
                             ->label(__('Email'))
@@ -101,6 +121,7 @@ class PersonalInfoComponentSuperAdmin extends Component implements HasForms
                             ->label(__('Nama Depan'))
                             ->required()
                             ->maxLength(255)
+                            ->disabled(fn (): bool => ! $this->isEditing)
                             ->live(onBlur: true)
                             ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                 $set('full_name', $this->buildFullName($state, $get('mid_name'), $get('last_name')));
@@ -108,6 +129,7 @@ class PersonalInfoComponentSuperAdmin extends Component implements HasForms
                         TextInput::make('mid_name')
                             ->label(__('Nama Tengah'))
                             ->maxLength(255)
+                            ->disabled(fn (): bool => ! $this->isEditing)
                             ->live(onBlur: true)
                             ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                 $set('full_name', $this->buildFullName($get('first_name'), $state, $get('last_name')));
@@ -115,6 +137,7 @@ class PersonalInfoComponentSuperAdmin extends Component implements HasForms
                         TextInput::make('last_name')
                             ->label(__('Nama Belakang'))
                             ->maxLength(255)
+                            ->disabled(fn (): bool => ! $this->isEditing)
                             ->live(onBlur: true)
                             ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                 $set('full_name', $this->buildFullName($get('first_name'), $get('mid_name'), $state));
@@ -126,10 +149,26 @@ class PersonalInfoComponentSuperAdmin extends Component implements HasForms
                             ->prefixIcon('/images/icons/user.svg')
                             ->helperText(__('Terisi otomatis dari Nama Depan, Tengah, dan Belakang.'))
                             ->columnSpanFull(),
-                        WhatsappField::group(withOtpButton: true),
+                        // Username DULU section sendiri ("Username -- Update
+                        // your username"). Sekarang satu section dengan nama,
+                        // foto, dan WhatsApp, sama seperti panel User.
+                        TextInput::make('username')
+                            ->label(__('Username'))
+                            ->placeholder(__('Masukkan username Anda'))
+                            ->required()
+                            ->disabled(fn (): bool => ! $this->isEditing)
+                            ->minLength(3)
+                            ->maxLength(255)
+                            ->unique(table: 'admins', column: 'username', ignorable: $user)
+                            ->autocomplete('username'),
+                        WhatsappField::group(
+                            withOtpButton: true,
+                            disabled: fn (): bool => ! $this->isEditing,
+                        ),
                         TextInput::make('otp_code')
                             ->label(__('Kode Verifikasi OTP'))
                             ->numeric()
+                            ->disabled(fn (): bool => ! $this->isEditing)
                             ->length(6)
                             ->placeholder(__('6 digit'))
                             ->live()
@@ -167,8 +206,19 @@ class PersonalInfoComponentSuperAdmin extends Component implements HasForms
         Log::info('PersonalInfoComponentSuperAdmin: WhatsApp OTP sent', ['whatsapp' => $phone]);
     }
 
+    public function startEditing(): void
+    {
+        $this->isEditing = true;
+    }
+
     public function save(): void
     {
+        // Halaman dibuka dalam mode baca. Simpan hanya mungkin setelah
+        // tombol "Edit" ditekan -- lihat catatan di properti $isEditing.
+        if (! $this->isEditing) {
+            return;
+        }
+
         try {
             $data = $this->form->getState();
 
@@ -226,6 +276,7 @@ class PersonalInfoComponentSuperAdmin extends Component implements HasForms
                 'mid_name' => $user->mid_name,
                 'last_name' => $user->last_name,
                 'full_name' => $this->buildFullName($user->first_name, $user->mid_name, $user->last_name),
+                'username' => $user->username,
                 ...WhatsappField::state($user->whatsapp),
             ]);
 
@@ -234,6 +285,9 @@ class PersonalInfoComponentSuperAdmin extends Component implements HasForms
                 ->success()
                 ->send();
 
+            // Kembali ke mode baca: field terkunci lagi dan tombolnya
+            // berganti jadi "Edit", sama seperti panel User.
+            $this->isEditing = false;
             $this->dispatch('profile-updated');
         } catch (\Exception $e) {
             Log::error('PersonalInfoComponentSuperAdmin: Error saving profile', ['error' => $e->getMessage()]);

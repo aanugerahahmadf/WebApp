@@ -20,8 +20,11 @@ class PaymentMethodSeeder extends Seeder
                 'type'           => 'virtual_account',
                 'code'           => 'bri_va',
                 'bank_name'      => 'BRI',
-                'account_number' => '421201032041536',
-                'account_holder' => 'Anugerah Ahmad Fachrurochim',
+                // Jangan isi rekening merchant di metode VA. Nomor VA dan
+                // nama pemiliknya dibuat untuk user/order oleh BRI dan
+                // dikirim kembali setelah create-va berhasil.
+                'account_number' => null,
+                'account_holder' => null,
                 'image_url'      => null,
                 'instructions'   => "1. Buka m-banking bank mana pun (BCA, Mandiri, BNI, BRI, dll) atau aplikasi e-wallet\n2. Pilih menu (Transfer/Bayar ke) → nomor Virtual Account BRI di bawah ini\n3. Masukkan nominal sesuai total pembayaran\n4. Konfirmasi → saldo otomatis berkurang, uang masuk rekening BRI\n5. Status pesanan otomatis LUNAS tanpa verifikasi admin",
                 'fee'            => 0,

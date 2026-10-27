@@ -2,8 +2,8 @@
 
 namespace App\Filament\Admin\Pages\TerminalPage;
 
-use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Support\AppIcon\AppIcon;
+use App\Support\AdminAccess\AdminAccess;
 use App\Support\Terminal\ArtisanCommandInput;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -25,13 +25,17 @@ use Symfony\Component\Console\Output\BufferedOutput;
  */
 class TerminalPage extends Page
 {
-    use HasDynamicBreadcrumbs;
 
     protected static string $view = 'Admin.pages.terminal-page.terminal-page';
 
     protected static ?string $navigationIcon = AppIcon::CODE;
 
     protected static ?int $navigationSort = 206;
+
+    public static function canAccess(): bool
+    {
+        return AdminAccess::allows('manage_system_configuration', 'manage_database');
+    }
 
     /**
      * State form.
@@ -126,12 +130,9 @@ class TerminalPage extends Page
         return __('Pengaturan Sistem');
     }
 
-    public function getBreadcrumbs(): array
+        public function getBreadcrumbs(): array
     {
-        return [
-            ...$this->breadcrumbParentCrumb(),
-            $this->getTitle(),
-        ];
+        return [];
     }
 
     public function form(Form $form): Form

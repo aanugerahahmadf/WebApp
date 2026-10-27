@@ -2,9 +2,6 @@
 
 use App\Http\Controllers\Api\User\AppSettingsController\AppSettingsController;
 use App\Http\Middleware\SuperAdmin\SuperAdmin;
-use App\Models\User\User;
-use App\Support\AppPlatform\AppPlatform;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -33,34 +30,8 @@ Route::get('/settings', [AppSettingsController::class, 'index']);
 // DIAGNOSTIC PING — test sinkronisasi mobile (GET /api/ping)
 // -----------------------------------------------------------------------------
 Route::get('/ping', function () {
-    $isMobile = AppPlatform::isNativeMobile();
-    $hostIp = AppPlatform::mobileHostIp();
-
-    $dbStatus = 'unknown';
-    $userCount = 0;
-    $dbError = null;
-
-    try {
-        $userCount = User::count();
-        $dbStatus = 'connected';
-    } catch (Throwable $e) {
-        $dbStatus = 'error';
-        $dbError = $e->getMessage();
-    }
-
     return response()->json([
         'status' => 'ok',
-        'timestamp' => now()->toIso8601String(),
-        'is_mobile' => $isMobile,
-        'host_ip' => $hostIp,
-        'os' => PHP_OS_FAMILY,
-        'db_driver' => config('database.default'),
-        'db_status' => $dbStatus,
-        'user_count' => $userCount,
-        'db_error' => $dbError,
-        'app_url' => config('app.url'),
-        'locale' => app()->getLocale(),
-        'php_version' => PHP_VERSION,
     ]);
 });
 
@@ -130,7 +101,8 @@ require __DIR__.'/user/PaymentWebhookController/PaymentWebhookController/Payment
 |
 */
 Route::middleware('auth:sanctum')->group(function (): void {
-    Route::prefix('admin')->middleware(SuperAdmin::class)->group(function (): void {
+    Route::prefix('admin')->middleware([SuperAdmin::class, 'throttle:admin'])->group(function (): void {
+        require __DIR__.'/admin/AnalyticsController/AnalyticsController/AnalyticsController.php';
         require __DIR__.'/admin/SearchController/SearchController/SearchController.php';
         require __DIR__.'/admin/HomeController/HomeController/HomeController.php';
         require __DIR__.'/admin/UserController/UserController/UserController.php';

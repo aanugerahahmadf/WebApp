@@ -5,7 +5,6 @@ namespace App\Filament\Admin\Resources\DatabaseStudioResource\Pages\ListDatabase
 use App\Filament\Admin\Resources\CatalogResource\CatalogResource;
 use App\Filament\Admin\Resources\DatabaseStudioResource\DatabaseStudioResource;
 use App\Filament\Admin\Exports\MigrationExporter\MigrationExporter;
-use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\Shared\Concerns\HasStandardActions\HasStandardActions;
 use App\Models\DatabaseStudio\Migration;
 use Filament\Forms\Components\Select;
@@ -19,6 +18,7 @@ use Filament\Tables\Actions\ExportAction;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use App\Support\Terminal\ArtisanCommandInput;
 use Throwable;
 
 /**
@@ -35,7 +35,6 @@ use Throwable;
  */
 class ListDatabaseStudio extends \Filament\Resources\Pages\ListRecords
 {
-    use HasDynamicBreadcrumbs;
     use HasStandardActions;
 
     /**
@@ -108,12 +107,21 @@ class ListDatabaseStudio extends \Filament\Resources\Pages\ListRecords
                         ->action(function (array $data): void {
                             $database = (string) ($data['database'] ?? 'sqlite');
 
-                            Artisan::call('migrate', ['--database' => $database]);
+                            try {
+                                Artisan::call('migrate', ['--database' => $database]);
 
-                            $this->notify(
-                                __('Migration Selesai Dijalankan'),
-                                (string) Artisan::output(),
-                            );
+                                $this->notify(
+                                    __('Migration Selesai Dijalankan'),
+                                    (string) Artisan::output(),
+                                );
+                            } catch (Throwable $exception) {
+                                $this->notify(
+                                    __('Migration Gagal Dijalankan'),
+                                    $exception->getMessage(),
+                                    null,
+                                    'danger',
+                                );
+                            }
                         }),
 
                     Action::make('rollback_migration')
@@ -225,7 +233,7 @@ class ListDatabaseStudio extends \Filament\Resources\Pages\ListRecords
                             $created = 0;
 
                             if ($model !== null && method_exists($model, 'factory')) {
-                                $created = $model::factory()->count($count)->create();
+                                $created = $model::factory()->count($count)->create()->count();
                             }
 
                             $this->notify(
@@ -251,7 +259,7 @@ class ListDatabaseStudio extends \Filament\Resources\Pages\ListRecords
                                 ->required(),
                         ])
                         ->action(function (array $data): void {
-                            $command = $this->normalizeCommand((string) ($data['command'] ?? ''));
+                            $command = ArtisanCommandInput::normalize((string) ($data['command'] ?? ''));
 
                             if ($command === '') {
                                 $this->notify(__('Perintah Tidak Valid'), __('Perintah yang dimasukkan tidak berisi perintah apa pun.'), null, 'warning');
@@ -259,7 +267,7 @@ class ListDatabaseStudio extends \Filament\Resources\Pages\ListRecords
                                 return;
                             }
 
-                            $commandName = str($command)->before(' ')->toString();
+                            $commandName = ArtisanCommandInput::commandName($command);
 
                             if (in_array($commandName, static::BLACKLISTED_COMMANDS, true)) {
                                 $this->notify(__('Perintah Diblokir'), __('Perintah :command tidak boleh dijalankan dari sini.', ['command' => $commandName]), null, 'danger');
@@ -393,7 +401,8 @@ class ListDatabaseStudio extends \Filament\Resources\Pages\ListRecords
 
         $notification->send();
 
-        $user = auth()->user();
+        // Panel Admin memakai guard `admin`, bukan guard default `web`.
+        $user = filament()->auth()->user();
 
         if ($user !== null) {
             $notification->sendToDatabase($user);
@@ -560,11 +569,8 @@ class ListDatabaseStudio extends \Filament\Resources\Pages\ListRecords
         return response()->download($path, $filename);
     }
 
-    public function getBreadcrumbs(): array
+        public function getBreadcrumbs(): array
     {
-        return [
-            ...$this->breadcrumbParentCrumb(),
-            DatabaseStudioResource::getUrl('index') => DatabaseStudioResource::getNavigationLabel(),
-        ];
+        return [];
     }
 }

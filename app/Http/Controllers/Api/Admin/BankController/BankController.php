@@ -28,7 +28,7 @@ class BankController extends Controller
                 'per_page' => $banks->perPage(), 'total' => $banks->total(),
             ]]);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil bank'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil bank'), 'error' => null], 500);
         }
     }
 
@@ -60,7 +60,7 @@ class BankController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['status' => 'error', 'message' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal membuat bank'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal membuat bank'), 'error' => null], 500);
         }
     }
 
@@ -84,7 +84,7 @@ class BankController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['status' => 'error', 'message' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal memperbarui bank'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal memperbarui bank'), 'error' => null], 500);
         }
     }
 

@@ -45,8 +45,21 @@ class CatalogController extends GraphQLDelegatingController
                         maxCapacity
                         averageRating
                         final_price
-                        is_wishlisted
-                        category {
+                         is_wishlisted
+                         tiers {
+                             id
+                             catalogId
+                             name
+                             description
+                             price
+                             discountPrice
+                             finalPrice
+                             stock
+                             features
+                             sortOrder
+                             imageUrl
+                         }
+                         category {
                             id
                             name
                             slug

@@ -37,7 +37,7 @@
                 autocomplete="off"
                 inline-prefix
                 maxlength="1000"
-                :placeholder="__('filament-panels::global-search.field.placeholder')"
+                :placeholder="__('filament-panels::global-search.field.label')"
                 type="search"
                 wire:key="global-search.field.input"
                 x-bind:id="$id('input')"

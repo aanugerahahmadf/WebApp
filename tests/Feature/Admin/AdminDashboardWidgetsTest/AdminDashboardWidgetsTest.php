@@ -90,3 +90,34 @@ it('dashboard merender label stat tanpa campuran dua bahasa', function (): void 
         // Deskripsinya juga ikut bahasa yang sama.
         ->and($html)->toContain(__('Terdaftar di aplikasi'));
 });
+
+it('setiap kartu statistik adalah tautan ke halaman admin yang relevan', function (): void {
+    actingAs($this->admin, 'admin');
+
+    $html = $this->get('/admin/home')->assertSuccessful()->getContent();
+
+    // 18 kartu, semuanya harus dirender sebagai <a>, bukan <div>.
+    preg_match_all('/<a\b[^>]*fi-wi-stats-overview-stat/', $html, $matches);
+
+    expect($matches[0])->toHaveCount(18);
+
+    foreach ([
+        '/admin/catalogs',
+        '/admin/users',
+        '/admin/admins',
+        '/admin/reviews',
+        '/admin/reports',
+        '/admin/reference-options',
+        '/admin/helps',
+        '/admin/privacy-policies',
+        '/admin/orders',
+        '/admin/transactions',
+        '/admin/vouchers',
+        '/admin/discounts',
+        '/admin/payment-methods',
+        '/admin/payment-gateways',
+        '/admin/wishlists',
+    ] as $path) {
+        expect($html)->toContain('href="'.url($path).'"');
+    }
+});

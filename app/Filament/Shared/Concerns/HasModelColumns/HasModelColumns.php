@@ -3,9 +3,11 @@
 namespace App\Filament\Shared\Concerns\HasModelColumns;
 
 use App\Filament\Shared\Typography\TypographyControls;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Model;
@@ -75,6 +77,18 @@ trait HasModelColumns
                 return match (true) {
                     $type === 'boolean' => Toggle::make($column),
                     $type === 'text', $type === 'json' => Textarea::make($column),
+
+                    /* Kolom tanggal/jam memakai komponen picker, BUKAN
+                       TextInput. Sebelumnya semuanya jatuh ke TextInput,
+                       sehingga `booking_date` di panel Admin hanya kotak
+                       teks -- padahal User dan Welcome menampilkan
+                       kalender. `native(false)` WAJIB: DatePicker v3
+                       default-nya native, dan yang diminta adalah
+                       kalender kustom yang sama dengan dua panel itu. */
+                    $type === 'date' => DatePicker::make($column)->native(false),
+                    in_array($type, ['datetime', 'timestamp'], true) => DateTimePicker::make($column)->native(false),
+                    $type === 'time' => TimePicker::make($column)->native(false),
+
                     default => TextInput::make($column),
                 };
             })

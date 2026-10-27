@@ -150,4 +150,48 @@ class FmAppSetting extends Model
 
         \Cache::forget('app_text_styles');
     }
+
+    /** Settings for the public User and Welcome panel background. */
+    public static function backgroundDefaults(): array
+    {
+        return [
+            'active' => false,
+            'type' => 'image',
+            'image' => null,
+            'video' => null,
+            'overlay' => '#000000',
+            'overlay_opacity' => 20,
+            'blur' => 2,
+            'parallax_strength' => 18,
+            'parallax_speed' => 0.12,
+        ];
+    }
+
+    public static function background(): array
+    {
+        try {
+            $setting = self::where('key', 'background')->first();
+            $value = $setting?->value;
+
+            return array_merge(self::backgroundDefaults(), is_array($value) ? $value : []);
+        } catch (\Throwable) {
+            return self::backgroundDefaults();
+        }
+    }
+
+    public static function saveBackground(array $data): void
+    {
+        $defaults = self::backgroundDefaults();
+        $data = array_merge($defaults, $data);
+        $data['active'] = (bool) $data['active'];
+        $data['type'] = in_array($data['type'], ['image', 'video'], true) ? $data['type'] : 'image';
+        $data['overlay'] = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $data['overlay'])
+            ? $data['overlay'] : $defaults['overlay'];
+        $data['overlay_opacity'] = max(0, min(100, (int) $data['overlay_opacity']));
+        $data['blur'] = max(0, min(40, (int) $data['blur']));
+        $data['parallax_strength'] = max(0, min(60, (int) $data['parallax_strength']));
+        $data['parallax_speed'] = max(0.02, min(0.5, (float) $data['parallax_speed']));
+
+        self::updateOrCreate(['key' => 'background'], ['value' => $data]);
+    }
 }

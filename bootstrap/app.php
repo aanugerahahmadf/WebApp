@@ -3,6 +3,9 @@
 use App\Http\Middleware\SetLocale\SetLocale;
 use App\Http\Middleware\VerifyCsrfToken\VerifyCsrfToken;
 use App\Providers\AutoTranslationServiceProvider\AutoTranslationServiceProvider;
+use App\Http\Middleware\SecurityHeaders\SecurityHeaders;
+use App\Http\Middleware\EmergencyLockdown\EmergencyLockdown;
+use App\Http\Middleware\SecurityAudit\SecurityAudit;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -43,6 +46,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
         // /admin* dan /livewire/* (tabel 611 baris). Lihat class-nya untuk
         // alasan lengkapnya.
         $middleware->append(\App\Http\Middleware\AdminExecutionTime\AdminExecutionTime::class);
+        $middleware->append(SecurityHeaders::class);
 
         // Mendaftarkan middleware SetLocale ke group web agar session dan auth tersedia
         $middleware->web(append: [
@@ -54,6 +58,9 @@ $app = Application::configure(basePath: dirname(__DIR__))
         $middleware->api(append: [
             SetLocale::class,
             \Illuminate\Http\Middleware\HandleCors::class,
+            'throttle:api',
+            EmergencyLockdown::class,
+            SecurityAudit::class,
         ]);
 
         // Define the mobile middleware group, used by the Capacitor shells

@@ -35,9 +35,12 @@ use Tests\TestCase;
  *   - Switcher bawaan Filament di user menu DIMATIKAN di panel Welcome dan
  *     panel User, karena kedua panel itu sudah punya switcher sendiri di
  *     topbar.
- *   - Panel ADMIN berbeda: tidak punya switcher tema di topbar, jadi yang di
- *     user menu tetap dipakai. Di sana switcher itu satu-satunya, dan test ini
- *     menjaganya supaya tidak ikut dihapus.
+ *   - Panel ADMIN berbeda: tidak punya switcher tema di topbar maupun di
+ *     user menu. Sejak 2026-10-25 (kedua) switchernya berada di DASAR
+ *     sidebar, bersama blok profil, dirender lewat hook SIDEBAR_NAV_START
+ *     di blok `fi-sidebar-bawah` (override sidebar/index.blade.php).
+ *     Di sana switcher itu satu-satunya, dan test ini menjaganya supaya
+ *     tidak ikut dobel.
  *
  * Cara menghitung switcher: yang dihitung adalah WRAPPER switcher, bukan
  * tombolnya. Wrapper Filament punya `class="fi-theme-switcher grid ..."`,
@@ -149,9 +152,10 @@ final class ThemeSwitcherOnceTest extends TestCase
 
     public function test_the_admin_panel_keeps_exactly_one_theme_switcher(): void
     {
-        // Panel admin TIDAK punya switcher tema di topbar, jadi yang di user
-        // menu tetap dipakai. Test ini menjaganya supaya switcher itu tidak
-        // ikut dihapus waktu switcher Filament dimatikan di panel lain.
+        // Panel admin TIDAK punya switcher tema di topbar maupun di user
+        // menu -- sejak 2026-10-25 (kedua) switchernya di dasar sidebar,
+        // bersama blok profil. Test ini menjaganya supaya tidak dobel atau
+        // ikut hilang waktu penataan sidebar berubah.
         AppPlatform::fake(RuntimePlatform::WebsiteWindows);
 
         $admin = Admin::factory()->create(['active_status' => true]);
@@ -168,7 +172,7 @@ final class ThemeSwitcherOnceTest extends TestCase
         $this->assertSame(
             1,
             self::themeSwitcherCount($html),
-            'Panel admin harus punya tepat satu switcher tema (yang di user menu).',
+            'Panel admin harus punya tepat satu switcher tema (di dasar sidebar).',
         );
     }
 

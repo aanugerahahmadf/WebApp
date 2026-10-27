@@ -49,8 +49,8 @@
             <div class="flex items-center gap-1.5">
                 @if($topMatch && ($topMatch['similarity'] ?? 0) > 0)
                     <x-filament::icon icon="/images/icons/star.svg" class="w-4 h-4" style="color:#facc15;" />
-                    <span class="text-xs font-black" style="color:#facc15;">{{ __('Hasil Terbaik') }}</span>
-                    <span class="px-2 py-0.5 rounded-full text-[9px] font-black text-gray-900" style="background:#facc15;">
+                    <span class="text-xs font-semibold" style="color:#facc15;">{{ __('Hasil Terbaik') }}</span>
+                    <span class="px-2 py-0.5 rounded-full text-[9px] font-semibold text-gray-900" style="background:#facc15;">
                         {{ number_format($topMatch['similarity'], 1) }}%
                     </span>
                 @endif
@@ -60,7 +60,7 @@
                 color="danger"
                 size="xs"
                 icon="/images/icons/refresh.svg"
-                class="rounded-lg font-bold"
+                class="rounded-lg font-semibold"
             >
                 {{ __('Reset CBIR') }}
             </x-filament::button>
@@ -118,7 +118,7 @@
             color="gray"
             size="sm"
             icon="/images/icons/refresh.svg"
-            class="w-full rounded-xl font-bold"
+            class="w-full rounded-xl font-semibold"
         >
             {{ __('Tampilkan Semua') }}
         </x-filament::button>

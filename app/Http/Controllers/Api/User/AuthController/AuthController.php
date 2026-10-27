@@ -171,15 +171,15 @@ class AuthController extends Controller
         ];
 
         if ($request->hasFile('ktp_photo')) {
-            $userData['ktp_photo'] = StorageService::upload($request->file('ktp_photo'), 'ktp-photos');
+            $userData['ktp_photo'] = StorageService::upload($request->file('ktp_photo'), 'ktp-photos', 'local');
         }
 
         if ($request->hasFile('selfie_photo')) {
-            $userData['selfie_photo'] = StorageService::upload($request->file('selfie_photo'), 'selfies');
+            $userData['selfie_photo'] = StorageService::upload($request->file('selfie_photo'), 'selfies', 'local');
         }
 
         if ($request->hasFile('face_scan_photo')) {
-            $userData['face_scan_photo'] = StorageService::upload($request->file('face_scan_photo'), 'face-scans');
+            $userData['face_scan_photo'] = StorageService::upload($request->file('face_scan_photo'), 'face-scans', 'local');
         }
 
         $userData['liveness_completed'] = $request->boolean('liveness_completed');
@@ -1034,7 +1034,7 @@ class AuthController extends Controller
 
         // Verify Google ID token via Google's token info endpoint
         try {
-            $response = Http::timeout(10)->withoutVerifying()->get('https://oauth2.googleapis.com/tokeninfo', [
+            $response = Http::timeout(10)->get('https://oauth2.googleapis.com/tokeninfo', [
                 'id_token' => $request->id_token,
             ]);
         } catch (\Exception $e) {

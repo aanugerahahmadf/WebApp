@@ -3,7 +3,7 @@
 namespace App\Grpc\User\V1;
 
 use App\Models\Category\Category;
-use App\Models\Package\Package;
+use App\Models\Package\Package as PackageModel;
 use Spiral\RoadRunner\GRPC\ContextInterface;
 
 /**
@@ -15,11 +15,12 @@ use Spiral\RoadRunner\GRPC\ContextInterface;
  */
 class PackageService extends BaseGrpcService
 {
-    public function GetPackage(GetPackageRequest $request, ContextInterface $context): Package
+    public const NAME = 'wedding.user.v1.PackageService';
+    public function GetPackage(ContextInterface $context, GetPackageRequest $request): Package
     {
         try {
             return $this->transform(
-                Package::with(['category', 'reviews'])
+                PackageModel::with(['category', 'reviews'])
                     ->findOrFail($request->id)
             );
         } catch (\Throwable $e) {
@@ -27,11 +28,11 @@ class PackageService extends BaseGrpcService
         }
     }
 
-    public function GetPackageBySlug(GetPackageBySlugRequest $request, ContextInterface $context): Package
+    public function GetPackageBySlug(ContextInterface $context, GetPackageBySlugRequest $request): Package
     {
         try {
             return $this->transform(
-                Package::with(['category', 'reviews'])
+                PackageModel::with(['category', 'reviews'])
                     ->where('slug', $request->slug)
                     ->firstOrFail()
             );
@@ -40,10 +41,10 @@ class PackageService extends BaseGrpcService
         }
     }
 
-    public function ListPackages(ListPackagesRequest $request, ContextInterface $context): PackageListResponse
+    public function ListPackages(ContextInterface $context, ListPackagesRequest $request): PackageListResponse
     {
         try {
-            $query = Package::with(['category', 'reviews'])->query();
+            $query = PackageModel::with(['category', 'reviews'])->query();
 
             if ($request->category_id !== '') {
                 $query->where('category_id', $request->category_id);
@@ -91,10 +92,10 @@ class PackageService extends BaseGrpcService
         }
     }
 
-    public function GetFeaturedPackages(GetFeaturedPackagesRequest $request, ContextInterface $context): PackageListResponse
+    public function GetFeaturedPackages(ContextInterface $context, GetFeaturedPackagesRequest $request): PackageListResponse
     {
         try {
-            $packages = Package::with(['category', 'reviews'])
+            $packages = PackageModel::with(['category', 'reviews'])
                 ->where('is_featured', true)
                 ->where('is_active', true)
                 ->limit($request->limit > 0 ? $request->limit : 10)
@@ -109,10 +110,10 @@ class PackageService extends BaseGrpcService
         }
     }
 
-    public function GetOnSalePackages(GetOnSalePackagesRequest $request, ContextInterface $context): PackageListResponse
+    public function GetOnSalePackages(ContextInterface $context, GetOnSalePackagesRequest $request): PackageListResponse
     {
         try {
-            $packages = Package::with(['category', 'reviews'])
+            $packages = PackageModel::with(['category', 'reviews'])
                 ->whereNotNull('discount_price')
                 ->where('discount_price', '<', 'price')
                 ->where('is_active', true)
@@ -128,10 +129,10 @@ class PackageService extends BaseGrpcService
         }
     }
 
-    public function GetPackagesByCategory(GetPackagesByCategoryRequest $request, ContextInterface $context): PackageListResponse
+    public function GetPackagesByCategory(ContextInterface $context, GetPackagesByCategoryRequest $request): PackageListResponse
     {
         try {
-            $packages = Package::with(['category', 'reviews'])
+            $packages = PackageModel::with(['category', 'reviews'])
                 ->where('category_id', $request->category_id)
                 ->where('is_active', true)
                 ->limit($request->limit > 0 ? $request->limit : 10)
@@ -149,10 +150,10 @@ class PackageService extends BaseGrpcService
     /**
      * Filter packages whose guest-capacity window overlaps the requested one.
      */
-    public function GetPackagesByCapacity(GetPackagesByCapacityRequest $request, ContextInterface $context): PackageListResponse
+    public function GetPackagesByCapacity(ContextInterface $context, GetPackagesByCapacityRequest $request): PackageListResponse
     {
         try {
-            $query = Package::with(['category', 'reviews'])->where('is_active', true);
+            $query = PackageModel::with(['category', 'reviews'])->where('is_active', true);
 
             $query->where('max_capacity', '>=', $request->min_capacity);
 
@@ -171,12 +172,12 @@ class PackageService extends BaseGrpcService
         }
     }
 
-    public function GetRelatedPackages(GetRelatedPackagesRequest $request, ContextInterface $context): PackageListResponse
+    public function GetRelatedPackages(ContextInterface $context, GetRelatedPackagesRequest $request): PackageListResponse
     {
         try {
-            $package = Package::findOrFail($request->package_id);
+            $package = PackageModel::findOrFail($request->package_id);
 
-            $packages = Package::with(['category', 'reviews'])
+            $packages = PackageModel::with(['category', 'reviews'])
                 ->where('category_id', $package->category_id)
                 ->where('id', '!=', $package->id)
                 ->where('is_active', true)
@@ -192,10 +193,10 @@ class PackageService extends BaseGrpcService
         }
     }
 
-    public function SearchPackages(SearchPackagesRequest $request, ContextInterface $context): PackageListResponse
+    public function SearchPackages(ContextInterface $context, SearchPackagesRequest $request): PackageListResponse
     {
         try {
-            $packages = Package::with(['category', 'reviews'])
+            $packages = PackageModel::with(['category', 'reviews'])
                 ->where('is_active', true)
                 ->where(function ($q) use ($request) {
                     $q->where('name', 'like', '%'.$request->query.'%')
@@ -213,10 +214,10 @@ class PackageService extends BaseGrpcService
         }
     }
 
-    public function GetPackageStats(GetPackageStatsRequest $request, ContextInterface $context): PackageStats
+    public function GetPackageStats(ContextInterface $context, GetPackageStatsRequest $request): PackageStats
     {
         try {
-            $base = Package::query();
+            $base = PackageModel::query();
 
             $byCategory = Category::query()
                 ->get()

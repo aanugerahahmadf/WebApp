@@ -43,9 +43,11 @@ class CheckWebsiteMaintenance
 
         $config = $setting->value;
 
-        // 4. Cek bypass secret (?bypass=...)
+        // 4. Bypass hanya melalui header. Query-string secrets bocor melalui
+        // browser history, proxy logs, analytics, dan Referer headers.
         $secret = $config['bypass_secret'] ?? '';
-        if ($secret !== '' && $request->query('bypass') === $secret) {
+        $providedSecret = (string) $request->header('X-Maintenance-Bypass');
+        if ($secret !== '' && $providedSecret !== '' && hash_equals((string) $secret, $providedSecret)) {
             $request->session()->put('maintenance_bypass_' . $targetKey, true);
             return $next($request);
         }

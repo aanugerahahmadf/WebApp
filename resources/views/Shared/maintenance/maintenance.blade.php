@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/css/app-font.css" />
 </head>
-<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center p-6 selection:bg-indigo-500 selection:text-white" style="font-family: 'Google Sans Flex', sans-serif;">
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center p-6 selection:bg-indigo-500 selection:text-white" style="font-family: 'Instrument Sans', sans-serif;">
     <div class="max-w-md w-full text-center space-y-6">
         <div class="relative inline-flex items-center justify-center">
             <div class="w-20 h-20 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center animate-pulse">
@@ -18,7 +18,7 @@
         </div>
 
         <div class="space-y-2">
-            <h1 class="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+            <h1 class="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
                 {{ __('Sedang Dalam Pemeliharaan') }}
             </h1>
             <p class="text-sm text-gray-400 font-medium">

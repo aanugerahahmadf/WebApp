@@ -11,7 +11,20 @@
     di-render ulang oleh `wire:poll`.
 --}}
 <div x-data="messageBubble"
-    class="w-full h-full overflow-hidden flex flex-col min-h-0">
+     class="w-full h-full overflow-hidden flex flex-col min-h-0">
+    @if ($this->needsGuestName())
+        <section class="m-4 rounded-xl border border-warning-300 bg-warning-50 p-4 dark:border-warning-700 dark:bg-warning-950/30">
+            <form wire:submit.prevent="setGuestName" class="flex items-end gap-3">
+                <div class="min-w-0 flex-1">
+                    <label class="mb-1 block text-sm font-medium">{{ __('Nama Anda') }}</label>
+                    <input type="text" wire:model.live="guestName" required maxlength="100"
+                        class="w-full rounded-lg border-gray-300 bg-white dark:border-white/10 dark:bg-white/5"
+                        placeholder="{{ __('Masukkan nama agar admin dapat mengenali Anda') }}">
+                </div>
+                <button type="submit" class="rounded-lg bg-warning-600 px-4 py-2 text-white">{{ __('Simpan') }}</button>
+            </form>
+        </section>
+    @endif
     @if ($selectedConversation)
         <!-- Chat Header : Start -->
         <div class="grid grid-cols-[var(--cols-default)] lg:grid-cols-[var(--cols-lg)] p-6"
@@ -29,6 +42,9 @@
                     @php
                         $avatar = $selectedConversation->primary_avatar;
                         $alt = urlencode($selectedConversation->inbox_title);
+                        $callPhone = $selectedConversation->other_users->first()?->phone
+                            ?? $selectedConversation->other_users->first()?->whatsapp;
+                        $callPhone = $callPhone ? preg_replace('/[^0-9+]/', '', $callPhone) : null;
                     @endphp
 
                     <x-filament::avatar src="{{ $avatar }}" alt="{{ $alt }}" size="lg" />
@@ -45,6 +61,11 @@
                     </div>
 
                     <div class="flex items-center gap-1 flex-shrink-0">
+                        <button type="button" x-on:click="$dispatch('open-modal', { id: 'welcome-message-call' })"
+                                class="p-2 rounded-lg text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 transition"
+                                title="{{ __('Telepon') }}" aria-label="{{ __('Telepon') }}">
+                                <x-filament::icon icon="/images/icons/phone.svg" class="w-5 h-5" />
+                        </button>
                         <button type="button" x-on:click="$dispatch('open-modal', { id: 'welcome-message-search' })"
                             class="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-white/10 transition"
                             title="{{ __('Cari') }}">
@@ -66,6 +87,10 @@
                     {{ $this->visibleMessages->count() }} {{ __('hasil') }}
                 </p>
             @endif
+        </x-filament::modal>
+        <x-filament::modal width="lg" id="welcome-message-call">
+            <x-slot name="heading">{{ __('Panggilan') }}</x-slot>
+            @include('Shared.components.chat-call.chat-call', ['inboxId' => $selectedConversation->id, 'modalId' => 'welcome-message-call'])
         </x-filament::modal>
         <!-- Chat Header : End -->
         <!-- Chat Box : Start -->

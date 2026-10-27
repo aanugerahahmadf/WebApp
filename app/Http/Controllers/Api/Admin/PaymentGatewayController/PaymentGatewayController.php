@@ -60,7 +60,7 @@ class PaymentGatewayController extends Controller
                 ],
             ]);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil gateway pembayaran'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil gateway pembayaran'), 'error' => null], 500);
         }
     }
 
@@ -97,7 +97,7 @@ class PaymentGatewayController extends Controller
         } catch (ValidationException $e) {
             return response()->json(['status' => 'error', 'message' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal memperbarui gateway pembayaran'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal memperbarui gateway pembayaran'), 'error' => null], 500);
         }
     }
 }

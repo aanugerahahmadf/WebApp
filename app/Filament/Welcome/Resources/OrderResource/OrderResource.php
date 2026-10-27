@@ -304,13 +304,6 @@ class OrderResource extends Resource
                     ->color('info')
                     ->size('lg')
                     ->icon('/images/icons/flower.svg'),
-                Tables\Actions\Action::make('book_package')
-                    ->label(__('Pesan Paket Dekorasi'))
-                    ->url(CatalogResource::getUrl())
-                    ->button()
-                    ->color('primary')
-                    ->size('lg')
-                    ->icon('/images/icons/gift.svg'),
             ])
             ->contentGrid([
                 'default' => 1,

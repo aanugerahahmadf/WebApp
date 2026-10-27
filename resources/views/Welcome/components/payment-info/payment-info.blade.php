@@ -20,13 +20,13 @@
                 <x-filament::badge 
                     color="primary" 
                     size="sm" 
-                    class="font-bold uppercase tracking-[0.2em] mb-1"
+                    class="font-semibold uppercase tracking-[0.2em] mb-1"
                 >
                     {{ $method->type->getLabel() }}
                 </x-filament::badge>
-                <h4 class="text-xl font-bold text-gray-950 dark:text-white leading-tight">{{ $method->name }}</h4>
+                <h4 class="text-xl font-semibold text-gray-950 dark:text-white leading-tight">{{ $method->name }}</h4>
                 @if($method->fee > 0)
-                    <p class="text-[10px] font-bold text-danger-500 dark:text-danger-400 mt-1 uppercase tracking-wider">
+                    <p class="text-[10px] font-semibold text-danger-500 dark:text-danger-400 mt-1 uppercase tracking-wider">
                         {{ __('Biaya Admin:') }} Rp {{ number_format($method->fee, 0, ',', '.') }}
                     </p>
                 @endif
@@ -39,10 +39,10 @@
                 class="bg-white dark:bg-gray-950 rounded-2xl border-primary-100 dark:border-primary-900 shadow-xl shadow-primary-500/5 text-center relative overflow-hidden group"
             >
                 <div class="flex flex-col items-center justify-center p-3">
-                    <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-3">
+                    <span class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-3">
                         {{ __('NOMOR TUJUAN') }}
                     </span>
-                    <span class="text-3xl font-bold text-primary-600 dark:text-primary-400 tracking-[0.1em] select-all transition-transform group-hover:scale-[1.02]">
+                    <span class="text-3xl font-semibold text-primary-600 dark:text-primary-400 tracking-[0.1em] select-all transition-transform group-hover:scale-[1.02]">
                         {{ $method->account_number }}
                     </span>
                     
@@ -54,7 +54,7 @@
                     </div>
                 </div>
                 
-                <div class="mt-4 pt-3 border-t border-gray-50 dark:border-gray-950 text-[9px] text-gray-400 dark:text-gray-600 leading-tight uppercase font-bold tracking-widest">
+                <div class="mt-4 pt-3 border-t border-gray-50 dark:border-gray-950 text-[9px] text-gray-400 dark:text-gray-600 leading-tight uppercase font-semibold tracking-widest">
                     {{ __('Verifikasi instan setelah pembayaran') }}
                 </div>
             </x-filament::section>

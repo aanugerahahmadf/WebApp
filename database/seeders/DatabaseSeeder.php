@@ -35,6 +35,9 @@ class DatabaseSeeder extends Seeder
             PaymentMethodSeeder::class,
             BankSeeder::class,
 
+            // Background default panel User & Welcome.
+            BackgroundSeeder::class,
+
             // Hubungkan akun admin ke identitas panel storefront bila diperlukan.
             AdminUserPanelAccessSeeder::class,
         ]);

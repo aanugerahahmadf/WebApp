@@ -8,7 +8,7 @@
     <style>
         :root { color-scheme: dark; --bg: #0b0b0c; --panel: #171719; --line: rgb(255 255 255 / .14); --text: #f4f4f5; --muted: #a1a1aa; --accent: #a5b4fc; }
         * { box-sizing: border-box; }
-        body { margin: 0; min-height: 100vh; padding: 2rem; background: radial-gradient(circle at 20% 0%, rgb(79 70 229 / .22), transparent 36rem), var(--bg); color: var(--text); font-family: 'Google Sans', ui-sans-serif, system-ui, sans-serif; }
+        body { margin: 0; min-height: 100vh; padding: 2rem; background: radial-gradient(circle at 20% 0%, rgb(79 70 229 / .22), transparent 36rem), var(--bg); color: var(--text); font-family: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif; }
         .code-page { width: min(100%, 1100px); margin: 0 auto; }
         .back { display: inline-block; margin-bottom: 1.25rem; color: var(--accent); text-decoration: none; }
         .header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .75rem; }

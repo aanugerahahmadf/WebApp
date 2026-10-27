@@ -48,8 +48,10 @@
         @endif
 
         <span
+            style="font-family: 'Instrument Sans', sans-serif !important; font-size: 14px !important;"
             @class([
-                'fi-topbar-item-label text-sm font-medium',
+                'fi-topbar-item-label text-sm font-normal',
+                'fi-topbar-group-label' => ! $url,
                 'text-gray-700 dark:text-gray-200',
             ])
         >

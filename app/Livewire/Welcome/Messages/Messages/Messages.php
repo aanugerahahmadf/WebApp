@@ -10,6 +10,7 @@ use App\Enums\OrderStatus\OrderStatus;
 use App\Enums\ReportStatus\ReportStatus;
 use App\Filament\Welcome\Pages\MessagesPage\MessagesPage;
 use App\Support\ChatStaff\ChatStaff;
+use App\Support\ChatParticipantName\ChatParticipantName;
 
 use App\Filament\Welcome\Resources\CatalogResource\CatalogResource;
 use App\Jobs\SendBotReply\SendBotReply;
@@ -122,9 +123,12 @@ class Messages extends Component implements HasActions, HasForms
 
     public string $typingUserName = '';
 
+    public string $guestName = '';
+
     public function mount(?Inbox $selectedConversation = null): void
     {
         if ($selectedConversation) {
+            abort_unless($this->isChatParticipant($selectedConversation), 403, __('Anda tidak memiliki akses ke percakapan ini.'));
             $this->selectedConversation = $selectedConversation;
         }
         $this->setPollInterval();
@@ -134,6 +138,26 @@ class Messages extends Component implements HasActions, HasForms
             $this->loadMessages();
             $this->markAsRead();
         }
+    }
+
+    public function needsGuestName(): bool
+    {
+        return $this->isChatGuest()
+            && app(\App\Services\GuestIdentity\GuestIdentity::class)->needsName();
+    }
+
+    public function setGuestName(): void
+    {
+        $this->validate(['guestName' => 'required|string|max:100']);
+
+        $guest = $this->chatUser();
+        if ($guest) {
+            $guest->forceFill(['full_name' => trim($this->guestName)])->save();
+        }
+
+        $this->guestName = '';
+        $this->selectedConversation?->refresh();
+        $this->dispatch('refresh-inbox');
     }
 
     public function pollMessages(): void
@@ -219,7 +243,7 @@ class Messages extends Component implements HasActions, HasForms
             if (Cache::has("typing_{$inboxId}_{$uid}")) {
                 $this->otherUserIsTyping = true;
                 $typingUser = $this->selectedConversation->other_users->firstWhere('id', $uid);
-                $this->typingUserName = $typingUser?->name ?? '';
+                $this->typingUserName = ChatParticipantName::for($typingUser);
                 break;
             }
         }
@@ -357,7 +381,7 @@ class Messages extends Component implements HasActions, HasForms
                 // Dispatch bot reply if user is not admin. Null-safe because a
                 // guest row always counts as "not admin".
                 if (! ChatStaff::isStaff($this->chatUser())) {
-                    SendBotReply::dispatch($newMessage->id)->delay(now()->addSeconds(5));
+                    SendBotReply::dispatch($newMessage->id);
                 }
 
                 $this->conversationMessages->prepend($newMessage);
@@ -484,7 +508,7 @@ class Messages extends Component implements HasActions, HasForms
         $this->replyTo = [
             'id' => (int) $message->id,
             'message' => $message->message ?? '',
-            'sender_name' => $message->sender?->name ?? '',
+            'sender_name' => ChatParticipantName::for($message->sender, __('Tidak dikenal')),
             'sender_id' => (int) $message->user_id,
         ];
     }
@@ -695,7 +719,7 @@ class Messages extends Component implements HasActions, HasForms
                     return [];
                 }
 
-                $sender = $message->sender?->name ?? __('Tidak dikenal');
+                $sender = ChatParticipantName::for($message->sender, __('Tidak dikenal'));
                 $time = $message->created_at?->setTimezone(config('messages.timezone', 'app.timezone'))->translatedFormat('d M Y, H:i');
 
                 $readBy = collect($message->read_by ?? [])->reject(fn ($id) => (int) $id === (int) $this->chatUserId());
@@ -776,7 +800,6 @@ class Messages extends Component implements HasActions, HasForms
 
         try {
             $response = Http::timeout(5)
-                ->withoutVerifying()
                 ->get('https://translate.googleapis.com/translate_a/single', [
                     'client' => 'gtx',
                     'sl' => 'auto',

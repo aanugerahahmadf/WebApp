@@ -44,7 +44,7 @@ class TransactionController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal mengambil riwayat transaksi'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }

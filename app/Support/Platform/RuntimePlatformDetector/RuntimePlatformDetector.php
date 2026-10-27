@@ -27,8 +27,7 @@ class RuntimePlatformDetector
         } catch (\Throwable $e) {
             Log::warning('Platform detection failed', [
                 'mode' => $mode->value,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'exception' => $e::class,
             ]);
 
             return RuntimePlatform::WebsiteWindows;

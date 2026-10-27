@@ -168,6 +168,15 @@ return [
     'Google Sans Regular', // GoogleSans-Regular.ttf
     'Google Sans SemiBold', // GoogleSans-SemiBold.ttf
     'Google Sans SemiBold Italic', // GoogleSans-SemiBoldItalic.ttf
+    'Instrument Sans', // InstrumentSans-Italic-VariableFont_wdth,wght.ttf, InstrumentSans-VariableFont_wdth,wght.ttf
+    'Instrument Sans Bold', // InstrumentSans-Bold.ttf
+    'Instrument Sans Bold Italic', // InstrumentSans-BoldItalic.ttf
+    'Instrument Sans Italic', // InstrumentSans-Italic.ttf
+    'Instrument Sans Medium', // InstrumentSans-Medium.ttf
+    'Instrument Sans Medium Italic', // InstrumentSans-MediumItalic.ttf
+    'Instrument Sans Regular', // InstrumentSans-Regular.ttf
+    'Instrument Sans SemiBold', // InstrumentSans-SemiBold.ttf
+    'Instrument Sans SemiBold Italic', // InstrumentSans-SemiBoldItalic.ttf
     'Open Sans', // OpenSans-Italic-VariableFont_wdth,wght.ttf, OpenSans-VariableFont_wdth,wght.ttf
     'Open Sans Bold', // OpenSans-Bold.ttf
     'Open Sans Bold Italic', // OpenSans-BoldItalic.ttf

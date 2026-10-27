@@ -34,7 +34,7 @@ class LegalPageController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal mengambil halaman legal'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }

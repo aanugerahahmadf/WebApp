@@ -11,18 +11,28 @@ require __DIR__ . "/vendor/autoload.php";
 $app = require_once __DIR__ . "/bootstrap/app.php";
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
-interface TestServiceInterface extends ServiceInterface {
-    public const NAME = "wedding.user.v1.TestService";
-}
+$server = new Server(new Invoker(), [
+    // Never let RoadRunner expose gRPC exception details in production.
+    'debug' => (bool) config('app.debug', false),
+]);
+$server->registerService(
+    \App\Grpc\User\V1\AuthService::class,
+    $app->make(\App\Grpc\User\V1\AuthService::class),
+);
 
-class TestService implements TestServiceInterface {
-    public function Ping(\Spiral\RoadRunner\GRPC\ContextInterface $ctx, \App\Grpc\User\V1\MeRequest $input): \App\Grpc\User\V1\MeRequest {
-        return new \App\Grpc\User\V1\MeRequest();
-    }
+// These services already expose the RoadRunner signature directly and use
+// generated wedding.user.v1 protobuf messages for both input and output.
+foreach ([
+    \App\Grpc\User\V1\CatalogService::class,
+    \App\Grpc\User\V1\CategoryService::class,
+    \App\Grpc\User\V1\PackageService::class,
+    \App\Grpc\User\V1\ProfileService::class,
+    \App\Grpc\User\V1\OrderService::class,
+    \App\Grpc\User\V1\CbirService::class,
+] as $serviceClass) {
+    $service = $app->make($serviceClass);
+    $server->registerService($serviceClass, $service);
 }
-
-$server = new Server(new Invoker(), ["debug" => true]);
-$server->registerService(TestServiceInterface::class, new TestService());
 
 $worker = Worker::create();
 $server->serve($worker);

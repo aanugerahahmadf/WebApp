@@ -2,13 +2,13 @@
     Field CheckoutAddress: ringkasan alamat + tombol Edit + modal "Ubah Alamat".
 
     Modul JavaScript-nya ada di `resources/js/checkout-address/checkout-address.js`
-    (Alpine `checkoutAddress`) dan baru memuat Google Maps API kalau key tersedia.
+    (Alpine `checkoutAddress`) dan memakai Leaflet + OpenStreetMap gratis.
     Semua state yang diedit di modal ditulis balik ke form lewat
     `Livewire.find(componentId)->set(statePath + '...')` -- bukan `$wire` langsung,
     supaya field ini tetap bekerja di Livewire manapun (checkout, draft, dll).
 
-    Semua kontrol punya fallback tanpa Google:
-      - `x-show="placesReady"` untuk peta + autocomplete,
+    Semua kontrol tidak bergantung Google/API key:
+      - `x-show="mapReady"` untuk peta OpenStreetMap,
       - input tetap bisa diketik manual,
       - tombol "Gunakan Lokasi Saya" memakai `navigator.geolocation` yang tersedia
         di browser/Android WebView tanpa API key apa pun.
@@ -24,9 +24,8 @@
     $summary = $field->getSummary();
 @endphp
 
-@if ($mapsKey !== '')
-    @vite('resources/js/checkout-address/checkout-address.js')
-@endif
+{{-- Alpine + GPS + peta OpenStreetMap selalu dimuat tanpa API key berbayar. --}}
+@vite('resources/js/checkout-address/checkout-address.js')
 
 {{--
     Wrapper diambil lewat `$getFieldWrapperView()`, bukan ditulis sebagai
@@ -36,10 +35,13 @@
 --}}
 <x-dynamic-component :component="$getFieldWrapperView()" :field="$field">
     <div
+        class="fi-checkout-address"
         x-data="checkoutAddress({
-            mapsKey: @js($mapsKey),
+            mapsKey: null,
+            modalId: @js($modalId),
             componentId: @js($getLivewire()->getId()),
             statePath: @js($statePath),
+            stateBinding: $wire.entangle(@js($statePath)).live,
             initial: @js($initial),
             labels: @js([
                 'gpsDenied' => __('Izinkan akses lokasi di browser untuk mengisi otomatis.'),
@@ -47,12 +49,21 @@
                 'gpsFailed' => __('Lokasi tidak bisa dibaca. Coba lagi atau isi manual.'),
                 'mapsMissing' => __('Pencarian alamat otomatis belum aktif. Alamat bisa diisi manual.'),
                 'selectStreetFirst' => __('Pilih "Nama Jalan" terlebih dahulu.'),
+                'fullscreen' => __('Layar penuh'),
+                'fullscreenClose' => __('Tutup'),
             ]),
         })"
-        x-on:checkout-address:applied.window="$dispatch('open-modal', { id: @js($modalId) })"
+            x-on:checkout-address:applied.window="if ($event.detail?.modalId === config.modalId) $dispatch('close-modal', { id: config.modalId })"
     >
         {{-- Ringkasan + tombol Edit --}}
-        <div class="fi-checkout-address-summary flex flex-col gap-3 rounded-lg border border-gray-200 bg-white p-4 dark:border-white/10 dark:bg-white/5">
+        <div
+            class="fi-checkout-address-summary flex cursor-pointer flex-col gap-3 rounded-lg border border-gray-200 bg-white p-4 transition hover:border-primary-400 hover:shadow-sm dark:border-white/10 dark:bg-white/5"
+            role="button"
+            tabindex="0"
+            x-on:click="openAddressModal()"
+            x-on:keydown.enter.prevent="openAddressModal()"
+            x-on:keydown.space.prevent="openAddressModal()"
+        >
             <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0 flex-1">
                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400">
@@ -82,7 +93,8 @@
                     size="sm"
                     color="gray"
                     icon="/images/icons/pencil.svg"
-                    x-on:click="$dispatch('open-modal', { id: @js($modalId) })"
+                    class="min-h-12 min-w-28 px-5 text-base"
+                    x-on:click.stop.prevent="openAddressModal()"
                 >
                     {{ __('Edit') }}
                 </x-filament::button>
@@ -96,7 +108,7 @@
             :id="$modalId"
             width="2xl"
             :close-button="false"
-            x-on:open-modal.window="if ($event.detail.id === @js($modalId)) init()"
+            x-on:open-modal.window="if ($event.detail.id === config.modalId) init()"
         >
             <x-slot name="heading">
                 {{ __('Ubah Alamat') }}
@@ -114,16 +126,16 @@
                         autocomplete="off"
                         data-checkout-address-area
                         x-model="draft.administrative_area"
+                        x-on:input.debounce.600ms="searchPlaces('area')"
                         x-on:keydown.escape="clearArea()"
-                        @disabled(! $field->hasMapsKey())
                         class="fi-input block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-white/10 dark:bg-white/5"
                         placeholder="{{ __('Ketik provinsi atau kota') }}"
                     >
-                    @unless ($field->hasMapsKey())
-                        <p class="mt-1 text-xs text-warning-600 dark:text-warning-400">
-                            {{ __('Pencarian alamat otomatis belum aktif (GOOGLE_MAPS_API_KEY kosong). Ketik manual saja.') }}
-                        </p>
-                    @endunless
+                    <div x-show="suggestions.area.length" x-cloak class="relative z-10 mt-1 max-h-40 overflow-y-auto rounded-lg border bg-white shadow-lg dark:border-white/10 dark:bg-gray-900">
+                        <template x-for="place in suggestions.area" :key="place.id">
+                            <button type="button" class="block w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-white/10" x-text="place.display_name" x-on:click="selectSuggestion(place)"></button>
+                        </template>
+                    </div>
                 </div>
 
                 {{-- Autocomplete 2: jalan --}}
@@ -137,11 +149,16 @@
                         autocomplete="off"
                         data-checkout-address-street
                         x-model="draft.street"
+                        x-on:input.debounce.600ms="searchPlaces('street')"
                         x-on:keydown.escape="clearStreet()"
-                        @disabled(! $field->hasMapsKey())
                         class="fi-input block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-white/10 dark:bg-white/5"
                         placeholder="{{ __('Ketik nama jalan atau nomor bangunan') }}"
                     >
+                    <div x-show="suggestions.street.length" x-cloak class="relative z-10 mt-1 max-h-40 overflow-y-auto rounded-lg border bg-white shadow-lg dark:border-white/10 dark:bg-gray-900">
+                        <template x-for="place in suggestions.street" :key="place.id">
+                            <button type="button" class="block w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-white/10" x-text="place.display_name" x-on:click="selectSuggestion(place)"></button>
+                        </template>
+                    </div>
                 </div>
 
                 {{-- Detail bebas --}}
@@ -162,14 +179,40 @@
                 {{-- Peta --}}
                 <div
                     class="overflow-hidden rounded-lg border border-gray-200 dark:border-white/10"
-                    x-show="placesReady"
+                    x-show="mapReady"
                     x-cloak
+                    x-ref="mapShell"
                 >
+                    <div class="flex items-center justify-between gap-2 border-b bg-white/90 px-2 py-2 text-xs dark:border-white/10 dark:bg-gray-900/90">
+                        <span class="text-gray-500">{{ __('Klik peta atau geser pin untuk memilih lokasi') }}</span>
+                        <div class="flex gap-1">
+                            <button type="button" class="rounded border px-2 py-1 hover:bg-gray-100 dark:hover:bg-white/10" x-on:click="resetMap()">{{ __('Reset') }}</button>
+                            <button type="button" class="rounded border px-2 py-1 hover:bg-gray-100 dark:hover:bg-white/10" x-on:click="toggleFullscreen()" x-text="fullscreen ? config.labels.fullscreenClose : config.labels.fullscreen"></button>
+                        </div>
+                    </div>
                     <div
                         data-checkout-address-map
                         class="h-56 w-full"
                         style="min-height: 14rem;"
                     ></div>
+                </div>
+
+                {{-- Fallback OSM map: tetap menampilkan peta jika CDN Leaflet
+                     diblokir jaringan. GPS dan alamat tetap dapat digunakan. --}}
+                <div
+                    class="overflow-hidden rounded-lg border border-gray-200 dark:border-white/10"
+                    x-show="mapFailed"
+                    x-cloak
+                >
+                    <iframe
+                        title="OpenStreetMap"
+                        class="h-56 w-full border-0"
+                        loading="lazy"
+                        src="https://www.openstreetmap.org/export/embed.html?bbox=106.78%2C-6.25%2C106.86%2C-6.15&layer=mapnik"
+                    ></iframe>
+                    <p class="px-3 py-2 text-xs text-gray-500">
+                        {{ __('Peta interaktif tidak tersedia di jaringan ini. Lokasi GPS tetap bisa diambil dan alamat akan diisi otomatis.') }}
+                    </p>
                 </div>
 
                 {{-- Status GPS --}}
@@ -229,7 +272,7 @@
                     </button>
 
                     <div class="flex items-center gap-3">
-                        <x-filament::button type="button" color="gray" x-on:click="$dispatch('close-modal', { id: @js($modalId) })">
+                        <x-filament::button type="button" color="gray" x-on:click="closeAddressModal()">
                             {{ __('Nanti Saja') }}
                         </x-filament::button>
 
@@ -248,6 +291,48 @@
        pada Alpine disembunyikan lewat aturan scoped ini saja. */
     .fi-checkout-address [x-cloak] {
         display: none !important;
+    }
+
+    /* Inline map pin: avoids Leaflet's default relative image URLs, which can
+       become broken when the page is served from a nested Laravel route. */
+    .fi-checkout-address .checkout-address-marker {
+        width: 28px !important;
+        height: 36px !important;
+        margin: 0 !important;
+        border: 0 !important;
+        background: transparent !important;
+    }
+
+    .fi-checkout-address .checkout-address-marker span {
+        display: block;
+        width: 24px;
+        height: 24px;
+        margin: 2px;
+        border: 3px solid #fff;
+        border-radius: 50% 50% 50% 0;
+        background: #d97706;
+        box-shadow: 0 2px 6px rgb(0 0 0 / 40%);
+        transform: rotate(-45deg);
+    }
+
+    .fi-checkout-address .checkout-address-marker span::after {
+        content: '';
+        display: block;
+        width: 7px;
+        height: 7px;
+        margin: 5px;
+        border-radius: 50%;
+        background: #fff;
+    }
+
+    .fi-checkout-address [x-ref="mapShell"]:fullscreen {
+        width: 100vw;
+        height: 100vh;
+        background: #fff;
+    }
+
+    .fi-checkout-address [x-ref="mapShell"]:fullscreen [data-checkout-address-map] {
+        height: calc(100vh - 45px) !important;
     }
 
     .fi-checkout-address-chip-body {

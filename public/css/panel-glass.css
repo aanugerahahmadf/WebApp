@@ -102,6 +102,35 @@ body.fi-panel-user {
     background-image: none !important;
 }
 
+/* Background storefront mengikuti tema aktif secara eksplisit.
+   Welcome dan User memakai stylesheet ini, sehingga Light/Night/System
+   selalu mendapatkan permukaan dasar yang sesuai tanpa tint ungu. */
+html:not(.dark) body.fi-panel-welcome,
+html:not(.dark) body.fi-panel-user,
+html:not(.dark) body.fi-panel-admin {
+    color-scheme: light;
+    background-color: #f8fafc !important;
+    background-image: none !important;
+}
+
+html.dark body.fi-panel-welcome,
+html.dark body.fi-panel-user,
+html.dark body.fi-panel-admin {
+    color-scheme: dark;
+    background-color: #0f1115 !important;
+    background-image: none !important;
+}
+
+html:not(.dark) body.fi-panel-welcome :is(.fi-layout, .fi-main, .fi-page, .fi-page-content),
+html:not(.dark) body.fi-panel-user :is(.fi-layout, .fi-main, .fi-page, .fi-page-content),
+html:not(.dark) body.fi-panel-admin :is(.fi-layout, .fi-main, .fi-page, .fi-page-content),
+html.dark body.fi-panel-welcome :is(.fi-layout, .fi-main, .fi-page, .fi-page-content),
+html.dark body.fi-panel-user :is(.fi-layout, .fi-main, .fi-page, .fi-page-content),
+html.dark body.fi-panel-admin :is(.fi-layout, .fi-main, .fi-page, .fi-page-content) {
+    background-color: transparent !important;
+    background-image: none !important;
+}
+
 /* --- Sidebar Admin: latar TRANSPARAN, sama dengan topbar/header ------
    Topbar Admin sudah transparan total (lihat override
    resources/views/Admin/vendor/filament-panels/components/topbar/
@@ -279,8 +308,7 @@ html.dark .fi-global-search-modal .fi-global-search-field input::placeholder {
 .fi-panel-welcome .fi-topbar-group-label,
 .fi-panel-user .fi-topbar-item-label,
 .fi-panel-user .fi-topbar-group-label {
-    text-shadow: 0 1px 2px rgb(255 255 255 / 0.28),
-        0 1px 3px rgb(0 0 0 / 0.22);
+    text-shadow: none !important;
 }
 
 html:not(.dark) .fi-panel-welcome .fi-topbar-item-label,
@@ -300,17 +328,48 @@ html.dark .fi-panel-user .fi-topbar-group-label {
 html:not(.dark) .fi-global-search-trigger-placeholder,
 html:not(.dark) .fi-global-search-modal .fi-global-search-field input::placeholder {
     color: #334155 !important;
-    text-shadow: 0 1px 2px rgb(255 255 255 / 0.35);
+    text-shadow: none !important;
 }
 
 html.dark .fi-global-search-trigger-placeholder,
 html.dark .fi-global-search-modal .fi-global-search-field input::placeholder {
     color: #e2e8f0 !important;
-    text-shadow: 0 1px 2px rgb(0 0 0 / 0.45);
+    text-shadow: none !important;
 }
 
 /* Header Welcome/User seperti header hopeindonesiarp.id: transparan di atas
    background image, tanpa permukaan putih dan tanpa blur kaca. */
+/* On phone surfaces the Messages page must start at the left edge. The page
+   templates have a legacy inline padding-inline: 200px; this override is
+   intentionally limited to Android/iOS app and website platforms. */
+html[data-platform="mobile_app_android"] .messages-page .messages-page-head,
+html[data-platform="mobile_app_ios"] .messages-page .messages-page-head,
+html[data-platform="website_android"] .messages-page .messages-page-head,
+html[data-platform="website_ios"] .messages-page .messages-page-head {
+    box-sizing: border-box !important;
+    padding-inline: 1rem !important;
+    margin-inline: 0 !important;
+    width: 100% !important;
+}
+
+html[data-platform="mobile_app_android"] .messages-page .messages-page-crumbs-row,
+html[data-platform="mobile_app_ios"] .messages-page .messages-page-crumbs-row,
+html[data-platform="website_android"] .messages-page .messages-page-crumbs-row,
+html[data-platform="website_ios"] .messages-page .messages-page-crumbs-row {
+    justify-content: flex-start !important;
+    width: 100% !important;
+    margin-inline: 0 !important;
+}
+
+html[data-platform="mobile_app_android"] .messages-page .messages-page-crumbs,
+html[data-platform="mobile_app_ios"] .messages-page .messages-page-crumbs,
+html[data-platform="website_android"] .messages-page .messages-page-crumbs,
+html[data-platform="website_ios"] .messages-page .messages-page-crumbs {
+    margin-inline-start: 0 !important;
+    margin-inline-end: auto !important;
+    text-align: start !important;
+}
+
 .fi-panel-welcome .fi-topbar.fi-topbar,
 .fi-panel-user .fi-topbar.fi-topbar,
 .fi-panel-welcome .fi-topbar > nav,
@@ -390,21 +449,56 @@ body.fi-panel-user [data-panel-background]::before {
    menuntut `npm run build`.
 
    Di atas 640px modal tetap di tengah layar (perilaku Filament). */
-@media (max-width: 640px) {
-    .fi-panel-admin .fi-admin-global-search-dialog {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: stretch !important;
-        justify-content: flex-start !important;
-        padding: 5rem 1.5rem 1.5rem !important;
-    }
+ .fi-panel-admin .fi-topbar > nav {
+     position: relative !important;
+ }
 
-    .fi-panel-admin .fi-admin-global-search-window {
-        width: 100% !important;
-        max-width: none !important;
-        margin: 0 !important;
-    }
-}
+ .fi-panel-admin .fi-admin-topbar-search {
+     position: absolute;
+     top: 50%;
+     left: 50%;
+     z-index: 2;
+     width: min(360px, calc(100% - 32px));
+     transform: translate(-50%, -50%);
+ }
+
+ .fi-panel-admin .fi-admin-global-search-trigger {
+     display: flex;
+     align-items: center;
+     width: 100%;
+     min-height: 40px;
+     gap: 10px;
+     padding: 0 12px;
+     border: 1px solid var(--fi-glass-ring);
+     border-radius: 9px;
+     background: transparent;
+     color: var(--fi-glass-input-fg);
+     cursor: text;
+     text-align: start;
+     transition: border-color .15s ease, background-color .15s ease;
+ }
+
+ .fi-panel-admin .fi-admin-global-search-trigger:hover,
+ .fi-panel-admin .fi-admin-global-search-trigger:focus-visible {
+     background-color: var(--fi-glass-bg);
+     border-color: var(--fi-glass-ring);
+     outline: none;
+ }
+
+ .fi-panel-admin .fi-admin-global-search-trigger-label {
+     min-width: 0;
+     flex: 1;
+     overflow: hidden;
+     text-overflow: ellipsis;
+     white-space: nowrap;
+     font-size: 13px;
+ }
+
+ @media (max-width: 767px) {
+     .fi-panel-admin .fi-admin-topbar-search {
+         width: min(260px, calc(100% - 112px));
+     }
+ }
 
 /* Gradasi warna dilepas dari SEMUA permukaan kaca (kapsul,
    sidebar, dropdown, lang-dd, modal, kartu). background-image: none
@@ -446,6 +540,19 @@ html.dark body.fi-panel-welcome .fi-topbar .fi-topbar-group-label,
 html.dark body.fi-panel-user .fi-topbar .fi-topbar-item-label,
 html.dark body.fi-panel-user .fi-topbar .fi-topbar-group-label {
     color: #ffffff !important;
+}
+
+/* Keep the customer-service category SVGs visible after all panel CSS loads. */
+.fi-panel-welcome .cs-action-icon img[src*='/images/icons/'],
+.fi-panel-user .cs-action-icon img[src*='/images/icons/'] {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    min-width: 1.25rem !important;
+    min-height: 1.25rem !important;
+    object-fit: contain !important;
 }
 
 .fi-panel-welcome .fi-topbar.fi-topbar,
@@ -1974,6 +2081,97 @@ body.fi-panel-user [data-panel-background-media] video {
     padding: 14px 12px !important;
 }
 
+/* Pilihan bahasa di panel `.lang-dd` juga tidak memakai highlight putih saat
+   kursor digeser, diklik, atau fokus. */
+body.fi-panel-welcome .lang-dd button:is(:hover, :focus, :focus-visible, :active),
+body.fi-panel-user .lang-dd button:is(:hover, :focus, :focus-visible, :active),
+body.fi-panel-admin .lang-dd button:is(:hover, :focus, :focus-visible, :active) {
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+}
+
+/* Selector dibuat sama spesifiknya dengan rule lama `.fi-topbar
+   .fi-dropdown-list-item:hover` yang memberi tint putih pada item menu. */
+body.fi-panel-welcome .fi-topbar .fi-dropdown-list-item:is(:hover, :focus, :focus-visible, :active),
+body.fi-panel-user .fi-topbar .fi-dropdown-list-item:is(:hover, :focus, :focus-visible, :active),
+body.fi-panel-admin .fi-topbar .fi-dropdown-list-item:is(:hover, :focus, :focus-visible, :active),
+body.fi-panel-welcome .fi-sidebar .fi-dropdown-list-item:is(:hover, :focus, :focus-visible, :active),
+body.fi-panel-user .fi-sidebar .fi-dropdown-list-item:is(:hover, :focus, :focus-visible, :active),
+body.fi-panel-admin .fi-sidebar .fi-dropdown-list-item:is(:hover, :focus, :focus-visible, :active) {
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+}
+
+/* Item yang dipilih Filament tandai dengan `fi-color-custom`; class ini
+   tetap memberi tint walaupun pointer sudah tidak hover. */
+body.fi-panel-welcome .fi-topbar .fi-dropdown-list-item.fi-color-custom,
+body.fi-panel-user .fi-topbar .fi-dropdown-list-item.fi-color-custom,
+body.fi-panel-admin .fi-topbar .fi-dropdown-list-item.fi-color-custom,
+body.fi-panel-welcome .fi-sidebar .fi-dropdown-list-item.fi-color-custom,
+body.fi-panel-user .fi-sidebar .fi-dropdown-list-item.fi-color-custom,
+body.fi-panel-admin .fi-sidebar .fi-dropdown-list-item.fi-color-custom {
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+}
+
+/* Semua widget User/Welcome memakai blur/background yang sama persis dengan
+   panel Language Switcher (`.lang-dd`). Combined Catalog dikecualikan
+   karena sudah memiliki CSS internal sendiri. */
+body.fi-panel-welcome :is(
+    .home-stat-card,
+    .profile-stat-card,
+    .fi-wi-stats-overview-stat,
+    .fi-wi-chart > .fi-section,
+    .fi-wi-table:not(:has(.combined-catalog)),
+    .fi-wi-table:not(:has(.combined-catalog)) .fi-ta-record
+),
+body.fi-panel-user :is(
+    .home-stat-card,
+    .profile-stat-card,
+    .fi-wi-stats-overview-stat,
+    .fi-wi-chart > .fi-section,
+    .fi-wi-table:not(:has(.combined-catalog)),
+    .fi-wi-table:not(:has(.combined-catalog)) .fi-ta-record
+) {
+    background: rgb(255 255 255 / 0.88) !important;
+    background-image: none !important;
+    border: 1px solid rgb(15 23 42 / 0.10) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    backdrop-filter: blur(12px) !important;
+    box-shadow: 0 12px 30px rgb(15 23 42 / 0.08) !important;
+}
+
+.dark body.fi-panel-welcome :is(
+    .home-stat-card,
+    .profile-stat-card,
+    .fi-wi-stats-overview-stat,
+    .fi-wi-chart > .fi-section,
+    .fi-wi-table:not(:has(.combined-catalog)),
+    .fi-wi-table:not(:has(.combined-catalog)) .fi-ta-record
+),
+.dark body.fi-panel-user :is(
+    .home-stat-card,
+    .profile-stat-card,
+    .fi-wi-stats-overview-stat,
+    .fi-wi-chart > .fi-section,
+    .fi-wi-table:not(:has(.combined-catalog)),
+    .fi-wi-table:not(:has(.combined-catalog)) .fi-ta-record
+) {
+    background: rgb(18 18 18 / 0.88) !important;
+    background-image: none !important;
+    border-color: rgb(255 255 255 / 0.08) !important;
+    box-shadow: 0 12px 30px rgb(15 23 42 / 0.08) !important;
+}
+
 /* Topbar memakai bobot regular, bukan semi-bold. Sidebar tetap mengikuti
    bobot navigasi sebelumnya. */
 body.fi-panel-welcome .fi-topbar :is(.fi-topbar-item-label, .fi-topbar-group-label),
@@ -1986,6 +2184,161 @@ body.fi-panel-welcome .fi-topbar :is(.fi-topbar-item-button, .fi-topbar-group-bu
 body.fi-panel-user .fi-topbar :is(.fi-topbar-item-button, .fi-topbar-group-button),
 body.fi-panel-admin .fi-topbar :is(.fi-topbar-item-button, .fi-topbar-group-button) {
     font-weight: 400 !important;
+}
+
+/* Item navigasi yang sedang aktif (contoh: Home) memakai kuning brand,
+   bukan putih seperti item navigasi lainnya. */
+body.fi-panel-welcome :is(
+    .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-label,
+    .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
+    .fi-sidebar-nav-item > a.fi-active
+),
+body.fi-panel-user :is(
+    .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-label,
+    .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
+    .fi-sidebar-nav-item > a.fi-active
+),
+body.fi-panel-admin :is(
+    .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-label,
+    .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
+    .fi-sidebar-nav-item > a.fi-active
+) {
+    color: #fbbf24 !important;
+}
+
+/* Item aktif tidak memakai kapsul putih/abu-abu atau blur tambahan.
+   Highlight aktif cukup ditandai oleh teks dan ikon kuning. */
+body.fi-panel-welcome :is(
+    .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
+    .fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-button
+),
+body.fi-panel-user :is(
+    .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
+    .fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-button
+),
+body.fi-panel-admin :is(
+    .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
+    .fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-button
+) {
+    background-color: transparent !important;
+    background-image: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+}
+
+/* Filament dropdown memakai `.fi-dropdown-list-item` dan menambahkan
+   bg-gray-50/dark:bg-white/5 pada hover/focus. Hilangkan lapisan putihnya. */
+body.fi-panel-welcome .fi-dropdown-list-item:is(:hover, :focus, :focus-visible, :active),
+body.fi-panel-user .fi-dropdown-list-item:is(:hover, :focus, :focus-visible, :active),
+body.fi-panel-admin .fi-dropdown-list-item:is(:hover, :focus, :focus-visible, :active) {
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+}
+
+/* Klik/fokus tombol navigasi tidak menampilkan kilau atau ring putih. */
+body.fi-panel-welcome :is(
+    .fi-sidebar .fi-sidebar-item-button:focus,
+    .fi-sidebar .fi-sidebar-item-button:focus-visible,
+    .fi-sidebar .fi-sidebar-item-button:active,
+    .fi-topbar .fi-topbar-item-button:focus,
+    .fi-topbar .fi-topbar-item-button:focus-visible,
+    .fi-topbar .fi-topbar-item-button:active
+),
+body.fi-panel-user :is(
+    .fi-sidebar .fi-sidebar-item-button:focus,
+    .fi-sidebar .fi-sidebar-item-button:focus-visible,
+    .fi-sidebar .fi-sidebar-item-button:active,
+    .fi-topbar .fi-topbar-item-button:focus,
+    .fi-topbar .fi-topbar-item-button:focus-visible,
+    .fi-topbar .fi-topbar-item-button:active
+),
+body.fi-panel-admin :is(
+    .fi-sidebar .fi-sidebar-item-button:focus,
+    .fi-sidebar .fi-sidebar-item-button:focus-visible,
+    .fi-sidebar .fi-sidebar-item-button:active,
+    .fi-topbar .fi-topbar-item-button:focus,
+    .fi-topbar .fi-topbar-item-button:focus-visible,
+    .fi-topbar .fi-topbar-item-button:active
+) {
+    outline: none !important;
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    --tw-ring-color: transparent !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+    --tw-ring-offset-shadow: 0 0 #0000 !important;
+}
+
+/* Hover/mouseover pada navigasi dan item dropdown tidak membuat kotak putih
+   atau blur tambahan ketika kursor digeser di atasnya. */
+body.fi-panel-welcome :is(
+    .fi-sidebar .fi-sidebar-item-button:hover,
+    .fi-topbar .fi-topbar-item-button:hover,
+    .fi-topbar .fi-dropdown .fi-dropdown-panel a:hover,
+    .fi-topbar .fi-dropdown .fi-dropdown-panel button:hover,
+    .fi-sidebar .fi-dropdown .fi-dropdown-panel a:hover,
+    .fi-sidebar .fi-dropdown .fi-dropdown-panel button:hover
+),
+body.fi-panel-user :is(
+    .fi-sidebar .fi-sidebar-item-button:hover,
+    .fi-topbar .fi-topbar-item-button:hover,
+    .fi-topbar .fi-dropdown .fi-dropdown-panel a:hover,
+    .fi-topbar .fi-dropdown .fi-dropdown-panel button:hover,
+    .fi-sidebar .fi-dropdown .fi-dropdown-panel a:hover,
+    .fi-sidebar .fi-dropdown .fi-dropdown-panel button:hover
+),
+body.fi-panel-admin :is(
+    .fi-sidebar .fi-sidebar-item-button:hover,
+    .fi-topbar .fi-topbar-item-button:hover,
+    .fi-topbar .fi-dropdown .fi-dropdown-panel a:hover,
+    .fi-topbar .fi-dropdown .fi-dropdown-panel button:hover,
+    .fi-sidebar .fi-dropdown .fi-dropdown-panel a:hover,
+    .fi-sidebar .fi-dropdown .fi-dropdown-panel button:hover
+) {
+    background-color: transparent !important;
+    background-image: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+}
+
+/* Tombol Theme dan Language juga tidak menampilkan kotak putih ketika
+   diklik atau mendapat focus. */
+body.fi-panel-welcome :is(
+    .fi-theme-switcher-btn:focus,
+    .fi-theme-switcher-btn:focus-visible,
+    .fi-theme-switcher-btn:active,
+    #filament-language-switcher:focus,
+    #filament-language-switcher:focus-visible,
+    #filament-language-switcher:active
+),
+body.fi-panel-user :is(
+    .fi-theme-switcher-btn:focus,
+    .fi-theme-switcher-btn:focus-visible,
+    .fi-theme-switcher-btn:active,
+    #filament-language-switcher:focus,
+    #filament-language-switcher:focus-visible,
+    #filament-language-switcher:active
+),
+body.fi-panel-admin :is(
+    .fi-theme-switcher-btn:focus,
+    .fi-theme-switcher-btn:focus-visible,
+    .fi-theme-switcher-btn:active,
+    #filament-language-switcher:focus,
+    #filament-language-switcher:focus-visible,
+    #filament-language-switcher:active
+) {
+    outline: none !important;
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    --tw-ring-color: transparent !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+    --tw-ring-offset-shadow: 0 0 #0000 !important;
 }
 
 /* Navigasi topbar dan sidebar harus tetap terang di Light, Dark maupun
@@ -2022,7 +2375,167 @@ body.fi-panel-admin :is(.fi-topbar, .fi-sidebar) :is(
     .fi-sidebar-group-button
 ) {
     color: #f8fafc !important;
-    text-shadow: 0 1px 2px rgb(0 0 0 / 0.42);
+    text-shadow: none !important;
+}
+
+/* Navigation interaction: hover/focus/active is communicated by text and
+   icon colour only. Never paint a blurred box, border, ring, or background
+   behind sidebar/top-navigation items. */
+body.fi-panel-welcome :is(
+    .fi-sidebar .fi-sidebar-item-button:hover,
+    .fi-sidebar .fi-sidebar-item-button:focus-visible,
+    .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
+    .fi-sidebar .fi-sidebar-group-button:hover,
+    .fi-sidebar .fi-sidebar-group-button:focus-visible,
+    .fi-topbar .fi-topbar-item-button:hover,
+    .fi-topbar .fi-topbar-item-button:focus-visible,
+    .fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-button,
+    .fi-topbar .fi-dropdown-list-item:hover,
+    .fi-topbar .fi-dropdown-list-item:focus-visible,
+    .fi-sidebar .fi-dropdown-list-item:hover,
+    .fi-sidebar .fi-dropdown-list-item:focus-visible
+),
+body.fi-panel-user :is(
+    .fi-sidebar .fi-sidebar-item-button:hover,
+    .fi-sidebar .fi-sidebar-item-button:focus-visible,
+    .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
+    .fi-sidebar .fi-sidebar-group-button:hover,
+    .fi-sidebar .fi-sidebar-group-button:focus-visible,
+    .fi-topbar .fi-topbar-item-button:hover,
+    .fi-topbar .fi-topbar-item-button:focus-visible,
+    .fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-button,
+    .fi-topbar .fi-dropdown-list-item:hover,
+    .fi-topbar .fi-dropdown-list-item:focus-visible,
+    .fi-sidebar .fi-dropdown-list-item:hover,
+    .fi-sidebar .fi-dropdown-list-item:focus-visible
+),
+body.fi-panel-admin :is(
+    .fi-sidebar .fi-sidebar-item-button:hover,
+    .fi-sidebar .fi-sidebar-item-button:focus-visible,
+    .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
+    .fi-sidebar .fi-sidebar-group-button:hover,
+    .fi-sidebar .fi-sidebar-group-button:focus-visible,
+    .fi-topbar .fi-topbar-item-button:hover,
+    .fi-topbar .fi-topbar-item-button:focus-visible,
+    .fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-button,
+    .fi-topbar .fi-dropdown-list-item:hover,
+    .fi-topbar .fi-dropdown-list-item:focus-visible,
+    .fi-sidebar .fi-dropdown-list-item:hover,
+    .fi-sidebar .fi-dropdown-list-item:focus-visible
+) {
+    color: #b45309 !important;
+    background: transparent !important;
+    background-image: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    --tw-ring-color: transparent !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+    --tw-ring-offset-shadow: 0 0 #0000 !important;
+}
+
+body.fi-panel-welcome :is(
+    .fi-sidebar .fi-sidebar-item-button:hover *,
+    .fi-sidebar .fi-sidebar-item-button:focus-visible *,
+    .fi-sidebar .fi-sidebar-group-button:hover *,
+    .fi-sidebar .fi-sidebar-group-button:focus-visible *,
+    .fi-topbar .fi-topbar-item-button:hover *,
+    .fi-topbar .fi-topbar-item-button:focus-visible *,
+    .fi-topbar .fi-dropdown-list-item:hover *,
+    .fi-topbar .fi-dropdown-list-item:focus-visible *,
+    .fi-sidebar .fi-dropdown-list-item:hover *,
+    .fi-sidebar .fi-dropdown-list-item:focus-visible *
+),
+body.fi-panel-user :is(
+    .fi-sidebar .fi-sidebar-item-button:hover *,
+    .fi-sidebar .fi-sidebar-item-button:focus-visible *,
+    .fi-sidebar .fi-sidebar-group-button:hover *,
+    .fi-sidebar .fi-sidebar-group-button:focus-visible *,
+    .fi-topbar .fi-topbar-item-button:hover *,
+    .fi-topbar .fi-topbar-item-button:focus-visible *,
+    .fi-topbar .fi-dropdown-list-item:hover *,
+    .fi-topbar .fi-dropdown-list-item:focus-visible *,
+    .fi-sidebar .fi-dropdown-list-item:hover *,
+    .fi-sidebar .fi-dropdown-list-item:focus-visible *
+),
+body.fi-panel-admin :is(
+    .fi-sidebar .fi-sidebar-item-button:hover *,
+    .fi-sidebar .fi-sidebar-item-button:focus-visible *,
+    .fi-sidebar .fi-sidebar-group-button:hover *,
+    .fi-sidebar .fi-sidebar-group-button:focus-visible *,
+    .fi-topbar .fi-topbar-item-button:hover *,
+    .fi-topbar .fi-topbar-item-button:focus-visible *,
+    .fi-topbar .fi-dropdown-list-item:hover *,
+    .fi-topbar .fi-dropdown-list-item:focus-visible *,
+    .fi-sidebar .fi-dropdown-list-item:hover *,
+    .fi-sidebar .fi-dropdown-list-item:focus-visible *
+) {
+    color: inherit !important;
+    text-shadow: none !important;
+}
+
+.dark body.fi-panel-welcome :is(
+    .fi-sidebar .fi-sidebar-item-button:hover,
+    .fi-sidebar .fi-sidebar-item-button:focus-visible,
+    .fi-sidebar .fi-sidebar-group-button:hover,
+    .fi-sidebar .fi-sidebar-group-button:focus-visible,
+    .fi-topbar .fi-topbar-item-button:hover,
+    .fi-topbar .fi-topbar-item-button:focus-visible,
+    .fi-topbar .fi-dropdown-list-item:hover,
+    .fi-topbar .fi-dropdown-list-item:focus-visible,
+    .fi-sidebar .fi-dropdown-list-item:hover,
+    .fi-sidebar .fi-dropdown-list-item:focus-visible
+),
+.dark body.fi-panel-user :is(
+    .fi-sidebar .fi-sidebar-item-button:hover,
+    .fi-sidebar .fi-sidebar-item-button:focus-visible,
+    .fi-sidebar .fi-sidebar-group-button:hover,
+    .fi-sidebar .fi-sidebar-group-button:focus-visible,
+    .fi-topbar .fi-topbar-item-button:hover,
+    .fi-topbar .fi-topbar-item-button:focus-visible,
+    .fi-topbar .fi-dropdown-list-item:hover,
+    .fi-topbar .fi-dropdown-list-item:focus-visible,
+    .fi-sidebar .fi-dropdown-list-item:hover,
+    .fi-sidebar .fi-dropdown-list-item:focus-visible
+),
+.dark body.fi-panel-admin :is(
+    .fi-sidebar .fi-sidebar-item-button:hover,
+    .fi-sidebar .fi-sidebar-item-button:focus-visible,
+    .fi-sidebar .fi-sidebar-group-button:hover,
+    .fi-sidebar .fi-sidebar-group-button:focus-visible,
+    .fi-topbar .fi-topbar-item-button:hover,
+    .fi-topbar .fi-topbar-item-button:focus-visible,
+    .fi-topbar .fi-dropdown-list-item:hover,
+    .fi-topbar .fi-dropdown-list-item:focus-visible,
+    .fi-sidebar .fi-dropdown-list-item:hover,
+    .fi-sidebar .fi-dropdown-list-item:focus-visible
+) {
+    color: #facc15 !important;
+}
+
+/* Navigation typography: group labels 12px and sidebar/topbar items 11px. */
+:is(body.fi-panel-welcome, body.fi-panel-user, body.fi-panel-admin) :is(
+    .fi-sidebar .fi-sidebar-group-label,
+    .fi-sidebar .fi-sidebar-group-button,
+    .fi-topbar .fi-topbar-group-label,
+    .fi-topbar .fi-topbar-group-button
+) {
+    font-size: 12px !important;
+}
+
+:is(body.fi-panel-welcome, body.fi-panel-user, body.fi-panel-admin) :is(
+    .fi-sidebar .fi-sidebar-item-label,
+    .fi-sidebar .fi-sidebar-item-button,
+    .fi-sidebar .fi-dropdown-list-item,
+    .fi-sidebar .fi-dropdown-list-item-label,
+    .fi-topbar .fi-topbar-item-label,
+    .fi-topbar .fi-topbar-item-button,
+    .fi-topbar .fi-dropdown-list-item,
+    .fi-topbar .fi-dropdown-list-item-label
+) {
+    font-size: 11px !important;
 }
 
 body.fi-panel-welcome :is(.fi-topbar, .fi-sidebar) :is(

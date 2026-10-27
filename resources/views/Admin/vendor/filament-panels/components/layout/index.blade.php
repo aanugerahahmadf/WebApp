@@ -6,6 +6,31 @@
 @endphp
 
 <x-filament-panels::layout.base :livewire="$livewire">
+    <style>
+        /* Layout Admin: sidebar/logo menjadi kolom kiri, header dan konten
+           berada di kolom kanan. */
+
+        /* Desktop saja: mulai 1024px sidebar menjadi kolom tetap. Tablet
+           768-1023px mengikuti drawer mobile. */
+        @media (min-width: 1024px) {
+            .fi-panel-admin .fi-main-ctn.fi-main-ctn-sidebar-open {
+                margin-inline-start: var(--sidebar-width) !important;
+            }
+        }
+
+        /* Topbar fixed setinggi 4rem. Konten cukup didorong 4rem, BUKAN
+           --fi-capsule-stack (jarak atas + tinggi kapsul + napas) --
+           angka kapsul itulah yang menyisakan celah kosong di bawah
+           header pada tampilan tanpa kapsul. */
+        .fi-panel-admin .fi-layout.fi-layout {
+            padding-top: 0 !important;
+        }
+
+        .fi-panel-admin .fi-main-ctn {
+            padding-top: 4rem !important;
+        }
+    </style>
+
     {{-- The sidebar is after the page content in the markup to fix issues with page content overlapping dropdown content from the sidebar. --}}
     <div
         class="fi-layout flex min-h-screen w-full flex-row-reverse overflow-x-clip"

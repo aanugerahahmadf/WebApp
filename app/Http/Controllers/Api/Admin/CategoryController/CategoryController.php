@@ -23,7 +23,7 @@ class CategoryController extends Controller
 
             return response()->json(['status' => 'success', 'data' => $categories]);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil kategori'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil kategori'), 'error' => null], 500);
         }
     }
 
@@ -65,7 +65,7 @@ class CategoryController extends Controller
         } catch (ValidationException $e) {
             return response()->json(['status' => 'error', 'message' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal membuat kategori'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal membuat kategori'), 'error' => null], 500);
         }
     }
 
@@ -93,7 +93,7 @@ class CategoryController extends Controller
         } catch (ValidationException $e) {
             return response()->json(['status' => 'error', 'message' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal memperbarui kategori'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal memperbarui kategori'), 'error' => null], 500);
         }
     }
 

@@ -84,7 +84,7 @@ class ChatService
         // Dispatch bot reply if user is not admin
         $sender = $senderUserId ? User::find($senderUserId) : Auth::user();
         if ($sender && ! ChatStaff::isStaff($sender)) {
-            SendBotReply::dispatch($message->id)->delay(now()->addSeconds(5));
+            SendBotReply::dispatch($message->id);
         }
 
         return $message;
@@ -147,7 +147,7 @@ class ChatService
         // guest row always counts as "not admin".
         $sender = $senderId ? User::find($senderId) : Auth::user();
         if ($sender && ! ChatStaff::isStaff($sender)) {
-            SendBotReply::dispatch($message->id)->delay(now()->addSeconds(5));
+            SendBotReply::dispatch($message->id);
         }
 
         return $message;

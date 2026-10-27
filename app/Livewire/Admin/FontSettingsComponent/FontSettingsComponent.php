@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin\FontSettingsComponent;
 
 use App\Models\FmAppSetting\FmAppSetting;
+use App\Support\AppFont\AppFont;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
@@ -25,6 +26,7 @@ class FontSettingsComponent extends Component implements \Filament\Forms\Contrac
     public function form(Form $form): Form
     {
         $current = FmAppSetting::appearance();
+        $fontFamilies = AppFont::families();
 
         return $form
             ->statePath('data')
@@ -32,6 +34,22 @@ class FontSettingsComponent extends Component implements \Filament\Forms\Contrac
                 Section::make(__('Ukuran & Tebal Teks'))
                     ->description(__('Berlaku untuk website, Dekstop App, dan Dekstop Admin App.'))
                     ->schema([
+                        Select::make('family')
+                            ->label(__('Font Website, User & Welcome'))
+                            ->options(array_combine($fontFamilies, $fontFamilies))
+                            ->searchable()
+                            ->native(false)
+                            ->default($current['family'])
+                            ->required(),
+
+                        Select::make('admin_family')
+                            ->label(__('Font Admin'))
+                            ->options(array_combine($fontFamilies, $fontFamilies))
+                            ->searchable()
+                            ->native(false)
+                            ->default($current['admin_family'])
+                            ->required(),
+
                         Select::make('size')
                             ->label(__('Ukuran Huruf'))
                             ->options([

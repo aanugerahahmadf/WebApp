@@ -28,10 +28,10 @@ export default defineConfig({
       // memuat Google Identity Services."
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https: http:",
+       "img-src 'self' data: blob: https:",
       "font-src 'self' data: https:",
       "media-src 'self' blob: https:",
-      "connect-src 'self' https: wss: ws: http:",
+       "connect-src 'self' https: wss:",
       // Pop-up Google One Tap / token client hidup di frame Google.
       "frame-src 'self' https://accounts.google.com",
       "object-src 'none'",

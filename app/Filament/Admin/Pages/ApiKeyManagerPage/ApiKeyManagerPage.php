@@ -2,19 +2,23 @@
 
 namespace App\Filament\Admin\Pages\ApiKeyManagerPage;
 
-use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Support\AppIcon\AppIcon;
+use App\Support\AdminAccess\AdminAccess;
 use Filament\Pages\Page;
 
 class ApiKeyManagerPage extends Page
 {
-    use HasDynamicBreadcrumbs;
 
     protected static string $view = 'Admin.pages.api-key-manager.api-key-manager-page';
 
     protected static ?string $navigationIcon = AppIcon::API_KEY;
 
     protected static ?int $navigationSort = 203;
+
+    public static function canAccess(): bool
+    {
+        return AdminAccess::allows('manage_api_keys');
+    }
 
     public static function getNavigationGroup(): ?string
     {
@@ -36,11 +40,8 @@ class ApiKeyManagerPage extends Page
         return 'api-keys';
     }
 
-    public function getBreadcrumbs(): array
+        public function getBreadcrumbs(): array
     {
-        return [
-            ...$this->breadcrumbParentCrumb(),
-            $this->getTitle(),
-        ];
+        return [];
     }
 }

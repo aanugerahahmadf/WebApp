@@ -106,7 +106,7 @@ public function categorySchema(): array
             ->helperText(__('Cukup tulis namanya. URL slug dan tipe kategori diisi otomatis dari nama ini.'))
             ->required()
             ->maxLength(255)
-            ->prefixIcon('heroicon-s-bookmark'),
+            ->prefixIcon('/images/icons/bookmark.svg'),
     ];
 }
 
@@ -145,7 +145,7 @@ public function categorySchema(): array
                     ->searchable()
                     ->sortable()
                     ->weight('bold')
-                    ->icon('heroicon-s-bookmark'),
+                    ->icon('/images/icons/bookmark.svg'),
             ])
             ->headerActions([
                 Tables\Actions\CreateAction::make()
@@ -156,7 +156,7 @@ public function categorySchema(): array
                     // Tanpa ini tombol ini jadi satu-satunya di ketiga tabel
                     // yang tidak punya ikon, dan tidak terbaca sebagai bagian
                     // dari kelompok yang sama.
-                    ->icon('heroicon-s-plus')
+                    ->icon('/images/icons/plus.svg')
                     ->visible(fn (): bool => $this->canManage())
                     ->using(fn (array $data): Category => Category::create($data))
                     // WAJIB: tanpa baris ini modalnya kosong. Lihat
@@ -171,7 +171,7 @@ public function categorySchema(): array
                 Tables\Actions\ExportAction::make()
                     ->exporter(CategoryExporter::class)
                     ->label(__('Ekspor Data'))
-                    ->icon('heroicon-s-arrow-down-tray')
+                    ->icon('/images/icons/download.svg')
                     ->color('success'),
             ])
             ->actions([

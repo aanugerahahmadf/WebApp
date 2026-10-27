@@ -64,8 +64,13 @@ class DatabaseStudioTest extends TestCase
         $response->assertSuccessful();
     }
 
-    public function test_admin_panel_renders_language_switcher_in_topbar(): void
+    public function test_admin_panel_renders_language_switcher_in_the_sidebar(): void
     {
+        // PERUBAHAN PERILAKU (2026-10-25): nama test tadinya "..._in_topbar".
+        // Switcher bahasa panel admin pindah dari topbar ke DASAR sidebar
+        // (bersama blok profil). Yang dijaga tetap sama: id-nya unik, jadi
+        // keberadaannya membuktikan switcher dirender tepat satu kali di
+        // halaman mana pun.
         $response = $this->actingAs($this->superAdmin, 'admin')
             ->get('/admin/database-studio');
 

@@ -17,8 +17,10 @@ service CbirService {
   // Search similar items using image (unary)
   rpc SearchSimilar(SearchSimilarRequest) returns (CbirSearchResponse);
   
-  // Search similar items using image (streaming for large images)
-  rpc SearchSimilarStream(stream SearchSimilarChunkRequest) returns (CbirSearchResponse);
+  // Search similar items using one buffered image chunk. RoadRunner's PHP
+  // transport supports unary RPCs; clients should upload the complete payload
+  // (or use SearchSimilar for the normal path).
+  rpc SearchSimilarStream(SearchSimilarChunkRequest) returns (CbirSearchResponse);
   
   // Arithmetic search (combine two images)
   rpc ArithmeticSearch(ArithmeticSearchRequest) returns (CbirSearchResponse);

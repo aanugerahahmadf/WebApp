@@ -1,12 +1,6 @@
-@php
-    /*
-     * Breadcrumb diambil lewat $this->getBreadcrumbs(), bukan lewat komponen
-     * halaman Filament. Lihat catatan panjang di bawah.
-     */
-    $messagesBreadcrumbs = $this->getBreadcrumbs();
-@endphp
-
 {{--
+
+
     HALAMAN MESSAGES -- PENUH, TANPA CHROME HALAMAN FILAMENT.
 
     Dulu blade ini dibungkus `<x-filament-panels::page>`. Komponen itu
@@ -57,15 +51,7 @@
         breadcrumb sudah berakhir dengan kata yang sama ("Inbox"), jadi dua-duanya
         hanya mengulang teks yang sama dalam dua ukuran berbeda.
     --}}
-    <div class="messages-page-head">
-        <div class="messages-page-crumbs-row">
-            @if (filled($messagesBreadcrumbs))
-                <div class="messages-page-crumbs">
-                    <x-filament::breadcrumbs :breadcrumbs="$messagesBreadcrumbs" />
-                </div>
-            @endif
-        </div>
-    </div>
+    {{-- Breadcrumb dihilangkan untuk panel Admin. --}}
 
     <div id="messages-container" class="messages-container flex flex-col lg:flex-row gap-6 w-full overflow-hidden">
         {{-- Inbox List --}}

@@ -51,7 +51,7 @@
         <div class="space-y-4">
             <div class="flex items-center gap-2 px-1">
                 <x-filament::icon icon="/images/icons/gift.svg" class="w-5 h-5 text-primary-500" />
-                <h3 class="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight">{{ __('Paket') }}</h3>
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-tight">{{ __('Paket') }}</h3>
             </div>
             
             <div class="space-y-3">
@@ -72,7 +72,7 @@
         <div class="space-y-4">
             <div class="flex items-center gap-2 px-1">
                 <x-filament::icon icon="/images/icons/bag.svg" class="w-5 h-5 text-amber-500" />
-                <h3 class="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight">{{ __('Katalog') }}</h3>
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-tight">{{ __('Katalog') }}</h3>
             </div>
 
             <div class="space-y-3">
@@ -98,7 +98,7 @@
             color="gray"
             size="lg"
             icon="/images/icons/refresh.svg"
-            class="w-full rounded-2xl font-bold"
+            class="w-full rounded-2xl font-semibold"
         >
             {{ __('Bersihkan Filter') }}
         </x-filament::button>

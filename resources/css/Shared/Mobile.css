@@ -11,8 +11,9 @@
  *  tablet to landscape (or resizing a browser below the breakpoint) never leaves
  *  a stray bottom bar or a squashed card table behind.
  *
- *  Breakpoint: 1023px. Kept in sync with config('app-platform.mobile_nav.breakpoint')
- *  and the MOBILE_BREAKPOINT env var.
+ *  Breakpoint untuk BOTTOM NAV: 767px (ponsel saja). Tablet (>= 768px)
+ *  memakai layout desktop: topbar berisi logo + baris navigasi, tanpa bar
+ *  bawah. Tabel kartu tetap memakai ambang 1023px -- itu keputusan terpisah.
  * ============================================================================
  */
 
@@ -25,7 +26,7 @@
     display: none;
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 767px) {
 
     .fi-bottom-nav {
         position: fixed;
@@ -90,7 +91,7 @@
 
     .fi-bottom-nav-item.fi-active {
         color: var(--fi-primary-600, rgb(79 70 229));
-        font-weight: 700;
+        font-weight: 600;
     }
 
     .dark .fi-bottom-nav-item.fi-active {
@@ -133,7 +134,7 @@
         background-color: rgb(225 29 72);
         color: #fff;
         font-size: 0.5625rem;
-        font-weight: 700;
+        font-weight: 600;
         line-height: 1;
     }
 

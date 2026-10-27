@@ -50,7 +50,7 @@ class DiscountController extends Controller
                 ],
             ]);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil diskon'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil diskon'), 'error' => null], 500);
         }
     }
 
@@ -98,7 +98,7 @@ class DiscountController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['status' => 'error', 'message' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal membuat diskon'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal membuat diskon'), 'error' => null], 500);
         }
     }
 
@@ -123,7 +123,7 @@ class DiscountController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['status' => 'error', 'message' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal memperbarui diskon'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal memperbarui diskon'), 'error' => null], 500);
         }
     }
 

@@ -2,7 +2,6 @@
 
 namespace App\Providers\PlatformSupportServiceProvider;
 
-use App\Support\MobileNav\MobileNav;
 use Filament\Notifications\Livewire\DatabaseNotifications;
 use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
@@ -69,22 +68,6 @@ class PlatformSupportServiceProvider extends ServiceProvider
         FilamentView::registerRenderHook(
             PanelsRenderHook::BODY_END,
             fn (): View => view('Shared.components.responsive-tables.responsive-tables'),
-        );
-
-        // Phone-only bottom navigation. The destinations are per panel, declared
-        // under `app-platform.mobile_nav.items.{panel}`, so this hook stays generic
-        // and lets MobileNav resolve the current panel; shouldRender() is what
-        // suppresses it on auth pages, on desktop, and for any panel that declares
-        // no destinations.
-        //
-        // WelcomePanelProvider registers a second, 'user'-keyed hook of its own:
-        // the storefront is browsable by guests, and config declares no 'welcome'
-        // destinations, so the bar it wants is the account one.
-        FilamentView::registerRenderHook(
-            PanelsRenderHook::BODY_END,
-            fn (): View|string => MobileNav::shouldRender()
-                ? view('Shared.components.mobile-bottom-nav.mobile-bottom-nav')
-                : '',
         );
 
         // FilamentView::registerRenderHook(

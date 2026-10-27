@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Resources\AdminResource;
 
-use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\Shared\Concerns\HasStandardActions\HasStandardActions;
 use App\Filament\Admin\Resources\AdminResource\Pages\ManageAdmins\ManageAdmins;
 use App\Models\Admin\Admin;
@@ -104,7 +103,7 @@ class AdminResource extends Resource
     {
         return $form->schema([
             Forms\Components\Section::make(__('Identitas'))
-                ->icon('heroicon-s-identification')
+                ->icon('/images/icons/id_card.svg')
                 ->columns(3)
                 ->schema([
                     Forms\Components\TextInput::make('full_name')
@@ -159,7 +158,7 @@ class AdminResource extends Resource
                 ]),
 
             Forms\Components\Section::make(__('Keamanan Akun'))
-                ->icon('heroicon-s-lock-closed')
+                ->icon('/images/icons/lock.svg')
                 ->columns(2)
                 ->schema([
                     Forms\Components\TextInput::make('password')
@@ -202,13 +201,14 @@ class AdminResource extends Resource
                 ]),
 
             Forms\Components\Section::make(__('Jabatan'))
-                ->icon('heroicon-s-briefcase')
+                ->icon('/images/icons/briefcase.svg')
                 ->description(__('Jabatan bersifat informatif. Penentu akses tetap role di bawah.'))
                 ->columns(3)
                 ->schema([
                     Forms\Components\TextInput::make('position')
                         ->label(__('Jabatan'))
-                        ->maxLength(100),
+                        ->maxLength(100)
+                        ->datalist(array_values(AdminAccess::roleOptions())),
 
                     Forms\Components\TextInput::make('department')
                         ->label(__('Divisi'))
@@ -231,7 +231,7 @@ class AdminResource extends Resource
                 ]),
 
             Forms\Components\Section::make(__('Otorisasi'))
-                ->icon('heroicon-s-key')
+                ->icon('/images/icons/key.svg')
                 ->description(__('Role menentukan apa yang terlihat di panel ini. super_admin melihat semuanya.'))
                 ->schema([
                     Forms\Components\Select::make('roles')
@@ -245,7 +245,9 @@ class AdminResource extends Resource
                             'name',
                             fn ($query) => $query->where('guard_name', 'admin')
                         )
-                        ->getOptionLabelFromRecordUsing(fn ($record) => str($record->name)->headline())
+                        ->getOptionLabelFromRecordUsing(
+                            fn ($record): string => __(AdminAccess::ROLE_LABELS[$record->name] ?? str($record->name)->headline())
+                        )
                         ->multiple()
                         ->preload()
                         ->required(),

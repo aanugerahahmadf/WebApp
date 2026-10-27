@@ -15,6 +15,13 @@ class BotReplyLocalizer
             return $text;
         }
 
+        // AI replies are already generated in the user's language. Do not run
+        // them through the old template translator, which would silently
+        // replace a contextual English/Indonesian answer with a canned reply.
+        if (! empty($meta['ai'])) {
+            return $text;
+        }
+
         $key = $meta['bot_reply_key'] ?? self::identify($text);
         $data = $meta['bot_reply_data'] ?? [];
 

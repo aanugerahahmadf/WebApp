@@ -10,7 +10,7 @@
 <body class="antialiased bg-gray-100 mt-7 md:mt-12 dark:bg-gray-900">
     <div class="mx-auto max-w-7xl lg:px-8 sm:px-6">
         <div class="flex flex-wrap justify-center space-y-3">
-            <h4 class="w-full text-2xl font-bold text-center text-gray-900 dark:text-white">{{ __('health::notifications.laravel_health') }}</h4>
+            <h4 class="w-full text-2xl font-semibold text-center text-gray-900 dark:text-white">{{ __('health::notifications.laravel_health') }}</h4>
             <div class="flex justify-center w-full">
                 <x-health-logo/>
             </div>
@@ -27,7 +27,7 @@
                         <div class="flex items-start px-4 space-x-2 overflow-hidden py-5 text-opacity-0 transition transform bg-white shadow-md shadow-gray-200 dark:shadow-black/25 dark:shadow-md dark:bg-gray-800 rounded-xl sm:p-6 md:space-x-3 md:min-h-[130px] dark:border-t dark:border-gray-700">
                             <x-health-status-indicator :result="$result" />
                             <div>
-                                <dd class="-mt-1 font-bold text-gray-900 dark:text-white md:mt-1 md:text-xl">
+                                <dd class="-mt-1 font-semibold text-gray-900 dark:text-white md:mt-1 md:text-xl">
                                     {{ $result->label }}
                                 </dd>
                                 <dt class="mt-0 text-sm font-medium text-gray-600 dark:text-gray-300 md:mt-1">

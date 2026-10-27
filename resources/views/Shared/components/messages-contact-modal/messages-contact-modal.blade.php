@@ -230,7 +230,7 @@
                                     title="{{ __('Negara / Kode Negara') }}"
                                 >
                                     <span
-                                        class="grid h-5 min-w-[1.5rem] place-items-center rounded bg-gray-200 px-1 text-[10px] font-bold text-gray-600 dark:bg-white/10 dark:text-gray-300"
+                                        class="grid h-5 min-w-[1.5rem] place-items-center rounded bg-gray-200 px-1 text-[10px] font-semibold text-gray-600 dark:bg-white/10 dark:text-gray-300"
                                         x-text="contactCurrentCountry().iso"
                                     >ID</span>
                                     <span class="font-medium" x-text="contactCurrentCountry().dial">+62</span>
@@ -260,7 +260,7 @@
                                                 class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-white/10"
                                             >
                                                 <span
-                                                    class="grid h-5 min-w-[1.5rem] place-items-center rounded bg-gray-200 px-1 text-[10px] font-bold text-gray-600 dark:bg-white/10 dark:text-gray-300"
+                                                    class="grid h-5 min-w-[1.5rem] place-items-center rounded bg-gray-200 px-1 text-[10px] font-semibold text-gray-600 dark:bg-white/10 dark:text-gray-300"
                                                     x-text="country.iso"
                                                 ></span>
                                                 <span class="flex-1 truncate" x-text="country.name"></span>

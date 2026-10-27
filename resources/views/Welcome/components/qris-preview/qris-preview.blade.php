@@ -15,7 +15,7 @@
                     <img src="{{ asset('storage/' . $method->qris_image) }}" class="w-64 h-64 object-contain shadow-xl rounded-2xl border-2 border-gray-100 dark:border-gray-800" alt="QRIS">
                 </div>
             </div>
-            <div class="text-[10px] text-gray-500 font-bold text-center uppercase tracking-widest mt-2">
+            <div class="text-[10px] text-gray-500 font-semibold text-center uppercase tracking-widest mt-2">
                 * {{ __('Simpan QRIS ini atau scan langsung dari aplikasi bank/e-wallet Anda.') }}
             </div>
         @else

@@ -235,7 +235,6 @@ class AutoTranslationService
     {
         try {
             $response = Http::timeout(2)
-                ->withoutVerifying()
                 ->withUserAgent('Mozilla/5.0')
                 ->get('https://api.mymemory.translated.net/get', [
                     'q' => $text,

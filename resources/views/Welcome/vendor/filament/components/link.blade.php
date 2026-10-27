@@ -78,9 +78,9 @@
                 FontWeight::Medium, 'medium' => 'font-medium',
                 FontWeight::Normal, 'normal' => 'font-normal',
                 FontWeight::SemiBold, 'semibold' => 'font-semibold',
-                FontWeight::Bold, 'bold' => 'font-bold',
-                FontWeight::ExtraBold, 'extrabold' => 'font-extrabold',
-                FontWeight::Black, 'black' => 'font-black',
+                FontWeight::Bold, 'bold' => 'font-semibold',
+                FontWeight::ExtraBold, 'extrabold' => 'font-semibold',
+                FontWeight::Black, 'black' => 'font-semibold',
                 default => $weight,
             },
             match ($size) {
