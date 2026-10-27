@@ -17,7 +17,7 @@
     x-data="{ label: @js($subNavigation ? "sub_navigation_{$label}" : $label) }"
     @if ($collapsible)
         x-on:pointerenter="if ($event.pointerType !== 'touch' && $store.sidebar.groupIsCollapsed(label)) $store.sidebar.toggleCollapsedGroup(label)"
-        x-on:pointerleave="if ($event.pointerType !== 'touch' && ! @js($active) && ! $store.sidebar.groupIsCollapsed(label)) $store.sidebar.toggleCollapsedGroup(label)"
+        x-on:pointerleave="if ($event.pointerType !== 'touch' && ! $store.sidebar.groupIsCollapsed(label)) $store.sidebar.toggleCollapsedGroup(label)"
     @endif
     data-group-label="{{ $subNavigation ? "sub_navigation_{$label}" : $label }}"
     {{
