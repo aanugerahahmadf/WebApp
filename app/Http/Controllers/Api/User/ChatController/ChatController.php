@@ -255,7 +255,7 @@ class ChatController extends Controller
         }
 
         if (! ChatStaff::isStaff($user)) {
-            SendBotReply::dispatch($message->id)->delay(now()->addSeconds(5));
+            SendBotReply::dispatch($message->id);
         }
 
         $message->load('attachments');
@@ -865,7 +865,7 @@ class ChatController extends Controller
             $inbox->save();
         }
 
-        SendBotReply::dispatch($message->id)->delay(now()->addSeconds(5));
+        SendBotReply::dispatch($message->id);
         $message->load('attachments');
 
         return response()->json([

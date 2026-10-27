@@ -231,7 +231,7 @@ class Inbox extends Component implements HasActions, HasForms
             ]);
 
             if (! ChatStaff::isStaff($this->chatUser())) {
-                SendBotReply::dispatch($newMessage->id)->delay(now()->addSeconds(5));
+                SendBotReply::dispatch($newMessage->id);
             }
         }
 

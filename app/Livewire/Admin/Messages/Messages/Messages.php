@@ -318,7 +318,7 @@ class Messages extends Component implements HasActions, HasForms
                 // balasan otomatis tidak dipicu -- aturan lama "pengirim admin
                 // tidak memicu bot" tetap berlaku lewat isStaffMixed().
                 if (! ChatStaff::isStaffMixed(auth()->user())) {
-                    SendBotReply::dispatch($newMessage->id)->delay(now()->addSeconds(5));
+                    SendBotReply::dispatch($newMessage->id);
                 }
 
                 $this->conversationMessages->prepend($newMessage);

@@ -357,7 +357,7 @@ class Messages extends Component implements HasActions, HasForms
                 // Dispatch bot reply if user is not admin. Null-safe because a
                 // guest row always counts as "not admin".
                 if (! ChatStaff::isStaff($this->chatUser())) {
-                    SendBotReply::dispatch($newMessage->id)->delay(now()->addSeconds(5));
+                    SendBotReply::dispatch($newMessage->id);
                 }
 
                 $this->conversationMessages->prepend($newMessage);

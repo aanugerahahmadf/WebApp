@@ -342,7 +342,7 @@ class Messages extends Component implements HasActions, HasForms
 
                 // Dispatch bot reply if user is not admin
                 if (! ChatStaff::isStaff(auth()->user())) {
-                    SendBotReply::dispatch($newMessage->id)->delay(now()->addSeconds(5));
+                    SendBotReply::dispatch($newMessage->id);
                 }
 
                 $this->conversationMessages->prepend($newMessage);
