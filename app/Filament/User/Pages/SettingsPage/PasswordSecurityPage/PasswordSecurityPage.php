@@ -60,5 +60,27 @@ class PasswordSecurityPage extends Page
      */
     public function getBreadcrumbs(): array
     {
-        return $this->securityBreadcrumbs();
+        $crumbs = $this->securityBreadcrumbs();
+
+        // Dukungan URL lama `?section=...`: beberapa tautan/cache browser
+        // masih membuka halaman induk dengan query ini, bukan route detail.
+        // Tetap tampilkan item terakhir tanpa menyisipkan nama kelompok.
+        $sectionLabels = [
+            'change-password' => __('Change Password'),
+            'two-factor' => __('Two-Factor Authentication'),
+            'saved-login' => __('Saved Sign In'),
+            'sign-in-activity' => __('Where You\'re Signed In'),
+            'recent-emails' => __('Change Email'),
+            'checkup' => __('Security Checkup'),
+        ];
+
+        if ($section = request()->query('section')) {
+            $label = $sectionLabels[$section] ?? null;
+
+            if ($label !== null) {
+                $crumbs[] = $label;
+            }
+        }
+
+        return $crumbs;
     }}
