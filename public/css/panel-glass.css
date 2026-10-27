@@ -2502,6 +2502,22 @@ body.fi-panel-admin :is(
     font-size: 11px !important;
 }
 
+/* Label grup utama navigasi sedikit lebih besar dari item di dalamnya. */
+body.fi-panel-welcome :is(
+    .fi-sidebar .fi-sidebar-group-label,
+    .fi-topbar .fi-topbar-group-label
+),
+body.fi-panel-user :is(
+    .fi-sidebar .fi-sidebar-group-label,
+    .fi-topbar .fi-topbar-group-label
+),
+body.fi-panel-admin :is(
+    .fi-sidebar .fi-sidebar-group-label,
+    .fi-topbar .fi-topbar-group-label
+) {
+    font-size: 13px !important;
+}
+
 body.fi-panel-welcome :is(.fi-topbar, .fi-sidebar) :is(
     .fi-topbar-item-icon,
     .fi-topbar-group-toggle-icon,
