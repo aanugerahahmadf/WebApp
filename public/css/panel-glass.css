@@ -2538,6 +2538,20 @@ body.fi-panel-admin :is(
     font-size: 11px !important;
 }
 
+/* Messages uses the same raised surface as the security/settings cards:
+   dark navy in night mode, white in light mode, with a subtle outline. */
+html:not(.dark) body.fi-panel-admin :has(> #messages-container) {
+    background-color: #ffffff !important;
+    border: 1px solid rgb(226 232 240 / 0.9);
+    border-radius: 1rem;
+}
+
+html.dark body.fi-panel-admin :has(> #messages-container) {
+    background-color: #111827 !important;
+    border: 1px solid rgb(51 65 85 / 0.7);
+    border-radius: 1rem;
+}
+
 body.fi-panel-welcome :is(.fi-topbar, .fi-sidebar) :is(
     .fi-topbar-item-icon,
     .fi-topbar-group-toggle-icon,
