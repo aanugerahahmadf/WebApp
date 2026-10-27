@@ -899,6 +899,11 @@ class ChatController extends Controller
                 // yang akan hash otomatis saat create. JANGAN Hash::make di sini.
                 'password' => Str::random(40),
             ]);
+        } elseif (filled($name) && $guest->full_name !== $name) {
+            // A device can create the guest inbox before the visitor finishes
+            // entering their name. Persist the later name as well; otherwise
+            // the admin inbox permanently shows the generic "Tamu" label.
+            $guest->forceFill(['full_name' => trim($name)])->save();
         }
 
         return $guest;

@@ -122,9 +122,12 @@ class Messages extends Component implements HasActions, HasForms
 
     public string $typingUserName = '';
 
+    public string $guestName = '';
+
     public function mount(?Inbox $selectedConversation = null): void
     {
         if ($selectedConversation) {
+            abort_unless($this->isChatParticipant($selectedConversation), 403, __('Anda tidak memiliki akses ke percakapan ini.'));
             $this->selectedConversation = $selectedConversation;
         }
         $this->setPollInterval();
@@ -134,6 +137,26 @@ class Messages extends Component implements HasActions, HasForms
             $this->loadMessages();
             $this->markAsRead();
         }
+    }
+
+    public function needsGuestName(): bool
+    {
+        return $this->isChatGuest()
+            && app(\App\Services\GuestIdentity\GuestIdentity::class)->needsName();
+    }
+
+    public function setGuestName(): void
+    {
+        $this->validate(['guestName' => 'required|string|max:100']);
+
+        $guest = $this->chatUser();
+        if ($guest) {
+            $guest->forceFill(['full_name' => trim($this->guestName)])->save();
+        }
+
+        $this->guestName = '';
+        $this->selectedConversation?->refresh();
+        $this->dispatch('refresh-inbox');
     }
 
     public function pollMessages(): void

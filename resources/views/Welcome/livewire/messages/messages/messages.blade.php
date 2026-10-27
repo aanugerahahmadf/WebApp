@@ -11,7 +11,20 @@
     di-render ulang oleh `wire:poll`.
 --}}
 <div x-data="messageBubble"
-    class="w-full h-full overflow-hidden flex flex-col min-h-0">
+     class="w-full h-full overflow-hidden flex flex-col min-h-0">
+    @if ($this->needsGuestName())
+        <section class="m-4 rounded-xl border border-warning-300 bg-warning-50 p-4 dark:border-warning-700 dark:bg-warning-950/30">
+            <form wire:submit.prevent="setGuestName" class="flex items-end gap-3">
+                <div class="min-w-0 flex-1">
+                    <label class="mb-1 block text-sm font-medium">{{ __('Nama Anda') }}</label>
+                    <input type="text" wire:model.live="guestName" required maxlength="100"
+                        class="w-full rounded-lg border-gray-300 bg-white dark:border-white/10 dark:bg-white/5"
+                        placeholder="{{ __('Masukkan nama agar admin dapat mengenali Anda') }}">
+                </div>
+                <button type="submit" class="rounded-lg bg-warning-600 px-4 py-2 text-white">{{ __('Simpan') }}</button>
+            </form>
+        </section>
+    @endif
     @if ($selectedConversation)
         <!-- Chat Header : Start -->
         <div class="grid grid-cols-[var(--cols-default)] lg:grid-cols-[var(--cols-lg)] p-6"
