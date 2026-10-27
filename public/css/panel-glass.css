@@ -2591,15 +2591,15 @@ body.fi-panel-admin :is(.fi-topbar, .fi-sidebar) {
     backdrop-filter: none !important;
 }
 
-/* Password & Security cards use the exact same glass material as the other
-   User settings pages. */
+/* Password & Security uses the same solid black surface as the Change
+   Password page, not the navy glass surface used by generic cards. */
 .fi-panel-user .password-security-card {
-    background-color: var(--fi-glass-bg) !important;
-    background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
-    border-color: var(--fi-glass-ring) !important;
+    background-color: #050607 !important;
+    background-image: none !important;
+    border-color: rgb(75 85 99 / 0.7) !important;
     box-shadow: none !important;
-    -webkit-backdrop-filter: var(--fi-glass-blur) !important;
-    backdrop-filter: var(--fi-glass-blur) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
 }
 
 body.fi-panel-user .password-security-page {
