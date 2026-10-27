@@ -2572,6 +2572,62 @@ body.fi-panel-admin .fi-topbar .fi-dropdown-list-item {
     font-size: 11px !important;
 }
 
+/* Ukuran final navigasi: grup atas 12px, item bawah 10px. */
+body.fi-panel-welcome :is(
+    .fi-sidebar .fi-sidebar-group-label,
+    .fi-sidebar .fi-sidebar-group-button,
+    .fi-topbar .fi-topbar-group-label,
+    .fi-topbar .fi-topbar-group-button
+),
+body.fi-panel-user :is(
+    .fi-sidebar .fi-sidebar-group-label,
+    .fi-sidebar .fi-sidebar-group-button,
+    .fi-topbar .fi-topbar-group-label,
+    .fi-topbar .fi-topbar-group-button
+),
+body.fi-panel-admin :is(
+    .fi-sidebar .fi-sidebar-group-label,
+    .fi-sidebar .fi-sidebar-group-button,
+    .fi-topbar .fi-topbar-group-label,
+    .fi-topbar .fi-topbar-group-button
+) {
+    font-size: 12px !important;
+}
+
+body.fi-panel-welcome :is(
+    .fi-sidebar .fi-sidebar-item-label,
+    .fi-sidebar .fi-sidebar-item-button,
+    .fi-topbar .fi-topbar-item-label,
+    .fi-topbar .fi-topbar-item-button,
+    .fi-topbar .fi-dropdown-list-item,
+    .fi-sidebar .fi-dropdown-list-item
+),
+body.fi-panel-user :is(
+    .fi-sidebar .fi-sidebar-item-label,
+    .fi-sidebar .fi-sidebar-item-button,
+    .fi-topbar .fi-topbar-item-label,
+    .fi-topbar .fi-topbar-item-button,
+    .fi-topbar .fi-dropdown-list-item,
+    .fi-sidebar .fi-dropdown-list-item
+),
+body.fi-panel-admin :is(
+    .fi-sidebar .fi-sidebar-item-label,
+    .fi-sidebar .fi-sidebar-item-button,
+    .fi-topbar .fi-topbar-item-label,
+    .fi-topbar .fi-topbar-item-button,
+    .fi-topbar .fi-dropdown-list-item,
+    .fi-sidebar .fi-dropdown-list-item
+) {
+    font-size: 10px !important;
+}
+
+/* Label grup harus tetap lebih besar daripada parent tombolnya. */
+body.fi-panel-welcome :is(.fi-sidebar .fi-sidebar-group-label, .fi-topbar .fi-topbar-group-label),
+body.fi-panel-user :is(.fi-sidebar .fi-sidebar-group-label, .fi-topbar .fi-topbar-group-label),
+body.fi-panel-admin :is(.fi-sidebar .fi-sidebar-group-label, .fi-topbar .fi-topbar-group-label) {
+    font-size: 12px !important;
+}
+
 body.fi-panel-welcome :is(.fi-topbar, .fi-sidebar) :is(
     .fi-topbar-item-icon,
     .fi-topbar-group-toggle-icon,
