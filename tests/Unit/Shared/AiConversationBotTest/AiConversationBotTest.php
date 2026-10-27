@@ -49,3 +49,37 @@ it('answers English without translating it into a canned Indonesian response', f
     expect($reply)->toContain('Hello')
         ->and($reply)->toContain('wedding flower decoration');
 });
+
+it('continues a short follow-up from the previous topic', function (): void {
+    $user = User::factory()->create();
+    $inbox = Inbox::create(['user_ids' => [$user->id, $user->id + 1]]);
+    Message::create([
+        'inbox_id' => $inbox->id,
+        'user_id' => $user->id,
+        'message' => 'Saya ingin tahu harga paketnya',
+    ]);
+    $current = Message::create([
+        'inbox_id' => $inbox->id,
+        'user_id' => $user->id,
+        'message' => 'iya',
+    ]);
+
+    expect(app(AiConversationService::class)->reply($current))
+        ->toContain('tanggal acara')
+        ->toContain('perkiraan jumlah tamu');
+});
+
+it('does not request passwords or OTPs in payment and account conversations', function (): void {
+    $user = User::factory()->create();
+    $inbox = Inbox::create(['user_ids' => [$user->id, $user->id + 1]]);
+    $current = Message::create([
+        'inbox_id' => $inbox->id,
+        'user_id' => $user->id,
+        'message' => 'Saya tidak bisa login dan butuh bantuan password',
+    ]);
+
+    $reply = app(AiConversationService::class)->reply($current);
+
+    expect($reply)->toContain('OTP')
+        ->and($reply)->toContain('kata sandi');
+});

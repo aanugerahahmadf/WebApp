@@ -67,42 +67,103 @@ class AiConversationService
     {
         $text = trim((string) $message->message);
         $lower = Str::lower($text);
-        $previous = collect($history)->last(fn (array $item) => $item['role'] === 'user')['content'] ?? null;
-        $context = $previous ? ($language === 'en'
-            ? " I remember you were also asking about \"{$previous}\"."
-            : " Saya ingat sebelumnya Anda juga menanyakan \"{$previous}\".") : '';
+        $previousUserText = collect($history)
+            ->reverse()
+            ->first(fn (array $item) => $item['role'] === 'user')['content'] ?? '';
+        $combined = Str::lower($previousUserText.' '.$text);
+        $context = $previousUserText !== '' ? ($language === 'en'
+            ? ' I am keeping your earlier details in mind.'
+            : ' Saya tetap mengingat detail yang Anda sampaikan sebelumnya.') : '';
 
-        if (preg_match('/\b(hi|hello|hey|good morning|good afternoon|good evening)\b/i', $text)) {
-            return "Hello!{$context} How can I help with your wedding flower decoration today?";
-        }
-        if (preg_match('/\b(halo|hai|pagi|siang|sore|malam)\b/u', $lower)) {
-            return "Halo!{$context} Saya siap membantu dekorasi bunga pernikahan Anda. Apa yang ingin Anda rencanakan hari ini?";
-        }
-        if (preg_match('/\b(price|cost|budget|how much)\b/i', $text)) {
-            return 'I can help compare packages and budget options. Please tell me your event date, venue/city, and estimated guest count; an admin can confirm the final availability and price.';
-        }
-        if (preg_match('/\b(harga|biaya|budget|berapa)\b/u', $lower)) {
-            return 'Saya bisa membantu membandingkan paket dan anggaran. Mohon beri tahu tanggal acara, kota/lokasi, dan perkiraan jumlah tamu; admin akan mengonfirmasi ketersediaan serta harga final.';
+        // Short confirmations are follow-ups, not new conversations. Infer the
+        // topic from the previous turn so "iya" / "yes" stays connected.
+        if ($this->matches($lower, '^(iya|ya|yes|oke|ok|baik|lanjut|sure|please do|boleh)$')) {
+            if ($this->matches($combined, 'harga|price|budget|biaya')) {
+                return $language === 'en'
+                    ? 'Great. Please send the event date, city or venue, estimated guests, and the package or decoration style you like. The admin will then confirm the exact quote.'
+                    : 'Baik. Silakan kirim tanggal acara, kota atau lokasi, perkiraan jumlah tamu, serta paket atau gaya dekorasi yang disukai. Admin kemudian mengonfirmasi penawaran tepatnya.';
+            }
+            if ($this->matches($combined, 'pesan|booking|book|order|reserv')) {
+                return $language === 'en'
+                    ? 'Perfect. The booking steps are: choose a catalogue or package, confirm the date and concept, review the quotation, then pay the required deposit. An admin will guide the confirmation.'
+                    : 'Baik. Langkah pemesanan adalah memilih katalog atau paket, mengonfirmasi tanggal dan konsep, meninjau penawaran, lalu membayar uang muka yang diperlukan. Admin akan membantu konfirmasinya.';
+            }
         }
 
-        if (preg_match('/\b(order|booking|book|pesan|reserv|beli)\b/i', $text)) {
-            return $language === 'en'
-                ? 'I can guide your booking. Please share the event date, venue/city, decoration theme, and package you are considering. I will help prepare the next step, while an admin confirms availability.'
-                : 'Saya bisa membantu proses pemesanan. Mohon kirim tanggal acara, lokasi, tema dekorasi, dan paket yang sedang dipertimbangkan. Saya bantu langkah berikutnya, lalu admin mengonfirmasi ketersediaannya.';
+        if ($this->matches($lower, 'hello|hi|hey|good morning|good afternoon|good evening|good night')) {
+            return "Hello!{$context} I am your wedding flower decoration assistant. I can help with flowers, packages, prices, availability, booking, orders, payments, and event planning. What would you like to discuss?";
         }
-        if (preg_match('/\b(bunga|flower|rose|mawar|warna|color|theme|tema)\b/iu', $text)) {
-            return $language === 'en'
-                ? 'Beautiful choice! Tell me your preferred flower or color, wedding style, and venue. I can help narrow the decoration concept to match your atmosphere and budget.'
-                : 'Pilihan yang indah! Ceritakan bunga atau warna yang disukai, gaya pernikahan, dan lokasinya. Saya bantu menyaring konsep dekorasi yang sesuai suasana dan anggaran.';
+        if ($this->matches($lower, 'halo|hai|selamat pagi|selamat siang|selamat sore|selamat malam')) {
+            return "Halo!{$context} Saya BOT bantuan dekorasi pernikahan. Saya bisa membantu bunga, paket, harga, ketersediaan, pemesanan, pesanan, pembayaran, dan rencana acara. Apa yang ingin Anda bahas?";
         }
-        if (preg_match('/\b(thank|thanks|terima kasih|makasih)\b/iu', $text)) {
+        if ($this->matches($lower, 'thank|thanks|thank you|terima kasih|makasih|tq')) {
             return $language === 'en'
-                ? 'You are welcome! I am here to help with the flowers, package, budget, or booking whenever you are ready.'
-                : 'Sama-sama! Saya siap membantu bunga, paket, anggaran, atau pemesanan kapan pun Anda siap.';
+                ? 'You are welcome! I will stay with you if you want to continue with flowers, packages, budget, booking, or your order.'
+                : 'Sama-sama! Saya siap melanjutkan jika Anda ingin membahas bunga, paket, anggaran, pemesanan, atau pesanan Anda.';
+        }
+        if ($this->matches($combined, 'urgent|darurat|urgent|komplain|complaint|kecewa|disappointed|masalah serius|serious problem')) {
+            return $language === 'en'
+                ? 'I am sorry this is difficult. I have marked the conversation as important. Please share your order number and the exact problem; an admin will verify it directly. Do not send passwords or payment PINs here.'
+                : 'Maaf masalah ini membuat Anda tidak nyaman. Percakapan ini saya tandai penting. Silakan kirim nomor pesanan dan kendala tepatnya; admin akan memeriksanya langsung. Jangan kirim kata sandi atau PIN pembayaran di sini.';
+        }
+        if ($this->matches($combined, 'admin|human|person|staff|manusia|orang|cs|customer service|petugas')) {
+            return $language === 'en'
+                ? 'Of course. I will keep the conversation context ready for our admin. Please write the topic and any order number, and the admin can continue without you repeating everything.'
+                : 'Tentu. Saya akan menjaga konteks percakapan ini agar admin dapat melanjutkannya. Tuliskan topik dan nomor pesanan jika ada, sehingga Anda tidak perlu mengulang semuanya.';
+        }
+        if ($this->matches($combined, 'login|sign in|password|account|akun|masuk|daftar|register|verification|verifikasi')) {
+            return $language === 'en'
+                ? 'For account help, tell me whether the issue is signing in, a forgotten password, verification, or profile data. Never share your password or OTP; an admin will help through the secure account flow.'
+                : 'Untuk bantuan akun, jelaskan apakah kendalanya login, lupa kata sandi, verifikasi, atau data profil. Jangan pernah membagikan kata sandi atau OTP; admin akan membantu melalui alur akun yang aman.';
+        }
+        if ($this->matches($combined, 'payment|pay|transfer|qris|virtual account|va|pembayaran|bayar|transfer')) {
+            return $language === 'en'
+                ? 'For payment help, please provide the order number, payment method, and the status shown in the app. You may attach proof of transfer, but hide sensitive account numbers and never share an OTP.'
+                : 'Untuk bantuan pembayaran, kirim nomor pesanan, metode pembayaran, dan status yang terlihat di aplikasi. Anda boleh melampirkan bukti transfer, tetapi tutupi nomor sensitif dan jangan membagikan OTP.';
+        }
+        if ($this->matches($combined, 'order status|track|tracking|pesanan|order|status pesanan|delivery|pengiriman')) {
+            return $language === 'en'
+                ? 'I can help check an order. Please send the order number and tell me what you want to know: payment, confirmation, schedule, or delivery. An admin confirms live order data.'
+                : 'Saya bisa membantu memeriksa pesanan. Kirim nomor pesanan dan jelaskan yang ingin diketahui: pembayaran, konfirmasi, jadwal, atau pengiriman. Admin mengonfirmasi data pesanan terbaru.';
+        }
+        if ($this->matches($combined, 'price|cost|budget|how much|harga|biaya|anggaran|berapa|murah|mahal|promo|discount|diskon|voucher')) {
+            return $language === 'en'
+                ? 'I can help compare packages and budget options. Please share your event date, city or venue, estimated guests, and preferred style. Prices and availability are confirmed by an admin after checking the details.'
+                : 'Saya bisa membantu membandingkan paket dan anggaran. Kirim tanggal acara, kota atau lokasi, perkiraan tamu, dan gaya yang disukai. Harga serta ketersediaan akan dikonfirmasi admin setelah detail diperiksa.';
+        }
+        if ($this->matches($combined, 'available|availability|date|schedule|tanggal|tersedia|ketersediaan|jadwal')) {
+            return $language === 'en'
+                ? 'To check availability, please tell me the event date, city or venue, and the decoration package or concept. I will keep those details in this thread while an admin confirms the schedule.'
+                : 'Untuk memeriksa ketersediaan, kirim tanggal acara, kota atau lokasi, serta paket atau konsep dekorasi. Detail itu akan tetap tersimpan di percakapan ini sampai admin mengonfirmasi jadwal.';
+        }
+        if ($this->matches($combined, 'flower|flowers|rose|lily|tulip|orchid|mawar|melati|bunga|warna|color|theme|tema|concept|konsep')) {
+            return $language === 'en'
+                ? 'Beautiful choice! Tell me the preferred flowers or colors, wedding style, venue, and budget. I can help narrow the concept and the admin can match it with available catalogue options.'
+                : 'Pilihan yang indah! Ceritakan bunga atau warna yang disukai, gaya pernikahan, lokasi, dan anggarannya. Saya bantu menyaring konsep, lalu admin mencocokkannya dengan pilihan katalog yang tersedia.';
+        }
+        if ($this->matches($combined, 'location|address|where|area|city|lokasi|alamat|dimana|di mana|kota|luar kota')) {
+            return $language === 'en'
+                ? 'We can discuss decoration for your venue and city. Please send the venue or city and event date; an admin will confirm the service area, travel needs, and availability.'
+                : 'Kita bisa membahas dekorasi untuk lokasi dan kota acara Anda. Kirim lokasi atau kota serta tanggal acara; admin mengonfirmasi area layanan, kebutuhan perjalanan, dan ketersediaannya.';
+        }
+        if ($this->matches($combined, 'review|rating|ulasan|rating|testimoni')) {
+            return $language === 'en'
+                ? 'You can leave a review after your eligible order. Tell me if you need help finding the review page or attaching a photo, and I will guide you.'
+                : 'Ulasan dapat diberikan setelah pesanan yang memenuhi syarat. Beri tahu jika Anda membutuhkan bantuan menemukan halaman ulasan atau melampirkan foto, dan saya akan memandu.';
+        }
+        if ($this->matches($combined, 'book|booking|order|reserve|reservation|pesan|pemesanan|booking|reservasi|beli')) {
+            return $language === 'en'
+                ? 'I can guide your booking: choose a catalogue or package, share the date and venue, discuss the theme, review the quotation, and confirm the deposit. Which step are you at now?'
+                : 'Saya bisa memandu pemesanan: pilih katalog atau paket, kirim tanggal dan lokasi, bahas tema, tinjau penawaran, lalu konfirmasi uang muka. Anda sedang berada di langkah yang mana?';
         }
 
         return $language === 'en'
-            ? "Thanks for explaining that.{$context} I can help with flowers, packages, budget, event details, orders, and payments. Please share the specific detail you need, and I will guide you step by step."
-            : "Terima kasih sudah menjelaskannya.{$context} Saya bisa membantu bunga, paket, anggaran, detail acara, pesanan, dan pembayaran. Silakan tuliskan detail yang dibutuhkan agar saya memandu Anda langkah demi langkah.";
+            ? "Thanks for explaining that.{$context} I can help with flowers, packages, prices, availability, event details, orders, payments, accounts, reviews, and admin support. Please tell me the most important detail first."
+            : "Terima kasih sudah menjelaskannya.{$context} Saya bisa membantu bunga, paket, harga, ketersediaan, detail acara, pesanan, pembayaran, akun, ulasan, dan bantuan admin. Silakan tuliskan detail yang paling penting terlebih dahulu.";
+    }
+
+    private function matches(string $text, string $pattern): bool
+    {
+        return preg_match('/(?:'.$pattern.')/iu', $text) === 1;
     }
 }
