@@ -197,7 +197,13 @@ trait HandlesPasswordSecurity
         $urls = array_keys(array_filter($crumbs, 'is_string', ARRAY_FILTER_USE_KEY));
 
         if (! in_array($this->getUrl(), $urls, true)) {
-            $crumbs[] = $this->getTitle();
+            $breadcrumbTitle = match ($this->getTitle()) {
+                __('Saved Sign In') => __('Saved Login'),
+                __('Where You\'re Signed In') => __('Login Activity'),
+                default => $this->getTitle(),
+            };
+
+            $crumbs[] = $breadcrumbTitle;
         }
 
         return $crumbs;

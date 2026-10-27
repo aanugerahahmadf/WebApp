@@ -68,8 +68,8 @@ class PasswordSecurityPage extends Page
         $sectionLabels = [
             'change-password' => __('Change Password'),
             'two-factor' => __('Two-Factor Authentication'),
-            'saved-login' => __('Saved Sign In'),
-            'sign-in-activity' => __('Where You\'re Signed In'),
+            'saved-login' => __('Saved Login'),
+            'sign-in-activity' => __('Login Activity'),
             'recent-emails' => __('Change Email'),
             'checkup' => __('Security Checkup'),
         ];
