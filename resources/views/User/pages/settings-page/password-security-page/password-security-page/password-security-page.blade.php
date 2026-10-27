@@ -12,7 +12,7 @@
     di detail akan mulai berbeda begitu salah satunya diedit.
 --}}
 <x-filament-panels::page>
-    <div class="password-security-page mx-auto max-w-4xl space-y-6">
+    <div class="profile-glass-page settings-page password-security-page space-y-6">
         @foreach ($this->securityGroups() as $group)
             <section>
                 {{--
