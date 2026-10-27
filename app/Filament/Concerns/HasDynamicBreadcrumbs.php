@@ -127,6 +127,13 @@ trait HasDynamicBreadcrumbs
                 continue;
             }
 
+            // Halaman autentikasi bukan parent navigasi aplikasi. Jangan
+            // pernah membawa "Sign In" dari referrer ke breadcrumb halaman
+            // Settings, Reviews, Messages, atau halaman storefront lainnya.
+            if (preg_match('#/(signin|sign-in|login)(/|$)#i', $path)) {
+                continue;
+            }
+
             // Lewati halaman sendiri (perbandingan slug).
             if (method_exists(static::class, 'getSlug')) {
                 $slug = (string) static::getSlug();
