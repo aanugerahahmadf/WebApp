@@ -202,7 +202,6 @@ Route::get('/clerk/login', [ClerkLoginController::class, 'login'])
 Route::get('/media/{path}', [MediaController::class, 'serve'])
     ->where('path', '.*')->name('media.serve');
 
-require __DIR__.'/../debug/debug.php';
 
 // -----------------------------------------------------------------------------
 // USER — PDF & dokumen (auth; pemilik atau super_admin)
