@@ -2572,6 +2572,23 @@ body.fi-panel-admin .fi-topbar .fi-dropdown-list-item {
     font-size: 11px !important;
 }
 
+/* Target label anak dropdown secara langsung; Filament memberi label ini
+   class `text-sm`, sehingga ukuran parent saja tidak selalu cukup. */
+body.fi-panel-welcome .fi-topbar .fi-dropdown-list-item-label,
+body.fi-panel-user .fi-topbar .fi-dropdown-list-item-label,
+body.fi-panel-admin .fi-topbar .fi-dropdown-list-item-label,
+body.fi-panel-welcome .fi-topbar .fi-topbar-group-label,
+body.fi-panel-user .fi-topbar .fi-topbar-group-label,
+body.fi-panel-admin .fi-topbar .fi-topbar-group-label {
+    font-size: 12px !important;
+}
+
+body.fi-panel-welcome .fi-topbar .fi-dropdown-list-item-label,
+body.fi-panel-user .fi-topbar .fi-dropdown-list-item-label,
+body.fi-panel-admin .fi-topbar .fi-dropdown-list-item-label {
+    font-size: 10px !important;
+}
+
 /* Ukuran final navigasi: grup atas 12px, item bawah 10px. */
 body.fi-panel-welcome :is(
     .fi-sidebar .fi-sidebar-group-label,
