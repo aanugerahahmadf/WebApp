@@ -46,18 +46,9 @@ trait HasDynamicBreadcrumbs
             }
         }
 
-        // Halaman yang punya navigasi sendiri opt-out lewat
-        // followsReferrerInBreadcrumb() -- lihat method-nya untuk alasannya.
-        $parent = $this->followsReferrerInBreadcrumb()
-            ? $this->resolveBreadcrumbParent()
-            : null;
-
-        if ($parent !== null) {
-            // Kunci arraynya URL, jadi parent yang kebetulan Home menimpa
-            // crumb Home di atas -- bukan menduplikasi. Labelnya juga sama
-            // ('Beranda'), jadi hasilnya tetap satu crumb, bukan dua.
-            $crumbs[$parent['url']] = $parent['label'];
-        }
+        // Jangan membawa halaman sebelumnya ke breadcrumb. Referrer seperti
+        // Sign In, Reviews, atau halaman lain bukan parent struktural dan
+        // membuat rantai berubah-ubah setiap kali pengguna berpindah halaman.
 
         return $crumbs;
     }
