@@ -3,10 +3,10 @@
   "appName": "Dekorasi Admin",
   "webDir": "dist",
   "server": {
-    "url": "http://127.0.0.1:8000/admin/signin",
-    "androidScheme": "http",
-    "iosScheme": "http",
-    "cleartext": true
+    "url": "https://wedding-flower-decorations.whop.site/admin/signin",
+    "androidScheme": "https",
+    "iosScheme": "https",
+    "cleartext": false
   },
   "plugins": {
     "SplashScreen": {

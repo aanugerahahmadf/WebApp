@@ -44,6 +44,11 @@ config.server = { ...(config.server ?? {}), url: raw };
 // WebView gets a secure context (service workers, camera, secure cookies).
 const isLocalDev = /^http:\/\//i.test(raw);
 
+if (isLocalDev && !/^http:\/\/(localhost|127\.0\.0\.1|10\.0\.2\.2|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/i.test(raw)) {
+    console.error('HTTP hanya diizinkan untuk host development lokal/private. Gunakan HTTPS untuk deployment.');
+    process.exit(1);
+}
+
 config.server.cleartext = isLocalDev;
 
 if (isLocalDev) {
