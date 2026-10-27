@@ -74,10 +74,11 @@ return [
     ],
 
     // Debugging is only applied when the global Laravel debug config is true.
-    'debug' => env(
-        'LIGHTHOUSE_DEBUG',
-        DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE
-    ),
+    // Never expose stack traces, SQL, file paths, or exception details in a
+    // production GraphQL response, even if APP_DEBUG is misconfigured.
+    'debug' => env('APP_ENV') === 'production'
+        ? DebugFlag::NONE
+        : (env('LIGHTHOUSE_DEBUG', DebugFlag::INCLUDE_DEBUG_MESSAGE)),
 
     'error_handlers' => [
         AuthenticationErrorHandler::class,

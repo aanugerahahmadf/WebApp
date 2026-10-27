@@ -118,6 +118,11 @@ class PackageResolver
      */
     public function stats($root, array $args, GraphQLContext $context)
     {
+        $user = $context->user();
+        if (! $user || ! $user->hasRole('admin')) {
+            throw new \Exception('Unauthorized');
+        }
+
         $totalPackages = Package::count();
         $activePackages = Package::where('is_active', true)->count();
         $featuredPackages = Package::where('is_featured', true)->count();

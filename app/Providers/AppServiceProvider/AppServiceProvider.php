@@ -290,6 +290,12 @@ class AppServiceProvider extends ServiceProvider
                 ->by($request->user()?->getAuthIdentifier() ?: $request->ip());
         });
 
+        RateLimiter::for('guest-chat', function ($request) {
+            $guestId = (string) $request->input('guest_id', '');
+            return Limit::perMinute(config('security.rate_limits.guest_chat', 20))
+                ->by(hash('sha256', $guestId.'|'.$request->ip()));
+        });
+
         // IkoN vendor Filament ikut BERWARNA: alias internal (tombol aksi
         // bawaan, editor file upload, boolean, notifikasi, filter tabel...)
         // dan SEMUA nama Heroicon yang di-hardcode vendor ditimpa dengan

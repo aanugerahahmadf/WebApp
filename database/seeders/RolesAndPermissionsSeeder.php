@@ -62,6 +62,30 @@ class RolesAndPermissionsSeeder extends Seeder
             'content_manager',
             'order_manager',
             'finance_manager',
+            'data_architect',
+            'data_engineer',
+            'data_mining',
+            'data_scientist',
+            'security_emergency',
+            'security',
+            'devops_engineer',
+            'data_manager',
+            'data_development',
+            'data_storage',
+            'data_specialist',
+            'data_annotation_staff',
+            'etl_engineer',
+            'database_administrator',
+            'system_analyst',
+            'network_engineer',
+            'site_reliability_engineer',
+            'cloud_engineer',
+            'cloud_computing',
+            'system_security',
+            'systems_manager',
+            'it_support',
+            'technical_writer',
+            'technical_support_engineer',
         ];
 
         foreach ($adminRoles as $role) {
@@ -276,6 +300,33 @@ class RolesAndPermissionsSeeder extends Seeder
                 'view_discounts',
                 'manage_discounts',
             ],
+        ];
+
+        // New operational roles are least-privilege by default. Job titles do
+        // not grant write access or a wildcard; permissions must be expanded
+        // deliberately by an authorized security administrator.
+        $readOnlyOperationalRoles = [
+            'data_architect', 'data_engineer', 'data_mining', 'data_scientist',
+            'security_emergency', 'security', 'devops_engineer', 'data_manager',
+            'data_development', 'data_storage', 'data_specialist',
+            'data_annotation_staff', 'etl_engineer', 'database_administrator',
+            'system_analyst', 'network_engineer', 'site_reliability_engineer',
+            'cloud_engineer', 'cloud_computing', 'system_security',
+            'systems_manager', 'it_support', 'technical_writer',
+            'technical_support_engineer',
+        ];
+        foreach ($readOnlyOperationalRoles as $roleName) {
+            $rolePermissions[$roleName] = [
+                'view_catalog', 'view_categories', 'view_packages',
+                'view_orders', 'view_reports', 'view_users',
+                'view_transactions', 'view_audit_logs',
+            ];
+        }
+        $rolePermissions['security_emergency'] = ['view_audit_logs', 'manage_security'];
+        $rolePermissions['security'] = ['view_audit_logs', 'manage_security', 'view_users'];
+        $rolePermissions['database_administrator'] = [
+            'view_database', 'manage_database', 'view_backups', 'manage_backups',
+            'view_audit_logs',
         ];
 
         foreach ($rolePermissions as $roleName => $perms) {

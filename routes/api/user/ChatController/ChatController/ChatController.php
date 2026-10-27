@@ -4,9 +4,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\User\ChatController\ChatController;
 
 
-Route::post('/messages/guest/start', [ChatController::class, 'guestStart']);
-Route::post('/messages/guest/send', [ChatController::class, 'guestSend']);
-Route::get('/messages/guest/{inboxId}', [ChatController::class, 'guestMessages']);
+Route::middleware('throttle:guest-chat')->group(function (): void {
+    Route::post('/messages/guest/start', [ChatController::class, 'guestStart']);
+    Route::post('/messages/guest/send', [ChatController::class, 'guestSend']);
+    Route::get('/messages/guest/{inboxId}', [ChatController::class, 'guestMessages']);
+});
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/messages/conversations', [ChatController::class, 'getConversations']);
     Route::get('/messages/conversations/{inboxId}', [ChatController::class, 'getMessages']);

@@ -163,9 +163,8 @@ class HomeResolver
             'totalCatalogs' => Catalog::where('is_active', true)->count(),
             'totalPackages' => Package::where('is_active', true)->count(),
             'totalCategories' => Category::where('is_active', true)->count(),
-            'happyCustomers' => \App\Models\Order\Order::where('payment_status', 'paid')
-                ->distinct('user_id')
-                ->count('user_id'),
+            // Do not expose a customer count; even aggregates can reveal
+            // business/user activity and are not needed by the public home UI.
         ];
     }
 }

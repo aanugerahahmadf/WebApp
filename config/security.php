@@ -18,5 +18,6 @@ return [
         'api' => (int) env('SECURITY_API_RATE_LIMIT', 120),
         'auth' => (int) env('SECURITY_AUTH_RATE_LIMIT', 10),
         'admin' => (int) env('SECURITY_ADMIN_RATE_LIMIT', 60),
+        'guest_chat' => (int) env('SECURITY_GUEST_CHAT_RATE_LIMIT', 20),
     ],
 ];

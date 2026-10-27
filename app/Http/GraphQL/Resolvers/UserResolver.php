@@ -22,7 +22,14 @@ class UserResolver
      */
     public function profile($root, array $args, GraphQLContext $context)
     {
-        $user = $args['id'] ? User::findOrFail($args['id']) : $context->user();
+        $currentUser = $context->user();
+        $requestedId = $args['id'] ?? null;
+        if (! $currentUser || ($requestedId !== null
+            && (int) $requestedId !== (int) $currentUser->getKey()
+            && ! $currentUser->hasRole('admin'))) {
+            throw new \Exception('Unauthorized');
+        }
+        $user = $requestedId ? User::findOrFail($requestedId) : $currentUser;
         
         if (!$user) {
             throw new \Exception('User not found');
@@ -62,7 +69,12 @@ class UserResolver
      */
     public function activity($root, array $args, GraphQLContext $context)
     {
+        $currentUser = $context->user();
         $userId = $args['userId'];
+        if (! $currentUser || ((int) $userId !== (int) $currentUser->getKey()
+            && ! $currentUser->hasRole('admin'))) {
+            throw new \Exception('Unauthorized');
+        }
         $first = $args['first'] ?? 20;
 
         $activities = collect();

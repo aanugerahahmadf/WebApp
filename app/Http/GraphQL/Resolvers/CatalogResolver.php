@@ -104,6 +104,11 @@ class CatalogResolver
      */
     public function stats($root, array $args, GraphQLContext $context)
     {
+        $user = $context->user();
+        if (! $user || ! $user->hasRole('admin')) {
+            throw new \Exception('Unauthorized');
+        }
+
         $totalCatalogs = Catalog::count();
         $activeCatalogs = Catalog::where('is_active', true)->count();
         $featuredCatalogs = Catalog::where('is_featured', true)->count();

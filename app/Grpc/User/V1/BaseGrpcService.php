@@ -5,6 +5,7 @@ namespace App\Grpc\User\V1;
 use App\Models\User\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Laravel\Sanctum\PersonalAccessToken;
 use Spiral\RoadRunner\GRPC\ContextInterface;
 
 abstract class BaseGrpcService
@@ -22,17 +23,11 @@ abstract class BaseGrpcService
         if ($authHeader) {
             $token = str_replace('Bearer ', '', $authHeader[0] ?? '');
             if ($token) {
-                $user = User::where('api_token', $token)->first();
-                if ($user) {
-                    return $user;
+                $accessToken = PersonalAccessToken::findToken($token);
+                if ($accessToken?->tokenable instanceof User) {
+                    return $accessToken->tokenable;
                 }
             }
-        }
-        
-        // Check for user_id in metadata (for internal service calls)
-        $userId = $metadata->get('user_id');
-        if ($userId) {
-            return User::find($userId[0] ?? null);
         }
         
         // Fallback to Laravel's auth guard
@@ -109,14 +104,13 @@ abstract class BaseGrpcService
      */
     protected function handleError(\Throwable $e, string $operation = 'operation'): array
     {
-        Log::error("gRPC {$operation} error: {$e->getMessage()}", [
-            'trace' => $e->getTraceAsString(),
+        Log::error("gRPC {$operation} failed", [
             'code' => $e->getCode(),
         ]);
         
         return [
             'success' => false,
-            'message' => $e->getMessage(),
+            'message' => 'The requested operation could not be completed.',
         ];
     }
     

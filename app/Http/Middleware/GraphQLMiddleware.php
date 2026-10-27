@@ -17,6 +17,17 @@ class GraphQLMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // Do not allow queries in URLs: GET puts credentials, personal data,
+        // and query variables into browser/proxy history and access logs.
+        if ($request->isMethod('get')) {
+            return response()->json(['errors' => [['message' => 'GraphQL GET is disabled.']]], 405)
+                ->header('Allow', 'POST');
+        }
+
+        if ($request->isMethod('options')) {
+            return response()->noContent(204);
+        }
+
         // Ensure content type is application/json for POST requests
         if ($request->isMethod('post') && !$request->isJson()) {
             // Allow GraphQL queries with application/json content type
@@ -31,12 +42,16 @@ class GraphQLMiddleware
             }
         }
 
-        // Add CORS headers for GraphQL endpoint
         $response = $next($request);
 
-        $response->headers->set('Access-Control-Allow-Origin', '*');
-        $response->headers->set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
-        $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+        $origin = (string) $request->headers->get('Origin');
+        $allowedOrigins = array_values(array_filter((array) config('cors.allowed_origins', [])));
+        if ($origin !== '' && in_array($origin, $allowedOrigins, true)) {
+            $response->headers->set('Access-Control-Allow-Origin', $origin);
+            $response->headers->set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+            $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-TOKEN');
+            $response->headers->set('Vary', 'Origin');
+        }
 
         return $response;
     }

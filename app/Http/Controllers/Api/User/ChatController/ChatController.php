@@ -58,10 +58,11 @@ class ChatController extends Controller
 
             $unreadCount = Message::where('inbox_id', $inbox->id)
                 ->where('user_id', '!=', $user->id)
-                ->whereNull('read_by')
-                ->orWhere(function ($q) use ($user) {
-                    $q->where('user_id', '!=', $user->id)
-                        ->whereNotJsonContains('read_by', (string) $user->id);
+                ->where(function ($q) use ($user) {
+                    $q->whereNull('read_by')
+                        ->orWhere(function ($nested) use ($user) {
+                            $nested->whereNotJsonContains('read_by', (string) $user->id);
+                        });
                 })
                 ->count();
 
@@ -89,7 +90,7 @@ class ChatController extends Controller
         return response()->json([
             'success' => true,
             'data' => $data,
-            'current_user_is_super_admin' => $isAdmin,
+            'current_user_is_staff' => $isAdmin,
         ]);
     }
 
