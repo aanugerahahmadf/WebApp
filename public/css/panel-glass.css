@@ -197,12 +197,12 @@ body.fi-panel-admin .fi-sidebar .fi-sidebar-header {
    Filament tanpa perlu mengubah blade, dan mengeditnya tidak menuntut
    `npm run build`. */
 body.fi-panel-admin {
-    background-color: #ffffff !important;
+    background-color: #f8fafc !important;
     background-image: none !important;
 }
 
 .dark body.fi-panel-admin {
-    background-color: #000000 !important;
+    background-color: #0f1115 !important;
     background-image: none !important;
 }
 
