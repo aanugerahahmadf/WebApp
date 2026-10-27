@@ -2608,7 +2608,7 @@ body.fi-panel-user .password-security-card a {
 
 body.fi-panel-user .password-security-card a:hover,
 body.fi-panel-user .password-security-card a:focus-visible {
-    background-color: #f8fafc !important;
+    background-color: #ffffff !important;
 }
 
 .dark body.fi-panel-user .password-security-card {
@@ -2618,5 +2618,5 @@ body.fi-panel-user .password-security-card a:focus-visible {
 
 .dark body.fi-panel-user .password-security-card a:hover,
 .dark body.fi-panel-user .password-security-card a:focus-visible {
-    background-color: #1f2937 !important;
+    background-color: #111827 !important;
 }
