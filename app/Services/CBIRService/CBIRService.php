@@ -95,7 +95,7 @@ class CBIRService
     protected function searchViaHttp($imageFile, int $topK): array
     {
         /** @var Response $response */
-        $response = Http::timeout($this->timeoutSeconds)
+        $response = $this->http()->timeout($this->timeoutSeconds)
             ->retry(2, 300, throw: false)
             ->attach(
                 'file', // Flask app.py expects 'file'
@@ -207,7 +207,7 @@ class CBIRService
                 }
             }
 
-            $response = Http::timeout($this->timeoutSeconds)
+            $response = $this->http()->timeout($this->timeoutSeconds)
                 ->retry(2, 300, throw: false)
                 ->post("{$this->baseUrl}/api/index/add", [
                     'image_path' => $media->getPath(),
@@ -250,7 +250,7 @@ class CBIRService
         }
 
         try {
-            $response = Http::timeout($this->timeoutSeconds)
+            $response = $this->http()->timeout($this->timeoutSeconds)
                 ->retry(2, 300, throw: false)
                 ->post("{$this->baseUrl}/api/index/remove", [
                     'metadata_id' => $mediaId,
@@ -269,7 +269,7 @@ class CBIRService
         try {
             Log::info("CBIR Arithmetic search: operation={$operation}");
 
-            $request = Http::timeout($this->timeoutSeconds)
+            $request = $this->http()->timeout($this->timeoutSeconds)
                 ->retry(1, 300, throw: false);
 
             // Attach files (bisa UploadedFile atau SplFileInfo)
@@ -335,7 +335,7 @@ class CBIRService
     public function getArithmeticOps(): array
     {
         try {
-            $response = Http::timeout(5)->get("{$this->baseUrl}/api/arithmetic/ops");
+            $response = $this->http()->timeout(5)->get("{$this->baseUrl}/api/arithmetic/ops");
             if ($response->successful()) {
                 return $response->json()['operations'] ?? [];
             }
@@ -343,6 +343,16 @@ class CBIRService
             Log::error('AI Core arithmetic ops error: ' . $e->getMessage());
         }
         return [];
+    }
+
+    private function http(): \Illuminate\Http\Client\PendingRequest
+    {
+        $request = Http::acceptJson();
+        if ($key = config('services.ai_core_api_key')) {
+            $request = $request->withHeaders(['X-AI-Core-Key' => $key]);
+        }
+
+        return $request;
     }
 
     protected function errorResponse(string $message): array
