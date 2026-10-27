@@ -70,10 +70,20 @@ class AiConversationService
         $previousUserText = collect($history)
             ->reverse()
             ->first(fn (array $item) => $item['role'] === 'user')['content'] ?? '';
-        $combined = Str::lower($previousUserText.' '.$text);
+        $combinedOriginal = trim($previousUserText.' '.$text);
+        $combined = Str::lower($combinedOriginal);
         $context = $previousUserText !== '' ? ($language === 'en'
             ? ' I am keeping your earlier details in mind.'
             : ' Saya tetap mengingat detail yang Anda sampaikan sebelumnya.') : '';
+
+        // A real conversation often contains several questions in one turn.
+        // Resolve all topics before the single-topic rules below; otherwise the
+        // first keyword (for example "harga") hides the user's date, venue,
+        // booking, or payment question.
+        $intents = $this->intents($combined);
+        if (count($intents) > 1 || $this->containsMultipleQuestions($text)) {
+            return $this->composeMultiIntentReply($text, $combinedOriginal, $intents, $language, $context);
+        }
 
         // Short confirmations are follow-ups, not new conversations. Infer the
         // topic from the previous turn so "iya" / "yes" stays connected.
@@ -169,6 +179,172 @@ class AiConversationService
         }
 
         return "Saya memahami Anda mengatakan: \"{$subject}\".{$context} Saya tidak ingin menebak lalu memberi jawaban yang salah. Apakah ini tentang rencana pernikahan, bunga atau dekorasi, paket atau harga, pesanan atau pembayaran, akun, atau hal lain? Ceritakan sedikit lagi, dan saya akan mengikuti topik Anda.";
+    }
+
+    /** @return list<string> */
+    private function intents(string $text): array
+    {
+        $definitions = [
+            'account' => 'login|sign in|password|account|akun|masuk|daftar|register|verification|verifikasi|otp',
+            'payment' => 'payment|pay|transfer|qris|virtual account|\bva\b|pembayaran|bayar|transfer',
+            'order' => 'order status|track|tracking|pesanan|order|status pesanan|delivery|pengiriman',
+            'price' => 'price|cost|budget|how much|harga|biaya|anggaran|berapa|murah|mahal|promo|discount|diskon|voucher',
+            'availability' => 'available|availability|date|schedule|tanggal|tersedia|ketersediaan|jadwal',
+            'flowers' => 'flower|flowers|rose|lily|tulip|orchid|mawar|melati|bunga|warna|color|theme|tema|concept|konsep',
+            'location' => 'location|address|where|area|city|lokasi|alamat|dimana|di mana|kota|luar kota',
+            'review' => 'review|rating|ulasan|testimoni',
+            'booking' => 'book|booking|reserve|reservation|pesan|pemesanan|reservasi|beli',
+            'staff' => 'admin|human|person|staff|manusia|orang|cs|customer service|petugas',
+        ];
+
+        $found = [];
+        foreach ($definitions as $intent => $pattern) {
+            if ($this->matches($text, $pattern)) {
+                $found[] = $intent;
+            }
+        }
+
+        return $found;
+    }
+
+    private function containsMultipleQuestions(string $text): bool
+    {
+        return substr_count($text, '?') > 1
+            || preg_match('/\b(and also|also|then|plus|as well as|dan juga|lalu|kemudian|sekalian|serta)\b/iu', $text) === 1;
+    }
+
+    private function composeMultiIntentReply(string $text, string $conversationText, array $intents, string $language, string $context): string
+    {
+        // Details can have been supplied in an earlier turn. Reuse them while
+        // keeping the current message as the words we respond to.
+        $details = $this->extractDetails($conversationText);
+        $prefix = '';
+        if ($this->matches($text, '^(hello|hallo|hi|hey|halo|hai)\b')) {
+            $prefix = $language === 'en' ? 'Hello! ' : 'Halo! ';
+        }
+
+        $parts = [];
+        foreach ($intents as $intent) {
+            $parts[] = $this->intentAnswer($intent, $language, $details);
+        }
+
+        $missing = $this->missingDetails($details, $intents, $language);
+        $known = array_intersect_key($details, array_flip(['date', 'budget', 'guests', 'venue', 'style', 'package', 'order']));
+        $knownLine = $known === [] ? '' : ($language === 'en'
+            ? ' I noted these details: '.implode(', ', array_values($known)).'.'
+            : ' Saya mencatat detail ini: '.implode(', ', array_values($known)).'.');
+        $bridge = $language === 'en'
+            ? ' I will keep these points together so you do not have to repeat yourself.'
+            : ' Saya akan menjaga semua poin ini tetap dalam satu konteks agar Anda tidak perlu mengulanginya.';
+
+        return $prefix.implode("\n\n", $parts).$knownLine.$bridge.$missing.$context;
+    }
+
+    /** @return array<string,string> */
+    private function extractDetails(string $text): array
+    {
+        $details = [];
+        $patterns = [
+            'date' => '/\b(?:\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}|\d{1,2}\s+(?:januari|februari|maret|april|mei|juni|juli|agustus|september|oktober|november|desember|january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{4})\b/iu',
+            'budget' => '/(?:rp\.?\s?[\d.,]+\s*(?:juta|miliar|million|thousand)?|\$\s?[\d.,]+\s*(?:million|thousand)?|\b\d+(?:[.,]\d+)?\s*(?:juta|miliar|million|thousand)\b)/iu',
+            'guests' => '/\b\d+(?:\s|-)?(?:tamu|orang|guest|guests)\b/iu',
+            // Do not treat every four-letter word ("Saya", "want", ...) as
+            // an order number. Only accept an explicit ORD/# prefix or a
+            // numeric order identifier.
+            'order' => '~\b(?:ord(?:er)?[-\s]?[A-Z0-9]{4,}(?:[-/][A-Z0-9]+)*|#\d{4,})\b~i',
+        ];
+        foreach ($patterns as $key => $pattern) {
+            if (preg_match($pattern, $text, $match) === 1) {
+                $details[$key] = trim($match[0]);
+            }
+        }
+
+        // Keep venue/package/style as user wording rather than inventing a
+        // value. This is intentionally conservative and only captures text
+        // after common labels.
+        foreach ([
+            'venue' => '(?:venue|lokasi|tempat)\\s+([^,.?]+?)(?=\\s+(?:dan|and|dengan|with)\\b|[,.?]|$)',
+            'style' => '(?:tema|theme|gaya|style|konsep|concept)\\s+([^,.?]+?)(?=\\s+(?:dan|and|dengan|with)\\b|[,.?]|$)',
+            'package' => '(?:paket|package)\\s+([^,.?]+?)(?=\\s+(?:dan|and|dengan|with)\\b|[,.?]|$)',
+        ] as $key => $pattern) {
+            if (preg_match('/'.$pattern.'/iu', $text, $match) === 1) {
+                $details[$key] = trim($match[1]);
+            }
+        }
+
+        return $details;
+    }
+
+    private function intentAnswer(string $intent, string $language, array $details): string
+    {
+        $answers = [
+            'account' => [
+                'en' => 'For the account part, tell me whether the problem is signing in, verification, or profile data. Never send a password or OTP.',
+                'id' => 'Untuk bagian akun, jelaskan apakah masalahnya login, verifikasi, atau data profil. Jangan kirim kata sandi atau OTP.',
+            ],
+            'payment' => [
+                'en' => 'For payment, I need the order number, payment method, and status shown in the app. You can attach proof, but hide sensitive numbers and never share an OTP.',
+                'id' => 'Untuk pembayaran, saya perlu nomor pesanan, metode pembayaran, dan status yang terlihat di aplikasi. Bukti transfer boleh dilampirkan, tetapi tutupi nomor sensitif dan jangan kirim OTP.',
+            ],
+            'order' => [
+                'en' => 'For the order, I can help separate payment, confirmation, schedule, and delivery questions. Please include the order number if you have it.',
+                'id' => 'Untuk pesanan, saya bisa membantu membedakan pertanyaan pembayaran, konfirmasi, jadwal, dan pengiriman. Sertakan nomor pesanan jika ada.',
+            ],
+            'price' => [
+                'en' => 'For price, I can compare suitable packages, but the final quote depends on the date, venue, guest count, and concept.',
+                'id' => 'Untuk harga, saya bisa membantu membandingkan paket yang sesuai, tetapi penawaran akhir bergantung pada tanggal, lokasi, jumlah tamu, dan konsep.',
+            ],
+            'availability' => [
+                'en' => 'For availability, the date and venue are the key details. An admin confirms the live schedule after checking them.',
+                'id' => 'Untuk ketersediaan, tanggal dan lokasi adalah detail utama. Admin akan mengonfirmasi jadwal setelah memeriksanya.',
+            ],
+            'flowers' => [
+                'en' => 'For flowers and decoration, tell me the colors, preferred flowers, and atmosphere you want; I can help narrow the concept.',
+                'id' => 'Untuk bunga dan dekorasi, ceritakan warna, jenis bunga, dan suasana yang diinginkan; saya bantu menyaring konsepnya.',
+            ],
+            'location' => [
+                'en' => 'For the location, send the city or venue. The admin can then confirm service area, travel needs, and availability.',
+                'id' => 'Untuk lokasi, kirim kota atau tempat acaranya. Admin kemudian mengonfirmasi area layanan, kebutuhan perjalanan, dan ketersediaannya.',
+            ],
+            'review' => [
+                'en' => 'For a review, I can guide you to the review page and help with an attachment after an eligible order.',
+                'id' => 'Untuk ulasan, saya bisa memandu ke halaman ulasan dan membantu lampiran setelah ada pesanan yang memenuhi syarat.',
+            ],
+            'booking' => [
+                'en' => 'For booking, the flow is: choose a package, confirm date and concept, review the quote, then confirm the deposit with an admin.',
+                'id' => 'Untuk pemesanan, alurnya: pilih paket, konfirmasi tanggal dan konsep, tinjau penawaran, lalu konfirmasi uang muka bersama admin.',
+            ],
+            'staff' => [
+                'en' => 'If you prefer a person, an admin can continue from this same conversation with the details already provided.',
+                'id' => 'Jika Anda ingin berbicara dengan orang, admin dapat melanjutkan dari percakapan yang sama dengan detail yang sudah diberikan.',
+            ],
+        ];
+
+        return $answers[$intent][$language] ?? $answers[$intent]['id'];
+    }
+
+    private function missingDetails(array $details, array $intents, string $language): string
+    {
+        $needs = [];
+        if (array_intersect($intents, ['price', 'availability', 'booking']) !== [] && ! isset($details['date'])) {
+            $needs[] = $language === 'en' ? 'event date' : 'tanggal acara';
+        }
+        if (array_intersect($intents, ['price', 'availability', 'booking']) !== [] && ! isset($details['venue'])) {
+            $needs[] = $language === 'en' ? 'city or venue' : 'kota atau lokasi';
+        }
+        if (in_array('price', $intents, true) && ! isset($details['budget'])) {
+            $needs[] = $language === 'en' ? 'budget' : 'anggaran';
+        }
+        if (in_array('order', $intents, true) && ! isset($details['order'])) {
+            $needs[] = $language === 'en' ? 'order number' : 'nomor pesanan';
+        }
+        if ($needs === []) {
+            return '';
+        }
+
+        return $language === 'en'
+            ? ' To continue, please send: '.implode(', ', $needs).'.'
+            : ' Untuk melanjutkan, silakan kirim: '.implode(', ', $needs).'.';
     }
 
     private function matches(string $text, string $pattern): bool

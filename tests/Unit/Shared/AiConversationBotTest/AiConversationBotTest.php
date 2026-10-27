@@ -130,3 +130,44 @@ it('keeps an English random message connected to the user words', function (): v
         ->toContain('I am confused about what to do next')
         ->toContain('I do not want to guess');
 });
+
+it('answers multiple Indonesian requests in one connected response', function (): void {
+    $user = User::factory()->create();
+    $inbox = Inbox::create(['user_ids' => [$user->id, $user->id + 1]]);
+    $current = Message::create([
+        'inbox_id' => $inbox->id,
+        'user_id' => $user->id,
+        'message' => 'Saya mau tahu harga dekorasi bunga putih untuk tanggal 12/12/2026, apakah masih tersedia, dan bagaimana cara bookingnya?',
+    ]);
+
+    $reply = app(AiConversationService::class)->reply($current);
+
+    expect($reply)
+        ->toContain('Untuk harga')
+        ->toContain('Untuk ketersediaan')
+        ->toContain('Untuk pemesanan')
+        ->toContain('12/12/2026')
+        ->toContain('kota atau lokasi');
+});
+
+it('carries event details from an earlier turn into a later multi-question', function (): void {
+    $user = User::factory()->create();
+    $inbox = Inbox::create(['user_ids' => [$user->id, $user->id + 1]]);
+    Message::create([
+        'inbox_id' => $inbox->id,
+        'user_id' => $user->id,
+        'message' => 'Acaranya tanggal 20/10/2027 di Bandung dengan budget Rp 15 juta.',
+    ]);
+    $current = Message::create([
+        'inbox_id' => $inbox->id,
+        'user_id' => $user->id,
+        'message' => 'Kalau begitu paket apa yang cocok dan bisa booking sekarang?',
+    ]);
+
+    $reply = app(AiConversationService::class)->reply($current);
+
+    expect($reply)
+        ->toContain('20/10/2027')
+        ->toContain('Rp 15 juta')
+        ->toContain('Untuk pemesanan');
+});
