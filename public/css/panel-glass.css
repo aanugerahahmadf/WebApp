@@ -2598,7 +2598,25 @@ body.fi-panel-user .password-security-card {
     border-color: rgb(226 232 240 / 0.9) !important;
 }
 
+body.fi-panel-user .password-security-page {
+    background-color: transparent !important;
+}
+
+body.fi-panel-user .password-security-card a {
+    background-color: transparent;
+}
+
+body.fi-panel-user .password-security-card a:hover,
+body.fi-panel-user .password-security-card a:focus-visible {
+    background-color: #f8fafc !important;
+}
+
 .dark body.fi-panel-user .password-security-card {
     background-color: #111827 !important;
     border-color: rgb(51 65 85 / 0.7) !important;
+}
+
+.dark body.fi-panel-user .password-security-card a:hover,
+.dark body.fi-panel-user .password-security-card a:focus-visible {
+    background-color: #1f2937 !important;
 }
