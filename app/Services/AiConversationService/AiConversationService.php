@@ -64,7 +64,7 @@ class AiConversationService
             $response = Http::asJson()
                 ->timeout((int) config('services.ai_local_timeout', 90))
                 ->post(rtrim((string) config('services.ai_local_url'), '/').'/api/chat', [
-                    'model' => (string) config('services.ai_local_model', 'qwen2.5:7b'),
+                    'model' => (string) config('services.ai_local_model', 'qwen2.5:3b'),
                     'messages' => $messages,
                     'stream' => false,
                     'options' => [

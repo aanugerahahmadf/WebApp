@@ -45,7 +45,7 @@ return [
     // available during development and tests.
     'ai_local_enabled' => env('AI_LOCAL_ENABLED', false),
     'ai_local_url' => env('AI_LOCAL_URL', 'http://127.0.0.1:11434'),
-    'ai_local_model' => env('AI_LOCAL_MODEL', 'qwen2.5:7b'),
+    'ai_local_model' => env('AI_LOCAL_MODEL', 'qwen2.5:3b'),
     'ai_local_timeout' => env('AI_LOCAL_TIMEOUT', 90),
 
     'turn' => [
