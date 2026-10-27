@@ -2518,6 +2518,38 @@ body.fi-panel-admin :is(
     font-size: 13px !important;
 }
 
+/* Pastikan ukuran parent tombol juga berbeda: grup atas 13px, item bawah
+   11px. Ini mencegah utilitas font Filament mewariskan ukuran yang sama. */
+body.fi-panel-welcome :is(
+    .fi-sidebar .fi-sidebar-group-button,
+    .fi-topbar .fi-topbar-group-button
+),
+body.fi-panel-user :is(
+    .fi-sidebar .fi-sidebar-group-button,
+    .fi-topbar .fi-topbar-group-button
+),
+body.fi-panel-admin :is(
+    .fi-sidebar .fi-sidebar-group-button,
+    .fi-topbar .fi-topbar-group-button
+) {
+    font-size: 13px !important;
+}
+
+body.fi-panel-welcome :is(
+    .fi-sidebar .fi-sidebar-item-button,
+    .fi-topbar .fi-topbar-item-button
+),
+body.fi-panel-user :is(
+    .fi-sidebar .fi-sidebar-item-button,
+    .fi-topbar .fi-topbar-item-button
+),
+body.fi-panel-admin :is(
+    .fi-sidebar .fi-sidebar-item-button,
+    .fi-topbar .fi-topbar-item-button
+) {
+    font-size: 11px !important;
+}
+
 body.fi-panel-welcome :is(.fi-topbar, .fi-sidebar) :is(
     .fi-topbar-item-icon,
     .fi-topbar-group-toggle-icon,
