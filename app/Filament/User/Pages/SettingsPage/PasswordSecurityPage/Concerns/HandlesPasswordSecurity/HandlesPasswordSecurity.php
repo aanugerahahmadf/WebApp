@@ -9,6 +9,7 @@ use App\Filament\User\Pages\SettingsPage\PasswordSecurityPage\SecurityCheck\Sign
 use App\Filament\User\Pages\SettingsPage\PasswordSecurityPage\SignInAndRecovery\ChangePassword\ChangePassword;
 use App\Filament\User\Pages\SettingsPage\PasswordSecurityPage\SignInAndRecovery\SavedLogin\SavedLogin;
 use App\Support\PasswordPolicy\PasswordPolicy;
+use App\Support\TopNavigation\TopNavigation;
 use App\Filament\User\Pages\SettingsPage\PasswordSecurityPage\SignInAndRecovery\TwoFactor\TwoFactor;
 use App\Filament\User\Pages\SettingsPage\SettingsPage;
 use App\Models\BackupCode\BackupCode;
@@ -164,16 +165,20 @@ trait HandlesPasswordSecurity
      */
     protected function securityBreadcrumbs(): array
     {
-        $crumbs = [
-            SettingsPage::getUrl(panel: 'user') => __('Pengaturan'),
-            PasswordSecurityPage::getUrl(panel: 'user') => __('Kata Sandi dan Keamanan'),
-        ];
+        $crumbs = [];
+
+        if ($homeUrl = TopNavigation::homeUrl('user')) {
+            $crumbs[$homeUrl] = __('Home');
+        }
+
+        $crumbs[SettingsPage::getUrl(panel: 'user')] = __('Settings');
+        $crumbs[PasswordSecurityPage::getUrl(panel: 'user')] = __('Password and Security');
 
         // Dikirim dari detail notifikasi: naik ke notifikasi dulu, lalu ke
         // daftar Keamanan. Sebelumnya jadi tombol; sekarang jadi crumb.
         if ($notificationDetailUrl = $this->notificationDetailReturnUrl()) {
-            $crumbs[$notificationDetailUrl] = __('Detail Notifikasi');
-            $crumbs[PasswordSecurityPage::getUrl(panel: 'user')] = __('Kata Sandi dan Keamanan');
+            $crumbs[$notificationDetailUrl] = __('Notification Details');
+            $crumbs[PasswordSecurityPage::getUrl(panel: 'user')] = __('Password and Security');
         }
 
         if ($group = $this->securityGroupLabel()) {
