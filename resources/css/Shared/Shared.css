@@ -1723,6 +1723,22 @@ body.cbir-browse-modal-open .fi-bottom-nav {
     filter: brightness(1.2) saturate(1.05);
 }
 
+/* Customer-service quick-action icons must remain visible in both themes.
+   The icon component renders these paths as <img>; keep them explicit so
+   light-mode image rules cannot collapse or hide the SVG inside its colored
+   tile. */
+.fi-panel-welcome .cs-action-icon img[src*='/images/icons/'],
+.fi-panel-user .cs-action-icon img[src*='/images/icons/'] {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    min-width: 1.25rem !important;
+    min-height: 1.25rem !important;
+    object-fit: contain !important;
+}
+
 /*
 |--------------------------------------------------------------------------
 | Sidebar: label menu TIDAK BOLEH DIPOTONG
