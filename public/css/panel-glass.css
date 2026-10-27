@@ -2593,7 +2593,7 @@ body.fi-panel-admin :is(.fi-topbar, .fi-sidebar) {
 
 /* Password & Security cards use the same raised surface as the other User
    settings pages: #111827 in dark mode, white in light mode. */
-body.fi-panel-user .password-security-card {
+.fi-panel-user .password-security-card {
     background-color: #ffffff !important;
     border-color: rgb(226 232 240 / 0.9) !important;
 }
@@ -2611,12 +2611,12 @@ body.fi-panel-user .password-security-card a:focus-visible {
     background-color: #ffffff !important;
 }
 
-.dark body.fi-panel-user .password-security-card {
+.dark .fi-panel-user .password-security-card {
     background-color: #050607 !important;
     border-color: rgb(75 85 99 / 0.7) !important;
 }
 
-.dark body.fi-panel-user .password-security-card a:hover,
-.dark body.fi-panel-user .password-security-card a:focus-visible {
+.dark .fi-panel-user .password-security-card a:hover,
+.dark .fi-panel-user .password-security-card a:focus-visible {
     background-color: #050607 !important;
 }
