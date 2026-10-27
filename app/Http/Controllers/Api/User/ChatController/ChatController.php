@@ -25,9 +25,9 @@ class ChatController extends Controller
      */
     private function callUrl(Inbox $inbox): string
     {
-        $digest = substr(hash_hmac('sha256', 'chat-call-'.$inbox->id, (string) config('app.key')), 0, 24);
-
-        return 'https://meet.jit.si/WeddingFlowerDecorations-'.$inbox->id.'-'.$digest;
+        // Calling is handled by the application's own WebRTC screen. Never
+        // redirect users to a third-party meeting service.
+        return url('/messages/'.$inbox->id.'/call');
     }
 
     public function getConversations(Request $request)

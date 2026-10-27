@@ -216,7 +216,7 @@ it('guest mobile chat receives the shared internet call room', function (): void
 
     $this->getJson('/api/messages/guest/'.$inboxId.'?guest_id=guest-call-test')
         ->assertOk()
-        ->assertJsonPath('other_user.call_url', fn ($url) => is_string($url) && str_contains($url, 'meet.jit.si/WeddingFlowerDecorations-'.$inboxId.'-'));
+        ->assertJsonPath('other_user.call_url', fn ($url) => is_string($url) && str_ends_with($url, '/messages/'.$inboxId.'/call'));
 });
 
 // ---------------------------------------------------------------------------

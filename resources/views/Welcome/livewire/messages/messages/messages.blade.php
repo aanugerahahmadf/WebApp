@@ -32,7 +32,7 @@
                         $callPhone = $selectedConversation->other_users->first()?->phone
                             ?? $selectedConversation->other_users->first()?->whatsapp;
                         $callPhone = $callPhone ? preg_replace('/[^0-9+]/', '', $callPhone) : null;
-                        $callUrl = 'https://meet.jit.si/WeddingFlowerDecorations-'.$selectedConversation->id.'-'.substr(hash_hmac('sha256', 'chat-call-'.$selectedConversation->id, (string) config('app.key')), 0, 24);
+                        $callUrl = url('/messages/'.$selectedConversation->id.'/call');
                     @endphp
 
                     <x-filament::avatar src="{{ $avatar }}" alt="{{ $alt }}" size="lg" />
