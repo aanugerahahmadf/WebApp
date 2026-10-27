@@ -56,7 +56,7 @@
     <div id="messages-container" class="messages-container flex flex-col lg:flex-row gap-6 w-full overflow-hidden">
         {{-- Inbox List --}}
         <div @class([
-            'w-full h-full min-h-0',
+            'messages-surface w-full h-full min-h-0',
             'hidden' => $selectedConversation,
             'block'  => !$selectedConversation,
         ])>
@@ -65,7 +65,7 @@
 
         {{-- Message Content --}}
         <div @class([
-            'flex-1 min-w-0 h-full min-h-0',
+            'messages-surface flex-1 min-w-0 h-full min-h-0',
             'block'  => $selectedConversation,
             'hidden' => !$selectedConversation,
         ])>

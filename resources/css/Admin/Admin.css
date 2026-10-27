@@ -286,6 +286,20 @@
     min-height: 300px;
 }
 
+/* Message columns use the same raised card surface as Settings/Security:
+   navy with a quiet outline in dark mode and white in light mode. */
+.fi-panel-admin .messages-surface {
+    background-color: #ffffff;
+    border: 1px solid rgb(226 232 240 / 0.9);
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.dark .fi-panel-admin .messages-surface {
+    background-color: #111827;
+    border-color: rgb(51 65 85 / 0.7);
+}
+
 /*
  * MODAL CARI TIDAK BOLEH IKUT MENGISI TINGGI KOLOM INBOX
  *
