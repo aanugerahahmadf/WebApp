@@ -156,12 +156,12 @@ class AiConversationService
             }
         }
 
-        if ($this->matches($lower, '^(hello|hallo|hi|hey)\b')) {
+        if ($this->matches($lower, '^(hello+|hallo+|helo+|hi+|hey+)\b')) {
             return $language === 'en'
                 ? "Hello!{$context} I am your wedding flower decoration assistant. How are you today? Tell me what you are planning, and I will help step by step."
                 : "Halo!{$context} Saya BOT bantuan dekorasi pernikahan. Apa kabar? Ceritakan rencana atau kebutuhan Anda, nanti saya bantu langkah demi langkah.";
         }
-        if ($this->matches($lower, '^(halo|hallo|hai|selamat pagi|selamat siang|selamat sore|selamat malam)[!,. ]*$')) {
+        if ($this->matches($lower, '^(halo+|hallo+|hai+|selamat pagi|selamat siang|selamat sore|selamat malam)[!,. ]*$')) {
             return "Halo!{$context} Saya BOT bantuan dekorasi pernikahan. Apa kabar? Ceritakan rencana atau kebutuhan Anda, nanti saya bantu langkah demi langkah.";
         }
         if ($this->matches($lower, 'thank|thanks|thank you|terima kasih|makasih|tq')) {

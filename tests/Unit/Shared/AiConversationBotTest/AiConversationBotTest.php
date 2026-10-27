@@ -98,6 +98,22 @@ it('recognizes Hallo as a greeting and does not use the generic fallback', funct
         ->not->toContain('Terima kasih sudah menjelaskannya');
 });
 
+it('recognizes stretched greetings such as hii and helo', function (): void {
+    foreach (['hii', 'hiii', 'helo'] as $greeting) {
+        $user = User::factory()->create();
+        $inbox = Inbox::create(['user_ids' => [$user->id, $user->id + 1]]);
+        $current = Message::create([
+            'inbox_id' => $inbox->id,
+            'user_id' => $user->id,
+            'message' => $greeting,
+        ]);
+
+        expect(app(AiConversationService::class)->reply($current))
+            ->toContain('Apa kabar?')
+            ->not->toContain('Saya memahami Anda mengatakan');
+    }
+});
+
 it('responds to an unrelated random message by reflecting it and asking a relevant clarification', function (): void {
     $user = User::factory()->create();
     $inbox = Inbox::create(['user_ids' => [$user->id, $user->id + 1]]);
