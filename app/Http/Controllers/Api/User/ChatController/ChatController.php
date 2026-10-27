@@ -824,6 +824,8 @@ class ChatController extends Controller
                 'id' => $adminId,
                 'name' => $adminUser?->full_name ?? __('Admin'),
                 'profile_photo' => $adminUser?->avatar_url ?? null,
+                'phone' => $adminUser?->phone ?? $adminUser?->whatsapp,
+                'call_url' => $this->callUrl($inbox),
             ],
         ]);
     }

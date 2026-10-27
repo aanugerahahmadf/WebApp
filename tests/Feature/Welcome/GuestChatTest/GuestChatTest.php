@@ -206,6 +206,19 @@ it('ChatService returns null when no admin user exists', function (): void {
     expect($inbox)->toBeNull();
 });
 
+it('guest mobile chat receives the shared internet call room', function (): void {
+    $started = $this->postJson('/api/messages/guest/start', [
+        'guest_id' => 'guest-call-test',
+        'name' => 'Call Guest',
+    ])->assertCreated();
+
+    $inboxId = $started->json('data.id');
+
+    $this->getJson('/api/messages/guest/'.$inboxId.'?guest_id=guest-call-test')
+        ->assertOk()
+        ->assertJsonPath('other_user.call_url', fn ($url) => is_string($url) && str_contains($url, 'meet.jit.si/WeddingFlowerDecorations-'.$inboxId.'-'));
+});
+
 // ---------------------------------------------------------------------------
 // Validation â€” guests cannot reach account-only pages
 // ---------------------------------------------------------------------------
