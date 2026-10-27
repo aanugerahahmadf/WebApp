@@ -19,17 +19,6 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class ChatController extends Controller
 {
-    /**
-     * Ruang Jitsi yang sama untuk semua peserta pada satu inbox.
-     * Nama ruang tidak memakai APP_KEY mentah, hanya digest pendeknya.
-     */
-    private function callUrl(Inbox $inbox): string
-    {
-        // The website opens its internal call modal. Mobile opens its own
-        // native call modal; no external URL is returned.
-        return '';
-    }
-
     public function getConversations(Request $request)
     {
         /** @var User $user */
@@ -85,7 +74,7 @@ class ChatController extends Controller
                     'name' => $otherUser ? ($otherUser->full_name ?: $otherUser->username ?? __('Pengguna')) : __('Admin'),
                     'profile_photo' => $otherUser?->avatar_url ?? null,
                     'phone' => $otherUser?->phone ?? $otherUser?->whatsapp,
-                    'call_url' => $this->callUrl($inbox),
+                'call_url' => '',
                 ],
                 'last_message' => $lastMessage ? [
                     'id' => $lastMessage->id,
@@ -159,13 +148,15 @@ class ChatController extends Controller
                 'name' => $otherUser->full_name ?: $otherUser->username ?? __('Admin'),
                 'profile_photo' => $otherUser->avatar_url ?? null,
                 'phone' => $otherUser->phone ?? $otherUser->whatsapp,
-                'call_url' => $this->callUrl($inbox),
+                'call_url' => '',
             ] : [
                 'id' => $adminId,
                 'name' => $adminUser?->full_name ?? __('Admin'),
                 'profile_photo' => $adminUser?->avatar_url ?? null,
                 'phone' => $adminUser?->phone ?? $adminUser?->whatsapp,
-                'call_url' => $this->callUrl($inbox),
+                // Guests do not receive an authenticated call room. They can
+                // continue the conversation in chat and sign in for calls.
+                'call_url' => '',
             ],
         ]);
     }
@@ -825,7 +816,7 @@ class ChatController extends Controller
                 'name' => $adminUser?->full_name ?? __('Admin'),
                 'profile_photo' => $adminUser?->avatar_url ?? null,
                 'phone' => $adminUser?->phone ?? $adminUser?->whatsapp,
-                'call_url' => $this->callUrl($inbox),
+                'call_url' => '',
             ],
         ]);
     }

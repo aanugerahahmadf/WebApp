@@ -52,7 +52,7 @@
                     </div>
                     <button type="button" x-on:click="$dispatch('open-modal', { id: 'admin-message-call' })"
                             class="rounded-lg p-2 text-green-600 transition hover:bg-green-50 hover:text-green-700 dark:hover:bg-green-900/20"
-                            title="{{ __('Telepon Internet') }}" aria-label="{{ __('Telepon Internet') }}">
+                            title="{{ __('Telepon') }}" aria-label="{{ __('Telepon') }}">
                             <x-filament::icon icon="/images/icons/phone.svg" class="h-5 w-5" />
                     </button>
                     <button type="button" x-on:click="$dispatch('open-modal', { id: 'admin-message-search' })"
@@ -80,7 +80,7 @@
             <div class="flex flex-col items-center gap-4 py-8 text-center">
                 <x-filament::icon icon="/images/icons/phone.svg" class="h-10 w-10" />
                 <h3 class="text-lg font-semibold">{{ $selectedConversation->inbox_title }}</h3>
-                <p class="text-sm text-gray-500">{{ __('Panggilan internal sedang disiapkan.') }}</p>
+                <p class="text-sm text-gray-500">{{ __('Panggilan internal aplikasi sedang disiapkan.') }}</p>
                 <button type="button" x-on:click="$dispatch('close-modal', { id: 'admin-message-call' })" class="rounded-lg bg-danger-600 px-4 py-2 text-white">{{ __('Tutup') }}</button>
             </div>
         </x-filament::modal>

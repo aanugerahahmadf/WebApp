@@ -50,7 +50,7 @@
                     <div class="flex items-center gap-1 flex-shrink-0">
                         <button type="button" x-on:click="$dispatch('open-modal', { id: 'user-message-call' })"
                                 class="p-2 rounded-lg text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 transition"
-                                title="{{ __('Telepon Internet') }}" aria-label="{{ __('Telepon Internet') }}">
+                                title="{{ __('Telepon') }}" aria-label="{{ __('Telepon') }}">
                                 <x-filament::icon icon="/images/icons/phone.svg" class="w-5 h-5" />
                         </button>
                         <button type="button" x-on:click="$dispatch('open-modal', { id: 'user-message-search' })"
@@ -78,14 +78,10 @@
         <x-filament::modal width="lg" id="user-message-call">
             <x-slot name="heading">{{ __('Panggilan') }}</x-slot>
             <div class="flex flex-col items-center gap-4 py-8 text-center">
-                <div class="flex h-20 w-20 items-center justify-center rounded-full bg-success-100 dark:bg-success-900/30">
-                    <x-filament::icon icon="/images/icons/phone.svg" class="h-10 w-10" />
-                </div>
+                <x-filament::icon icon="/images/icons/phone.svg" class="h-10 w-10" />
                 <h3 class="text-lg font-semibold">{{ $selectedConversation->inbox_title }}</h3>
-                <p class="text-sm text-gray-500">{{ __('Panggilan internal sedang disiapkan.') }}</p>
-                <div class="flex gap-2">
-                    <button type="button" x-on:click="$dispatch('close-modal', { id: 'user-message-call' })" class="rounded-lg bg-danger-600 px-4 py-2 text-white">{{ __('Tutup') }}</button>
-                </div>
+                <p class="text-sm text-gray-500">{{ __('Panggilan internal aplikasi sedang disiapkan.') }}</p>
+                <button type="button" x-on:click="$dispatch('close-modal', { id: 'user-message-call' })" class="rounded-lg bg-danger-600 px-4 py-2 text-white">{{ __('Tutup') }}</button>
             </div>
         </x-filament::modal>
         <!-- Chat Header : End -->
