@@ -97,3 +97,36 @@ it('recognizes Hallo as a greeting and does not use the generic fallback', funct
         ->toContain('Apa kabar?')
         ->not->toContain('Terima kasih sudah menjelaskannya');
 });
+
+it('responds to an unrelated random message by reflecting it and asking a relevant clarification', function (): void {
+    $user = User::factory()->create();
+    $inbox = Inbox::create(['user_ids' => [$user->id, $user->id + 1]]);
+    $current = Message::create([
+        'inbox_id' => $inbox->id,
+        'user_id' => $user->id,
+        'message' => 'Hari ini saya sangat bingung dengan semuanya',
+    ]);
+
+    $reply = app(AiConversationService::class)->reply($current);
+
+    expect($reply)
+        ->toContain('sangat bingung dengan semuanya')
+        ->toContain('Saya tidak ingin menebak')
+        ->toContain('Ceritakan sedikit lagi');
+});
+
+it('keeps an English random message connected to the user words', function (): void {
+    $user = User::factory()->create();
+    $inbox = Inbox::create(['user_ids' => [$user->id, $user->id + 1]]);
+    $current = Message::create([
+        'inbox_id' => $inbox->id,
+        'user_id' => $user->id,
+        'message' => 'I am confused about what to do next',
+    ]);
+
+    $reply = app(AiConversationService::class)->reply($current);
+
+    expect($reply)
+        ->toContain('I am confused about what to do next')
+        ->toContain('I do not want to guess');
+});

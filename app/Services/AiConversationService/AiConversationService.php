@@ -159,9 +159,16 @@ class AiConversationService
                 : 'Saya bisa memandu pemesanan: pilih katalog atau paket, kirim tanggal dan lokasi, bahas tema, tinjau penawaran, lalu konfirmasi uang muka. Anda sedang berada di langkah yang mana?';
         }
 
-        return $language === 'en'
-            ? "Thanks for explaining that.{$context} I can help with flowers, packages, prices, availability, event details, orders, payments, accounts, reviews, and admin support. Please tell me the most important detail first."
-            : "Terima kasih sudah menjelaskannya.{$context} Saya bisa membantu bunga, paket, harga, ketersediaan, detail acara, pesanan, pembayaran, akun, ulasan, dan bantuan admin. Silakan tuliskan detail yang paling penting terlebih dahulu.";
+        // Never answer an unknown/random message with an unrelated feature
+        // catalogue. Reflect the user's actual words, preserve the previous
+        // turn, and ask one useful clarification so the next turn can become
+        // specific instead of making the bot sound robotic.
+        $subject = Str::limit(preg_replace('/\s+/u', ' ', $text), 180, '…');
+        if ($language === 'en') {
+            return "I understand you said: \"{$subject}\".{$context} I do not want to guess and give you the wrong answer. Is this about your wedding plan, flowers or decoration, a package or price, an order or payment, your account, or something else? Tell me a little more and I will follow your topic.";
+        }
+
+        return "Saya memahami Anda mengatakan: \"{$subject}\".{$context} Saya tidak ingin menebak lalu memberi jawaban yang salah. Apakah ini tentang rencana pernikahan, bunga atau dekorasi, paket atau harga, pesanan atau pembayaran, akun, atau hal lain? Ceritakan sedikit lagi, dan saya akan mengikuti topik Anda.";
     }
 
     private function matches(string $text, string $pattern): bool
