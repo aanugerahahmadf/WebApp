@@ -102,6 +102,35 @@ body.fi-panel-user {
     background-image: none !important;
 }
 
+/* Background storefront mengikuti tema aktif secara eksplisit.
+   Welcome dan User memakai stylesheet ini, sehingga Light/Night/System
+   selalu mendapatkan permukaan dasar yang sesuai tanpa tint ungu. */
+html:not(.dark) body.fi-panel-welcome,
+html:not(.dark) body.fi-panel-user,
+html:not(.dark) body.fi-panel-admin {
+    color-scheme: light;
+    background-color: #f8fafc !important;
+    background-image: none !important;
+}
+
+html.dark body.fi-panel-welcome,
+html.dark body.fi-panel-user,
+html.dark body.fi-panel-admin {
+    color-scheme: dark;
+    background-color: #0f1115 !important;
+    background-image: none !important;
+}
+
+html:not(.dark) body.fi-panel-welcome :is(.fi-layout, .fi-main, .fi-page, .fi-page-content),
+html:not(.dark) body.fi-panel-user :is(.fi-layout, .fi-main, .fi-page, .fi-page-content),
+html:not(.dark) body.fi-panel-admin :is(.fi-layout, .fi-main, .fi-page, .fi-page-content),
+html.dark body.fi-panel-welcome :is(.fi-layout, .fi-main, .fi-page, .fi-page-content),
+html.dark body.fi-panel-user :is(.fi-layout, .fi-main, .fi-page, .fi-page-content),
+html.dark body.fi-panel-admin :is(.fi-layout, .fi-main, .fi-page, .fi-page-content) {
+    background-color: transparent !important;
+    background-image: none !important;
+}
+
 /* --- Sidebar Admin: latar TRANSPARAN, sama dengan topbar/header ------
    Topbar Admin sudah transparan total (lihat override
    resources/views/Admin/vendor/filament-panels/components/topbar/
@@ -279,8 +308,7 @@ html.dark .fi-global-search-modal .fi-global-search-field input::placeholder {
 .fi-panel-welcome .fi-topbar-group-label,
 .fi-panel-user .fi-topbar-item-label,
 .fi-panel-user .fi-topbar-group-label {
-    text-shadow: 0 1px 2px rgb(255 255 255 / 0.28),
-        0 1px 3px rgb(0 0 0 / 0.22);
+    text-shadow: none !important;
 }
 
 html:not(.dark) .fi-panel-welcome .fi-topbar-item-label,
@@ -300,13 +328,13 @@ html.dark .fi-panel-user .fi-topbar-group-label {
 html:not(.dark) .fi-global-search-trigger-placeholder,
 html:not(.dark) .fi-global-search-modal .fi-global-search-field input::placeholder {
     color: #334155 !important;
-    text-shadow: 0 1px 2px rgb(255 255 255 / 0.35);
+    text-shadow: none !important;
 }
 
 html.dark .fi-global-search-trigger-placeholder,
 html.dark .fi-global-search-modal .fi-global-search-field input::placeholder {
     color: #e2e8f0 !important;
-    text-shadow: 0 1px 2px rgb(0 0 0 / 0.45);
+    text-shadow: none !important;
 }
 
 /* Header Welcome/User seperti header hopeindonesiarp.id: transparan di atas
@@ -390,21 +418,56 @@ body.fi-panel-user [data-panel-background]::before {
    menuntut `npm run build`.
 
    Di atas 640px modal tetap di tengah layar (perilaku Filament). */
-@media (max-width: 640px) {
-    .fi-panel-admin .fi-admin-global-search-dialog {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: stretch !important;
-        justify-content: flex-start !important;
-        padding: 5rem 1.5rem 1.5rem !important;
-    }
+ .fi-panel-admin .fi-topbar > nav {
+     position: relative !important;
+ }
 
-    .fi-panel-admin .fi-admin-global-search-window {
-        width: 100% !important;
-        max-width: none !important;
-        margin: 0 !important;
-    }
-}
+ .fi-panel-admin .fi-admin-topbar-search {
+     position: absolute;
+     top: 50%;
+     left: 50%;
+     z-index: 2;
+     width: min(360px, calc(100% - 32px));
+     transform: translate(-50%, -50%);
+ }
+
+ .fi-panel-admin .fi-admin-global-search-trigger {
+     display: flex;
+     align-items: center;
+     width: 100%;
+     min-height: 40px;
+     gap: 10px;
+     padding: 0 12px;
+     border: 1px solid var(--fi-glass-ring);
+     border-radius: 9px;
+     background: transparent;
+     color: var(--fi-glass-input-fg);
+     cursor: text;
+     text-align: start;
+     transition: border-color .15s ease, background-color .15s ease;
+ }
+
+ .fi-panel-admin .fi-admin-global-search-trigger:hover,
+ .fi-panel-admin .fi-admin-global-search-trigger:focus-visible {
+     background-color: var(--fi-glass-bg);
+     border-color: var(--fi-glass-ring);
+     outline: none;
+ }
+
+ .fi-panel-admin .fi-admin-global-search-trigger-label {
+     min-width: 0;
+     flex: 1;
+     overflow: hidden;
+     text-overflow: ellipsis;
+     white-space: nowrap;
+     font-size: 13px;
+ }
+
+ @media (max-width: 767px) {
+     .fi-panel-admin .fi-admin-topbar-search {
+         width: min(260px, calc(100% - 112px));
+     }
+ }
 
 /* Gradasi warna dilepas dari SEMUA permukaan kaca (kapsul,
    sidebar, dropdown, lang-dd, modal, kartu). background-image: none
@@ -2268,7 +2331,7 @@ body.fi-panel-admin :is(.fi-topbar, .fi-sidebar) :is(
     .fi-sidebar-group-button
 ) {
     color: #f8fafc !important;
-    text-shadow: 0 1px 2px rgb(0 0 0 / 0.42);
+    text-shadow: none !important;
 }
 
 body.fi-panel-welcome :is(.fi-topbar, .fi-sidebar) :is(
