@@ -2590,3 +2590,15 @@ body.fi-panel-admin :is(.fi-topbar, .fi-sidebar) {
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
 }
+
+/* Password & Security cards use the same raised surface as the other User
+   settings pages: #111827 in dark mode, white in light mode. */
+body.fi-panel-user .password-security-card {
+    background-color: #ffffff !important;
+    border-color: rgb(226 232 240 / 0.9) !important;
+}
+
+.dark body.fi-panel-user .password-security-card {
+    background-color: #111827 !important;
+    border-color: rgb(51 65 85 / 0.7) !important;
+}
