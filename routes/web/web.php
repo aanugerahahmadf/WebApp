@@ -66,6 +66,12 @@ Route::get('/app-loading', function (\Illuminate\Http\Request $request) {
     return view('Shared.pages.app-loading.app-loading', compact('target'));
 })->middleware(SetLocale::class)->name('app.loading');
 
+// Internal call surface. This route intentionally stays on the application
+// origin; it must never redirect to Jitsi, WhatsApp, or another provider.
+Route::get('/messages/{inbox}/call', function (\App\Models\Inbox\Inbox $inbox) {
+    return view('Shared.pages.chat-call.chat-call', ['inbox' => $inbox]);
+})->whereNumber('inbox')->middleware(SetLocale::class)->name('chat.call');
+
 // Legal Pages — HTML untuk mobile browser / HP fisik (scope Welcome).
 Route::get('/legal/terms', [WelcomeLegalWebController::class, 'terms'])->name('legal.terms');
 Route::get('/legal/privacy', [WelcomeLegalWebController::class, 'privacy'])->name('legal.privacy');
