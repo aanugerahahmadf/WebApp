@@ -2550,6 +2550,28 @@ body.fi-panel-admin :is(
     font-size: 11px !important;
 }
 
+/* Topbar mengikuti hierarki sidebar: judul grup 13px, isi dropdown 11px. */
+body.fi-panel-welcome .fi-topbar :is(
+    .fi-topbar-group-label,
+    .fi-topbar-group-button
+),
+body.fi-panel-user .fi-topbar :is(
+    .fi-topbar-group-label,
+    .fi-topbar-group-button
+),
+body.fi-panel-admin .fi-topbar :is(
+    .fi-topbar-group-label,
+    .fi-topbar-group-button
+) {
+    font-size: 13px !important;
+}
+
+body.fi-panel-welcome .fi-topbar .fi-dropdown-list-item,
+body.fi-panel-user .fi-topbar .fi-dropdown-list-item,
+body.fi-panel-admin .fi-topbar .fi-dropdown-list-item {
+    font-size: 11px !important;
+}
+
 body.fi-panel-welcome :is(.fi-topbar, .fi-sidebar) :is(
     .fi-topbar-item-icon,
     .fi-topbar-group-toggle-icon,
