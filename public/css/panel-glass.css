@@ -2471,7 +2471,7 @@ body.fi-panel-admin :is(
     color: #facc15 !important;
 }
 
-/* Final navigation typography: group/top labels 12px, child/item labels 10px. */
+/* Navigation typography: group labels 12px and sidebar/topbar items 11px. */
 :is(body.fi-panel-welcome, body.fi-panel-user, body.fi-panel-admin) :is(
     .fi-sidebar .fi-sidebar-group-label,
     .fi-sidebar .fi-sidebar-group-button,
@@ -2484,14 +2484,14 @@ body.fi-panel-admin :is(
 :is(body.fi-panel-welcome, body.fi-panel-user, body.fi-panel-admin) :is(
     .fi-sidebar .fi-sidebar-item-label,
     .fi-sidebar .fi-sidebar-item-button,
-    .fi-topbar .fi-topbar-item-label,
-    .fi-topbar .fi-topbar-item-button,
     .fi-sidebar .fi-dropdown-list-item,
     .fi-sidebar .fi-dropdown-list-item-label,
+    .fi-topbar .fi-topbar-item-label,
+    .fi-topbar .fi-topbar-item-button,
     .fi-topbar .fi-dropdown-list-item,
     .fi-topbar .fi-dropdown-list-item-label
 ) {
-    font-size: 10px !important;
+    font-size: 11px !important;
 }
 
 body.fi-panel-welcome :is(.fi-topbar, .fi-sidebar) :is(
