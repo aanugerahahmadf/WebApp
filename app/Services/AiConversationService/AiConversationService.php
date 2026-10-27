@@ -35,7 +35,7 @@ class AiConversationService
             return 'id';
         }
 
-        $indonesian = preg_match_all('/\b(aku|saya|kami|kita|anda|kamu|yang|dan|dengan|untuk|ingin|bisa|tolong|berapa|harga|pesan|bunga|pernikahan|terima|kasih|dimana|apakah|ini|itu|tidak|nggak|mau)\b/u', $text);
+        $indonesian = preg_match_all('/\b(aku|saya|kami|kita|anda|kamu|hallo|yang|dan|dengan|untuk|ingin|bisa|tolong|berapa|harga|pesan|bunga|pernikahan|terima|kasih|dimana|apakah|ini|itu|tidak|nggak|mau)\b/u', $text);
         $english = preg_match_all('/\b(i|we|you|the|and|with|for|want|can|please|how|much|price|book|flower|wedding|thank|where|is|this|that|not|need)\b/u', $text);
 
         return $english > $indonesian ? 'en' : 'id';
@@ -90,11 +90,13 @@ class AiConversationService
             }
         }
 
-        if ($this->matches($lower, 'hello|hi|hey|good morning|good afternoon|good evening|good night')) {
-            return "Hello!{$context} I am your wedding flower decoration assistant. I can help with flowers, packages, prices, availability, booking, orders, payments, and event planning. What would you like to discuss?";
+        if ($this->matches($lower, '^(hello|hallo|hi|hey)\b')) {
+            return $language === 'en'
+                ? "Hello!{$context} I am your wedding flower decoration assistant. How are you today? Tell me what you are planning, and I will help step by step."
+                : "Halo!{$context} Saya BOT bantuan dekorasi pernikahan. Apa kabar? Ceritakan rencana atau kebutuhan Anda, nanti saya bantu langkah demi langkah.";
         }
-        if ($this->matches($lower, 'halo|hai|selamat pagi|selamat siang|selamat sore|selamat malam')) {
-            return "Halo!{$context} Saya BOT bantuan dekorasi pernikahan. Saya bisa membantu bunga, paket, harga, ketersediaan, pemesanan, pesanan, pembayaran, dan rencana acara. Apa yang ingin Anda bahas?";
+        if ($this->matches($lower, '^(halo|hallo|hai|selamat pagi|selamat siang|selamat sore|selamat malam)[!,. ]*$')) {
+            return "Halo!{$context} Saya BOT bantuan dekorasi pernikahan. Apa kabar? Ceritakan rencana atau kebutuhan Anda, nanti saya bantu langkah demi langkah.";
         }
         if ($this->matches($lower, 'thank|thanks|thank you|terima kasih|makasih|tq')) {
             return $language === 'en'

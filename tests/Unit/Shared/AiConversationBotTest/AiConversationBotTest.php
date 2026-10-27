@@ -83,3 +83,17 @@ it('does not request passwords or OTPs in payment and account conversations', fu
     expect($reply)->toContain('OTP')
         ->and($reply)->toContain('kata sandi');
 });
+
+it('recognizes Hallo as a greeting and does not use the generic fallback', function (): void {
+    $user = User::factory()->create();
+    $inbox = Inbox::create(['user_ids' => [$user->id, $user->id + 1]]);
+    $current = Message::create([
+        'inbox_id' => $inbox->id,
+        'user_id' => $user->id,
+        'message' => 'HALLO',
+    ]);
+
+    expect(app(AiConversationService::class)->reply($current))
+        ->toContain('Apa kabar?')
+        ->not->toContain('Terima kasih sudah menjelaskannya');
+});
