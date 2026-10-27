@@ -149,7 +149,7 @@ trait HandlesPasswordSecurity
     /**
      * Rantai crumb lengkap:
      *
-     *   Pengaturan / Kata Sandi dan Keamanan / [Kelompok] / Judul
+     *   Home / Settings / Password and Security / Judul
      *
      * Tidak memakai breadcrumbParentCrumb() dari HasDynamicBreadcrumbs:
      * parent di sini bukan "halaman asal klik" tapi struktur tetap. Kalau
@@ -157,8 +157,8 @@ trait HandlesPasswordSecurity
      * sebelumnya -- dan bisa hilang total saat halaman dibuka langsung dari
      * bookmark, sehingga tidak ada cara naik sama sekali.
      *
-     * Kelompok sengaja crumb tanpa URL: dia bukan halaman, cuma pengelompok,
-     * jadi tidak boleh diklik.
+     * Kelompok navigasi tidak dimasukkan: "Sign In and Recovery" dan
+     * "Security Checkup" hanya label visual di halaman daftar.
      *
      * @return array<string|\Illuminate\Support\HtmlString, string|\Illuminate\Support\HtmlString>
      */
@@ -180,17 +180,8 @@ trait HandlesPasswordSecurity
             $crumbs[PasswordSecurityPage::getUrl(panel: 'user')] = __('Password and Security');
         }
 
-        if ($group = $this->securityGroupLabel()) {
-            // Kalau judul halaman sama dengan label kelompok -- terjadi di
-            // Checkup, yang bernama "Pemeriksaan Keamanan" dan bergrup pada
-            // "Pemeriksaan Keamanan" -- crumb kelompok disembunyikan saja.
-            // Menampilkan keduanya berarti dua crumb identik berturut-turut,
-            // yang terbaca sebagai bug, bukan sebagai informasi.
-            if ($group !== $this->getTitle()) {
-                // Kunci integer -> Filament merender <span>, bukan <a>.
-                $crumbs[] = $group;
-            }
-        }
+        // Nama kelompok ("Sign In and Recovery" / "Security Checkup") sengaja
+        // tidak dijadikan breadcrumb. Breadcrumb langsung menuju halaman item.
 
         // Judul halaman sebagai crumb terakhir.
         //
