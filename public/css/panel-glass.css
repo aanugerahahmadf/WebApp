@@ -2334,6 +2334,143 @@ body.fi-panel-admin :is(.fi-topbar, .fi-sidebar) :is(
     text-shadow: none !important;
 }
 
+/* Navigation interaction: hover/focus/active is communicated by text and
+   icon colour only. Never paint a blurred box, border, ring, or background
+   behind sidebar/top-navigation items. */
+body.fi-panel-welcome :is(
+    .fi-sidebar .fi-sidebar-item-button:hover,
+    .fi-sidebar .fi-sidebar-item-button:focus-visible,
+    .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
+    .fi-sidebar .fi-sidebar-group-button:hover,
+    .fi-sidebar .fi-sidebar-group-button:focus-visible,
+    .fi-topbar .fi-topbar-item-button:hover,
+    .fi-topbar .fi-topbar-item-button:focus-visible,
+    .fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-button,
+    .fi-topbar .fi-dropdown-list-item:hover,
+    .fi-topbar .fi-dropdown-list-item:focus-visible,
+    .fi-sidebar .fi-dropdown-list-item:hover,
+    .fi-sidebar .fi-dropdown-list-item:focus-visible
+),
+body.fi-panel-user :is(
+    .fi-sidebar .fi-sidebar-item-button:hover,
+    .fi-sidebar .fi-sidebar-item-button:focus-visible,
+    .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
+    .fi-sidebar .fi-sidebar-group-button:hover,
+    .fi-sidebar .fi-sidebar-group-button:focus-visible,
+    .fi-topbar .fi-topbar-item-button:hover,
+    .fi-topbar .fi-topbar-item-button:focus-visible,
+    .fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-button,
+    .fi-topbar .fi-dropdown-list-item:hover,
+    .fi-topbar .fi-dropdown-list-item:focus-visible,
+    .fi-sidebar .fi-dropdown-list-item:hover,
+    .fi-sidebar .fi-dropdown-list-item:focus-visible
+),
+body.fi-panel-admin :is(
+    .fi-sidebar .fi-sidebar-item-button:hover,
+    .fi-sidebar .fi-sidebar-item-button:focus-visible,
+    .fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-button,
+    .fi-sidebar .fi-sidebar-group-button:hover,
+    .fi-sidebar .fi-sidebar-group-button:focus-visible,
+    .fi-topbar .fi-topbar-item-button:hover,
+    .fi-topbar .fi-topbar-item-button:focus-visible,
+    .fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-button,
+    .fi-topbar .fi-dropdown-list-item:hover,
+    .fi-topbar .fi-dropdown-list-item:focus-visible,
+    .fi-sidebar .fi-dropdown-list-item:hover,
+    .fi-sidebar .fi-dropdown-list-item:focus-visible
+) {
+    color: #b45309 !important;
+    background: transparent !important;
+    background-image: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    --tw-ring-color: transparent !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+    --tw-ring-offset-shadow: 0 0 #0000 !important;
+}
+
+body.fi-panel-welcome :is(
+    .fi-sidebar .fi-sidebar-item-button:hover *,
+    .fi-sidebar .fi-sidebar-item-button:focus-visible *,
+    .fi-sidebar .fi-sidebar-group-button:hover *,
+    .fi-sidebar .fi-sidebar-group-button:focus-visible *,
+    .fi-topbar .fi-topbar-item-button:hover *,
+    .fi-topbar .fi-topbar-item-button:focus-visible *,
+    .fi-topbar .fi-dropdown-list-item:hover *,
+    .fi-topbar .fi-dropdown-list-item:focus-visible *,
+    .fi-sidebar .fi-dropdown-list-item:hover *,
+    .fi-sidebar .fi-dropdown-list-item:focus-visible *
+),
+body.fi-panel-user :is(
+    .fi-sidebar .fi-sidebar-item-button:hover *,
+    .fi-sidebar .fi-sidebar-item-button:focus-visible *,
+    .fi-sidebar .fi-sidebar-group-button:hover *,
+    .fi-sidebar .fi-sidebar-group-button:focus-visible *,
+    .fi-topbar .fi-topbar-item-button:hover *,
+    .fi-topbar .fi-topbar-item-button:focus-visible *,
+    .fi-topbar .fi-dropdown-list-item:hover *,
+    .fi-topbar .fi-dropdown-list-item:focus-visible *,
+    .fi-sidebar .fi-dropdown-list-item:hover *,
+    .fi-sidebar .fi-dropdown-list-item:focus-visible *
+),
+body.fi-panel-admin :is(
+    .fi-sidebar .fi-sidebar-item-button:hover *,
+    .fi-sidebar .fi-sidebar-item-button:focus-visible *,
+    .fi-sidebar .fi-sidebar-group-button:hover *,
+    .fi-sidebar .fi-sidebar-group-button:focus-visible *,
+    .fi-topbar .fi-topbar-item-button:hover *,
+    .fi-topbar .fi-topbar-item-button:focus-visible *,
+    .fi-topbar .fi-dropdown-list-item:hover *,
+    .fi-topbar .fi-dropdown-list-item:focus-visible *,
+    .fi-sidebar .fi-dropdown-list-item:hover *,
+    .fi-sidebar .fi-dropdown-list-item:focus-visible *
+) {
+    color: inherit !important;
+    text-shadow: none !important;
+}
+
+.dark body.fi-panel-welcome :is(
+    .fi-sidebar .fi-sidebar-item-button:hover,
+    .fi-sidebar .fi-sidebar-item-button:focus-visible,
+    .fi-sidebar .fi-sidebar-group-button:hover,
+    .fi-sidebar .fi-sidebar-group-button:focus-visible,
+    .fi-topbar .fi-topbar-item-button:hover,
+    .fi-topbar .fi-topbar-item-button:focus-visible,
+    .fi-topbar .fi-dropdown-list-item:hover,
+    .fi-topbar .fi-dropdown-list-item:focus-visible,
+    .fi-sidebar .fi-dropdown-list-item:hover,
+    .fi-sidebar .fi-dropdown-list-item:focus-visible
+),
+.dark body.fi-panel-user :is(
+    .fi-sidebar .fi-sidebar-item-button:hover,
+    .fi-sidebar .fi-sidebar-item-button:focus-visible,
+    .fi-sidebar .fi-sidebar-group-button:hover,
+    .fi-sidebar .fi-sidebar-group-button:focus-visible,
+    .fi-topbar .fi-topbar-item-button:hover,
+    .fi-topbar .fi-topbar-item-button:focus-visible,
+    .fi-topbar .fi-dropdown-list-item:hover,
+    .fi-topbar .fi-dropdown-list-item:focus-visible,
+    .fi-sidebar .fi-dropdown-list-item:hover,
+    .fi-sidebar .fi-dropdown-list-item:focus-visible
+),
+.dark body.fi-panel-admin :is(
+    .fi-sidebar .fi-sidebar-item-button:hover,
+    .fi-sidebar .fi-sidebar-item-button:focus-visible,
+    .fi-sidebar .fi-sidebar-group-button:hover,
+    .fi-sidebar .fi-sidebar-group-button:focus-visible,
+    .fi-topbar .fi-topbar-item-button:hover,
+    .fi-topbar .fi-topbar-item-button:focus-visible,
+    .fi-topbar .fi-dropdown-list-item:hover,
+    .fi-topbar .fi-dropdown-list-item:focus-visible,
+    .fi-sidebar .fi-dropdown-list-item:hover,
+    .fi-sidebar .fi-dropdown-list-item:focus-visible
+) {
+    color: #facc15 !important;
+}
+
 body.fi-panel-welcome :is(.fi-topbar, .fi-sidebar) :is(
     .fi-topbar-item-icon,
     .fi-topbar-group-toggle-icon,
