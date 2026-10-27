@@ -21,6 +21,7 @@ use App\Http\Controllers\Welcome\DocumentationController\DocumentationController
 use App\Http\Controllers\Welcome\ReportPdfController\ReportPdfController as WelcomeReportPdfController;
 use App\Http\Middleware\SetLocale\SetLocale;
 use App\Http\Middleware\SuperAdmin\SuperAdmin;
+use App\Http\Controllers\ChatCall\ChatCallController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -348,6 +349,17 @@ Route::redirect('/welcome', '/home');
 // Query string tetap ikut karena Route::redirect meneruskannya.
 Route::redirect('/login', '/signin');
 Route::redirect('/register', '/signup');
+
+// First-party WebRTC signaling for the three web chat panels. The controller
+// resolves the current web/admin session or the Welcome guest cookie.
+Route::prefix('chat-calls')->group(function (): void {
+    Route::post('/', [ChatCallController::class, 'start']);
+    Route::get('/{inboxId}/active', [ChatCallController::class, 'active']);
+    Route::get('/{token}', [ChatCallController::class, 'state']);
+    Route::post('/{token}/signal', [ChatCallController::class, 'signal']);
+    Route::post('/{token}/accept', [ChatCallController::class, 'accept']);
+    Route::post('/{token}/end', [ChatCallController::class, 'end']);
+});
 
 // Alias /user/* yang TIDAK bisa ikut catch-all di bawah, karena padanannya
 // di root bernama berbeda (register -> signup, login -> signin). Tanpa ini

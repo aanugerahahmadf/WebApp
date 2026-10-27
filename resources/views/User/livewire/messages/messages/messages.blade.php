@@ -77,12 +77,7 @@
         </x-filament::modal>
         <x-filament::modal width="lg" id="user-message-call">
             <x-slot name="heading">{{ __('Panggilan') }}</x-slot>
-            <div class="flex flex-col items-center gap-4 py-8 text-center">
-                <x-filament::icon icon="/images/icons/phone.svg" class="h-10 w-10" />
-                <h3 class="text-lg font-semibold">{{ $selectedConversation->inbox_title }}</h3>
-                <p class="text-sm text-gray-500">{{ __('Panggilan internal aplikasi sedang disiapkan.') }}</p>
-                <button type="button" x-on:click="$dispatch('close-modal', { id: 'user-message-call' })" class="rounded-lg bg-danger-600 px-4 py-2 text-white">{{ __('Tutup') }}</button>
-            </div>
+            @include('Shared.components.chat-call.chat-call', ['inboxId' => $selectedConversation->id, 'modalId' => 'user-message-call'])
         </x-filament::modal>
         <!-- Chat Header : End -->
         <!-- Chat Box : Start -->
