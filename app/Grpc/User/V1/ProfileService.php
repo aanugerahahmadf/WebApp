@@ -3,8 +3,8 @@
 namespace App\Grpc\User\V1;
 
 use App\Http\GraphQL\Resolvers\ProfileResolver;
-use App\Models\User\User;
-use App\Models\User\UserAddress;
+use App\Models\User\User as UserModel;
+use App\Models\User\UserAddress as UserAddressModel;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -15,6 +15,7 @@ use Spiral\RoadRunner\GRPC\ContextInterface;
  */
 class ProfileService extends BaseGrpcService
 {
+    public const NAME = 'wedding.user.v1.ProfileService';
     private ProfileResolver $profileResolver;
     
     public function __construct(ProfileResolver $profileResolver)
@@ -25,7 +26,7 @@ class ProfileService extends BaseGrpcService
     /**
      * Get user profile
      */
-    public function GetProfile(GetProfileRequest $request, ContextInterface $context): UserProfile
+    public function GetProfile(ContextInterface $context, GetProfileRequest $request): UserProfile
     {
         try {
             $user = $request->user_id ? User::find($request->user_id) : $this->requireAuth($context);
@@ -44,7 +45,7 @@ class ProfileService extends BaseGrpcService
     /**
      * Update user profile
      */
-    public function UpdateProfile(UpdateProfileRequest $request, ContextInterface $context): User
+    public function UpdateProfile(ContextInterface $context, UpdateProfileRequest $request): User
     {
         try {
             $user = $this->requireAuth($context);
@@ -82,7 +83,7 @@ class ProfileService extends BaseGrpcService
     /**
      * Change password
      */
-    public function ChangePassword(ChangePasswordRequest $request, ContextInterface $context): ChangePasswordResponse
+    public function ChangePassword(ContextInterface $context, ChangePasswordRequest $request): ChangePasswordResponse
     {
         try {
             $user = $this->requireAuth($context);
@@ -111,7 +112,7 @@ class ProfileService extends BaseGrpcService
     /**
      * Update avatar
      */
-    public function UpdateAvatar(UpdateAvatarRequest $request, ContextInterface $context): User
+    public function UpdateAvatar(ContextInterface $context, UpdateAvatarRequest $request): User
     {
         try {
             $user = $this->requireAuth($context);
@@ -133,7 +134,7 @@ class ProfileService extends BaseGrpcService
     /**
      * Delete avatar
      */
-    public function DeleteAvatar(DeleteAvatarRequest $request, ContextInterface $context): User
+    public function DeleteAvatar(ContextInterface $context, DeleteAvatarRequest $request): User
     {
         try {
             $user = $this->requireAuth($context);
@@ -150,7 +151,7 @@ class ProfileService extends BaseGrpcService
     /**
      * Delete account
      */
-    public function DeleteAccount(DeleteAccountRequest $request, ContextInterface $context): DeleteAccountResponse
+    public function DeleteAccount(ContextInterface $context, DeleteAccountRequest $request): DeleteAccountResponse
     {
         try {
             $user = $this->requireAuth($context);
@@ -183,7 +184,7 @@ class ProfileService extends BaseGrpcService
     /**
      * Update notification preferences
      */
-    public function UpdateNotificationPreferences(UpdateNotificationPreferencesRequest $request, ContextInterface $context): User
+    public function UpdateNotificationPreferences(ContextInterface $context, UpdateNotificationPreferencesRequest $request): User
     {
         try {
             $user = $this->requireAuth($context);
@@ -206,7 +207,7 @@ class ProfileService extends BaseGrpcService
     /**
      * Update locale preferences
      */
-    public function UpdateLocalePreferences(UpdateLocalePreferencesRequest $request, ContextInterface $context): User
+    public function UpdateLocalePreferences(ContextInterface $context, UpdateLocalePreferencesRequest $request): User
     {
         try {
             $user = $this->requireAuth($context);
@@ -231,7 +232,7 @@ class ProfileService extends BaseGrpcService
     /**
      * Get user addresses
      */
-    public function GetAddresses(GetAddressesRequest $request, ContextInterface $context): UserAddressesResponse
+    public function GetAddresses(ContextInterface $context, GetAddressesRequest $request): UserAddressesResponse
     {
         try {
             $user = $request->user_id ? User::find($request->user_id) : $this->requireAuth($context);
@@ -254,7 +255,7 @@ class ProfileService extends BaseGrpcService
     /**
      * Create address
      */
-    public function CreateAddress(CreateAddressRequest $request, ContextInterface $context): UserAddress
+    public function CreateAddress(ContextInterface $context, CreateAddressRequest $request): UserAddress
     {
         try {
             $user = $this->requireAuth($context);
@@ -285,7 +286,7 @@ class ProfileService extends BaseGrpcService
     /**
      * Update address
      */
-    public function UpdateAddress(UpdateAddressRequest $request, ContextInterface $context): UserAddress
+    public function UpdateAddress(ContextInterface $context, UpdateAddressRequest $request): UserAddress
     {
         try {
             $user = $this->requireAuth($context);
@@ -319,7 +320,7 @@ class ProfileService extends BaseGrpcService
     /**
      * Delete address
      */
-    public function DeleteAddress(DeleteAddressRequest $request, ContextInterface $context): DeleteAddressResponse
+    public function DeleteAddress(ContextInterface $context, DeleteAddressRequest $request): DeleteAddressResponse
     {
         try {
             $user = $this->requireAuth($context);
@@ -352,7 +353,7 @@ class ProfileService extends BaseGrpcService
     /**
      * Set default address
      */
-    public function SetDefaultAddress(SetDefaultAddressRequest $request, ContextInterface $context): UserAddress
+    public function SetDefaultAddress(ContextInterface $context, SetDefaultAddressRequest $request): UserAddress
     {
         try {
             $user = $this->requireAuth($context);
@@ -391,7 +392,7 @@ class ProfileService extends BaseGrpcService
     /**
      * Transform User model to protobuf User message
      */
-    private function transformUser(User $user): User
+    private function transformUser(UserModel $user): User
     {
         return new User([
             'id' => (string) $user->id,

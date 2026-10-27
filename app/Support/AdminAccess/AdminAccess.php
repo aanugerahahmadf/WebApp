@@ -78,6 +78,55 @@ class AdminAccess
     ];
 
     /**
+     * Label jabatan yang boleh dipilih di panel admin.
+     *
+     * Nama teknis role tetap stabil untuk permission dan database; label ini
+     * adalah teks yang ditampilkan kepada administrator.
+     *
+     * @var array<string, string>
+     */
+    public const ROLE_LABELS = [
+        'super_admin' => 'Super Admin',
+        'data_lens' => 'Data Lens',
+        'data_analyst' => 'Analis Data',
+        'cyber_security' => 'Cyber Security / Keamanan Siber',
+        'database' => 'Database',
+        'content_manager' => 'Pengelola Konten',
+        'order_manager' => 'Pengelola Pesanan',
+        'finance_manager' => 'Pengelola Keuangan',
+        'data_architect' => 'Arsitek Data',
+        'data_engineer' => 'Engineer Data',
+        'data_mining' => 'Penambangan Data',
+        'data_scientist' => 'Ilmuan Data',
+        'security_emergency' => 'Security Emergency',
+        'security' => 'Security',
+        'devops_engineer' => 'DevOps Engineer',
+        'data_manager' => 'Pengelola Data',
+        'data_development' => 'Pengembangan Data',
+        'data_storage' => 'Penyimpanan Data',
+        'data_specialist' => 'Posisi Data Lainnya',
+        'data_annotation_staff' => 'Staf Anotasi Data',
+        'etl_engineer' => 'ETL Engineer',
+        'database_administrator' => 'Database Administrator',
+        'system_analyst' => 'Analis Sistem',
+        'network_engineer' => 'Engineer Jaringan',
+        'site_reliability_engineer' => 'Site Reliability Engineer',
+        'cloud_engineer' => 'Insinyur Komputasi Awan',
+        'cloud_computing' => 'Komputasi Awan',
+        'system_security' => 'Keamanan Sistem',
+        'systems_manager' => 'Pengelola Sistem',
+        'it_support' => 'IT Support',
+        'technical_writer' => 'Technical Writer',
+        'technical_support_engineer' => 'Technical Support Engineer',
+    ];
+
+    /** @return array<string, string> */
+    public static function roleOptions(): array
+    {
+        return array_intersect_key(self::ROLE_LABELS, array_flip(self::ADMIN_ROLES));
+    }
+
+    /**
      * Permission "lihat saja" -- cukup untuk masuk daftar dan membuka detail.
      *
      * @var list<string>
@@ -144,6 +193,123 @@ class AdminAccess
         'export_data',
         'import_data',
     ];
+
+    /**
+     * Capabilities for the operational positions. These are deliberately
+     * separate from CRUD permissions: a data engineer must be able to run an
+     * ETL job without becoming a catalog editor, and an SRE must be able to
+     * inspect health/incident data without receiving database-write access.
+     *
+     * @var array<string, list<string>>
+     */
+    public const OPERATIONAL_PERMISSIONS = [
+        'data_architecture' => ['view_data_dictionary', 'manage_data_contracts'],
+        'data_engineering' => ['view_data_dictionary', 'run_data_pipelines', 'manage_data_quality'],
+        'data_mining' => ['view_analytics', 'run_data_queries', 'export_analytical_data'],
+        'data_science' => ['view_analytics', 'run_data_queries', 'manage_experiments'],
+        'security_incident_response' => ['view_security_events', 'manage_security_incidents', 'manage_security'],
+        'cyber_security' => ['view_security_events', 'manage_security_incidents', 'manage_security_policies'],
+        'data_management' => ['view_data_dictionary', 'manage_data_quality', 'export_data'],
+        'data_development' => ['view_data_dictionary', 'manage_data_contracts', 'run_data_pipelines'],
+        'data_storage' => ['view_storage', 'manage_storage', 'view_database'],
+        'data_specialist' => ['view_data_dictionary', 'run_data_queries', 'export_analytical_data'],
+        'data_annotation' => ['view_annotation_jobs', 'manage_annotation_jobs'],
+        'etl' => ['run_data_pipelines', 'manage_pipeline_schedules', 'view_pipeline_runs'],
+        'database_administration' => ['view_database', 'manage_database', 'manage_database_backups', 'manage_database_migrations'],
+        'system_analysis' => ['view_system_inventory', 'view_audit_logs', 'export_analytical_data'],
+        'network_engineering' => ['view_network_health', 'manage_network_configuration'],
+        'sre' => ['view_system_health', 'view_system_inventory', 'manage_incidents', 'manage_deployments'],
+        'cloud_engineering' => ['view_cloud_resources', 'manage_cloud_resources'],
+        'cloud_operations' => ['view_cloud_resources', 'manage_cloud_deployments'],
+        'system_security' => ['view_security_events', 'manage_security_policies', 'manage_security'],
+        'systems_management' => ['view_system_inventory', 'manage_system_configuration', 'manage_incidents'],
+        'it_support' => ['view_support_tickets', 'manage_support_tickets'],
+        'technical_writing' => ['view_documentation', 'manage_documentation'],
+        'technical_support' => ['view_support_tickets', 'manage_support_tickets', 'view_system_health'],
+    ];
+
+    /**
+     * Least-privilege capability assignment for every operational position.
+     * The seeder consumes this map, so adding a position without granting a
+     * real capability is impossible to miss during review.
+     *
+     * @var array<string, list<string>>
+     */
+    public const OPERATIONAL_ROLE_CAPABILITIES = [
+        'data_architect' => ['data_architecture'],
+        'data_engineer' => ['data_engineering'],
+        'data_mining' => ['data_mining'],
+        'data_scientist' => ['data_science'],
+        'security_emergency' => ['security_incident_response'],
+        'security' => ['cyber_security'],
+        'devops_engineer' => ['sre'],
+        'data_manager' => ['data_management'],
+        'data_development' => ['data_development'],
+        'data_storage' => ['data_storage'],
+        'data_specialist' => ['data_specialist'],
+        'data_annotation_staff' => ['data_annotation'],
+        'etl_engineer' => ['etl'],
+        'database_administrator' => ['database_administration'],
+        'system_analyst' => ['system_analysis'],
+        'network_engineer' => ['network_engineering'],
+        'site_reliability_engineer' => ['sre'],
+        'cloud_engineer' => ['cloud_engineering'],
+        'cloud_computing' => ['cloud_operations'],
+        'system_security' => ['system_security'],
+        'systems_manager' => ['systems_management'],
+        'it_support' => ['it_support'],
+        'technical_writer' => ['technical_writing'],
+        'technical_support_engineer' => ['technical_support'],
+    ];
+
+    /** @return list<string> */
+    public static function operationalPermissions(): array
+    {
+        return array_values(array_unique(array_merge(...array_values(self::OPERATIONAL_PERMISSIONS))));
+    }
+
+    /** @return list<string> */
+    public static function permissionsForOperationalRole(string $role): array
+    {
+        $capabilities = self::OPERATIONAL_ROLE_CAPABILITIES[$role] ?? [];
+
+        return array_values(array_unique(array_merge(...array_map(
+            fn (string $capability): array => self::OPERATIONAL_PERMISSIONS[$capability] ?? [],
+            $capabilities,
+        ))));
+    }
+
+    /** @return list<string> */
+    public static function capabilitiesForRole(string $role): array
+    {
+        return self::permissionsForOperationalRole($role);
+    }
+
+    /** @return list<string> */
+    public static function currentCapabilities(): array
+    {
+        $admin = static::user();
+        if ($admin === null) {
+            return [];
+        }
+
+        if ($admin->hasRole(static::SUPER_ADMIN)) {
+            return array_values(array_unique(array_merge(
+                self::VIEW_PERMISSIONS,
+                self::WRITE_PERMISSIONS,
+                self::operationalPermissions(),
+            )));
+        }
+
+        return array_values(array_filter(
+            array_values(array_unique(array_merge(
+                self::VIEW_PERMISSIONS,
+                self::WRITE_PERMISSIONS,
+                self::operationalPermissions(),
+            ))),
+            fn (string $permission): bool => $admin->checkPermissionTo($permission),
+        ));
+    }
 
     /**
      * Gate generik: true kalau user punya SATU SAJA dari permission yang

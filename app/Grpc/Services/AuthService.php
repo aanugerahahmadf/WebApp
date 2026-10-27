@@ -297,8 +297,22 @@ class AuthService
             return $call->sendResponse($response);
         }
 
-        // Verify token logic here
-        $user->markEmailAsVerified();
+        // Never mark an address verified from an email alone. The token is a
+        // bearer credential and must match the single-use value issued by the
+        // REST/API verification flow.
+        $token = $request->getToken();
+        if ($token === '' || ! hash_equals((string) $user->email_verification_token, $token)) {
+            $response = new \Weddingapp\Auth\VerifyEmailResponse();
+            $response->setSuccess(false);
+            $response->setMessage('Invalid verification token');
+
+            return $call->sendResponse($response);
+        }
+
+        $user->forceFill([
+            'email_verified_at' => now(),
+            'email_verification_token' => null,
+        ])->save();
 
         $response = new \Weddingapp\Auth\VerifyEmailResponse();
         $response->setSuccess(true);

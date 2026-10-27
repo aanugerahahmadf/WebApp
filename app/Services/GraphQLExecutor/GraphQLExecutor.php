@@ -50,17 +50,13 @@ class GraphQLExecutor
             return is_array($result) ? $result : (method_exists($result, 'toArray') ? $result->toArray() : (array) $result);
             
         } catch (\Throwable $e) {
-            Log::error('GraphQLExecutor error: ' . $e->getMessage(), [
-                'query' => $query,
-                'variables' => $variables,
-                'trace' => $e->getTraceAsString(),
-            ]);
+            Log::error('GraphQLExecutor error', ['exception' => $e::class]);
             
             return [
                 'data' => null,
                 'errors' => [
                     [
-                        'message' => $e->getMessage(),
+                        'message' => __('Terjadi kesalahan internal.'),
                         'extensions' => [
                             'category' => 'internal',
                         ],

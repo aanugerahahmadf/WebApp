@@ -74,7 +74,7 @@ class PackageController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal mengambil pilihan paket'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }
@@ -135,7 +135,7 @@ class PackageController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal membuat pilihan paket'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }
@@ -169,7 +169,7 @@ class PackageController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal memperbarui pilihan paket'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }

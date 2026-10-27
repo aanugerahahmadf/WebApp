@@ -19,6 +19,17 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class ChatController extends Controller
 {
+    /**
+     * Ruang Jitsi yang sama untuk semua peserta pada satu inbox.
+     * Nama ruang tidak memakai APP_KEY mentah, hanya digest pendeknya.
+     */
+    private function callUrl(Inbox $inbox): string
+    {
+        $digest = substr(hash_hmac('sha256', 'chat-call-'.$inbox->id, (string) config('app.key')), 0, 24);
+
+        return 'https://meet.jit.si/WeddingFlowerDecorations-'.$inbox->id.'-'.$digest;
+    }
+
     public function getConversations(Request $request)
     {
         /** @var User $user */
@@ -50,7 +61,7 @@ class ChatController extends Controller
             $lastMessage = $inbox->messages->first();
             $userIds = $inbox->user_ids ?? [];
             $otherId = collect($userIds)->first(fn ($id) => (int) $id !== (int) $user->id);
-            $otherUser = $otherId ? User::find($otherId, ['id', 'full_name', 'username', 'avatar_url']) : null;
+            $otherUser = $otherId ? User::find($otherId, ['id', 'full_name', 'username', 'avatar_url', 'phone', 'whatsapp']) : null;
 
             $title = $isAdmin
                 ? ($otherUser ? __('Chat dengan :name', ['name' => $otherUser->full_name ?: $otherUser->username ?: __('Pelanggan')]) : $inbox->title ?? __('Chat Bantuan'))
@@ -73,6 +84,8 @@ class ChatController extends Controller
                     'id' => $otherUser?->id ?? $adminId,
                     'name' => $otherUser ? ($otherUser->full_name ?: $otherUser->username ?? __('Pengguna')) : __('Admin'),
                     'profile_photo' => $otherUser?->avatar_url ?? null,
+                    'phone' => $otherUser?->phone ?? $otherUser?->whatsapp,
+                    'call_url' => $this->callUrl($inbox),
                 ],
                 'last_message' => $lastMessage ? [
                     'id' => $lastMessage->id,
@@ -106,7 +119,7 @@ class ChatController extends Controller
         $adminUser = ChatStaff::adminUser();
         $adminId = $adminUser?->getKey();
         $otherId = collect($userIds)->first(fn ($id) => (int) $id !== (int) $user->id);
-        $otherUser = $otherId ? User::find($otherId, ['id', 'full_name', 'username', 'avatar_url']) : null;
+        $otherUser = $otherId ? User::find($otherId, ['id', 'full_name', 'username', 'avatar_url', 'phone', 'whatsapp']) : null;
 
         $messages = Message::where('inbox_id', $inbox->id)
             ->with(['sender:id,full_name,username,avatar_url', 'attachments'])
@@ -145,10 +158,14 @@ class ChatController extends Controller
                 'id' => $otherUser->id,
                 'name' => $otherUser->full_name ?: $otherUser->username ?? __('Admin'),
                 'profile_photo' => $otherUser->avatar_url ?? null,
+                'phone' => $otherUser->phone ?? $otherUser->whatsapp,
+                'call_url' => $this->callUrl($inbox),
             ] : [
                 'id' => $adminId,
                 'name' => $adminUser?->full_name ?? __('Admin'),
                 'profile_photo' => $adminUser?->avatar_url ?? null,
+                'phone' => $adminUser?->phone ?? $adminUser?->whatsapp,
+                'call_url' => $this->callUrl($inbox),
             ],
         ]);
     }

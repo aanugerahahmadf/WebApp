@@ -53,6 +53,19 @@ use Illuminate\Support\Facades\Route;
 // -----------------------------------------------------------------------------
 // SHARED / WELCOME — halaman publik (storefront)
 // -----------------------------------------------------------------------------
+// Native app boot screen. Capacitor starts here so Android, iOS, and Electron
+// can prepare the session/data before showing the first panel page.
+Route::get('/app-loading', function (\Illuminate\Http\Request $request) {
+    $target = (string) $request->query('target', '/home');
+
+    // Never allow the boot screen to redirect to an external URL.
+    if (! str_starts_with($target, '/') || str_starts_with($target, '//')) {
+        $target = '/home';
+    }
+
+    return view('Shared.pages.app-loading.app-loading', compact('target'));
+})->middleware(SetLocale::class)->name('app.loading');
+
 // Legal Pages — HTML untuk mobile browser / HP fisik (scope Welcome).
 Route::get('/legal/terms', [WelcomeLegalWebController::class, 'terms'])->name('legal.terms');
 Route::get('/legal/privacy', [WelcomeLegalWebController::class, 'privacy'])->name('legal.privacy');

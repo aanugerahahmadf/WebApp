@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Pages\TerminalPage;
 
 use App\Support\AppIcon\AppIcon;
+use App\Support\AdminAccess\AdminAccess;
 use App\Support\Terminal\ArtisanCommandInput;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -30,6 +31,11 @@ class TerminalPage extends Page
     protected static ?string $navigationIcon = AppIcon::CODE;
 
     protected static ?int $navigationSort = 206;
+
+    public static function canAccess(): bool
+    {
+        return AdminAccess::allows('manage_system_configuration', 'manage_database');
+    }
 
     /**
      * State form.

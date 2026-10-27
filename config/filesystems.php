@@ -33,7 +33,9 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            // KYC documents and other private files must never be exposed by
+            // Laravel's public local-file route.
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],

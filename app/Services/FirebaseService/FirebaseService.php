@@ -158,11 +158,11 @@ class FirebaseService
             $message = $message->withApnsConfig($defaultApns);
 
             $messaging->send($message);
-            Log::info('FCM sent successfully', ['token_prefix' => substr($token, 0, 20).'...', 'title' => $title]);
+            Log::info('FCM sent successfully');
 
             return true;
         } catch (\Throwable $e) {
-            Log::error('FCM send failed', ['error' => $e->getMessage(), 'token' => substr($token, 0, 20).'...']);
+            Log::error('FCM send failed', ['exception' => $e::class]);
 
             return false;
         }

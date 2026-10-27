@@ -3,7 +3,7 @@
   "appName": "Dekorasi User",
   "webDir": "dist",
   "server": {
-    "url": "https://wedding-flower-decorations.whop.site/home",
+    "url": "https://wedding-flower-decorations.whop.site/app-loading?target=%2Fhome",
     "androidScheme": "https",
     "iosScheme": "https",
     "cleartext": false

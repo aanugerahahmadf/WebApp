@@ -207,7 +207,8 @@ class AdminResource extends Resource
                 ->schema([
                     Forms\Components\TextInput::make('position')
                         ->label(__('Jabatan'))
-                        ->maxLength(100),
+                        ->maxLength(100)
+                        ->datalist(array_values(AdminAccess::roleOptions())),
 
                     Forms\Components\TextInput::make('department')
                         ->label(__('Divisi'))
@@ -244,7 +245,9 @@ class AdminResource extends Resource
                             'name',
                             fn ($query) => $query->where('guard_name', 'admin')
                         )
-                        ->getOptionLabelFromRecordUsing(fn ($record) => str($record->name)->headline())
+                        ->getOptionLabelFromRecordUsing(
+                            fn ($record): string => __(AdminAccess::ROLE_LABELS[$record->name] ?? str($record->name)->headline())
+                        )
                         ->multiple()
                         ->preload()
                         ->required(),

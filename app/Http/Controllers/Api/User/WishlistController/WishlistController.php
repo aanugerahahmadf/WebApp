@@ -70,7 +70,7 @@ class WishlistController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal mengambil wishlist'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }
@@ -130,7 +130,7 @@ class WishlistController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal memperbarui wishlist'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }
@@ -157,7 +157,7 @@ class WishlistController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal memeriksa status wishlist'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }
@@ -193,7 +193,7 @@ class WishlistController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal menghapus dari wishlist'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }
@@ -235,7 +235,7 @@ class WishlistController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal menambahkan ke wishlist'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }

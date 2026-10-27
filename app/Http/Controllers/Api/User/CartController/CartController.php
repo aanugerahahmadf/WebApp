@@ -45,6 +45,16 @@ class CartController extends Controller
 
         $validated['user_id'] = $request->user()->id;
 
+        if (isset($validated['package_id']) && isset($validated['catalog_id'])) {
+            $package = \App\Models\Package\Package::findOrFail($validated['package_id']);
+            if ((int) $package->catalog_id !== (int) $validated['catalog_id']) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => __('Paket tidak termasuk dalam katalog yang dipilih'),
+                ], 422);
+            }
+        }
+
         // ── Stock validation ──
         if (isset($validated['catalog_id'])) {
             $catalog = \App\Models\Catalog\Catalog::find($validated['catalog_id']);

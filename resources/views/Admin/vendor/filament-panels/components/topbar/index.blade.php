@@ -213,6 +213,25 @@
             @endif
         @endif
 
+        @if (filament()->isGlobalSearchEnabled())
+            <div class="fi-admin-topbar-search">
+                <button
+                    type="button"
+                    data-admin-global-search-trigger
+                    x-data
+                    x-on:click="$dispatch('open-modal', { id: 'admin-global-search' })"
+                    aria-label="{{ __('filament-panels::global-search.field.label') }}"
+                    aria-haspopup="dialog"
+                    class="fi-admin-global-search-trigger"
+                >
+                    <x-filament::icon alias="panels::global-search.field" icon="/images/icons/search.svg" class="h-5 w-5 shrink-0" />
+                    <span class="fi-admin-global-search-trigger-label">
+                        {{ __('filament-panels::global-search.field.placeholder') }}
+                    </span>
+                </button>
+            </div>
+        @endif
+
         <div
             @if (filament()->hasTenancy())
                 x-persist="topbar.end.panel-{{ filament()->getId() }}.tenant-{{ filament()->getTenant()?->getKey() }}"

@@ -771,6 +771,7 @@ class CatalogResource extends Resource
         ]);
 
         $vaFailed = false;
+        $va = null;
 
         if ($isVirtualAccount) {
             // Checkout web sebelumnya tidak pernah membuat VA, jadi pesanan
@@ -787,7 +788,11 @@ class CatalogResource extends Resource
                 // dicocokkan otomatis. User harus diberi tahu supaya tidak
                 // menunggu pembayaran yang tidak akan pernah tercatat.
                 $vaFailed => __('Nomor Virtual Account gagal dibuat. Silakan hubungi admin untuk instruksi pembayaran.'),
-                $isVirtualAccount => __('Silakan transfer ke nomor Virtual Account BRI di halaman "Pesanan Saya".'),
+                $isVirtualAccount && $va !== null => __('Transfer ke VA :number atas nama :name.', [
+                    'number' => $va['virtual_account_no'],
+                    'name' => $va['virtual_account_name'],
+                ]),
+                $isVirtualAccount => __('Nomor Virtual Account gagal ditampilkan. Buka halaman "Pesanan Saya" untuk mencoba lagi.'),
                 default => __('Silakan lakukan pembayaran di halaman "Pesanan Saya".'),
             });
 

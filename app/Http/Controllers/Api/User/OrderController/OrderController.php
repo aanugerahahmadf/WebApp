@@ -127,7 +127,7 @@ class OrderController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal memuat pesanan'),
-                'error' => config('app.debug') ? $e->getMessage() : null,
+                'error' => null,
             ], 500);
         }
     }
@@ -162,8 +162,19 @@ class OrderController extends Controller
             $package = null;
             $catalog = null;
             if (filled($validatedData['package_id'] ?? null)) {
-                $package = Package::with('category')->findOrFail($validatedData['package_id']);
-            } else {
+                $package = Package::with(['category', 'catalog'])->findOrFail($validatedData['package_id']);
+                // A tier is always scoped to its parent catalog. When both
+                // IDs are sent by the mobile client, reject mismatches rather
+                // than silently ordering a tier from another catalog.
+                if (filled($validatedData['catalog_id'] ?? null)
+                    && (int) $package->catalog_id !== (int) $validatedData['catalog_id']) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => __('Paket tidak termasuk dalam katalog yang dipilih'),
+                    ], 422);
+                }
+                $catalog = $package->catalog;
+            } elseif (filled($validatedData['catalog_id'] ?? null)) {
                 $catalog = Catalog::with('category')->findOrFail($validatedData['catalog_id']);
             }
 
@@ -226,7 +237,7 @@ class OrderController extends Controller
             $order = Order::create([
                 'user_id' => Auth::id(),
                 'package_id' => $package?->id,
-                'catalog_id' => $catalog?->id,
+                'catalog_id' => $catalog?->id ?? $validatedData['catalog_id'] ?? null,
                 'order_number' => 'ORD-'.strtoupper(Str::random(10)),
                 'total_price' => $totalPrice,
                 'quantity' => $quantity,
@@ -306,7 +317,7 @@ class OrderController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal membuat pesanan'),
-                'error' => config('app.debug') ? $e->getMessage() : null,
+                'error' => null,
             ], 500);
         }
     }
@@ -348,7 +359,7 @@ class OrderController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal mengambil info pembayaran'),
-                'error' => config('app.debug') ? $e->getMessage() : null,
+                'error' => null,
             ], 500);
         }
     }
@@ -393,7 +404,8 @@ class OrderController extends Controller
             }
 
             // VA sudah pernah dibuat? Kirim ulang tanpa panggil BRI lagi.
-            if ($transaction->virtual_account_no) {
+            if ($transaction->virtual_account_no
+                && (! $transaction->virtual_account_expiry || $transaction->virtual_account_expiry->isFuture())) {
                 return response()->json([
                     'status' => 'success',
                     'message' => __('Nomor Virtual Account berhasil dibuat'),
@@ -401,8 +413,6 @@ class OrderController extends Controller
                         'virtual_account_no' => $transaction->virtual_account_no,
                         'virtual_account_name' => $transaction->virtual_account_name,
                         'virtual_account_expiry' => $transaction->virtual_account_expiry?->format('Y-m-d\TH:i:sP'),
-                        'account_number' => config('bri.account_number'),
-                        'account_holder' => config('bri.account_holder'),
                     ],
                 ]);
             }
@@ -419,7 +429,11 @@ class OrderController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => __('Nomor Virtual Account berhasil dibuat'),
-                'data' => $va,
+                'data' => [
+                    'virtual_account_no' => $va['virtual_account_no'],
+                    'virtual_account_name' => $va['virtual_account_name'],
+                    'virtual_account_expiry' => $va['virtual_account_expiry'],
+                ],
             ]);
         } catch (ModelNotFoundException $e) {
             return response()->json([
@@ -432,7 +446,7 @@ class OrderController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal membuat Virtual Account'),
-                'error' => config('app.debug') ? $e->getMessage() : null,
+                'error' => null,
             ], 500);
         }
     }
@@ -515,7 +529,7 @@ class OrderController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal membuat QRIS'),
-                'error' => config('app.debug') ? $e->getMessage() : null,
+                'error' => null,
             ], 500);
         }
     }
@@ -886,7 +900,7 @@ class OrderController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal mengkonfirmasi pembayaran'),
-                'error' => config('app.debug') ? $e->getMessage() : null,
+                'error' => null,
             ], 500);
         }
     }
@@ -1026,7 +1040,7 @@ class OrderController extends Controller
         } catch (ModelNotFoundException $e) {
             return response()->json(['status' => 'error', 'message' => __('Pesanan tidak ditemukan')], 404);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal upload bukti pembayaran'), 'error' => config('app.debug') ? $e->getMessage() : null], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal upload bukti pembayaran'), 'error' => null], 500);
         }
     }
 
@@ -1115,7 +1129,16 @@ class OrderController extends Controller
                     $gatewayEnabled = $midtransEnabled && in_array($m->type, ['e_wallet', 'credit_card', 'bank_transfer']);
                 }
 
-                return array_merge($m->toArray(), [
+                $method = $m->toArray();
+                // Rekening settlement merchant bukan nomor VA pelanggan.
+                // Jangan kirim data itu sebagai bagian dari metode VA; nomor
+                // yang sah hanya dibuat provider setelah order dibuat.
+                if ($m->type === 'virtual_account') {
+                    $method['account_number'] = null;
+                    $method['account_holder'] = null;
+                }
+
+                return array_merge($method, [
                     'gateway_enabled' => $gatewayEnabled,
                 ]);
             })
@@ -1194,7 +1217,7 @@ class OrderController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal membuat pembayaran'),
-                'error' => config('app.debug') ? $e->getMessage() : null,
+                'error' => null,
             ], 500);
         }
     }
@@ -1275,7 +1298,7 @@ class OrderController extends Controller
         } catch (ModelNotFoundException $e) {
             return response()->json(['status' => 'error', 'message' => __('Pesanan tidak ditemukan')], 404);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal mengunduh invoice'), 'error' => config('app.debug') ? $e->getMessage() : null], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal mengunduh invoice'), 'error' => null], 500);
         }
     }
 
@@ -1314,7 +1337,7 @@ class OrderController extends Controller
         } catch (ModelNotFoundException $e) {
             return response()->json(['status' => 'error', 'message' => __('Pesanan tidak ditemukan')], 404);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal mengirim invoice'), 'error' => config('app.debug') ? $e->getMessage() : null], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal mengirim invoice'), 'error' => null], 500);
         }
     }
 }

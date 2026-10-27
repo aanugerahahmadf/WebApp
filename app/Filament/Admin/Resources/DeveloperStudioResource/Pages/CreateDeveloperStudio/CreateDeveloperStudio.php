@@ -14,6 +14,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Halaman "Buat Modul" Studio API.
@@ -271,6 +272,15 @@ class CreateDeveloperStudio extends CreateRecord
      */
     public function create(bool $another = false): void
     {
+        // Code generation changes executable application files. It must never
+        // be enabled on a production server by accident; use a reviewed CI/CD
+        // deployment instead.
+        if (app()->environment('production') && ! config('developer_studio.allow_code_generation', false)) {
+            throw ValidationException::withMessages([
+                'mode' => __('Pembuatan kode dinonaktifkan pada server produksi.'),
+            ]);
+        }
+
         $this->callHook('beforeValidate');
 
         $data = $this->form->getState();
@@ -318,8 +328,11 @@ class CreateDeveloperStudio extends CreateRecord
      */
     protected function generateApiController(array $data): string
     {
-        $name = (string) ($data['api_name'] ?? 'ApiController');
+        $name = $this->safeIdentifier((string) ($data['api_name'] ?? 'ApiController'), 'api_name');
         $scope = (string) ($data['api_scope'] ?? 'User');
+        if (! in_array($scope, ['User', 'Admin'], true)) {
+            throw ValidationException::withMessages(['api_scope' => __('Scope controller tidak valid.')]);
+        }
         $methods = (string) ($data['api_methods'] ?? 'all');
 
         $directory = app_path("Http/Controllers/Api/{$scope}/{$name}");
@@ -338,7 +351,7 @@ class CreateDeveloperStudio extends CreateRecord
      */
     protected function generateWebController(array $data): string
     {
-        $name = (string) ($data['web_controller_name'] ?? 'Controller');
+        $name = $this->safeIdentifier((string) ($data['web_controller_name'] ?? 'Controller'), 'web_controller_name');
         $type = (string) ($data['controller_type'] ?? 'controller');
 
         $directory = app_path("Http/Controllers/{$name}");
@@ -357,11 +370,25 @@ class CreateDeveloperStudio extends CreateRecord
      */
     protected function generateRoute(array $data): string
     {
-        $method = (string) ($data['http_method'] ?? 'GET');
+        $method = strtoupper((string) ($data['http_method'] ?? 'GET'));
+        if (! in_array($method, ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'], true)) {
+            throw ValidationException::withMessages(['http_method' => __('Metode route tidak valid.')]);
+        }
         $uri = (string) ($data['route_uri'] ?? 'api/sample');
         $targetFile = (string) ($data['target_route_file'] ?? 'routes/api.php');
         $action = (string) ($data['route_action'] ?? '');
         $name = (string) ($data['route_name'] ?? '');
+
+        if (! preg_match('/\A[A-Za-z0-9_\/.{}?\-]+\z/', $uri)
+            || ! preg_match('/\A[A-Za-z0-9_\\@:\-]+\z/', $action)
+            || ($name !== '' && ! preg_match('/\A[A-Za-z0-9_.\-]+\z/', $name))) {
+            throw ValidationException::withMessages(['route_uri' => __('Definisi route tidak valid.')]);
+        }
+
+        $targetFile = ltrim(str_replace('\\', '/', $targetFile), '/');
+        if (str_contains($targetFile, '..') || ! preg_match('/\Aroutes\/[A-Za-z0-9_\/-]+\.php\z/', $targetFile)) {
+            throw ValidationException::withMessages(['target_route_file' => __('Berkas route tidak diizinkan.')]);
+        }
 
         $path = base_path($targetFile);
 
@@ -399,7 +426,7 @@ class CreateDeveloperStudio extends CreateRecord
      */
     protected function generateGraphql(array $data): string
     {
-        $name = (string) ($data['graphql_name'] ?? 'schema');
+        $name = $this->safeIdentifier((string) ($data['graphql_name'] ?? 'schema'), 'graphql_name');
         $type = (string) ($data['schema_type'] ?? 'type');
         $code = (string) ($data['graphql_code'] ?? '');
 
@@ -423,8 +450,11 @@ class CreateDeveloperStudio extends CreateRecord
      */
     protected function generateGrpc(array $data): string
     {
-        $name = (string) ($data['grpc_proto_name'] ?? 'service.proto');
+        $name = $this->safeFilename((string) ($data['grpc_proto_name'] ?? 'service.proto'), 'grpc_proto_name', ['proto']);
         $package = (string) ($data['package_name'] ?? 'wedding.app.v1');
+        if (! preg_match('/\A[A-Za-z][A-Za-z0-9_.]*\z/', $package)) {
+            throw ValidationException::withMessages(['package_name' => __('Nama package tidak valid.')]);
+        }
         $code = (string) ($data['proto_code'] ?? '');
 
         $directory = base_path('proto');
@@ -447,8 +477,11 @@ class CreateDeveloperStudio extends CreateRecord
      */
     protected function generateCapacitor(array $data): string
     {
-        $name = (string) ($data['capacitor_plugin_name'] ?? 'Plugin.ts');
+        $name = $this->safeFilename((string) ($data['capacitor_plugin_name'] ?? 'Plugin.ts'), 'capacitor_plugin_name', ['ts']);
         $app = (string) ($data['target_app'] ?? 'UserApp');
+        if (! in_array($app, ['UserApp', 'AdminApp'], true)) {
+            throw ValidationException::withMessages(['target_app' => __('Target aplikasi tidak valid.')]);
+        }
         $code = (string) ($data['capacitor_code'] ?? '');
 
         $directory = app_path("Capacitor/{$app}/src/js");
@@ -471,7 +504,7 @@ class CreateDeveloperStudio extends CreateRecord
      */
     protected function generateFlutter(array $data): string
     {
-        $name = (string) ($data['flutter_filename'] ?? 'service.dart');
+        $name = $this->safeFilename((string) ($data['flutter_filename'] ?? 'service.dart'), 'flutter_filename', ['dart']);
         $code = (string) ($data['flutter_code'] ?? '');
 
         $directory = base_path('../mobile_app/lib/services');
@@ -494,7 +527,7 @@ class CreateDeveloperStudio extends CreateRecord
      */
     protected function generatePython(array $data): string
     {
-        $name = (string) ($data['python_filename'] ?? 'module.py');
+        $name = $this->safeFilename((string) ($data['python_filename'] ?? 'module.py'), 'python_filename', ['py']);
         $code = (string) ($data['python_code'] ?? '');
 
         $directory = base_path('../ai_core/src/custom');
@@ -519,7 +552,26 @@ class CreateDeveloperStudio extends CreateRecord
     {
         $uploaded = $this->resolveUploadedFile($data);
 
-        $directory = base_path((string) ($data['upload_target_dir'] ?? 'app/Http/Controllers'));
+        $relativeDirectory = ltrim(str_replace('\\', '/', (string) ($data['upload_target_dir'] ?? '')), '/');
+        $allowedRoots = [
+            'app/Http/Controllers', 'app/Grpc', 'graphql', 'proto',
+            'app/Capacitor', '../mobile_app/lib', '../ai_core/src',
+        ];
+        $allowed = false;
+        foreach ($allowedRoots as $root) {
+            if ($relativeDirectory === $root || str_starts_with($relativeDirectory, $root.'/')) {
+                $allowed = true;
+                break;
+            }
+        }
+        $filename = basename($uploaded['name']);
+        if (! $allowed || str_contains($relativeDirectory, '..')
+            || $filename !== $uploaded['name']
+            || ! preg_match('/\A[A-Za-z0-9][A-Za-z0-9._-]*\z/', $filename)) {
+            throw ValidationException::withMessages(['upload_target_dir' => __('Lokasi atau nama berkas tidak diizinkan.')]);
+        }
+
+        $directory = base_path($relativeDirectory);
 
         File::ensureDirectoryExists($directory);
 
@@ -533,6 +585,30 @@ class CreateDeveloperStudio extends CreateRecord
     protected function isGenerating(Get $get, string $moduleType): bool
     {
         return $get('module_type') === $moduleType && $get('mode') === 'generate';
+    }
+
+    protected function safeIdentifier(string $value, string $field): string
+    {
+        if (! preg_match('/\A[A-Za-z][A-Za-z0-9_]*\z/', $value)) {
+            throw ValidationException::withMessages([$field => __('Nama modul tidak valid.')]);
+        }
+
+        return $value;
+    }
+
+    /** @param list<string> $extensions */
+    protected function safeFilename(string $value, string $field, array $extensions): string
+    {
+        if (basename($value) !== $value || ! preg_match('/\A[A-Za-z][A-Za-z0-9_-]*\.([A-Za-z0-9]+)\z/', $value)) {
+            throw ValidationException::withMessages([$field => __('Nama berkas tidak valid.')]);
+        }
+
+        $extension = strtolower(pathinfo($value, PATHINFO_EXTENSION));
+        if (! in_array($extension, $extensions, true)) {
+            throw ValidationException::withMessages([$field => __('Ekstensi berkas tidak diizinkan.')]);
+        }
+
+        return $value;
     }
 
     protected function apiControllerTemplate(string $name, string $scope, string $methods): string

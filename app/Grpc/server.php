@@ -61,6 +61,48 @@ $server->handle(function ($call, $method) use (
     $homeService,
     $searchService
 ) {
+    // The wire contract is wedding.user.v1.  Keep the existing domain
+    // handlers behind this small compatibility map while they are migrated
+    // to generated V1 message types; clients must never call the retired
+    // weddingapp.* service names.
+    $method = str_replace(
+        [
+            '/wedding.user.v1.AuthService/',
+            '/wedding.user.v1.CatalogService/',
+            '/wedding.user.v1.PackageService/',
+            '/wedding.user.v1.OrderService/',
+            '/wedding.user.v1.CartService/',
+            '/wedding.user.v1.WishlistService/',
+            '/wedding.user.v1.ReviewService/',
+            '/wedding.user.v1.VoucherService/',
+            '/wedding.user.v1.CbirService/',
+            '/wedding.user.v1.HomeService/',
+            '/wedding.user.v1.SearchService/',
+        ],
+        [
+            '/weddingapp.auth.AuthService/',
+            '/weddingapp.catalog.CatalogService/',
+            '/weddingapp.package.PackageService/',
+            '/weddingapp.order.OrderService/',
+            '/weddingapp.cart.CartService/',
+            '/weddingapp.wishlist.WishlistService/',
+            '/weddingapp.review.ReviewService/',
+            '/weddingapp.voucher.VoucherService/',
+            '/weddingapp.cbir.CbirService/',
+            '/weddingapp.home.HomeService/',
+            '/weddingapp.search.SearchService/',
+        ],
+        $method
+    );
+
+    $method = str_replace([
+        '/ResendVerification', '/GetMyCart', '/ApplyVoucherToCart',
+        '/RemoveVoucherFromCart', '/GetMyWishlist', '/GetMyVouchers',
+    ], [
+        '/ResendVerificationEmail', '/GetCart', '/ApplyVoucher',
+        '/RemoveVoucher', '/GetWishlist', '/GetVouchers',
+    ], $method);
+
     switch ($method) {
         // Auth Service
         case '/weddingapp.auth.AuthService/Login':

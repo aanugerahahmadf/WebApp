@@ -40,7 +40,7 @@ class WishlistController extends Controller
                 'per_page' => $wishlists->perPage(), 'total' => $wishlists->total(),
             ]]);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil wishlist'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil wishlist'), 'error' => null], 500);
         }
     }
 

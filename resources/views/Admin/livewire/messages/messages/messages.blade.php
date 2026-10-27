@@ -33,6 +33,10 @@
                     @php
                         $avatar = $selectedConversation->primary_avatar;
                         $alt = urlencode($selectedConversation->inbox_title);
+                        $callPhone = $selectedConversation->other_users->first()?->phone
+                            ?? $selectedConversation->other_users->first()?->whatsapp;
+                        $callPhone = $callPhone ? preg_replace('/[^0-9+]/', '', $callPhone) : null;
+                        $callUrl = 'https://meet.jit.si/WeddingFlowerDecorations-'.$selectedConversation->id.'-'.substr(hash_hmac('sha256', 'chat-call-'.$selectedConversation->id, (string) config('app.key')), 0, 24);
                     @endphp
 
                     <x-filament::avatar src="{{ $avatar }}" alt="{{ $alt }}" size="lg" />
@@ -47,6 +51,13 @@
                                 {{ $selectedConversation->other_users->pluck('name')->implode(', ') }}</p>
                         @endif
                     </div>
+                    @if ($callUrl)
+                        <a href="{{ $callUrl }}" target="_blank" rel="noopener noreferrer"
+                            class="rounded-lg p-2 text-green-600 transition hover:bg-green-50 hover:text-green-700 dark:hover:bg-green-900/20"
+                            title="{{ __('Telepon Internet') }}" aria-label="{{ __('Telepon Internet') }}">
+                            <x-filament::icon icon="/images/icons/phone.svg" class="h-5 w-5" />
+                        </a>
+                    @endif
                     <button type="button" x-on:click="$dispatch('open-modal', { id: 'admin-message-search' })"
                         class="rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-white/10"
                         title="{{ __('Cari') }}">

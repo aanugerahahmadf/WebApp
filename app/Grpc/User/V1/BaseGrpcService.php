@@ -7,8 +7,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\PersonalAccessToken;
 use Spiral\RoadRunner\GRPC\ContextInterface;
+use Spiral\RoadRunner\GRPC\ServiceInterface;
 
-abstract class BaseGrpcService
+abstract class BaseGrpcService implements ServiceInterface
 {
     /**
      * Get authenticated user from gRPC context

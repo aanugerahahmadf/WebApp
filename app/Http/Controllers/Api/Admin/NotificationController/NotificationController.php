@@ -44,7 +44,7 @@ class NotificationController extends Controller
                 'per_page' => $notifications->perPage(), 'total' => $notifications->total(),
             ]]);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil notifikasi'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil notifikasi'), 'error' => null], 500);
         }
     }
 
@@ -79,7 +79,7 @@ class NotificationController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['status' => 'error', 'message' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal mengirim notifikasi'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal mengirim notifikasi'), 'error' => null], 500);
         }
     }
 
@@ -109,7 +109,7 @@ class NotificationController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['status' => 'error', 'message' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal mengirim notifikasi'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal mengirim notifikasi'), 'error' => null], 500);
         }
     }
 

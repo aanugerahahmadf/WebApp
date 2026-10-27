@@ -3,19 +3,20 @@
 namespace App\Grpc\User\V1;
 
 use App\Http\GraphQL\Resolvers\OrderResolver;
-use App\Models\Order\Order;
-use App\Models\User\User;
+use App\Models\Order\Order as OrderModel;
+use App\Models\User\User as UserModel;
 use Spiral\RoadRunner\GRPC\ContextInterface;
 
 class OrderService extends BaseGrpcService
 {
+    public const NAME = 'wedding.user.v1.OrderService';
     public function __construct(private OrderResolver $orderResolver) {}
 
-    public function GetMyOrders(GetMyOrdersRequest $request, ContextInterface $context): OrderListResponse
+    public function GetMyOrders(ContextInterface $context, GetMyOrdersRequest $request): OrderListResponse
     {
         try {
             $user = $this->requireAuth($context);
-            $query = Order::where('user_id', $user->id)->with(['user', 'catalog', 'package', 'payment', 'timeline']);
+            $query = OrderModel::where('user_id', $user->id)->with(['user', 'catalog', 'package', 'payment', 'timeline']);
             if ($request->status) {
                 $query->where('status', $request->status);
             }
@@ -32,11 +33,11 @@ class OrderService extends BaseGrpcService
         }
     }
 
-    public function GetOrder(GetOrderRequest $request, ContextInterface $context): Order
+    public function GetOrder(ContextInterface $context, GetOrderRequest $request): Order
     {
         try {
             $user = $this->requireAuth($context);
-            $order = Order::with(['user', 'catalog', 'package', 'payment', 'timeline'])
+            $order = OrderModel::with(['user', 'catalog', 'package', 'payment', 'timeline'])
                 ->where('user_id', $user->id)->findOrFail($request->id);
             return $this->transformOrder($order);
         } catch (\Throwable $e) {
@@ -44,11 +45,11 @@ class OrderService extends BaseGrpcService
         }
     }
 
-    public function GetOrderByNumber(GetOrderByNumberRequest $request, ContextInterface $context): Order
+    public function GetOrderByNumber(ContextInterface $context, GetOrderByNumberRequest $request): Order
     {
         try {
             $user = $this->requireAuth($context);
-            $order = Order::with(['user', 'catalog', 'package', 'payment', 'timeline'])
+            $order = OrderModel::with(['user', 'catalog', 'package', 'payment', 'timeline'])
                 ->where('order_number', $request->order_number)
                 ->where('user_id', $user->id)->firstOrFail();
             return $this->transformOrder($order);
@@ -57,11 +58,11 @@ class OrderService extends BaseGrpcService
         }
     }
 
-    public function GetOrders(GetOrdersRequest $request, ContextInterface $context): OrderListResponse
+    public function GetOrders(ContextInterface $context, GetOrdersRequest $request): OrderListResponse
     {
         try {
             $this->requireAuth($context);
-            $query = Order::with(['user', 'catalog', 'package', 'payment', 'timeline']);
+            $query = OrderModel::with(['user', 'catalog', 'package', 'payment', 'timeline']);
             if ($request->status) $query->where('status', $request->status);
             if ($request->payment_status) $query->where('payment_status', $request->payment_status);
             if ($request->user_id) $query->where('user_id', $request->user_id);
@@ -80,7 +81,7 @@ class OrderService extends BaseGrpcService
         }
     }
 
-    public function GetOrderStats(GetOrderStatsRequest $request, ContextInterface $context): OrderStats
+    public function GetOrderStats(ContextInterface $context, GetOrderStatsRequest $request): OrderStats
     {
         try {
             $this->requireAuth($context);
@@ -115,7 +116,7 @@ class OrderService extends BaseGrpcService
         }
     }
 
-    public function GetOrderTimeline(GetOrderTimelineRequest $request, ContextInterface $context): OrderTimelineResponse
+    public function GetOrderTimeline(ContextInterface $context, GetOrderTimelineRequest $request): OrderTimelineResponse
     {
         try {
             $this->requireAuth($context);
@@ -134,7 +135,7 @@ class OrderService extends BaseGrpcService
         }
     }
 
-    public function CreateOrder(CreateOrderRequest $request, ContextInterface $context): Order
+    public function CreateOrder(ContextInterface $context, CreateOrderRequest $request): Order
     {
         try {
             $this->requireAuth($context);
@@ -155,7 +156,7 @@ class OrderService extends BaseGrpcService
         }
     }
 
-    public function CancelOrder(CancelOrderRequest $request, ContextInterface $context): Order
+    public function CancelOrder(ContextInterface $context, CancelOrderRequest $request): Order
     {
         try {
             $this->requireAuth($context);
@@ -169,7 +170,7 @@ class OrderService extends BaseGrpcService
         }
     }
 
-    public function Reorder(ReorderRequest $request, ContextInterface $context): Order
+    public function Reorder(ContextInterface $context, ReorderRequest $request): Order
     {
         try {
             $this->requireAuth($context);
@@ -180,7 +181,7 @@ class OrderService extends BaseGrpcService
         }
     }
 
-    public function UpdateOrder(UpdateOrderRequest $request, ContextInterface $context): Order
+    public function UpdateOrder(ContextInterface $context, UpdateOrderRequest $request): Order
     {
         try {
             $this->requireAuth($context);
@@ -202,7 +203,7 @@ class OrderService extends BaseGrpcService
         }
     }
 
-    public function UpdateOrderStatus(UpdateOrderStatusRequest $request, ContextInterface $context): Order
+    public function UpdateOrderStatus(ContextInterface $context, UpdateOrderStatusRequest $request): Order
     {
         try {
             $this->requireAuth($context);
@@ -216,7 +217,7 @@ class OrderService extends BaseGrpcService
         }
     }
 
-    public function UpdatePaymentStatus(UpdatePaymentStatusRequest $request, ContextInterface $context): Order
+    public function UpdatePaymentStatus(ContextInterface $context, UpdatePaymentStatusRequest $request): Order
     {
         try {
             $this->requireAuth($context);
@@ -230,7 +231,7 @@ class OrderService extends BaseGrpcService
         }
     }
 
-    public function ProcessPayment(ProcessPaymentRequest $request, ContextInterface $context): PaymentResult
+    public function ProcessPayment(ContextInterface $context, ProcessPaymentRequest $request): PaymentResult
     {
         try {
             $this->requireAuth($context);
@@ -245,11 +246,11 @@ class OrderService extends BaseGrpcService
                 'message' => $result['message'] ?? '',
             ]);
         } catch (\Throwable $e) {
-            return new PaymentResult(['success' => false, 'message' => $e->getMessage()]);
+            return new PaymentResult(['success' => false, 'message' => __('Terjadi kesalahan internal.')]);
         }
     }
 
-    public function RequestRefund(RequestRefundRequest $request, ContextInterface $context): RefundRequestResponse
+    public function RequestRefund(ContextInterface $context, RequestRefundRequest $request): RefundRequestResponse
     {
         try {
             $this->requireAuth($context);
@@ -272,7 +273,7 @@ class OrderService extends BaseGrpcService
         }
     }
 
-    private function transformOrder(Order $order): Order
+    private function transformOrder(OrderModel $order): Order
     {
         $user = $order->user ? $this->transformUser($order->user) : null;
         $timeline = collect($order->relationLoaded('timeline') ? $order->timeline : [])->map(fn ($t) => new OrderTimeline([
@@ -322,7 +323,7 @@ class OrderService extends BaseGrpcService
         ]);
     }
 
-    private function transformUser(User $user): \App\Grpc\User\V1\User
+    private function transformUser(UserModel $user): \App\Grpc\User\V1\User
     {
         return new \App\Grpc\User\V1\User([
             'id' => (string) $user->id,

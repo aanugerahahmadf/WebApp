@@ -107,7 +107,7 @@ message Cart {
   repeated CartItem items = 3;
   double subtotal = 4;
   double discount = 5;
-  Voucher voucher = 6;
+  weddingapp.voucher.Voucher voucher = 6;
   double shipping_cost = 7;
   double tax = 8;
   double total = 9;

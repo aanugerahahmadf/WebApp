@@ -259,6 +259,7 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
                             ->maxLength(20)
                             ->columnSpan(1),
                         FileUpload::make('ktp_photo')
+                            ->disk('local')
                             ->label(fn (Get $get) => match ($get('identity_type')) {
                                 'ktp' => __('Foto KTP'),
                                 'passport' => __('Foto Passport'),
@@ -275,6 +276,7 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
                             ->helperText(__('Scan atau unggah foto dokumen dari kamera/galeri.'))
                             ->columnSpan(1),
                         FileUpload::make('selfie_photo')
+                            ->disk('local')
                             ->label(fn (Get $get) => match ($get('identity_type')) {
                                 'ktp' => __('Foto Selfie + KTP'),
                                 'passport' => __('Foto Selfie + Passport'),
@@ -549,6 +551,7 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
                     ->description(__('Scan wajah Anda untuk verifikasi identitas.'))
                     ->schema([
                         FileUpload::make('face_scan_photo')
+                            ->disk('local')
                             ->label(__('Scan Wajah'))
                             ->image()
                             ->maxSize(5120)
@@ -658,7 +661,7 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
     {
         $path = ltrim(str_replace('storage/', '', $path), '/');
 
-        $real = Storage::disk('public')->path($path);
+        $real = Storage::disk('local')->path($path);
 
         return file_exists($real) ? $real : null;
     }

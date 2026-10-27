@@ -117,9 +117,7 @@ class FonnteWebhookController extends Controller
             ], 200);
 
         } catch (\Throwable $e) {
-            Log::error('[Fonnte Webhook] Exception: '.$e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-            ]);
+            Log::error('[Fonnte Webhook] Exception', ['exception' => $e::class]);
 
             return response()->json([
                 'status' => 'error',

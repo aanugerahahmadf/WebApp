@@ -363,35 +363,6 @@
             rel sempit; kotak pencarian selebar kolom tidak mungkin muat di
             sana. `x-show` (bukan `x-cloak`) mengikuti pola logo di atas.
         --}}
-        @if (filament()->isGlobalSearchEnabled())
-            <div
-                x-show="$store.sidebar.isOpen"
-                x-transition:enter="lg:transition lg:delay-100"
-                x-transition:enter-start="opacity-0"
-                x-transition:enter-end="opacity-100"
-                class="fi-sidebar-search shrink-0 px-6 pt-4"
-            >
-                <button
-                    type="button"
-                    data-admin-global-search-trigger
-                    x-on:click="$dispatch('open-modal', { id: 'admin-global-search' })"
-                    aria-label="{{ __('filament-panels::global-search.field.label') }}"
-                    class="fi-admin-global-search-trigger flex w-full items-center gap-2 rounded-lg px-3 py-2 text-start text-sm text-gray-500 transition hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:text-gray-400 dark:hover:bg-white/5"
-                    style="border: 1px solid var(--fi-glass-ring); background-color: transparent;"
-                >
-                    <x-filament::icon
-                        alias="panels::global-search.field"
-                        icon="/images/icons/search.svg"
-                        class="h-5 w-5 shrink-0"
-                    />
-
-                    <span class="flex-1 truncate">
-                        {{ __('filament-panels::global-search.field.placeholder') }}
-                    </span>
-                </button>
-            </div>
-        @endif
-
         {{-- BARIS SWITCHER TERPINDAH KE DALAM <header> (SEKARANG NONAKTIF).
 
              Sebelumnya baris `fi-sidebar-switchers` berdiri sendiri di bawah

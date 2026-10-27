@@ -23,12 +23,13 @@ use Spiral\RoadRunner\GRPC\ContextInterface;
  */
 class CbirService extends BaseGrpcService
 {
+    public const NAME = 'wedding.user.v1.CbirService';
     public function __construct(private CbirEngine $cbirService) {}
 
     /**
      * Search similar items using an uploaded image.
      */
-    public function SearchSimilar(SearchSimilarRequest $request, ContextInterface $context): CbirSearchResponse
+    public function SearchSimilar(ContextInterface $context, SearchSimilarRequest $request): CbirSearchResponse
     {
         try {
             if ($request->image === '') {
@@ -46,30 +47,18 @@ class CbirService extends BaseGrpcService
     }
 
     /**
-     * Client-streaming variant: chunks are concatenated before extraction.
-     *
-     * Useful for mobile clients on slow links that cannot buffer the whole
-     * image in a single unary request.
+     * Compatibility variant for clients that use the streaming RPC name.
+     * The PHP RoadRunner transport exposes it as unary; the complete payload
+     * is carried in the request chunk.
      */
-    public function SearchSimilarStream(iterable $requests, ContextInterface $context): CbirSearchResponse
+    public function SearchSimilarStream(ContextInterface $context, SearchSimilarChunkRequest $request): CbirSearchResponse
     {
         try {
-            $chunks = [];
-            $mimeType = 'image/jpeg';
-
-            foreach ($requests as $request) {
-                /** @var SearchSimilarChunkRequest $request */
-                $chunks[] = $request->chunk;
-                if ($request->mime_type !== '') {
-                    $mimeType = $request->mime_type;
-                }
-            }
-
-            if ($chunks === []) {
+            if ($request->chunk === '') {
                 throw new \InvalidArgumentException('No image chunks received', 400);
             }
 
-            $file = $this->toUploadedFile(implode('', $chunks), $mimeType);
+            $file = $this->toUploadedFile($request->chunk, $request->mime_type ?: 'image/jpeg');
 
             $apiResponse = $this->cbirService->searchByImage($file);
 
@@ -82,7 +71,7 @@ class CbirService extends BaseGrpcService
     /**
      * Arithmetic (image math) search combining two query images.
      */
-    public function ArithmeticSearch(ArithmeticSearchRequest $request, ContextInterface $context): CbirSearchResponse
+    public function ArithmeticSearch(ContextInterface $context, ArithmeticSearchRequest $request): CbirSearchResponse
     {
         try {
             if ($request->image_1 === '' || $request->image_2 === '') {
@@ -118,7 +107,7 @@ class CbirService extends BaseGrpcService
     /**
      * List the arithmetic operations the AI Core supports.
      */
-    public function GetArithmeticOps(GetArithmeticOpsRequest $request, ContextInterface $context): ArithmeticOpsResponse
+    public function GetArithmeticOps(ContextInterface $context, GetArithmeticOpsRequest $request): ArithmeticOpsResponse
     {
         try {
             $ops = collect($this->cbirService->getArithmeticOps())
@@ -143,7 +132,7 @@ class CbirService extends BaseGrpcService
     /**
      * CBIR index statistics.
      */
-    public function GetStats(GetCbirStatsRequest $request, ContextInterface $context): CbirStats
+    public function GetStats(ContextInterface $context, GetCbirStatsRequest $request): CbirStats
     {
         $baseUrl = config('services.ai_core_url', 'http://127.0.0.1:5000');
 
@@ -176,7 +165,7 @@ class CbirService extends BaseGrpcService
     /**
      * Paginated CBIR search history for the authenticated user.
      */
-    public function GetHistory(GetCbirHistoryRequest $request, ContextInterface $context): CbirHistoryResponse
+    public function GetHistory(ContextInterface $context, GetCbirHistoryRequest $request): CbirHistoryResponse
     {
         try {
             $user = $this->requireAuth($context);
@@ -203,7 +192,7 @@ class CbirService extends BaseGrpcService
     /**
      * Replay stored results for a previous search.
      */
-    public function GetSavedResults(GetSavedCbirResultsRequest $request, ContextInterface $context): CbirSavedResultsResponse
+    public function GetSavedResults(ContextInterface $context, GetSavedCbirResultsRequest $request): CbirSavedResultsResponse
     {
         try {
             $user = $this->requireAuth($context);
@@ -242,7 +231,7 @@ class CbirService extends BaseGrpcService
     /**
      * Persist a search (and its results) so the user can revisit it.
      */
-    public function SaveSearch(SaveCbirSearchRequest $request, ContextInterface $context): CbirHistory
+    public function SaveSearch(ContextInterface $context, SaveCbirSearchRequest $request): CbirHistory
     {
         try {
             $user = $this->requireAuth($context);
@@ -288,7 +277,7 @@ class CbirService extends BaseGrpcService
     /**
      * Delete a single search from the user's history.
      */
-    public function DeleteSearch(DeleteCbirSearchRequest $request, ContextInterface $context): DeleteCbirSearchResponse
+    public function DeleteSearch(ContextInterface $context, DeleteCbirSearchRequest $request): DeleteCbirSearchResponse
     {
         try {
             $user = $this->requireAuth($context);
@@ -306,7 +295,7 @@ class CbirService extends BaseGrpcService
         } catch (\Throwable $e) {
             return new DeleteCbirSearchResponse([
                 'success' => false,
-                'message' => $e->getMessage(),
+                'message' => __('Terjadi kesalahan internal.'),
             ]);
         }
     }
@@ -314,7 +303,7 @@ class CbirService extends BaseGrpcService
     /**
      * Clear the whole CBIR history for the authenticated user.
      */
-    public function ClearHistory(ClearCbirHistoryRequest $request, ContextInterface $context): ClearCbirHistoryResponse
+    public function ClearHistory(ContextInterface $context, ClearCbirHistoryRequest $request): ClearCbirHistoryResponse
     {
         try {
             $user = $this->requireAuth($context);
@@ -328,7 +317,7 @@ class CbirService extends BaseGrpcService
         } catch (\Throwable $e) {
             return new ClearCbirHistoryResponse([
                 'success' => false,
-                'message' => $e->getMessage(),
+                'message' => __('Terjadi kesalahan internal.'),
             ]);
         }
     }
@@ -336,7 +325,7 @@ class CbirService extends BaseGrpcService
     /**
      * Store relevance feedback for a returned result.
      */
-    public function SubmitFeedback(SubmitCbirFeedbackRequest $request, ContextInterface $context): SubmitCbirFeedbackResponse
+    public function SubmitFeedback(ContextInterface $context, SubmitCbirFeedbackRequest $request): SubmitCbirFeedbackResponse
     {
         try {
             $user = $this->requireAuth($context);
@@ -357,7 +346,7 @@ class CbirService extends BaseGrpcService
         } catch (\Throwable $e) {
             return new SubmitCbirFeedbackResponse([
                 'success' => false,
-                'message' => $e->getMessage(),
+                'message' => __('Terjadi kesalahan internal.'),
             ]);
         }
     }
@@ -365,7 +354,7 @@ class CbirService extends BaseGrpcService
     /**
      * Admin: reindex every package and catalog image.
      */
-    public function RebuildIndex(RebuildCbirIndexRequest $request, ContextInterface $context): CbirIndexResult
+    public function RebuildIndex(ContextInterface $context, RebuildCbirIndexRequest $request): CbirIndexResult
     {
         $startedAt = microtime(true);
 
@@ -404,7 +393,7 @@ class CbirService extends BaseGrpcService
         } catch (\Throwable $e) {
             return new CbirIndexResult([
                 'success' => false,
-                'message' => $e->getMessage(),
+                'message' => __('Terjadi kesalahan internal.'),
                 'affected_count' => 0,
                 'processing_time' => round(microtime(true) - $startedAt, 2),
             ]);
@@ -414,7 +403,7 @@ class CbirService extends BaseGrpcService
     /**
      * Admin: index a single media item.
      */
-    public function AddToIndex(AddToCbirIndexRequest $request, ContextInterface $context): CbirIndexResult
+    public function AddToIndex(ContextInterface $context, AddToCbirIndexRequest $request): CbirIndexResult
     {
         $startedAt = microtime(true);
 
@@ -439,7 +428,7 @@ class CbirService extends BaseGrpcService
         } catch (\Throwable $e) {
             return new CbirIndexResult([
                 'success' => false,
-                'message' => $e->getMessage(),
+                'message' => __('Terjadi kesalahan internal.'),
                 'affected_count' => 0,
                 'processing_time' => round(microtime(true) - $startedAt, 2),
             ]);
@@ -449,7 +438,7 @@ class CbirService extends BaseGrpcService
     /**
      * Admin: remove a media item from the CBIR index.
      */
-    public function RemoveFromIndex(RemoveFromCbirIndexRequest $request, ContextInterface $context): CbirIndexResult
+    public function RemoveFromIndex(ContextInterface $context, RemoveFromCbirIndexRequest $request): CbirIndexResult
     {
         $startedAt = microtime(true);
 
@@ -467,7 +456,7 @@ class CbirService extends BaseGrpcService
         } catch (\Throwable $e) {
             return new CbirIndexResult([
                 'success' => false,
-                'message' => $e->getMessage(),
+                'message' => __('Terjadi kesalahan internal.'),
                 'affected_count' => 0,
                 'processing_time' => round(microtime(true) - $startedAt, 2),
             ]);
@@ -477,7 +466,7 @@ class CbirService extends BaseGrpcService
     /**
      * Probe the AI Core health endpoint.
      */
-    public function HealthCheck(HealthCheckRequest $request, ContextInterface $context): HealthCheckResponse
+    public function HealthCheck(ContextInterface $context, HealthCheckRequest $request): HealthCheckResponse
     {
         $baseUrl = config('services.ai_core_url', 'http://127.0.0.1:5000');
 
@@ -517,7 +506,7 @@ class CbirService extends BaseGrpcService
     /**
      * Fetch CBIR retrieval metrics from the AI Core.
      */
-    public function Evaluate(EvaluateRequest $request, ContextInterface $context): EvaluateResponse
+    public function Evaluate(ContextInterface $context, EvaluateRequest $request): EvaluateResponse
     {
         $baseUrl = config('services.ai_core_url', 'http://127.0.0.1:5000');
 

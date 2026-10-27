@@ -156,7 +156,7 @@ class HomeController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => __('Gagal memuat dashboard'),
-                'error' => $e->getMessage(),
+                'error' => null,
             ], 500);
         }
     }

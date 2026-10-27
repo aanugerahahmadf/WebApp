@@ -4,6 +4,7 @@ namespace App\Filament\Admin\Pages\MessagesPage;
 
 use App\Models\Inbox\Inbox;
 use App\Support\AppIcon\AppIcon;
+use App\Support\AdminAccess\AdminAccess;
 use Filament\Pages\Page;
 use Filament\Support\Enums\MaxWidth;
 use Illuminate\Contracts\Support\Htmlable;
@@ -32,6 +33,11 @@ class MessagesPage extends Page
     protected static ?string $activeNavigationIcon = AppIcon::MESSAGES;
 
     protected static ?int $navigationSort = 1;
+
+    public static function canAccess(): bool
+    {
+        return AdminAccess::allows('manage_support_tickets');
+    }
 
     public ?Inbox $selectedConversation;
 

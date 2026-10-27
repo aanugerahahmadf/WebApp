@@ -26,8 +26,10 @@ return [
 
     // Nominminal rekening admin yang dipantau. BRI API mengharuskan 15 digit
     // (tambahkan 0 di depan bila kurang dari 15 digit).
-    'account_number' => env('BRI_ACCOUNT_NUMBER', '421201032041536'),
-    'account_holder' => env('BRI_ACCOUNT_HOLDER', 'Anugerah Ahmad Fachrurochim'),
+    // Rekening settlement merchant hanya untuk API statement. Jangan pernah
+    // memakai nilai ini sebagai nomor VA yang ditampilkan ke pelanggan.
+    'account_number' => env('BRI_ACCOUNT_NUMBER', ''),
+    'account_holder' => env('BRI_ACCOUNT_HOLDER', ''),
 
     // Base URL. Sandbox: https://sandbox.partner.api.bri.co.id
     // Production: https://partner.api.bri.co.id

@@ -14,6 +14,7 @@ use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
 /**
@@ -204,7 +205,7 @@ class CreateDatabaseStudio extends CreateRecord
      */
     protected function generateMigration(array $data): string
     {
-        $name = (string) ($data['migration_name'] ?? 'migration');
+        $name = $this->safeClassName((string) ($data['migration_name'] ?? 'migration'), 'migration_name');
         $table = (string) ($data['migration_table'] ?? 'table');
         $type = (string) ($data['migration_type'] ?? 'create');
 
@@ -230,7 +231,7 @@ class CreateDatabaseStudio extends CreateRecord
      */
     protected function generateSeeder(array $data): string
     {
-        $name = (string) ($data['seeder_name'] ?? 'Seeder');
+        $name = $this->safeClassName((string) ($data['seeder_name'] ?? 'Seeder'), 'seeder_name');
 
         $class = str_ends_with($name, 'Seeder') ? $name : $name.'Seeder';
 
@@ -250,11 +251,11 @@ class CreateDatabaseStudio extends CreateRecord
      */
     protected function generateFactory(array $data): string
     {
-        $name = (string) ($data['factory_name'] ?? 'Factory');
+        $name = $this->safeClassName((string) ($data['factory_name'] ?? 'Factory'), 'factory_name');
 
         $class = str_ends_with($name, 'Factory') ? $name : $name.'Factory';
 
-        $model = (string) ($data['factory_model'] ?? 'User');
+        $model = $this->resolveFactoryModel((string) ($data['factory_model'] ?? 'User'));
 
         $directory = database_path('factories');
 
@@ -282,13 +283,28 @@ class CreateDatabaseStudio extends CreateRecord
             default => database_path('migrations'),
         };
 
+        $filename = basename($uploaded['name']);
+        if ($filename !== $uploaded['name']
+            || ! preg_match('/\A[A-Za-z0-9][A-Za-z0-9._-]*\.php\z/', $filename)) {
+            throw ValidationException::withMessages(['uploaded_file' => __('Nama berkas PHP tidak valid.')]);
+        }
+
         File::ensureDirectoryExists($directory);
 
-        $path = $directory.'/'.$uploaded['name'];
+        $path = $directory.'/'.$filename;
 
         File::put($path, $uploaded['contents']);
 
         return $path;
+    }
+
+    protected function safeClassName(string $value, string $field): string
+    {
+        if (! preg_match('/\A[A-Za-z][A-Za-z0-9_]*\z/', $value)) {
+            throw ValidationException::withMessages([$field => __('Nama class tidak valid.')]);
+        }
+
+        return $value;
     }
 
     /**
@@ -414,6 +430,8 @@ class CreateDatabaseStudio extends CreateRecord
 
     protected function factoryTemplate(string $class, string $model): string
     {
+        $modelClass = str_starts_with($model, '\\') ? $model : '\\'.$model;
+
         return <<<PHP
         <?php
 
@@ -423,7 +441,7 @@ class CreateDatabaseStudio extends CreateRecord
 
         class {$class} extends Factory
         {
-            protected \$model = \\App\\Models\\{$model}::class;
+            protected \$model = {$modelClass}::class;
 
             public function definition(): array
             {
@@ -432,6 +450,47 @@ class CreateDatabaseStudio extends CreateRecord
         }
 
         PHP;
+    }
+
+    /**
+     * Form options display short model names, but generated factories need the
+     * real namespaced class (for example Category lives in
+     * App\\Models\\Category\\Category).
+     */
+    protected function resolveFactoryModel(string $value): string
+    {
+        foreach ($this->modelClasses() as $class) {
+            if ($class === $value || class_basename($class) === $value) {
+                return $class;
+            }
+        }
+
+        return 'App\\Models\\'.$value;
+    }
+
+    /** @return array<int, class-string> */
+    protected function modelClasses(): array
+    {
+        $classes = [];
+
+        foreach (File::allFiles(app_path('Models')) as $file) {
+            if ($file->getExtension() !== 'php') {
+                continue;
+            }
+
+            $relative = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $file->getRelativePathname());
+            $class = 'App\\Models\\'.str_replace(
+                [DIRECTORY_SEPARATOR, '.php'],
+                ['\\', ''],
+                $relative,
+            );
+
+            if (class_exists($class)) {
+                $classes[] = $class;
+            }
+        }
+
+        return $classes;
     }
 
     /**

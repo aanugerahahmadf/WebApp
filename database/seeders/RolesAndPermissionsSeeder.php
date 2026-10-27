@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use App\Support\AdminAccess\AdminAccess;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -53,40 +54,7 @@ class RolesAndPermissionsSeeder extends Seeder
         //
         // Daftar ini harus sama dengan AdminAccess::ADMIN_ROLES. Kalau ditambah
         // di sana, tambahkan juga di sini.
-        $adminRoles = [
-            'super_admin',
-            'data_lens',
-            'data_analyst',
-            'cyber_security',
-            'database',
-            'content_manager',
-            'order_manager',
-            'finance_manager',
-            'data_architect',
-            'data_engineer',
-            'data_mining',
-            'data_scientist',
-            'security_emergency',
-            'security',
-            'devops_engineer',
-            'data_manager',
-            'data_development',
-            'data_storage',
-            'data_specialist',
-            'data_annotation_staff',
-            'etl_engineer',
-            'database_administrator',
-            'system_analyst',
-            'network_engineer',
-            'site_reliability_engineer',
-            'cloud_engineer',
-            'cloud_computing',
-            'system_security',
-            'systems_manager',
-            'it_support',
-            'technical_writer',
-            'technical_support_engineer',
-        ];
+        $adminRoles = AdminAccess::ADMIN_ROLES;
 
         foreach ($adminRoles as $role) {
             Role::firstOrCreate(['name' => $role, 'guard_name' => self::ADMIN_GUARD]);
@@ -168,6 +136,15 @@ class RolesAndPermissionsSeeder extends Seeder
             'manage_settings',
             'manage_backups',
         ];
+
+        // Capability permissions are maintained centrally with the role
+        // matrix. This keeps the database in sync when a new operational
+        // function is added and prevents a role from silently receiving a
+        // name with no server-side permission behind it.
+        $permissions = array_values(array_unique(array_merge(
+            $permissions,
+            AdminAccess::operationalPermissions(),
+        )));
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate([
@@ -302,9 +279,9 @@ class RolesAndPermissionsSeeder extends Seeder
             ],
         ];
 
-        // New operational roles are least-privilege by default. Job titles do
-        // not grant write access or a wildcard; permissions must be expanded
-        // deliberately by an authorized security administrator.
+        // New operational roles are least-privilege by default. Every one of
+        // them must have a capability mapping; a role with only a label is a
+        // configuration error, not a valid server position.
         $readOnlyOperationalRoles = [
             'data_architect', 'data_engineer', 'data_mining', 'data_scientist',
             'security_emergency', 'security', 'devops_engineer', 'data_manager',
@@ -315,19 +292,42 @@ class RolesAndPermissionsSeeder extends Seeder
             'systems_manager', 'it_support', 'technical_writer',
             'technical_support_engineer',
         ];
+
+        $unmappedOperationalRoles = array_diff(
+            $readOnlyOperationalRoles,
+            array_keys(AdminAccess::OPERATIONAL_ROLE_CAPABILITIES),
+        );
+        if ($unmappedOperationalRoles !== []) {
+            throw new \RuntimeException(
+                'Operational roles without capability mappings: '.implode(', ', $unmappedOperationalRoles),
+            );
+        }
+
         foreach ($readOnlyOperationalRoles as $roleName) {
-            $rolePermissions[$roleName] = [
+            $rolePermissions[$roleName] = array_values(array_unique(array_merge(
+                [
                 'view_catalog', 'view_categories', 'view_packages',
                 'view_orders', 'view_reports', 'view_users',
                 'view_transactions', 'view_audit_logs',
-            ];
+                ],
+                AdminAccess::permissionsForOperationalRole($roleName),
+            )));
         }
-        $rolePermissions['security_emergency'] = ['view_audit_logs', 'manage_security'];
-        $rolePermissions['security'] = ['view_audit_logs', 'manage_security', 'view_users'];
-        $rolePermissions['database_administrator'] = [
-            'view_database', 'manage_database', 'view_backups', 'manage_backups',
-            'view_audit_logs',
-        ];
+        $rolePermissions['security_emergency'] = array_values(array_unique(array_merge(
+            ['view_audit_logs', 'manage_security'],
+            AdminAccess::permissionsForOperationalRole('security_emergency'),
+        )));
+        $rolePermissions['security'] = array_values(array_unique(array_merge(
+            ['view_audit_logs', 'manage_security', 'view_users'],
+            AdminAccess::permissionsForOperationalRole('security'),
+        )));
+        $rolePermissions['database_administrator'] = array_values(array_unique(array_merge(
+            [
+                'view_database', 'manage_database', 'view_backups', 'manage_backups',
+                'view_audit_logs', 'manage_migrations',
+            ],
+            AdminAccess::permissionsForOperationalRole('database_administrator'),
+        )));
 
         foreach ($rolePermissions as $roleName => $perms) {
             $role = Role::findByName($roleName, self::ADMIN_GUARD);

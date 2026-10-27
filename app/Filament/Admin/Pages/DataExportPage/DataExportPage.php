@@ -4,6 +4,7 @@ namespace App\Filament\Admin\Pages\DataExportPage;
 
 use App\Services\DataExportService\DataExportService;
 use App\Support\AppIcon\AppIcon;
+use App\Support\AdminAccess\AdminAccess;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
@@ -31,6 +32,11 @@ class DataExportPage extends Page
     protected static string $view = 'Admin.pages.data-export-page.data-export-page';
 
     protected static ?string $navigationIcon = AppIcon::EXPORT;
+
+    public static function canAccess(): bool
+    {
+        return AdminAccess::allows('export_data');
+    }
 
     /**
      * Key dataset yang dicentang.

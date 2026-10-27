@@ -65,7 +65,7 @@ class TransactionController extends Controller
                 ],
             ]);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil transaksi'), 'error' => $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => __('Gagal mengambil transaksi'), 'error' => null], 500);
         }
     }
 

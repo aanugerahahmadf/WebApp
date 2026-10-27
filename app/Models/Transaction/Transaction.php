@@ -66,7 +66,42 @@ class Transaction extends Model
      */
     public static function virtualAccountNameFor(?User $user): string
     {
-        $name = trim((string) ($user?->full_name ?: $user?->username));
+        if ($user) {
+            // Keep the provider name in the same order as the profile form:
+            // first name, middle name, last name. This prevents a provider
+            // request from accidentally using only `full_name` or username.
+            $nameParts = array_values(array_filter([
+                trim((string) $user->first_name),
+                trim((string) $user->mid_name),
+                trim((string) $user->last_name),
+            ], static fn (string $part): bool => $part !== ''));
+            $structuredName = trim(implode(' ', $nameParts));
+            $fullName = trim((string) $user->full_name);
+
+            // full_name is the persisted canonical value. It also protects
+            // older/imported users whose component fields are stale or were
+            // generated independently of the displayed full name.
+            $name = $fullName !== '' && $structuredName !== $fullName
+                ? $fullName
+                : $structuredName;
+
+            // Older users may only have full_name. Split it into the same
+            // first/middle/last order before falling back to username.
+            if ($name === '') {
+                $fullNameParts = preg_split('/\s+/', trim((string) $user->full_name), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+                if (count($fullNameParts) >= 3) {
+                    $name = implode(' ', $fullNameParts);
+                } elseif (count($fullNameParts) === 2) {
+                    $name = implode(' ', $fullNameParts);
+                }
+            }
+
+            if ($name === '') {
+                $name = trim((string) $user->username);
+            }
+        } else {
+            $name = '';
+        }
 
         if ($name === '') {
             // VA tanpa nama ditolak BRI, jadi selalu ada nilai yang dikirim.

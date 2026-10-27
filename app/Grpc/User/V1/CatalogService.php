@@ -3,7 +3,7 @@
 namespace App\Grpc\User\V1;
 
 use App\Http\GraphQL\Resolvers\CatalogResolver;
-use App\Models\Catalog\Catalog;
+use App\Models\Catalog\Catalog as CatalogModel;
 use App\Models\Category\Category;
 use Illuminate\Support\Facades\Log;
 use Spiral\RoadRunner\GRPC\ContextInterface;
@@ -13,6 +13,7 @@ use Spiral\RoadRunner\GRPC\ContextInterface;
  */
 class CatalogService extends BaseGrpcService
 {
+    public const NAME = 'wedding.user.v1.CatalogService';
     private CatalogResolver $catalogResolver;
     
     public function __construct(CatalogResolver $catalogResolver)
@@ -23,10 +24,10 @@ class CatalogService extends BaseGrpcService
     /**
      * Get catalog by ID
      */
-    public function GetCatalog(GetCatalogRequest $request, ContextInterface $context): Catalog
+    public function GetCatalog(ContextInterface $context, GetCatalogRequest $request): Catalog
     {
         try {
-            $catalog = Catalog::with(['category', 'reviews', 'media', 'tiers.media'])->findOrFail($request->id);
+            $catalog = CatalogModel::with(['category', 'reviews', 'media', 'tiers.media'])->findOrFail($request->id);
             return $this->transformCatalog($catalog);
         } catch (\Throwable $e) {
             $error = $this->handleError($e, 'GetCatalog');
@@ -37,10 +38,10 @@ class CatalogService extends BaseGrpcService
     /**
      * Get catalog by slug
      */
-    public function GetCatalogBySlug(GetCatalogBySlugRequest $request, ContextInterface $context): Catalog
+    public function GetCatalogBySlug(ContextInterface $context, GetCatalogBySlugRequest $request): Catalog
     {
         try {
-            $catalog = Catalog::with(['category', 'reviews', 'media', 'tiers.media'])
+            $catalog = CatalogModel::with(['category', 'reviews', 'media', 'tiers.media'])
                 ->where('slug', $request->slug)
                 ->firstOrFail();
             return $this->transformCatalog($catalog);
@@ -53,10 +54,10 @@ class CatalogService extends BaseGrpcService
     /**
      * List catalogs with pagination and filters
      */
-    public function ListCatalogs(ListCatalogsRequest $request, ContextInterface $context): CatalogListResponse
+    public function ListCatalogs(ContextInterface $context, ListCatalogsRequest $request): CatalogListResponse
     {
         try {
-            $query = Catalog::with(['category', 'reviews', 'media']);
+            $query = CatalogModel::with(['category', 'reviews', 'media']);
             
             if ($request->category_id) {
                 $query->where('category_id', $request->category_id);
@@ -119,11 +120,11 @@ class CatalogService extends BaseGrpcService
     /**
      * Get featured catalogs
      */
-    public function GetFeaturedCatalogs(GetFeaturedCatalogsRequest $request, ContextInterface $context): CatalogListResponse
+    public function GetFeaturedCatalogs(ContextInterface $context, GetFeaturedCatalogsRequest $request): CatalogListResponse
     {
         try {
             $limit = $request->limit > 0 ? $request->limit : 10;
-            $catalogs = Catalog::with(['category', 'reviews', 'media'])
+            $catalogs = CatalogModel::with(['category', 'reviews', 'media'])
                 ->where('is_featured', true)
                 ->where('is_active', true)
                 ->limit($limit)
@@ -142,11 +143,11 @@ class CatalogService extends BaseGrpcService
     /**
      * Get on-sale catalogs
      */
-    public function GetOnSaleCatalogs(GetOnSaleCatalogsRequest $request, ContextInterface $context): CatalogListResponse
+    public function GetOnSaleCatalogs(ContextInterface $context, GetOnSaleCatalogsRequest $request): CatalogListResponse
     {
         try {
             $limit = $request->limit > 0 ? $request->limit : 10;
-            $catalogs = Catalog::with(['category', 'reviews', 'media'])
+            $catalogs = CatalogModel::with(['category', 'reviews', 'media'])
                 ->whereNotNull('discount_price')
                 ->where('discount_price', '<', 'price')
                 ->where('is_active', true)
@@ -166,11 +167,11 @@ class CatalogService extends BaseGrpcService
     /**
      * Get catalogs by category
      */
-    public function GetCatalogsByCategory(GetCatalogsByCategoryRequest $request, ContextInterface $context): CatalogListResponse
+    public function GetCatalogsByCategory(ContextInterface $context, GetCatalogsByCategoryRequest $request): CatalogListResponse
     {
         try {
             $limit = $request->limit > 0 ? $request->limit : 10;
-            $catalogs = Catalog::with(['category', 'reviews', 'media'])
+            $catalogs = CatalogModel::with(['category', 'reviews', 'media'])
                 ->where('category_id', $request->category_id)
                 ->where('is_active', true)
                 ->limit($limit)
@@ -189,13 +190,13 @@ class CatalogService extends BaseGrpcService
     /**
      * Get related catalogs
      */
-    public function GetRelatedCatalogs(GetRelatedCatalogsRequest $request, ContextInterface $context): CatalogListResponse
+    public function GetRelatedCatalogs(ContextInterface $context, GetRelatedCatalogsRequest $request): CatalogListResponse
     {
         try {
             $limit = $request->limit > 0 ? $request->limit : 10;
-            $catalog = Catalog::findOrFail($request->catalog_id);
+            $catalog = CatalogModel::findOrFail($request->catalog_id);
             
-            $catalogs = Catalog::with(['category', 'reviews', 'media'])
+            $catalogs = CatalogModel::with(['category', 'reviews', 'media'])
                 ->where('category_id', $catalog->category_id)
                 ->where('id', '!=', $catalog->id)
                 ->where('is_active', true)
@@ -215,11 +216,11 @@ class CatalogService extends BaseGrpcService
     /**
      * Search catalogs
      */
-    public function SearchCatalogs(SearchCatalogsRequest $request, ContextInterface $context): CatalogListResponse
+    public function SearchCatalogs(ContextInterface $context, SearchCatalogsRequest $request): CatalogListResponse
     {
         try {
             $limit = $request->limit > 0 ? $request->limit : 10;
-            $catalogs = Catalog::with(['category', 'reviews', 'media'])
+            $catalogs = CatalogModel::with(['category', 'reviews', 'media'])
                 ->where('is_active', true)
                 ->where(function ($q) use ($request) {
                     $q->where('name', 'like', '%' . $request->query . '%')
@@ -241,10 +242,10 @@ class CatalogService extends BaseGrpcService
     /**
      * Get catalog tiers
      */
-    public function GetCatalogTiers(GetCatalogTiersRequest $request, ContextInterface $context): CatalogTiersResponse
+    public function GetCatalogTiers(ContextInterface $context, GetCatalogTiersRequest $request): CatalogTiersResponse
     {
         try {
-            $catalog = Catalog::with('tiers.media')->findOrFail($request->catalog_id);
+            $catalog = CatalogModel::with('tiers.media')->findOrFail($request->catalog_id);
             
             $tiers = $catalog->tiers->map(function ($tier) use ($catalog) {
                 $tierMedia = $tier->getRelationValue('media');
@@ -284,7 +285,7 @@ class CatalogService extends BaseGrpcService
     /**
      * Get catalog stats
      */
-    public function GetCatalogStats(GetCatalogStatsRequest $request, ContextInterface $context): CatalogStats
+    public function GetCatalogStats(ContextInterface $context, GetCatalogStatsRequest $request): CatalogStats
     {
         try {
             $stats = $this->catalogResolver->stats(null, [], $context);
@@ -320,7 +321,7 @@ class CatalogService extends BaseGrpcService
     /**
      * Transform Catalog model to protobuf Catalog message
      */
-    private function transformCatalog(Catalog $catalog): Catalog
+    private function transformCatalog(CatalogModel $catalog): Catalog
     {
         $locale = app()->getLocale();
         

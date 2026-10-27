@@ -49,7 +49,11 @@ class Cart extends Model
 
     public function getItemAttribute()
     {
-        return $this->catalog ?? $this->package;
+        // A package is a tier belonging to a catalog. When both foreign keys
+        // are present, the tier is the purchasable item and therefore owns
+        // the price; returning the catalog first made checkout use the
+        // catalog's legacy base price instead of the selected tier price.
+        return $this->package ?? $this->catalog;
     }
 
     /**

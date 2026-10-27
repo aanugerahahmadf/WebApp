@@ -3,7 +3,7 @@
 namespace App\Grpc\User\V1;
 
 use App\Http\GraphQL\Resolvers\AuthResolver;
-use App\Models\User\User;
+use App\Models\User\User as UserModel;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -15,6 +15,7 @@ use Spiral\RoadRunner\GRPC\ContextInterface;
  */
 class AuthService extends BaseGrpcService
 {
+    public const NAME = 'wedding.user.v1.AuthService';
     private AuthResolver $authResolver;
     
     public function __construct(AuthResolver $authResolver)
@@ -25,7 +26,7 @@ class AuthService extends BaseGrpcService
     /**
      * Login with email and password
      */
-    public function Login(LoginRequest $request, ContextInterface $context): AuthResponse
+    public function Login(ContextInterface $context, LoginRequest $request): AuthResponse
     {
         try {
             $input = [
@@ -55,7 +56,7 @@ class AuthService extends BaseGrpcService
     /**
      * Register new user
      */
-    public function Register(RegisterRequest $request, ContextInterface $context): AuthResponse
+    public function Register(ContextInterface $context, RegisterRequest $request): AuthResponse
     {
         try {
             $input = [
@@ -87,7 +88,7 @@ class AuthService extends BaseGrpcService
     /**
      * Logout current user
      */
-    public function Logout(LogoutRequest $request, ContextInterface $context): LogoutResponse
+    public function Logout(ContextInterface $context, LogoutRequest $request): LogoutResponse
     {
         try {
             $user = $this->requireAuth($context);
@@ -116,7 +117,7 @@ class AuthService extends BaseGrpcService
     /**
      * Refresh access token
      */
-    public function RefreshToken(RefreshTokenRequest $request, ContextInterface $context): AuthResponse
+    public function RefreshToken(ContextInterface $context, RefreshTokenRequest $request): AuthResponse
     {
         try {
             // Validate refresh token and issue new access token
@@ -140,7 +141,7 @@ class AuthService extends BaseGrpcService
     /**
      * Request password reset
      */
-    public function ForgotPassword(ForgotPasswordRequest $request, ContextInterface $context): ForgotPasswordResponse
+    public function ForgotPassword(ContextInterface $context, ForgotPasswordRequest $request): ForgotPasswordResponse
     {
         try {
             $result = $this->authResolver->forgotPassword(null, ['input' => ['email' => $request->email]], $context);
@@ -161,7 +162,7 @@ class AuthService extends BaseGrpcService
     /**
      * Reset password with token
      */
-    public function ResetPassword(ResetPasswordRequest $request, ContextInterface $context): ResetPasswordResponse
+    public function ResetPassword(ContextInterface $context, ResetPasswordRequest $request): ResetPasswordResponse
     {
         try {
             $input = [
@@ -189,7 +190,7 @@ class AuthService extends BaseGrpcService
     /**
      * Verify email with token
      */
-    public function VerifyEmail(VerifyEmailRequest $request, ContextInterface $context): VerifyEmailResponse
+    public function VerifyEmail(ContextInterface $context, VerifyEmailRequest $request): VerifyEmailResponse
     {
         try {
             $input = [
@@ -215,7 +216,7 @@ class AuthService extends BaseGrpcService
     /**
      * Resend verification email
      */
-    public function ResendVerification(ResendVerificationRequest $request, ContextInterface $context): ResendVerificationResponse
+    public function ResendVerification(ContextInterface $context, ResendVerificationRequest $request): ResendVerificationResponse
     {
         try {
             $result = $this->authResolver->resendVerification(null, ['input' => ['email' => $request->email]], $context);
@@ -236,7 +237,7 @@ class AuthService extends BaseGrpcService
     /**
      * Get current authenticated user
      */
-    public function Me(MeRequest $request, ContextInterface $context): User
+    public function Me(ContextInterface $context, MeRequest $request): User
     {
         try {
             $user = $this->requireAuth($context);
@@ -280,7 +281,7 @@ class AuthService extends BaseGrpcService
     /**
      * Transform User model to protobuf User message
      */
-    private function transformUser(User $user): User
+    private function transformUser(UserModel $user): User
     {
         return new User([
             'id' => (string) $user->id,
