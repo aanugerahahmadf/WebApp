@@ -2471,6 +2471,37 @@ body.fi-panel-admin :is(
     color: #facc15 !important;
 }
 
+/* Ukuran tipografi navigasi seragam di seluruh panel. */
+body.fi-panel-welcome :is(
+    .fi-sidebar .fi-sidebar-item-label,
+    .fi-sidebar .fi-sidebar-group-label,
+    .fi-topbar .fi-topbar-item-label,
+    .fi-topbar .fi-topbar-group-label,
+    .fi-topbar .fi-topbar-item-button,
+    .fi-sidebar .fi-sidebar-item-button,
+    .fi-dropdown-list-item
+),
+body.fi-panel-user :is(
+    .fi-sidebar .fi-sidebar-item-label,
+    .fi-sidebar .fi-sidebar-group-label,
+    .fi-topbar .fi-topbar-item-label,
+    .fi-topbar .fi-topbar-group-label,
+    .fi-topbar .fi-topbar-item-button,
+    .fi-sidebar .fi-sidebar-item-button,
+    .fi-dropdown-list-item
+),
+body.fi-panel-admin :is(
+    .fi-sidebar .fi-sidebar-item-label,
+    .fi-sidebar .fi-sidebar-group-label,
+    .fi-topbar .fi-topbar-item-label,
+    .fi-topbar .fi-topbar-group-label,
+    .fi-topbar .fi-topbar-item-button,
+    .fi-sidebar .fi-sidebar-item-button,
+    .fi-dropdown-list-item
+) {
+    font-size: 11px !important;
+}
+
 body.fi-panel-welcome :is(.fi-topbar, .fi-sidebar) :is(
     .fi-topbar-item-icon,
     .fi-topbar-group-toggle-icon,
