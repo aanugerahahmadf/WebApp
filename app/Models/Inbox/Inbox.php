@@ -9,6 +9,7 @@ use App\Models\Admin\Admin;
 use App\Models\User\User;
 use App\Services\GuestIdentity\GuestIdentity;
 use App\Support\ChatStaff\ChatStaff;
+use App\Support\ChatParticipantName\ChatParticipantName;
 
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
@@ -149,12 +150,15 @@ class Inbox extends Model
                     // Percakapan dengan diri sendiri: nama orangnya adalah nama
                     // penonton, yang di panel Welcome tetap ada -- hanya lewat
                     // cookie, bukan lewat Auth.
-                    return $this->viewer()?->full_name ?? 'Diri Sendiri';
+                    return ChatParticipantName::for($this->viewer(), 'Diri Sendiri');
                 }
 
                 return $otherParticipants->map(function ($userId) {
-                    return User::query()->find($userId, ['*'])?->full_name;
-                })->values()->filter()->implode(', ') ?: 'Unknown';
+                    return ChatParticipantName::for(
+                        User::query()->find($userId, ['*']),
+                        'Pengguna',
+                    );
+                })->values()->filter()->implode(', ') ?: 'Pengguna';
             }
         );
     }

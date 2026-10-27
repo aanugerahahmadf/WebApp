@@ -11,6 +11,7 @@ use App\Models\Order\Order;
 use App\Models\User\User;
 use App\Services\ChatService\ChatService;
 use App\Support\ChatStaff\ChatStaff;
+use App\Support\ChatParticipantName\ChatParticipantName;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -53,7 +54,7 @@ class ChatController extends Controller
             $otherUser = $otherId ? User::find($otherId, ['id', 'full_name', 'username', 'avatar_url', 'phone', 'whatsapp']) : null;
 
             $title = $isAdmin
-                ? ($otherUser ? __('Chat dengan :name', ['name' => $otherUser->full_name ?: $otherUser->username ?: __('Pelanggan')]) : $inbox->title ?? __('Chat Bantuan'))
+                ? ($otherUser ? __('Chat dengan :name', ['name' => ChatParticipantName::for($otherUser, __('Pelanggan'))]) : $inbox->title ?? __('Chat Bantuan'))
                 : __('Chat dengan Admin');
 
             $unreadCount = Message::where('inbox_id', $inbox->id)
@@ -71,7 +72,7 @@ class ChatController extends Controller
                 'title' => $title,
                 'other_user' => [
                     'id' => $otherUser?->id ?? $adminId,
-                    'name' => $otherUser ? ($otherUser->full_name ?: $otherUser->username ?? __('Pengguna')) : __('Admin'),
+                    'name' => $otherUser ? ChatParticipantName::for($otherUser, __('Pengguna')) : __('Admin'),
                     'profile_photo' => $otherUser?->avatar_url ?? null,
                     'phone' => $otherUser?->phone ?? $otherUser?->whatsapp,
                 'call_url' => '',
@@ -124,7 +125,7 @@ class ChatController extends Controller
                 'id' => $message->id,
                 'message' => $message->message,
                 'sender_id' => $message->user_id,
-                'sender_name' => $sender?->full_name ?? $sender?->username ?? __('Tidak dikenal'),
+                'sender_name' => ChatParticipantName::for($sender, __('Tidak dikenal')),
                 'is_me' => (int) $message->user_id === $userId,
                 'read_by' => $message->read_by ?? [],
                 'attachments' => $message->attachments->map(fn (Media $m) => [
@@ -145,13 +146,13 @@ class ChatController extends Controller
             'data' => $data,
             'other_user' => $otherUser ? [
                 'id' => $otherUser->id,
-                'name' => $otherUser->full_name ?: $otherUser->username ?? __('Admin'),
+                'name' => ChatParticipantName::for($otherUser, __('Admin')),
                 'profile_photo' => $otherUser->avatar_url ?? null,
                 'phone' => $otherUser->phone ?? $otherUser->whatsapp,
                 'call_url' => '',
             ] : [
                 'id' => $adminId,
-                'name' => $adminUser?->full_name ?? __('Admin'),
+                'name' => ChatParticipantName::for($adminUser, __('Admin')),
                 'profile_photo' => $adminUser?->avatar_url ?? null,
                 'phone' => $adminUser?->phone ?? $adminUser?->whatsapp,
                 // Guests do not receive an authenticated call room. They can
@@ -197,7 +198,7 @@ class ChatController extends Controller
                     'reply_to' => [
                         'id' => $repliedMessage->id,
                         'message' => $repliedMessage->message,
-                        'sender_name' => $repliedSender?->full_name ?? $repliedSender?->username ?? __('Tidak dikenal'),
+                        'sender_name' => ChatParticipantName::for($repliedSender, __('Tidak dikenal')),
                         'sender_id' => $repliedMessage->user_id,
                     ],
                 ];
@@ -788,7 +789,7 @@ class ChatController extends Controller
                 'id' => $message->id,
                 'message' => $message->message,
                 'sender_id' => $message->user_id,
-                'sender_name' => $sender?->full_name ?? $sender?->username ?? __('Tamu'),
+                'sender_name' => ChatParticipantName::for($sender, __('Tamu')),
                 'is_me' => (int) $message->user_id === (int) $guest->id,
                 'read_by' => $message->read_by ?? [],
                 'attachments' => $message->attachments->map(fn (Media $m) => [
@@ -809,11 +810,11 @@ class ChatController extends Controller
             'data' => $data,
             'other_user' => $otherUser ? [
                 'id' => $otherUser->id,
-                'name' => $otherUser->full_name ?: $otherUser->username ?? __('Admin'),
+                'name' => ChatParticipantName::for($otherUser, __('Admin')),
                 'profile_photo' => $otherUser->avatar_url ?? null,
             ] : [
                 'id' => $adminId,
-                'name' => $adminUser?->full_name ?? __('Admin'),
+                'name' => ChatParticipantName::for($adminUser, __('Admin')),
                 'profile_photo' => $adminUser?->avatar_url ?? null,
                 'phone' => $adminUser?->phone ?? $adminUser?->whatsapp,
                 'call_url' => '',
@@ -831,9 +832,10 @@ class ChatController extends Controller
             'inbox_id' => 'required',
             'message' => 'required|string',
             'cs_category' => 'nullable|string|max:50',
+            'name' => 'nullable|string|max:100',
         ]);
 
-        $guest = $this->resolveGuestUser($request->input('guest_id'), null);
+        $guest = $this->resolveGuestUser($request->input('guest_id'), $request->input('name'));
         $inbox = Inbox::find($request->input('inbox_id'), ['*']);
         if (! $inbox) {
             return response()->json(['success' => false, 'message' => __('Kotak pesan tidak ditemukan')], 404);
