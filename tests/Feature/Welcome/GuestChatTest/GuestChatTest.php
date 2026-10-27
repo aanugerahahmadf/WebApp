@@ -206,7 +206,7 @@ it('ChatService returns null when no admin user exists', function (): void {
     expect($inbox)->toBeNull();
 });
 
-it('guest mobile chat receives the shared internet call room', function (): void {
+it('guest mobile chat does not receive a third-party call URL', function (): void {
     $started = $this->postJson('/api/messages/guest/start', [
         'guest_id' => 'guest-call-test',
         'name' => 'Call Guest',
@@ -216,7 +216,7 @@ it('guest mobile chat receives the shared internet call room', function (): void
 
     $this->getJson('/api/messages/guest/'.$inboxId.'?guest_id=guest-call-test')
         ->assertOk()
-        ->assertJsonPath('other_user.call_url', fn ($url) => is_string($url) && str_ends_with($url, '/messages/'.$inboxId.'/call'));
+        ->assertJsonPath('other_user.call_url', fn ($url) => empty($url));
 });
 
 // ---------------------------------------------------------------------------

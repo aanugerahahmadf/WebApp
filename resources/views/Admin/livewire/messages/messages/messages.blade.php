@@ -36,7 +36,6 @@
                         $callPhone = $selectedConversation->other_users->first()?->phone
                             ?? $selectedConversation->other_users->first()?->whatsapp;
                         $callPhone = $callPhone ? preg_replace('/[^0-9+]/', '', $callPhone) : null;
-                        $callUrl = url('/messages/'.$selectedConversation->id.'/call');
                     @endphp
 
                     <x-filament::avatar src="{{ $avatar }}" alt="{{ $alt }}" size="lg" />
@@ -51,13 +50,11 @@
                                 {{ $selectedConversation->other_users->pluck('name')->implode(', ') }}</p>
                         @endif
                     </div>
-                    @if ($callUrl)
-                        <a href="{{ $callUrl }}" target="_blank" rel="noopener noreferrer"
+                    <button type="button" x-on:click="$dispatch('open-modal', { id: 'admin-message-call' })"
                             class="rounded-lg p-2 text-green-600 transition hover:bg-green-50 hover:text-green-700 dark:hover:bg-green-900/20"
                             title="{{ __('Telepon Internet') }}" aria-label="{{ __('Telepon Internet') }}">
                             <x-filament::icon icon="/images/icons/phone.svg" class="h-5 w-5" />
-                        </a>
-                    @endif
+                    </button>
                     <button type="button" x-on:click="$dispatch('open-modal', { id: 'admin-message-search' })"
                         class="rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-white/10"
                         title="{{ __('Cari') }}">
@@ -77,6 +74,15 @@
                     {{ $this->visibleMessages->count() }} {{ __('hasil') }}
                 </p>
             @endif
+        </x-filament::modal>
+        <x-filament::modal width="lg" id="admin-message-call">
+            <x-slot name="heading">{{ __('Panggilan') }}</x-slot>
+            <div class="flex flex-col items-center gap-4 py-8 text-center">
+                <x-filament::icon icon="/images/icons/phone.svg" class="h-10 w-10" />
+                <h3 class="text-lg font-semibold">{{ $selectedConversation->inbox_title }}</h3>
+                <p class="text-sm text-gray-500">{{ __('Panggilan internal sedang disiapkan.') }}</p>
+                <button type="button" x-on:click="$dispatch('close-modal', { id: 'admin-message-call' })" class="rounded-lg bg-danger-600 px-4 py-2 text-white">{{ __('Tutup') }}</button>
+            </div>
         </x-filament::modal>
         <!-- Chat Header : End -->
         <!-- Chat Box : Start -->

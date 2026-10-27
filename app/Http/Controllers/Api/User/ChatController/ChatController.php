@@ -25,9 +25,9 @@ class ChatController extends Controller
      */
     private function callUrl(Inbox $inbox): string
     {
-        // Calling is handled by the application's own WebRTC screen. Never
-        // redirect users to a third-party meeting service.
-        return url('/messages/'.$inbox->id.'/call');
+        // The website opens its internal call modal. Mobile opens its own
+        // native call modal; no external URL is returned.
+        return '';
     }
 
     public function getConversations(Request $request)
