@@ -197,12 +197,12 @@ body.fi-panel-admin .fi-sidebar .fi-sidebar-header {
    Filament tanpa perlu mengubah blade, dan mengeditnya tidak menuntut
    `npm run build`. */
 body.fi-panel-admin {
-    background-color: #ffffff !important;
+    background-color: #f8fafc !important;
     background-image: none !important;
 }
 
 .dark body.fi-panel-admin {
-    background-color: #000000 !important;
+    background-color: #0f1115 !important;
     background-image: none !important;
 }
 
@@ -2589,4 +2589,28 @@ body.fi-panel-user :is(.fi-topbar, .fi-sidebar),
 body.fi-panel-admin :is(.fi-topbar, .fi-sidebar) {
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
+}
+
+/* Password & Security uses the same solid black surface as the Change
+   Password page, not the navy glass surface used by generic cards. */
+.fi-panel-user .password-security-card {
+    background-color: #050607 !important;
+    background-image: none !important;
+    border-color: rgb(75 85 99 / 0.7) !important;
+    box-shadow: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+}
+
+body.fi-panel-user .password-security-page {
+    background-color: transparent !important;
+}
+
+body.fi-panel-user .password-security-card a {
+    background-color: transparent;
+}
+
+.fi-panel-user .password-security-card a:hover,
+.fi-panel-user .password-security-card a:focus-visible {
+    background-color: transparent !important;
 }

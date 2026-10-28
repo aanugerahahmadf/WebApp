@@ -40,8 +40,8 @@ class SettingsPage extends Page
     public function getBreadcrumbs(): array
     {
         return [
-            ...$this->breadcrumbParentCrumb(),
-            $this->getTitle(),
+            url('/') => __('Home'),
+            __('Settings'),
         ];
     }
 }

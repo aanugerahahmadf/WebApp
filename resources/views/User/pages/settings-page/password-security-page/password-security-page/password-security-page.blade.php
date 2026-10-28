@@ -12,7 +12,7 @@
     di detail akan mulai berbeda begitu salah satunya diedit.
 --}}
 <x-filament-panels::page>
-    <div class="mx-auto max-w-4xl space-y-6">
+    <div class="profile-glass-page settings-page password-security-page space-y-6">
         @foreach ($this->securityGroups() as $group)
             <section>
                 {{--
@@ -29,7 +29,7 @@
                     {{ $group['label'] }}
                 </h2>
 
-                <div class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/10 dark:bg-gray-900">
+                <div class="password-security-card overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/10 dark:bg-gray-900">
                     @foreach ($group['items'] as [$page, $icon, $label, $description])
                         <a
                             wire:navigate

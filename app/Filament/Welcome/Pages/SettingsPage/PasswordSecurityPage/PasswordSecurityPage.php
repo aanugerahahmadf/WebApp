@@ -485,9 +485,16 @@ class PasswordSecurityPage extends Page
 
     public function getBreadcrumbs(): array
     {
-        return [
-            ...$this->breadcrumbParentCrumb(),
-            $this->getTitle(),
+        $crumbs = [
+            url('/') => __('Home'),
+            url('/settings') => __('Settings'),
+            url('/settings/password-security') => __('Password and Security'),
         ];
+
+        if ($this->section !== 'index') {
+            $crumbs[] = $this->getHeading();
+        }
+
+        return $crumbs;
     }
 }

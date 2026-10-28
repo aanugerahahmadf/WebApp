@@ -82,9 +82,9 @@
             </div>
         @endif
 
-        @if ($pm?->type === 'qris' && $pm?->image_url)
+        @if ($pm?->type === 'qris' && $pm?->qris_image_url)
             <div class="mt-2 flex justify-center">
-                <img src="{{ $pm->image_url }}" alt="QRIS" class="max-h-56 rounded-lg bg-white object-contain p-2 shadow-sm">
+                <img src="{{ $pm->qris_image_url }}" alt="QRIS" class="max-h-56 rounded-lg bg-white object-contain p-2 shadow-sm">
             </div>
         @endif
 

@@ -2,16 +2,31 @@
 
 namespace App\Console\Commands\SyncBriPayments;
 
+use App\Enums\PaymentStatus\PaymentStatus;
 use App\Models\Transaction\Transaction;
 use App\Services\BriService\BriService;
 use Illuminate\Console\Command;
 
+/**
+ * Jalur cadangan untuk melunasi pembayaran BRI.
+ *
+ * Webhook adalah jalur utama, tetapi notifikasi bisa hilang (server mati,
+ * URL belum terdaftar, signature beda). Command ini membaca mutasi rekening
+ * settlement dan mencocokkan kredit dengan transaksi yang masih pending:
+ *
+ *   1. Nomor Virtual Account yang tercantum di `remark` mutasi (paling tepat,
+ *      karena nomor VA unik per user + pesanan), lalu
+ *   2. nominal yang sama (untuk QRIS statis / transfer manual).
+ *
+ * Dijadwalkan tiap 5 menit (routes/console/console.php), jadi pembayaran
+ * tetap otomatis LUNAS walau webhook tidak sampai.
+ */
 class SyncBriPayments extends Command
 {
     protected $signature = 'app:sync-bri-payments
         {--dry-run : Tampilkan hasil tanpa menandai LUNAS}';
 
-    protected $description = 'Cek mutasi BRI dan otomatis tandai pembayaran manual (QRIS/transfer) sebagai LUNAS';
+    protected $description = 'Cek mutasi BRI dan otomatis tandai pembayaran (VA/QRIS/transfer) sebagai LUNAS';
 
     public function handle(BriService $bri): int
     {
@@ -42,15 +57,16 @@ class SyncBriPayments extends Command
 
         $this->line('Baris mutasi yang didapat: '.count($rows));
 
-        // Hanya transaksi order manual yang masih menunggu verifikasi.
+        // Semua transaksi order yang masih menunggu, termasuk VA (bri_va) dan
+        // QRIS dinamis. Jangan menyaring `payment_gateway = manual` saja:
+        // transaksi VA/QRIS justru yang paling butuh rekonsiliasi.
         $pending = Transaction::where('type', 'order')
-            ->where('payment_gateway', 'manual')
             ->whereIn('status', ['pending', 'processing'])
             ->with('order')
             ->get();
 
         if ($pending->isEmpty()) {
-            $this->info('Tidak ada pembayaran manual yang menunggu.');
+            $this->info('Tidak ada pembayaran yang menunggu.');
 
             return self::SUCCESS;
         }
@@ -66,34 +82,49 @@ class SyncBriPayments extends Command
                 continue;
             }
 
+            $remark = (string) ($row['remark'] ?? $row['description'] ?? '');
+            $normalizedRemark = strtoupper((string) preg_replace('/\s+/', '', $remark));
+
             $pointer = null;
-            foreach ($pending as $tx) {
-                if ($tx->status === 'success') {
-                    continue;
-                }
-                if (abs((float) $tx->total_amount - $credit) <= $tolerance) {
-                    $pointer = $tx;
-                    break;
-                }
+
+            // 1. Cocokkan nomor Virtual Account di keterangan mutasi. Nomor VA
+            //    unik per user + pesanan, jadi ini identitas paling kuat.
+            if ($normalizedRemark !== '') {
+                $pointer = $pending->first(function (Transaction $tx) use ($normalizedRemark): bool {
+                    $va = strtoupper((string) preg_replace('/\s+/', '', (string) $tx->virtual_account_no));
+
+                    return $va !== '' && str_contains($normalizedRemark, $va);
+                });
+            }
+
+            // 2. Cadangan: nominal yang sama (QRIS statis / transfer manual).
+            if (! $pointer) {
+                $pointer = $pending->first(
+                    fn (Transaction $tx): bool => abs((float) $tx->total_amount - $credit) <= $tolerance
+                );
             }
 
             if (! $pointer) {
                 continue;
             }
 
+            if ($pointer->status === PaymentStatus::SUCCESS) {
+                continue;
+            }
+
             $matched++;
 
             // Anti-dobel: tandai metadata mutasi BRI.
-            $remark = (string) ($row['remark'] ?? '');
+            $transactionTime = $row['transactionTime'] ?? null;
             $this->info("MATCH: TRX #{$pointer->reference_number} (Rp ".number_format($credit, 0, ',', '.').") | remark: ".mb_substr($remark, 0, 60));
 
             if ($dryRun) {
                 continue;
             }
 
-            if (isset($pointer->metadata['bri_remark'])
-                && $pointer->metadata['bri_remark'] === $remark
-                && $pointer->metadata['bri_transaction_time'] === ($row['transactionTime'] ?? null)) {
+            $metadata = $pointer->metadata ?? [];
+            if (($metadata['bri_remark'] ?? null) === $remark
+                && ($metadata['bri_transaction_time'] ?? null) === $transactionTime) {
                 // Sudah pernah dicocokkan dengan baris mutasi yang sama.
                 $matched--;
 
@@ -103,13 +134,18 @@ class SyncBriPayments extends Command
             $pointer->markAsSuccess();
 
             $pointer->update([
-                'payment_gateway' => 'manual',
-                'metadata' => array_merge($pointer->metadata ?? [], [
+                // Jangan menimpa payment_gateway bri_va/qris menjadi manual:
+                // nilai itu menjelaskan jalur pembayaran yang dipakai pembeli.
+                'metadata' => array_merge($metadata, [
                     'bri_auto' => true,
-                    'bri_transaction_time' => $row['transactionTime'] ?? null,
+                    'bri_transaction_time' => $transactionTime,
                     'bri_remark' => $remark,
+                    'bri_settlement_account' => config('bri.account_number'),
                 ]),
             ]);
+
+            // Transaksi yang sudah LUNAS tidak perlu dicocokkan lagi.
+            $pending = $pending->reject(fn (Transaction $tx): bool => $tx->is($pointer));
 
             $this->info("LUNAS otomatis: TRX #{$pointer->reference_number} (Rp ".number_format($credit, 0, ',', '.').")");
         }

@@ -24,12 +24,17 @@ return [
     // Symmetric hanya butuh client_secret, asymmetric perlu RSA private key.
     'snap_key_type' => env('BRI_SNAP_KEY_TYPE', 'symmetric'),
 
-    // Nominminal rekening admin yang dipantau. BRI API mengharuskan 15 digit
-    // (tambahkan 0 di depan bila kurang dari 15 digit).
-    // Rekening settlement merchant hanya untuk API statement. Jangan pernah
-    // memakai nilai ini sebagai nomor VA yang ditampilkan ke pelanggan.
-    'account_number' => env('BRI_ACCOUNT_NUMBER', ''),
-    'account_holder' => env('BRI_ACCOUNT_HOLDER', ''),
+    // Rekening settlement merchant. Semua dana yang masuk ke nomor Virtual
+    // Account pelanggan diteruskan BRI ke rekening ini, dan API statement
+    // dipakai untuk mencocokkan mutasinya.
+    //
+    // Nilainya dijadikan default (bukan string kosong) karena rekening ini
+    // adalah bagian dari alur pembayaran toko: tanpa nilai default, instalasi
+    // baru yang lupa mengisi .env akan "lupa" ke mana uang harus masuk.
+    // JANGAN pernah memakai nilai ini sebagai nomor VA yang ditampilkan ke
+    // pelanggan -- nomor VA dibuat unik per user + pesanan.
+    'account_number' => env('BRI_ACCOUNT_NUMBER', '421201032041536'),
+    'account_holder' => env('BRI_ACCOUNT_HOLDER', 'Anugerah Ahmad Fachrurochim'),
 
     // Base URL. Sandbox: https://sandbox.partner.api.bri.co.id
     // Production: https://partner.api.bri.co.id
@@ -86,6 +91,23 @@ return [
 
     // Masa berlaku nomor VA (jam).
     'va_expiry_hours' => (int) env('BRI_VA_EXPIRY_HOURS', 24),
+
+    /*
+     * Path yang dipakai BRI saat menghitung X-SIGNATURE notifikasi pembayaran
+     * (SNAP: HMAC-SHA512 atas METHOD:EndpointUrl:AccessToken:bodyHash:Timestamp).
+     *
+     * BRI tidak mengirim path itu di body, jadi kita coba beberapa kandidat
+     * endpoint resmi. Tanpa ini, notifikasi yang sah dari BRI ditolak dan
+     * pesanan tidak pernah otomatis LUNAS. Verifikasi tetap memakai
+     * client_secret; daftar ini hanya menyangkut stringToSign.
+     */
+    'notification_paths' => [
+        '/v1.0/transfer-va/payment',
+        '/snap/v1.0/transfer-va/payment',
+        '/v1.0/transfer-va/payment-inquiry',
+        '/v1.0/qr/qr-mpm-notify',
+        '/snap/v1.0/qr/qr-mpm-notify',
+    ],
 
     // Endpoint SNAP
     'snap_token_url' => env('BRI_BASE_URL', 'https://sandbox.partner.api.bri.co.id').'/snap/v1.0/access-token/b2b',

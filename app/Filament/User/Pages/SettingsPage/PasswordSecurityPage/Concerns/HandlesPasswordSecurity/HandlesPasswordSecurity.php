@@ -149,7 +149,7 @@ trait HandlesPasswordSecurity
     /**
      * Rantai crumb lengkap:
      *
-     *   Pengaturan / Kata Sandi dan Keamanan / [Kelompok] / Judul
+     *   Home / Settings / Password and Security / Judul
      *
      * Tidak memakai breadcrumbParentCrumb() dari HasDynamicBreadcrumbs:
      * parent di sini bukan "halaman asal klik" tapi struktur tetap. Kalau
@@ -157,36 +157,31 @@ trait HandlesPasswordSecurity
      * sebelumnya -- dan bisa hilang total saat halaman dibuka langsung dari
      * bookmark, sehingga tidak ada cara naik sama sekali.
      *
-     * Kelompok sengaja crumb tanpa URL: dia bukan halaman, cuma pengelompok,
-     * jadi tidak boleh diklik.
+     * Kelompok navigasi tidak dimasukkan: "Sign In and Recovery" dan
+     * "Security Checkup" hanya label visual di halaman daftar.
      *
      * @return array<string|\Illuminate\Support\HtmlString, string|\Illuminate\Support\HtmlString>
      */
     protected function securityBreadcrumbs(): array
     {
+        // Tetapkan URL secara eksplisit. Jangan memakai referrer atau
+        // getUrl() dinamis di sini: URL lama `?section=...` sebelumnya
+        // membuat Filament membuang Settings dan Password and Security.
         $crumbs = [
-            SettingsPage::getUrl(panel: 'user') => __('Pengaturan'),
-            PasswordSecurityPage::getUrl(panel: 'user') => __('Kata Sandi dan Keamanan'),
+            url('/') => __('Home'),
+            url('/settings') => __('Settings'),
+            url('/settings/password-security') => __('Password and Security'),
         ];
 
         // Dikirim dari detail notifikasi: naik ke notifikasi dulu, lalu ke
         // daftar Keamanan. Sebelumnya jadi tombol; sekarang jadi crumb.
         if ($notificationDetailUrl = $this->notificationDetailReturnUrl()) {
-            $crumbs[$notificationDetailUrl] = __('Detail Notifikasi');
-            $crumbs[PasswordSecurityPage::getUrl(panel: 'user')] = __('Kata Sandi dan Keamanan');
+            $crumbs[$notificationDetailUrl] = __('Notification Details');
+            $crumbs[PasswordSecurityPage::getUrl(panel: 'user')] = __('Password and Security');
         }
 
-        if ($group = $this->securityGroupLabel()) {
-            // Kalau judul halaman sama dengan label kelompok -- terjadi di
-            // Checkup, yang bernama "Pemeriksaan Keamanan" dan bergrup pada
-            // "Pemeriksaan Keamanan" -- crumb kelompok disembunyikan saja.
-            // Menampilkan keduanya berarti dua crumb identik berturut-turut,
-            // yang terbaca sebagai bug, bukan sebagai informasi.
-            if ($group !== $this->getTitle()) {
-                // Kunci integer -> Filament merender <span>, bukan <a>.
-                $crumbs[] = $group;
-            }
-        }
+        // Nama kelompok ("Sign In and Recovery" / "Security Checkup") sengaja
+        // tidak dijadikan breadcrumb. Breadcrumb langsung menuju halaman item.
 
         // Judul halaman sebagai crumb terakhir.
         //
@@ -202,7 +197,13 @@ trait HandlesPasswordSecurity
         $urls = array_keys(array_filter($crumbs, 'is_string', ARRAY_FILTER_USE_KEY));
 
         if (! in_array($this->getUrl(), $urls, true)) {
-            $crumbs[] = $this->getTitle();
+            $breadcrumbTitle = match ($this->getTitle()) {
+                __('Saved Sign In') => __('Saved Login'),
+                __('Where You\'re Signed In') => __('Login Activity'),
+                default => $this->getTitle(),
+            };
+
+            $crumbs[] = $breadcrumbTitle;
         }
 
         return $crumbs;

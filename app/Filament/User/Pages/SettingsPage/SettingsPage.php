@@ -5,6 +5,7 @@ namespace App\Filament\User\Pages\SettingsPage;
 use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\User\Pages\Home\Home;
 use App\Livewire\User\DeleteAccountComponent\DeleteAccountComponent;
+use App\Support\TopNavigation\TopNavigation;
 use Filament\Pages\Page;
 
 class SettingsPage extends Page
@@ -39,9 +40,14 @@ class SettingsPage extends Page
 
     public function getBreadcrumbs(): array
     {
-        return [
-            ...$this->breadcrumbParentCrumb(),
-            $this->getTitle(),
-        ];
+        $crumbs = [];
+
+        if ($homeUrl = TopNavigation::homeUrl('user')) {
+            $crumbs[$homeUrl] = __('Home');
+        }
+
+        $crumbs[] = __('Settings');
+
+        return $crumbs;
     }
 }

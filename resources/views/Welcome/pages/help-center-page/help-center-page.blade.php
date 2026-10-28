@@ -2,7 +2,7 @@
     <div class="space-y-4">
         @if ($subtitle)
             {{-- Gaya Teks: styling per-field "helps.subtitle" dari form admin. --}}
-            <p class="text-sm text-gray-500 dark:text-gray-400" data-typo="subheading">{{ $subtitle }}</p>
+            <p class="text-sm text-gray-700 dark:text-gray-200" data-typo="subheading">{{ $subtitle }}</p>
         @endif
 
         @forelse ($faqs as $item)
@@ -11,13 +11,13 @@
                     {{-- data-typo/data-field agar tipografi per-peran & override per-field "helps.faqs" ikut di sini. --}}
                     <span data-typo="subheading">{{ $item['question'] ?? $item['q'] ?? $item['heading'] ?? '' }}</span>
                 </x-slot>
-                <div class="text-sm text-gray-600 dark:text-gray-300" data-typo="description">
+                <div class="text-sm text-gray-800 dark:text-gray-100" data-typo="description">
                     {{ $item['answer'] ?? $item['a'] ?? $item['body'] ?? '' }}
                 </div>
             </x-filament::section>
         @empty
             <x-filament::section>
-                <p class="text-sm text-gray-500 dark:text-gray-400">{{ __('Konten belum tersedia.') }}</p>
+                <p class="text-sm text-gray-700 dark:text-gray-200">{{ __('Konten belum tersedia.') }}</p>
             </x-filament::section>
         @endforelse
 
@@ -43,7 +43,7 @@
                                     @endif
                                 </dt>
                                 @if ($value)
-                                    <dd class="text-gray-600 dark:text-gray-300">{{ $value }}</dd>
+                                    <dd class="text-gray-800 dark:text-gray-100">{{ $value }}</dd>
                                 @endif
                             </div>
                         @endif
