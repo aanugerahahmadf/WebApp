@@ -31,10 +31,11 @@ class PaymentMethodSeeder extends Seeder
                 'sort_order'     => 1,
                 'is_active'      => true,
             ],
-            // ── QRIS DINAMIS (BANK & E-WALLET) ──────────────────────────
-            // 1 pesanan = 1 kode QR dinamis. Bisa discan dari aplikasi mana
-            // pun (GoPay, DANA, OVO, ShopeePay, m-banking, dll). Dana masuk
-            // otomatis ke rekening BRI admin via webhook.
+            // ── QRIS STATIS (BANK & E-WALLET) ───────────────────────────
+            // Gambar QRIS-nya statis milik toko: public/images/qris/qris.jpg
+            // (lihat App\Support\QrisImage\QrisImage). Pembeli memindai gambar
+            // itu dari aplikasi bank/e-wallet mana pun, lalu mengunggah bukti
+            // bayar -- alur yang sama dengan transfer bank manual.
             [
                 'name'           => 'QRIS (Semua Bank & E-Wallet)',
                 'type'           => 'qris',
@@ -43,7 +44,7 @@ class PaymentMethodSeeder extends Seeder
                 'account_number' => '421201032041536',
                 'account_holder' => 'Anugerah Ahmad Fachrurochim',
                 'image_url'      => null,
-                'instructions'   => "1. Buka aplikasi bank/e-wallet Anda (BCA Mobile, BRImo, BNI Mobile, DANA, GoPay, OVO, ShopeePay, dll)\n2. Pilih menu Scan / Bayar QRIS\n3. Scan kode QR yang ditampilkan\n4. Konfirmasi di aplikasi Anda (saldo otomatis berkurang)\n5. Status pesanan otomatis LUNAS tanpa verifikasi admin",
+                'instructions'   => "1. Buka aplikasi bank/e-wallet Anda (BCA Mobile, BRImo, BNI Mobile, DANA, GoPay, OVO, ShopeePay, dll)\n2. Pilih menu Scan / Bayar QRIS\n3. Scan gambar QRIS toko yang tampil di halaman checkout\n4. Konfirmasi di aplikasi Anda (saldo otomatis berkurang)\n5. Unggah bukti pembayaran di halaman Pesanan Saya",
                 'fee'            => 0,
                 'sort_order'     => 2,
                 'is_active'      => true,
@@ -75,7 +76,9 @@ class PaymentMethodSeeder extends Seeder
 
         // Nonaktifkan metode lama yang butuh gateway (Midtrans) atau rekening fiktif,
         // agar tidak muncul di halaman pembayaran aplikasi.
-        $legacyCodes = ['bca', 'mandiri', 'gopay', 'ovo', 'dana', 'shopeepay', 'credit_card', 'bri', 'qris'];
+        // 'qris' TIDAK ikut lagi: sejak 2026-10-28 toko punya QRIS statis resmi
+        // (public/images/qris/qris.jpg) sehingga QRIS bisa dibayar manual.
+        $legacyCodes = ['bca', 'mandiri', 'gopay', 'ovo', 'dana', 'shopeepay', 'credit_card', 'bri'];
         foreach ($legacyCodes as $code) {
             DB::table('payment_methods')->where('code', $code)->update(['is_active' => false, 'updated_at' => now()]);
         }

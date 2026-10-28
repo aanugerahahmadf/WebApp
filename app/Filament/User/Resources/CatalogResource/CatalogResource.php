@@ -968,7 +968,28 @@ class CatalogResource extends Resource
                                 ->default(PaymentMethod::activeFirstId() ?: null)
                                 ->options(PaymentMethod::activeOptions())
                                 ->descriptions(PaymentMethod::activeDescriptions())
+                                // Tanpa `live()`, memilih QRIS tidak
+                                // memicu render ulang -> gambar QRIS baru
+                                // muncul setelah pindah step.
+                                ->live()
                                 ->columnSpanFull(),
+                            // Gambar QRIS muncul tepat di bawah pilihan metode
+                            // begitu pembeli memilih QRIS. Sumber gambarnya
+                            // public/images/qris/qris.jpg (QrisImage), bukan
+                            // kolom image_url yang selalu NULL.
+                            Forms\Components\Placeholder::make('qris_preview')
+                                ->hiddenLabel()
+                                ->columnSpanFull()
+                                ->visible(fn (Forms\Get $get): bool => PaymentMethod::isQris((int) $get('payment_method_id')))
+                                ->content(function (Forms\Get $get): HtmlString {
+                                    $method = PaymentMethod::find((int) $get('payment_method_id'));
+
+                                    return new HtmlString(
+                                        view('Shared.components.qris-card.qris-card', [
+                                            'method' => $method,
+                                        ])->render()
+                                    );
+                                }),
                             Forms\Components\Placeholder::make('payment_note')
                                 ->label('')
                                 ->hiddenLabel()

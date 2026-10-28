@@ -410,12 +410,16 @@ class BriService
         }
 
         $partnerServiceId = config('bri.va_partner_service_id', '8808');
-        // customerNo harus mengikat VA ke user dan transaksi. Jangan memakai
+        // customerNo harus mengikat VA ke user DAN pesanan. Jangan memakai
         // rekening settlement merchant (mis. 421...) sebagai nomor VA.
-        // 10 digit user + 6 digit transaksi tetap numeric dan deterministik,
-        // sehingga retry tidak membuat identitas pembayaran yang berbeda.
+        //
+        // 10 digit user + 6 digit pesanan tetap numeric dan deterministik,
+        // sehingga retry untuk pesanan yang sama selalu menghasilkan nomor VA
+        // yang sama (BRI menolak create-va ganda dengan nomor berbeda untuk
+        // trxId yang sama), sementara pesanan berbeda tetap unik.
+        $orderKey = $transaction->order?->getKey() ?? $transaction->getKey();
         $customerNo = str_pad((string) ($user->getKey() % 10_000_000_000), 10, '0', STR_PAD_LEFT)
-            .str_pad((string) ($transaction->getKey() % 1_000_000), 6, '0', STR_PAD_LEFT);
+            .str_pad((string) ($orderKey % 1_000_000), 6, '0', STR_PAD_LEFT);
         $virtualAccountNo = $partnerServiceId.$customerNo;
         $virtualAccountName = $this->virtualAccountHolderName($user);
         $expiry = now()->addHours((int) config('bri.va_expiry_hours', 24));
@@ -484,15 +488,36 @@ class BriService
                 return null;
             }
 
-            // Jangan menerima nomor VA yang tidak sesuai user/order atau
-            // identitas kosong. Nomor final selalu berasal dari provider.
-            if (mb_strtolower($providerVaName) !== mb_strtolower($virtualAccountName)) {
-                Log::error('[BRI] create-va mengembalikan nama VA berbeda dari user', [
-                    'transaction_id' => $transaction->id,
-                ]);
+            // Jangan menerima nomor VA kosong. Nomor final selalu berasal dari
+            // provider. Untuk nama: beberapa respons sandbox mengembalikan nama
+            // yang sudah dinormalisasi BRI (spasi ganda, huruf kapital, atau
+            // potongan 40 karakter). Perbedaan seperti itu BUKAN alasan untuk
+            // membuang VA yang sudah dibuat -- kalau dibuang, pesanan tidak
+            // akan pernah bisa dibayar otomatis. Yang dikunci: nama yang
+            // ditampilkan tetap nama pemesan yang kita kirim, bukan nama
+            // merchant.
+            $providerNameDiffers = mb_strtolower(
+                preg_replace('/\s+/', ' ', trim($providerVaName)) ?? $providerVaName
+            ) !== mb_strtolower(
+                preg_replace('/\s+/', ' ', trim($virtualAccountName)) ?? $virtualAccountName
+            );
 
-                return null;
+            if ($providerNameDiffers) {
+                Log::warning('[BRI] create-va mengembalikan nama VA berbeda dari yang dikirim', [
+                    'transaction_id' => $transaction->id,
+                    'sent' => $virtualAccountName,
+                    'received' => $providerVaName,
+                ]);
             }
+
+            // Nama yang disimpan adalah nama pemesan yang sudah disetujui
+            // (bukan nama merchant). Kalau BRI hanya mengubah kapitalisasi/
+            // spasi, pakai versi BRI supaya UI tidak menampilkan nama basi;
+            // kalau benar-benar berbeda, pertahankan nama pemesan yang kita
+            // kirim. Versi provider tetap dicatat di metadata untuk audit.
+            $displayVaName = $providerNameDiffers
+                ? $virtualAccountName
+                : ($providerVaName !== '' ? $providerVaName : $virtualAccountName);
 
             $transaction->update([
                 'virtual_account_no' => $providerVaNo,
@@ -502,9 +527,12 @@ class BriService
                 'metadata' => array_merge($transaction->metadata ?? [], [
                     'bri_va' => [
                         'virtualAccountNo' => $providerVaNo,
-                        'virtualAccountName' => $providerVaName,
+                        'virtualAccountName' => $displayVaName,
+                        'providerVirtualAccountName' => $providerVaName !== '' ? $providerVaName : null,
                         'expiredDate' => $vaData['expiredDate'] ?? null,
                         'responseCode' => $data['responseCode'] ?? null,
+                        'settlementAccount' => config('bri.account_number'),
+                        'settlementAccountHolder' => config('bri.account_holder'),
                     ],
                 ]),
             ]);
@@ -512,7 +540,7 @@ class BriService
             return [
                 'virtual_account_no' => $transaction->virtual_account_no,
                 // Nama yang akan tampil di aplikasi BRI = nama pemesan.
-                'virtual_account_name' => $providerVaName,
+                'virtual_account_name' => $displayVaName,
                 'virtual_account_expiry' => $transaction->virtual_account_expiry ? $transaction->virtual_account_expiry->format('Y-m-d\TH:i:sP') : null,
                 // Settlement destination is returned for trusted backend
                 // consumers and tests only. Customer payment-method data is
@@ -630,26 +658,64 @@ class BriService
     }
 
     /**
-     * Verifikasi signature X-SIGNATURE yang dikirim BRI pada callback
-     * (Payment Notification VA). Signature dibentuk dengan HMAC-SHA512
-     * dari client_secret atas body mentah (atau hash body).
+     * Verifikasi signature X-SIGNATURE yang dikirim BRI pada callback.
+     *
+     * BRI memakai beberapa bentuk stringToSign tergantung produk dan versi
+     * SNAP:
+     *
+     *   1. HMAC-SHA512(clientSecret, rawBody)                     (legacy)
+     *   2. HMAC-SHA512(clientSecret, lowercase(hex(sha256(body))))
+     *   3. HMAC-SHA512(clientSecret,
+     *          "POST:{endpoint}:{accessToken}:{bodyHash}:{timestamp}")  (SNAP)
+     *
+     * Notifikasi pembayaran tidak selalu menyertakan access token, jadi bentuk
+     * ke-3 dicoba dengan token kosong dan tanpa segmen token.
+     *
+     * Tanpa salah satu bentuk ini, callback yang SAH dari BRI ditolak dan
+     * pesanan tidak pernah otomatis LUNAS -- gejalanya "pembayaran tidak
+     * pernah masuk" padahal BRI sudah mengirim notifikasi.
      */
     public function verifyVaNotification(string $timestamp, string $signature, string $rawBody): bool
     {
-        // 1. HMAC_SHA512(clientSecret, rawBody)
-        $candidateRaw = base64_encode(hash_hmac('sha512', $rawBody, config('bri.client_secret'), true));
-        if (hash_equals($signature, $candidateRaw)) {
-            return true;
+        $secret = (string) config('bri.client_secret');
+        if ($signature === '' || $secret === '') {
+            return false;
         }
 
-        // 2. HMAC_SHA512(clientSecret, lowercase(hex(sha256(body))))
         $bodyHash = strtolower(hash('sha256', $rawBody));
-        $candidateHash = base64_encode(hash_hmac('sha512', $bodyHash, config('bri.client_secret'), true));
-        if (hash_equals($signature, $candidateHash)) {
-            return true;
+
+        $candidates = [
+            // 1. HMAC atas body mentah.
+            $rawBody,
+            // 2. HMAC atas hash body.
+            $bodyHash,
+        ];
+
+        $paths = array_unique(array_filter(array_map(
+            static fn ($path): string => trim((string) $path),
+            (array) config('bri.notification_paths', [])
+        )));
+
+        foreach ($paths as $path) {
+            // 3a. SNAP dengan segmen access token (kosong untuk notifikasi).
+            $candidates[] = "POST:{$path}::{$bodyHash}:{$timestamp}";
+            // 3b. SNAP tanpa segmen access token.
+            $candidates[] = "POST:{$path}:{$bodyHash}:{$timestamp}";
+            // 3c. Bentuk legacy dengan body mentah.
+            $candidates[] = "path={$path}&verb=POST&token=&timestamp={$timestamp}&body={$rawBody}";
         }
 
-        Log::warning('[BRI] VA notification signature tidak cocok.');
+        foreach ($candidates as $payload) {
+            $expected = base64_encode(hash_hmac('sha512', $payload, $secret, true));
+            if (hash_equals($expected, $signature)) {
+                return true;
+            }
+        }
+
+        Log::warning('[BRI] VA notification signature tidak cocok.', [
+            'timestamp' => $timestamp,
+            'paths_checked' => $paths,
+        ]);
 
         return false;
     }

@@ -6,12 +6,25 @@ use App\Models\Traits\LegacyMorphClass\LegacyMorphClass;
 
 use App\Models\Bank\Bank;
 
+use App\Support\QrisImage\QrisImage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
 class PaymentMethod extends Model
 {
     use LegacyMorphClass;
+
+    /**
+     * `qris_image_url` WAJIB ikut `toArray()`: respons API aplikasi HP
+     * (`OrderController::paymentMethodsForResponse()`, `getPaymentInfo()`)
+     * mengirim metode pembayaran lewat `toArray()`. Tanpa appends ini,
+     * Flutter menerima `qris_image_url` = null dan hanya menampilkan badge
+     * "gambar QRIS tidak tersedia".
+     */
+    protected $appends = [
+        'qris_image_url',
+    ];
+
     protected $fillable = [
         'name',
         'type',
@@ -44,6 +57,39 @@ class PaymentMethod extends Model
         }
 
         return Storage::disk('public')->url($value);
+    }
+
+    /**
+     * Gambar QRIS yang ditampilkan ke pembeli.
+     *
+     * Sumber utamanya gambar statis merchant (`public/images/qris/qris.jpg`),
+     * bukan kolom `image_url` -- kolom itu kosong, dan yang diunggah admin
+     * lewat form metode pembayaran adalah logo bank, bukan QR untuk discan.
+     * Kalau berkas statisnya hilang, baru jatuh ke `image_url` supaya QRIS
+     * buatan admin lama tetap terpakai.
+     */
+    public function getQrisImageUrlAttribute(): ?string
+    {
+        if ($this->type !== 'qris') {
+            return null;
+        }
+
+        return QrisImage::url() ?? $this->getImageUrlAttribute($this->getRawOriginal('image_url'));
+    }
+
+    /**
+     * Metode pembayaran ini QRIS?
+     *
+     * Dipakai form checkout untuk memunculkan gambar QRIS tanpa memuat model
+     * penuh: satu query ringan per render, bukan satu model + relasi.
+     */
+    public static function isQris(?int $id): bool
+    {
+        if (! $id) {
+            return false;
+        }
+
+        return static::query()->whereKey($id)->value('type') === 'qris';
     }
 
     public static function typeLabel(string $type): string
