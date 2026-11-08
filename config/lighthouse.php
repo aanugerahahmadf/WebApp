@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\GraphQL\Errors\RevealBusinessErrorHandler;
 use GraphQL\Error\DebugFlag;
 use Nuwave\Lighthouse\Execution\AuthenticationErrorHandler;
 use Nuwave\Lighthouse\Execution\AuthorizationErrorHandler;
@@ -39,7 +40,7 @@ return [
             'App\\Models\\Package',
             'App\\Models\\Order',
             'App\\Models\\Cart',
-            'App\\Models\\Wishlist',
+            'App\\Models\\Favorite',
             'App\\Models\\Review',
             'App\\Models\\Voucher',
             'App\\Models\\Cbir',
@@ -63,8 +64,8 @@ return [
     ],
 
     'security' => [
-        'max_query_complexity' => 1000,
-        'max_query_depth' => 10,
+        'max_query_complexity' => 3000,
+        'max_query_depth' => 15,
         'disable_introspection' => env('APP_ENV') === 'production' ? 1 : 0,
     ],
 
@@ -81,6 +82,10 @@ return [
         : (env('LIGHTHOUSE_DEBUG', DebugFlag::INCLUDE_DEBUG_MESSAGE)),
 
     'error_handlers' => [
+        // Penolakan bisnis dari resolver ditampilkan apa adanya ke client;
+        // sisanya (termasuk semua subclass Exception) tetap "Internal server
+        // error". Lihat App\Http\GraphQL\Errors\RevealBusinessErrorHandler.
+        RevealBusinessErrorHandler::class,
         AuthenticationErrorHandler::class,
         AuthorizationErrorHandler::class,
         ValidationErrorHandler::class,
