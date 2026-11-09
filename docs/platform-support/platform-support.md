@@ -414,8 +414,8 @@ public/
 ```
 
 CI/CD (`.github/workflows/build-mobile.yml`, `build-desktop.yml`) mengasert
-keberadaan `public/build/mobile/.vite/manifest.json` dan
-`public/build/desktop/.vite/manifest.json`.
+keberadaan `public/build/mobile/manifest.json` dan
+`public/build/desktop/manifest.json`.
 
 ---
 

@@ -91,6 +91,21 @@ jobs:
       - run: composer install --no-interaction --no-progress --prefer-dist --no-scripts
       - name: Create Laravel runtime directories
         run: mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache
+      # Test platform membaca manifest asli dari public/build/{web,mobile,desktop}.
+      # Tanpa langkah ini, seluruh suite hanya menghasilkan warning
+      # file_get_contents(...manifest.json) dan PlatformAssetManagerTest gagal.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Build all platform assets
+        run: npm run build:all
+      - name: Verify platform manifests
+        run: |
+          test -f public/build/web/manifest.json
+          test -f public/build/mobile/manifest.json
+          test -f public/build/desktop/manifest.json
       - name: Run Unit suite
         run: php artisan test --testsuite=Unit
       - name: Run Integration suite
@@ -133,4 +148,5 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build:web
-      - run: test -f public/build/web/.vite/manifest.json
+      - name: Verify web manifest
+        run: test -f public/build/web/manifest.json

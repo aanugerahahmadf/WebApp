@@ -24,9 +24,11 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npm run build:mobile:${{ inputs.target }}
+      # Android dan iOS memakai bundle mobile yang sama; input target hanya
+      # memilih nama artifact, bukan script build yang berbeda.
+      - run: npm run build:mobile
       - name: Verify build output
-        run: test -f public/build/mobile/.vite/manifest.json
+        run: test -f public/build/mobile/manifest.json
       - uses: actions/upload-artifact@v4
         with:
           name: mobile-assets-${{ inputs.target }}

@@ -19,7 +19,7 @@ jobs:
       - run: npm ci
       - run: npm run build:desktop
       - name: Verify build output
-        run: test -f public/build/desktop/.vite/manifest.json
+        run: test -f public/build/desktop/manifest.json
       - uses: actions/upload-artifact@v4
         with:
           name: desktop-assets
