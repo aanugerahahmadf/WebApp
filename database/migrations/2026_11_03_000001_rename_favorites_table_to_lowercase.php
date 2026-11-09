@@ -15,19 +15,31 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Hanya PostgreSQL yang membeda-bedakan nama tabel dengan huruf besar-
-        // kecil. Di MySQL/Windows dan SQLite `Favorites` sudah terbaca sebagai
-        // `favorites`, dan percobaan rename justru gagal karena sistem menganggap
-        // keduanya objek yang sama.
-        if (DB::getDriverName() !== 'pgsql') {
+        $stored = $this->storedName();
+
+        if ($stored === null || $stored === 'favorites') {
             return;
         }
 
-        $stored = $this->storedName();
-
-        if ($stored !== null && $stored !== 'favorites') {
+        // PostgreSQL: nama tabel peka huruf besar-kecil, jadi `Favorites` dan
+        // `favorites` adalah objek berbeda -- rename langsung aman.
+        if (DB::getDriverName() === 'pgsql') {
             Schema::rename($stored, 'favorites');
+
+            return;
         }
+
+        // SQLite (dipakai test in-memory): juga bisa rename, tapi karena nama
+        // tabel tidak peka huruf besar-kecil, rename langsung ke casing yang
+        // sama bisa gagal. Pakai nama sementara agar pasti berhasil.
+        if (DB::getDriverName() === 'sqlite') {
+            Schema::rename($stored, 'favorites_tmp');
+            Schema::rename('favorites_tmp', 'favorites');
+        }
+
+        // MySQL: perilaku casing bergantung OS/filesystem; di Windows (umum di
+        // dev/CI lokal) sudah case-insensitive sehingga tidak perlu diubah,
+        // dan rename paksa berisiko di setup yang sudah konsisten.
     }
 
     public function down(): void

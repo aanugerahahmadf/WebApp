@@ -21,7 +21,7 @@ use Illuminate\Contracts\Support\Htmlable;
  *   Setelah OTP verifikasi   --+
  *   Setelah Complete Profile --+--> SecurityQuestion
  *                                        |-- Tidak --> Home
- *                                        `-- Ya    --> TwoFactorAuth --> Auth.php --> Home
+ *                                        `-- Ya    --> TwoFactorAuth --> Auth.php -> Home
  *
  * Tidak pernah ditanyakan di setiap Sign In. Halaman ini hanya dituju dari
  * dua alur di atas, dan sekali menjawab langsung dicatat di session supaya

@@ -62,6 +62,8 @@ class Favorite extends Model
     use ResolvesCamelCaseAttributes;
     use HasFactory;
     use LegacyMorphClass;
+
+    protected $table = 'favorites';
     /** @var Builder */
     protected $fillable = [
         'user_id',
