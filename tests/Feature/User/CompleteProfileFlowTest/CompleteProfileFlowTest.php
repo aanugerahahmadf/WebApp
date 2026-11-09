@@ -166,22 +166,16 @@ test('profil yang sudah lengkap tidak Asking security question lagi', function (
 // Flow 2 -- Security Question "Tidak": Sign In -> Home
 // ---------------------------------------------------------------------------
 
-test('flow 2: jawaban tidak setelah complete profile keluar ke sign in', function (): void {
+test('flow 2: jawaban tidak langsung ke home', function (): void {
     $user = makeGoogleUserNeedingProfile();
 
     $this->actingAs($user);
 
     Livewire::test(SecurityQuestion::class)
-        ->callAction('skip');
+        ->callAction('skip')
+        ->assertRedirect(Home::getUrl());
 
-    // Logout wajib: tanpa itu /signin memantulkan balik ke panel dan
-    // tahap Sign In dilewati tanpa jejak.
-    $this->assertGuest();
-
-    expect(session('2fa_passed'))->toBeNull()
-        ->and(session('trusted_device_validated'))->toBeNull();
-
-    $this->get('/signin')->assertOk();
+    $this->assertAuthenticatedAs($user);
 });
 
 test('flow 2: setelah sign in tanpa 2FA, langsung home', function (): void {
@@ -256,7 +250,7 @@ test('flow 1: 2FA aktif lalu sign in nyata, 2FA diminta di OTP factory', functio
         ->assertRedirect(OtpEmailOrTwoFactory::getUrl());
 });
 
-test('flow 1: setelah 2FA diaktifkan, sign in bisa dibuka', function (): void {
+test('flow 1: setelah 2FA diaktifkan, redirect ke halaman auth lalu home', function (): void {
     $user = makeGoogleUserNeedingProfile();
 
     $this->actingAs($user);
@@ -271,14 +265,9 @@ test('flow 1: setelah 2FA diaktifkan, sign in bisa dibuka', function (): void {
 
     $page->fillForm(['otp' => currentTotp($secret)], 'verifyTOTPForm')
         ->call('verifyTOTP')
-        ->assertRedirect(Filament::getPanel('user')->getLoginUrl());
+        ->assertRedirect(\App\Filament\User\Auth\Auth\Auth::getUrl());
 
-    $this->assertGuest();
-
-    expect(session('2fa_passed'))->toBeNull()
-        ->and(session('trusted_device_validated'))->toBeNull();
-
-    $this->get('/signin')->assertOk();
+    $this->assertAuthenticatedAs($user);
 });
 
 // ---------------------------------------------------------------------------

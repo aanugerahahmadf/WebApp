@@ -49,7 +49,7 @@ class BackgroundResource extends Resource
                     Select::make('value.type')->label(__('Jenis Media'))->options([
                         'image' => __('Gambar'),
                         'video' => __('Video'),
-                    ])->required()->live(),
+                    ])->searchable()->required()->live(),
                     FileUpload::make('value.image')->label(__('Background Gambar'))
                         ->image()->disk('public')->directory('backgrounds')->visibility('public')
                         ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])

@@ -125,7 +125,15 @@ class StorefrontUrls
             return false;
         }
 
-        return in_array(strtolower((string) $segments[0]), self::AUTHENTICATED_FIRST_SEGMENTS, true);
+        // Daftar konstanta ditulis campur aduk (mis. 'Favorites'), jadi
+        // bandingan harus di-normalisasi dulu. Kalau tidak, '/Favorites'
+        // dianggap halaman publik -- tamu yang datang dari sana justru diberi
+        // crumb "Kembali" ke halaman yang butuh login.
+        return in_array(
+            strtolower((string) $segments[0]),
+            array_map('strtolower', self::AUTHENTICATED_FIRST_SEGMENTS),
+            true,
+        );
     }
 
     /**

@@ -131,23 +131,18 @@ test('setelah OTP valid, akun form mendarat di security question', function (): 
 // Tahap 2 -- Security Question, cabang "Tidak" (Flow 2)
 // ---------------------------------------------------------------------------
 
-test('flow 2: jawaban tidak keluar ke sign in dan logout', function (): void {
+test('flow 2: jawaban tidak langsung ke home', function (): void {
     $user = makeFreshSignup(['email_verified_at' => now()]);
 
     $this->actingAs($user);
 
     Livewire::test(SecurityQuestion::class)
-        ->callAction('skip');
+        ->callAction('skip')
+        ->assertRedirect(Home::getUrl());
 
-    // Logout itu wajib: tanpa itu /signin memantulkan balik ke panel.
-    $this->assertGuest();
-
-    // Dan penanda bypass harus ikut hilang, kalau tidak Sign In berikutnya
-    // lolos 2FA tanpa diminta kode.
-    expect(session('2fa_passed'))->toBeNull()
-        ->and(session('trusted_device_validated'))->toBeNull();
-
-    $this->get('/signin')->assertOk();
+    // Alur Google Gateway (Menjawab Tidak): tetap login, langsung Home.
+    // Tidak logout, tidak paksa Sign In.
+    $this->assertAuthenticatedAs($user);
 });
 
 test('flow 2: setelah sign in tanpa 2FA, langsung home', function (): void {
@@ -195,7 +190,7 @@ test('flow 1: 2FA aktif, tahap sign in nyata, lalu 2FA diminta', function (): vo
         ->assertRedirect(OtpEmailOrTwoFactory::getUrl());
 });
 
-test('flow 1: setelah 2FA diaktifkan, sign in mengarah ke form sign in', function (): void {
+test('flow 1: setelah 2FA diaktifkan, redirect ke halaman auth lalu home', function (): void {
     $user = makeFreshSignup(['email_verified_at' => now()]);
 
     $this->actingAs($user);
@@ -210,17 +205,11 @@ test('flow 1: setelah 2FA diaktifkan, sign in mengarah ke form sign in', functio
 
     $page->fillForm(['otp' => currentTotp($secret)], 'verifyTOTPForm')
         ->call('verifyTOTP')
-        ->assertRedirect(Filament::getPanel('user')->getLoginUrl());
+        ->assertRedirect(\App\Filament\User\Auth\Auth\Auth::getUrl());
 
-    // Sign-out harus terjadi di tahap yang sama.
-    $this->assertGuest();
-
-    expect(session('2fa_passed'))->toBeNull()
-        ->and(session('trusted_device_validated'))->toBeNull();
-
-    // Dan form Sign In harus benar-benar bisa dibuka -- kalau tidak, Sign In
-    // di rantai ini hanya nominally ada.
-    $this->get('/signin')->assertOk();
+    // Alur Google Gateway (Menjawab Iya): tetap login, tanpa logout/OTP kedua.
+    // Auth::mount() memantul ke Home.
+    $this->assertAuthenticatedAs($user);
 });
 
 test('flow 1: kode 2FA yang salah tidak mengeluarkan user dari sesi', function (): void {
