@@ -73,6 +73,11 @@ class MessagesPage extends Page
                         // Pesan yang read_by-nya tidak mengandung userId ini
                         if (DB::getDriverName() === 'sqlite') {
                             $query->whereRaw('read_by NOT LIKE ?', ["%\"{$userId}\"%"]);
+                        } elseif (DB::getDriverName() === 'pgsql') {
+                            $query->whereRaw(
+                                "NOT (COALESCE(read_by::jsonb, '[]'::jsonb) @> to_jsonb(?::text))",
+                                [(string) $userId]
+                            );
                         } else {
                             $query->whereRaw(
                                 'JSON_SEARCH(read_by, "one", ?) IS NULL',
@@ -173,19 +178,7 @@ class MessagesPage extends Page
      */
     protected function getHeaderActions(): array
     {
-        $settingsUrl = $this->settingsReturnUrl();
-
-        if (! $settingsUrl) {
-            return [];
-        }
-
-        return [
-            Action::make('backToSettings')
-                ->label(__('Kembali ke Pengaturan'))
-                ->icon('/images/icons/arrow_left.svg')
-                ->color('gray')
-                ->url($settingsUrl),
-        ];
+        return [];
     }
 
     private function settingsReturnUrl(): ?string

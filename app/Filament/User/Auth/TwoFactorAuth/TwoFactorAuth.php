@@ -7,13 +7,16 @@ use App\Filament\Welcome\Pages\Home\Home;
 use Filament\Facades\Filament;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\HtmlString;
+use MixCode\FilamentMulti2fa\Enums\TwoFactorAuthType;
 
 /**
  * "Strengthen your account?" -- halaman setup 2FA di tengah alur auth.
  *
- *   Sign Up -> Email OTP -> SecurityQuestion
- *       -> jawab Ya  -> halaman ini -> Sign In -> OtpEmailOrTwoFactory -> Home
- *       -> jawab Tidak -> Sign In -> Home
+ * Google Gateway Belum Terdaftar:
+ *   1. Menjawab Iya: Verify OTP -> Complete Profile -> Security Question (Iya)
+ *        -> Two Factor Auth (Berhasil) -> Auth.php -> Home
+ *   2. Menjawab Tidak: Verify OTP -> Complete Profile
+ *        -> Security Question (Tidak) -> Home
  *
  * Alurnya sama persis dengan TwoFactorySetup di Pengaturan: pilih tipe (Email /
  * Authenticator App / None), verifikasi OTP atau TOTP, simpan, plus daftar
@@ -28,11 +31,8 @@ use Illuminate\Support\HtmlString;
  *     tempat yang punya induk. Menempelkannya di Pengaturan akan menyesatkan
  *     -- pengguna tidak datang dari sana.
  *
- *   - Setelah 2FA aktif, Sign In dulu, baru Home. Ini BUKAN langkah yang bisa
- *     dilewati: Filament memantulkan user yang sudah login balik ke Home
- *     (Login::mount()), jadi tanpa sign-out di sini seluruh rantai
- *     "Sign In -> OtpEmailOrTwoFactory" akan hilang dan 2FA yang baru
- *     diaktifkan tidak pernah benar-benar diuji. Lihat signOutAfterSetup().
+ *   - Setelah 2FA aktif (Menjawab Iya): tetap login, redirect ke Auth.php,
+ *     lalu Auth::mount() memantul ke Home. Tanpa logout, tanpa OTP kedua.
  *
  * Opsi "None" tetap tersedia di sini seperti di halaman Pengaturan: pengguna
  * boleh memutuskan tidak memakai 2FA, dan halaman ini tidak memaksanya.
@@ -83,66 +83,54 @@ class TwoFactorAuth extends TwoFactorAuthenticatorPage
     }
 
     /**
-     * Login ulang setelah 2FA diaktifkan.
+     * Redirect setelah setup berhasil.
      *
-     * Dipanggil SETELAH parent::verifyTOTP() / parent::verifyOTP(). Paket
-     * sudah menandai `2fa_passed` dan memanggil redirect() kalau berhasil, dan
-     * berhenti tanpa redirect kalau kodenya salah -- jadi `2fa_passed` itu
-     * penanda sukses yang sudah tersedia, bukan tebakan baru.
+     * Alur Google Gateway Belum Terdaftar (Menjawab Iya):
+     *   Verify OTP -> Complete Profile -> Security Question (Iya)
+     *     -> Two Factor Auth (Berhasil) -> Auth.php -> Home.
      *
-     * Kenapa sign-out wajib, bukan cuma redirect: `Filament\Pages\Auth\Login`
-     * memantulkan user yang SUDAH login balik ke panel (`Login::mount()`).
-     * Tanpa sign-out, mengarahkan ke /signin akan memantul balik ke Home,
-     * dan seluruh rantai "Sign In -> OtpEmailOrTwoFactory" dilewati -- artinya
-     * 2FA yang baru saja diaktifkan tidak pernah diuji sekali pun.
+     * Paket menandai `2fa_passed=true` di dalam transaksi sukses, lalu
+     * memanggil global `redirect()` yang TIDAK melakukan redirect Livewire
+     * (return value dibuang). Karena itu di sini call `$this->redirect()`
+     * eksplisit setelah parent sukses -- user TETAP login, tanpa logout,
+     * tanpa OTP kedua. Auth.php (mount: sudah login) memantul ke Home.
      *
-     * Penanda yang harus dibersihkan:
-     *   - `2fa_passed`         -- kalau dibiarkan, sesi berikutnya lolos 2FA
-     *                             tanpa diminta kode.
-     *   - `trusted_device_validated` -- bentuk lain dari bypass yang sama.
-     *
-     * Session TIDAK di-invalidate: notifikasi sukses dari paket disimpan sebagai
-     * flash di session, dan `invalidate()` akan membuangnya sebelum sempat
-     * tampil. Yang diregenerate hanya token CSRF.
+     * Kalau kode salah, paket berhenti tanpa menandai `2fa_passed`,
+     * dan method ini tidak redirect (user tetap di form).
      */
-    protected function signOutAfterSetup(): void
+    public function setup(): void
     {
-        // Gagal verifikasi tidak pernah menandai ini, jadi gagal = jangan logout.
-        if (session('2fa_passed') !== true) {
-            return;
+        parent::setup();
+
+        // Sukses -> redirect ke Auth.php (Menjawab Iya: TwoFactorAuth ->
+        // Auth.php -> Home). Gagal -> parent sudah berhenti tanpa
+        // menandai 2fa_passed, jadi tidak redirect di sini.
+        if (session('2fa_passed') === true
+            || ($this->data['two_factor_type'] ?? null) === TwoFactorAuthType::None->value) {
+            $this->redirect($this->getRedirectUrl());
         }
-
-        auth()->logout();
-
-        session()->forget(['2fa_passed', 'trusted_device_validated']);
-
-        session()->regenerateToken();
     }
 
     public function verifyTOTP(): void
     {
         parent::verifyTOTP();
 
-        $this->signOutAfterSetup();
+        if (session('2fa_passed') === true) {
+            $this->redirect($this->getRedirectUrl());
+        }
     }
 
     public function verifyOTP(): void
     {
         parent::verifyOTP();
 
-        $this->signOutAfterSetup();
+        if (session('2fa_passed') === true) {
+            $this->redirect($this->getRedirectUrl());
+        }
     }
 
     protected function getRedirectUrl(): string
     {
-        // Sign In dulu, bukan Home. Untuk 2FA TOTP, CheckTrustedDevice akan
-        // mengarahkan ke OtpEmailOrTwoFactory begitu kredensial dimasukkan.
-        // Untuk "None", Sign In langsung menuju Home.
-        //
-        // URL diambil dari PANEL, bukan `SignIn::getUrl()`: SignIn extends
-        // `Filament\Pages\Auth\Login` yang tidak punya helper getUrl() statis,
-        // jadi memanggilnya jatuh ke __callStatic dan melempar
-        // BadMethodCallException.
-        return Filament::getPanel('welcome')->getLoginUrl();
+        return \App\Filament\User\Auth\Auth\Auth::getUrl();
     }
 }

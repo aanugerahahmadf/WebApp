@@ -120,8 +120,8 @@ enum SearchSuggestionType {
   KEYWORD
 }
 
-# Wishlist Enums
-enum WishlistActionType {
+# Favorite Enums
+enum FavoriteActionType {
   ADDED
   REMOVED
 }
@@ -158,7 +158,7 @@ enum NotificationType {
   PROMOTION
   PRICE_DROP
   BACK_IN_STOCK
-  WISHLIST_ON_SALE
+  Favorite_ON_SALE
 }
 
 # Media Enums

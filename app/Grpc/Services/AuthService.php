@@ -373,7 +373,7 @@ class AuthService
         $proto = new \Weddingapp\Auth\UserProfile();
         $proto->setOrderCount($user->orders()->count());
         $proto->setReviewCount($user->reviews()->count());
-        $proto->setWishlistCount($user->wishlist()->count());
+        $proto->setFavoriteCount($user->Favorite()->count());
         $proto->setTotalSpent($user->orders()->where('payment_status', 'paid')->sum('total_price'));
         
         $favCategory = \App\Models\Category\Category::query()

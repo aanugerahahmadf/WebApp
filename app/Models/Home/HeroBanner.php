@@ -4,9 +4,12 @@ namespace App\Models\Home;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Traits\ResolvesCamelCaseAttributes\ResolvesCamelCaseAttributes;
+
 
 class HeroBanner extends Model
 {
+    use ResolvesCamelCaseAttributes;
     use HasFactory;
 
     protected $table = 'hero_banners';

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Halaman "Ulasan Saya" (/reviews).
+ * Halaman "Komentar Penilaian Katalog Saya" (/reviews).
  *
  * Dua hal yang dikunci di sini:
  *
@@ -31,8 +31,8 @@ use App\Enums\OrderStatus\OrderStatus;
 use App\Filament\Welcome\Resources\CatalogResource\CatalogResource;
 use App\Filament\Welcome\Resources\CatalogResource\Pages\CreateReviews\CreateReviews;
 use App\Filament\Welcome\Resources\OrderResource\Pages\ManageOrders\ManageOrders;
-use App\Filament\Welcome\Resources\ReviewResource\ReviewResource;
-use App\Filament\Welcome\Resources\ReviewResource\Pages\ManageReviews\ManageReviews;
+use App\Filament\Welcome\Resources\MyReviewsResource\MyReviewsResource;
+use App\Filament\Welcome\Resources\MyReviewsResource\Pages\ManageMyReviews\ManageMyReviews;
 use App\Models\Catalog\Catalog;
 use App\Models\Order\Order;
 use App\Models\Review\Review;
@@ -74,7 +74,7 @@ function makeReviewOrder(User $user, Catalog $catalog): Order
 }
 
 it('halaman ulasan punya satu saja aksi di empty state: ke katalog', function (): void {
-    $html = Livewire::test(ManageReviews::class)->html();
+    $html = Livewire::test(ManageMyReviews::class)->html();
 
     // Aksi ke katalog: ada.
     expect($html)->toContain(__('Belanja Bunga'));
@@ -84,7 +84,7 @@ it('halaman ulasan punya satu saja aksi di empty state: ke katalog', function ()
 });
 
 it('empty state mengarah ke halaman katalog', function (): void {
-    $html = Livewire::test(ManageReviews::class)->html();
+    $html = Livewire::test(ManageMyReviews::class)->html();
 
     expect($html)->toContain(CatalogResource::getUrl());
 });
@@ -93,7 +93,7 @@ it('aksi tulis ulasan ada dan arahnya ke halaman CreateReviews', function (): vo
     $catalog = Catalog::factory()->create(['name' => 'Paket Vintage', 'is_active' => true]);
     makeReviewOrder($this->user, $catalog);
 
-    $component = Livewire::test(ManageReviews::class);
+    $component = Livewire::test(ManageMyReviews::class);
 
     $component->assertTableActionExists('write_review');
 
@@ -106,7 +106,7 @@ it('aksi tulis ulasan tidak membuka modal', function (): void {
     $catalog = Catalog::factory()->create(['is_active' => true]);
     makeReviewOrder($this->user, $catalog);
 
-    $html = Livewire::test(ManageReviews::class)->html();
+    $html = Livewire::test(ManageMyReviews::class)->html();
 
     // Dulu modalnya berisi form dengan select `catalog_id`. Tidak ada form
     // seperti itu lagi -- tidak ada markup modal yang dirender.
@@ -133,7 +133,7 @@ it('halaman pilih katalog bisa dibuka dan menampilkan katalog yang bisa diulas',
 
     $this->get(CatalogResource::getUrl('write-review'))
         ->assertOk()
-        ->assertSee(__('Tulis Ulasan'))
+        ->assertSee(__('Tulis Komentar Penilaian'))
         // Namanya dibaca dari `name_translations` (accessor `name`), bukan
         // dari kolom mentah -- makanya yang dipakai `$catalog->name`.
         ->assertSee($catalog->name);
@@ -166,7 +166,7 @@ it('halaman CreateReviews milik katalog itu bisa dibuka', function (): void {
 
     $this->get(CatalogResource::getUrl('create-reviews', ['record' => $catalog->id]))
         ->assertOk()
-        ->assertSee(__('Tulis Ulasan'))
+        ->assertSee(__('Tulis Komentar Penilaian'))
         // Mode form: field ulasan ada.
         ->assertSee(__('Komentar Anda'));
 });
@@ -222,7 +222,7 @@ it('katalog yang belum pernah dipesan tetap bisa dipilih', function (): void {
     // daripada bolehnya mengulas katalog yang belum dibeli.
     $notOrdered = Catalog::factory()->create(['is_active' => true]);
 
-    expect(ReviewResource::reviewableCatalogOptions())->toHaveKey($notOrdered->id);
+    expect(MyReviewsResource::reviewableCatalogOptions())->toHaveKey($notOrdered->id);
 });
 
 it('katalog yang sudah diulas tidak ditawarkan lagi', function (): void {
@@ -236,13 +236,13 @@ it('katalog yang sudah diulas tidak ditawarkan lagi', function (): void {
         'comment'    => 'Bagus banget.',
     ]);
 
-    expect(ReviewResource::reviewableCatalogOptions())->not->toHaveKey($catalog->id);
+    expect(MyReviewsResource::reviewableCatalogOptions())->not->toHaveKey($catalog->id);
 });
 
 it('katalog non-aktif tidak ditawarkan', function (): void {
     $inactive = Catalog::factory()->create(['is_active' => false]);
 
-    expect(ReviewResource::reviewableCatalogOptions())->not->toHaveKey($inactive->id);
+    expect(MyReviewsResource::reviewableCatalogOptions())->not->toHaveKey($inactive->id);
 });
 
 it('aksi tulis ulasan disembunyikan saat tidak ada katalog yang bisa diulas', function (): void {
@@ -258,9 +258,9 @@ it('aksi tulis ulasan disembunyikan saat tidak ada katalog yang bisa diulas', fu
         'comment'    => 'Bagus banget.',
     ]);
 
-    expect(ReviewResource::reviewableCatalogOptions())->toBe([]);
+    expect(MyReviewsResource::reviewableCatalogOptions())->toBe([]);
 
-    Livewire::test(ManageReviews::class)
+    Livewire::test(ManageMyReviews::class)
         ->assertTableActionHidden('write_review');
 });
 

@@ -77,7 +77,7 @@ class AdminStatsOverviewTest extends TestCase
 
         foreach ([
             'Total Pesanan', 'Total Transaksi', 'Total Voucher', 'Total Diskon',
-            'Metode Pembayaran', 'Payment Gateway', 'Total Wishlist',
+            'Metode Pembayaran', 'Payment Gateway', 'Total Favorite',
         ] as $expected) {
             $this->assertContains($expected, $transactions, "Statistik Transaksi '{$expected}' tidak ada.");
         }
@@ -151,7 +151,7 @@ class AdminStatsOverviewTest extends TestCase
             'Total Diskon' => '/admin/discounts',
             'Metode Pembayaran' => '/admin/payment-methods',
             'Payment Gateway' => '/admin/payment-gateways',
-            'Total Wishlist' => '/admin/wishlists',
+            'Total Favorite' => '/admin/Favorites',
         ];
 
         foreach ($this->stats() as $stat) {

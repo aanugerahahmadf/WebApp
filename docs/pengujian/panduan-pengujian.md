@@ -13,7 +13,7 @@ php artisan test tests/Feature/SignInBackButtonTest.php
 php artisan test tests/Feature/SignInBackButtonTest.php tests/Feature/RenameSmokeTest.php tests/Feature/GuestAddToCartTest.php
 
 # Satu kasus (filter nama test)
-php artisan test tests/Feature/WelcomeChatAdminTest.php --filter="wishlist_detail redirects a guest"
+php artisan test tests/Feature/WelcomeChatAdminTest.php --filter="Favorite_detail redirects a guest"
 ```
 
 Konfigurasi test ada di `phpunit.xml`: `APP_ENV=testing`, database memakai
@@ -57,7 +57,7 @@ seperti kode aplikasi:
 
 1. **Helper test Filament crash saat action me-redirect.** Memanggil
    `callInfolistAction()` pada action guest yang langsung redirect
-   (`wishlist_detail`, dsb.) menyebabkan `ErrorException: Attempt to read
+   (`Favorite_detail`, dsb.) menyebabkan `ErrorException: Attempt to read
    property "mountedInfolistActions" on null` di `TestsActions.php` vendor.
    Ini keterbatasan versi Filament/Livewire yang dipakai, bukan bug aplikasi.
    Solusinya: uji modal-nya (`mountInfolistAction` + `assertSee` link login)

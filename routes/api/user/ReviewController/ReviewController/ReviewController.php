@@ -5,14 +5,21 @@ use App\Http\Controllers\Api\User\ReviewController\ReviewController;
 
 
 Route::middleware('auth:sanctum')->group(function (): void {
+    // Kartu+modal "Komentar Penilaian Katalog" (semua pengguna) dan halaman
+    // "Komentar Penilaian Katalog Saya".
+    Route::get('/reviews', [ReviewController::class, 'getAllReviews']);
+    Route::get('/reviews/summary', [ReviewController::class, 'getAllRatingSummary']);
+
     Route::post('/reviews', [ReviewController::class, 'store']);
     Route::put('/reviews/{id}', [ReviewController::class, 'update']);
     Route::delete('/reviews/{id}', [ReviewController::class, 'destroy']);
     Route::get('/reviews/user/{userId}', [ReviewController::class, 'getUserPublicReviews']);
     Route::get('/reviews/user', [ReviewController::class, 'getUserReviews']);
     Route::get('/reviews/package/{id}/summary', [ReviewController::class, 'getPackageRatingSummary']);
+    Route::get('/reviews/tier/{id}/summary', [ReviewController::class, 'getPackageRatingSummary']);
     Route::get('/reviews/catalog/{id}/summary', [ReviewController::class, 'getCatalogRatingSummary']);
     Route::get('/reviews/package/{packageId}', [ReviewController::class, 'getPackageReviews']);
+    Route::get('/reviews/tier/{packageId}', [ReviewController::class, 'getPackageReviews']);
     Route::get('/reviews/catalog/{catalogId}', [ReviewController::class, 'getCatalogReviews']);
     
     Route::post('/reviews/{id}/vote', [ReviewController::class, 'voteHelpful']);

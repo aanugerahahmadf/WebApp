@@ -6,6 +6,9 @@ type Package @model(class: "App\\Models\\Package\\Package") {
   name: String!
   slug: String!
   description: String
+  catalogId: ID
+  stock: Int!
+  sortOrder: Int!
   price: Float!
   discountPrice: Float
   finalPrice: Float!

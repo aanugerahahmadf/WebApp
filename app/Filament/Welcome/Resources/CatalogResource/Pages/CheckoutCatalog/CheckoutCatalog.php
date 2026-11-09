@@ -37,6 +37,16 @@ class CheckoutCatalog extends Page implements HasForms
      */
     public ?int $selectedTierId = null;
 
+    /**
+     * Batas waktu pembayaran yang ditampilkan di langkah pembayaran.
+     *
+     * Disimpan sebagai PROPERTI (bukan dihitung ulang tiap render) supaya
+     * hitungan mundur tidak reset setiap kali form di-render ulang. Nilainya
+     * 24 jam sejak halaman checkout dibuka -- pesanan sendiri belum ada di
+     * titik ini, jadi belum punya `created_at`.
+     */
+    public ?string $paymentDeadline = null;
+
     public function mount(int|string $record): void
     {
         // Resolve first: Filament runs mountCanAuthorizeAccess() after mount()
@@ -44,6 +54,7 @@ class CheckoutCatalog extends Page implements HasForms
         $this->record = $this->resolveRecord($record);
 
         $this->selectedTierId = $this->resolveSelectedTierId();
+        $this->paymentDeadline = \App\Support\PaymentWindow\PaymentWindow::deadlineFromNow()->toDateTimeString();
 
         // This URL sits under the storefront's public path, so a guest can type
         // it in directly. Checking out writes an order against a user, so bounce
@@ -67,7 +78,11 @@ class CheckoutCatalog extends Page implements HasForms
         return $form
             ->schema([
                 Wizard::make()
-                    ->steps(CatalogResource::getCheckoutWizardSteps($this->record))
+                    ->steps(CatalogResource::getCheckoutWizardSteps(
+                        $this->record,
+                        $this->selectedTier(),
+                        $this->paymentDeadline ? \Illuminate\Support\Carbon::parse($this->paymentDeadline) : null,
+                    ))
                     ->submitAction(new HtmlString(
                         '<div class="flex justify-end mt-4">'.
                         '<button type="submit" class="fi-btn fi-btn-size-md fi-btn-color-success relative grid-flow-col items-center justify-center font-semibold outline-none transition duration-75 focus-visible:ring-2 rounded-lg px-5 py-3 cursor-pointer shadow-sm" style="background-color:#d97706 !important;color:#ffffff !important;border:1px solid #b45309 !important;box-shadow:0 2px 4px rgb(0 0 0 / 15%) !important;">'.

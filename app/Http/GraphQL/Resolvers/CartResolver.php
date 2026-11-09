@@ -43,9 +43,10 @@ class CartResolver
             throw new \Exception('Catalog or Package is required');
         }
         
-        if ($input['catalogId'] && $input['packageId']) {
-            throw new \Exception('Cannot add both catalog and package at once');
-        }
+        // A catalog is only a parent/visual product. Its price is defined by
+        // the selected tier package, so catalog + package is the canonical
+        // cart shape. Standalone package adds remain supported for legacy
+        // callers.
         
         $quantity = $input['quantity'] ?? 1;
         $options = $input['options'] ?? [];
@@ -73,6 +74,10 @@ class CartResolver
         $price = 0;
         $discountPrice = 0;
         
+        if ($input['catalogId'] && !$input['packageId']) {
+            throw new \Exception('A tier package is required for a catalog');
+        }
+
         if ($input['catalogId']) {
             $catalog = Catalog::findOrFail($input['catalogId']);
             
@@ -84,10 +89,14 @@ class CartResolver
                 throw new \Exception('Insufficient stock');
             }
             
-            $price = $catalog->price;
-            $discountPrice = $catalog->discount_price ?? 0;
-        } else {
+        }
+
+        if ($input['packageId']) {
             $package = Package::findOrFail($input['packageId']);
+
+            if ($input['catalogId'] && (int) $package->catalog_id !== (int) $input['catalogId']) {
+                throw new \Exception('Package does not belong to the selected catalog');
+            }
             
             if (!$package->is_active) {
                 throw new \Exception('Package is not available');
@@ -143,8 +152,7 @@ class CartResolver
             }
         }
         
-        $finalPrice = $cartItem->catalog?->discount_price ?? $cartItem->catalog?->price 
-            ?? $cartItem->package?->discount_price ?? $cartItem->package?->price;
+        $finalPrice = $cartItem->package?->final_price ?? $cartItem->package?->price;
         
         $cartItem->quantity = $quantity;
         $cartItem->subtotal = $finalPrice * $quantity;

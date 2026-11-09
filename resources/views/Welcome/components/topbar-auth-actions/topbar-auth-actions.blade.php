@@ -186,60 +186,19 @@
 
     @guest
         {{--
-            Tamu: ikon user (bawaan Filament) + dropdown berisi satu aksi,
-            "Sign In To Account" / "Masuk ke Akun". Dropdown-nya disusun dari
-            parts yang sama dengan theme switcher, jadi keduanya native;
-            `teleport` supaya tidak terpotong baris topbar.
+            Tamu: ikon user langsung mengarah ke pintu Google Gateway (/auth)
+            karena tombol Sign In dan Sign Up manual telah dinonaktifkan.
         --}}
-        <x-filament::dropdown placement="bottom-end" teleport>
-            <x-slot name="trigger">
-                <button
-                    type="button"
-                    aria-label="{{ __('Sign In To Account') }}"
-                    x-tooltip="{
-                        content: @js(__('Sign In To Account')),
-                        theme: $store.theme,
-                    }"
-                    class="{{ $accountButtonClass }}"
-                >
-                    <x-filament::icon :icon="AppIcon::PROFILE" :class="$accountIconClass" />
-                </button>
-            </x-slot>
-
-            <x-filament::dropdown.list>
-                <x-filament::dropdown.list.item
-                    tag="a"
-                    :href="$loginUrl"
-                    :icon="AppIcon::PROFILE"
-                >
-                    {{ __('Sign In To Account') }}
-                </x-filament::dropdown.list.item>
-
-                {{--
-                    Pendaftaran punya door sendiri di dropdown ini. Ditambahkan
-                    sebagai item menu, bukan tombol terpisah di topbar: topbar
-                    sudah penuh (pencarian, bahasa, tema, ikon akun) dan dua
-                    tombol teks auth akan merebut lebar dari kotak pencarian.
-
-                    Dijaga `if` karena `$signUpUrl` bisa null kalau panel user
-                    suatu saat mematikan lagi `->registration()`. Tanpa penjaga
-                    itu itemnya tetap dirender dengan href kosong -- satu item
-                    dropdown yang tidak melakukan apa pun, dan itu lebih buruk
-                    daripada tidak ada.
-
-                    "Sign Up Sekarang" ditulis lewat `__()` supaya ikut ganti
-                    bersama bahasa switcher.
-                --}}
-                @if ($signUpUrl ?? null)
-                    <x-filament::dropdown.list.item
-                        tag="a"
-                        :href="$signUpUrl"
-                        :icon="AppIcon::ARROW_RIGHT"
-                    >
-                        {{ __('Sign Up Sekarang') }}
-                    </x-filament::dropdown.list.item>
-                @endif
-            </x-filament::dropdown.list>
-        </x-filament::dropdown>
+        <a
+            href="{{ $loginUrl }}"
+            aria-label="{{ __('Masuk dengan Google') }}"
+            x-tooltip="{
+                content: @js(__('Masuk dengan Google')),
+                theme: $store.theme,
+            }"
+            class="{{ $accountButtonClass }}"
+        >
+            <x-filament::icon :icon="AppIcon::PROFILE" :class="$accountIconClass" />
+        </a>
     @endguest
 </div>

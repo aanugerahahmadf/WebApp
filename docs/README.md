@@ -11,10 +11,10 @@ Berikut adalah daftar semua dokumen teknis yang tersedia, terorganisir berdasark
 |---|---|---|---|
 | 1 | [Arsitektur Aplikasi](arsitektur/arsitektur.md) | arsitektur/arsitektur.md | Struktur panel (welcome/admin), middleware, konvensi penamaan, identitas guest, session url.intended |
 | 2 | [Autentikasi](autentikasi/autentikasi.md) | autentikasi/autentikasi.md | Alur Sign-In, Sign-Up, OTP, login sosial, guard, checkbox persetujuan, auth landing page |
-| 3 | [Katalog & Keranjang](katalog-keranjang/katalog-keranjang.md) | katalog-keranjang/katalog-keranjang.md | Aksi katalog, anti-419 guest flow, cart, checkout, wishlist, ulasan, quantity behavior |
+| 3 | [Katalog & Keranjang](katalog-keranjang/katalog-keranjang.md) | katalog-keranjang/katalog-keranjang.md | Aksi katalog, anti-419 guest flow, cart, checkout, Favorite, ulasan, quantity behavior |
 | 4 | [Panduan Pengujian](pengujian/panduan-pengujian.md) | pengujian/panduan-pengujian.md | Cara menjalankan test Pest, struktur file test, pola umum, batasan yang diketahui |
 | 5 | [Panel Welcome](welcome-panel/welcome-panel.md) | welcome-panel/welcome-panel.md | Storefront publik, halaman, resources, widgets, guest identity, chat system, CBIR search |
-| 6 | [Aksi Katalog](catalog-actions/catalog-actions.md) | catalog-actions/catalog-actions.md | Matriks aksi detail, chat_admin, wishlist_detail, getChatUser(), redirectGuestToLogin() |
+| 6 | [Aksi Katalog](catalog-actions/catalog-actions.md) | catalog-actions/catalog-actions.md | Matriks aksi detail, chat_admin, Favorite_detail, getChatUser(), redirectGuestToLogin() |
 | 7 | [Sistem Pesan](messages-system/messages-system.md) | messages-system/messages-system.md | Database schema (fm_inboxes, fm_messages), Livewire components, unread badge, lampiran media |
 | 8 | [Pohon Keputusan Perintah](command-decision-tree/command-decision-tree.md) | command-decision-tree/command-decision-tree.md | Flowchart pemilihan perintah php artisan serve:web/mobile/desktop, pemecahan masalah |
 | 9 | [Panduan Perintah](command-guide/command-guide.md) | command-guide/command-guide.md | Referensi perintah lengkap serve:web/mobile/desktop, build commands, troubleshooting |

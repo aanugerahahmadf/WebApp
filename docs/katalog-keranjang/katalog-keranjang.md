@@ -29,7 +29,7 @@ jangan hardcode path di kode/test baru — pakai `Resource::getUrl()`.
 | `buy_now_detail` | Tidak | Ke login | Ke halaman checkout |
 | `add_to_cart_detail` | Ya (qty) | **Form tetap muncul**, Submit = link ke login | Submit normal, cart tersimpan |
 | `chat_admin` | Tidak | Chat sebagai guest (`GuestIdentity`) | Chat sebagai user |
-| `wishlist_detail` | Tidak | Ke login | Tambah/hapus favorit |
+| `Favorite_detail` | Tidak | Ke login | Tambah/hapus favorit |
 | `write_review` | Ya (rating) | Form muncul, submit ke login | Simpan ulasan (sekali per item) |
 
 ## Alur Guest Add to Cart (Anti-419)
@@ -62,10 +62,10 @@ kolom `quantity = 1`. Akibatnya penambahan **pertama** tercatat sebesar
 bagian dari desain anti-419; test `GuestAddToCartTest` mengunci perilaku
 tersebut supaya perubahan di masa depan terdeteksi.
 
-## Checkout, Wishlist, Ulasan
+## Checkout, Favorite, Ulasan
 
 - **Checkout** (`CheckoutPackage` / `CheckoutProduct`): wizard tanggal acara,
   validasi stok, dan redirect guest ke login dengan `navigate: false`.
-- **Wishlist**: toggle tambah/hapus per user; guest diarahkan ke login.
+- **Favorite**: toggle tambah/hapus per user; guest diarahkan ke login.
 - **Ulasan**: satu user satu ulasan per item; tombol tulis ulasan tetap
   terlihat oleh guest (submit-nya yang mengarah ke login).

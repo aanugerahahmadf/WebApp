@@ -10,7 +10,7 @@ use Illuminate\Database\Seeder;
  *
  * Dulu seeder ini menulis ke tabel `users`, sekarang ke `admins`. Itu pemisahan
  * yang sama sekali bukan kosmetik: `admins` dibaca guard `admin`, tidak punya
- * token Sanctum, dan tidak punya kolom KYC/KTP/budget/wishlist/cart. Akun
+ * token Sanctum, dan tidak punya kolom KYC/KTP/budget/Favorite/cart. Akun
  * belanja tidak akan pernah bisa membuka panel admin karena tidak ada baris
  * di `users` yang punya role ber-guard 'admin'.
  *

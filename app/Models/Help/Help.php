@@ -6,9 +6,12 @@ use App\Models\Traits\LegacyMorphClass\LegacyMorphClass;
 use App\Traits\HasTranslations\HasTranslations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Traits\ResolvesCamelCaseAttributes\ResolvesCamelCaseAttributes;
+
 
 class Help extends Model
 {
+    use ResolvesCamelCaseAttributes;
     use HasFactory;
     use LegacyMorphClass;
     use HasTranslations;

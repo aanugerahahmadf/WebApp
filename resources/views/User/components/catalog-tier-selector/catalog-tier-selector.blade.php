@@ -56,6 +56,7 @@
         'price' => (float) ($tier->discount_price > 0 ? $tier->discount_price : $tier->price),
         'listPrice' => (float) $tier->price,
         'discounted' => $tier->discount_price > 0,
+        'stock' => (int) $tier->stock,
         'features' => collect($tier->features ?? [])->map($featureText)->filter()->values()->all(),
     ])->values();
 @endphp
@@ -135,6 +136,10 @@
                         </div>
                         <div class="text-right shrink-0">
                             <p class="text-xl font-semibold" style="color: #facc15;" x-text="format(selected.price)" data-field="catalogs.tier_price"></p>
+                            <p class="text-sm font-semibold mt-1"
+                               :class="selected.stock > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'"
+                               x-text="'{{ __('Stok') }}: ' + selected.stock"
+                               data-field="catalogs.tier_stock"></p>
                             <p
                                 x-show="selected.discounted"
                                 class="text-xs text-gray-400 line-through"

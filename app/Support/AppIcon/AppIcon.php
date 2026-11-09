@@ -56,7 +56,7 @@ final class AppIcon
 
     public const VOUCHER = self::FOLDER.'voucher.svg';
 
-    public const WISHLIST = self::FOLDER.'wishlist.svg';
+    public const Favorite = self::FOLDER.'Favorite.svg';
 
     public const CART = self::FOLDER.'cart.svg';
 

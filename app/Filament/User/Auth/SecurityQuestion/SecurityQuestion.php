@@ -15,13 +15,13 @@ use Illuminate\Contracts\Support\Htmlable;
  * Complete Profile.
  *
  *   Sign In biasa  --> LANGSUNG Home
- *   (yang 2FA-nya sudah aktif saja yang diminta kode, itu route
- *    o-t-p-verify milik plugin multi-2fa)
+ *   (yang 2FA-nya sudah aktif saja yang diminta kode, itu halaman
+ *    OTP-Verify milik plugin multi-2fa)
  *
  *   Setelah OTP verifikasi   --+
  *   Setelah Complete Profile --+--> SecurityQuestion
- *                                        |-- Tidak --> Sign In --> Home
- *                                        `-- Ya    --> TwoFactorAuth --> Sign In --> OtpEmailOrTwoFactory --> Home
+ *                                        |-- Tidak --> Home
+ *                                        `-- Ya    --> TwoFactorAuth --> Auth.php --> Home
  *
  * Tidak pernah ditanyakan di setiap Sign In. Halaman ini hanya dituju dari
  * dua alur di atas, dan sekali menjawab langsung dicatat di session supaya
@@ -72,7 +72,8 @@ class SecurityQuestion extends Page
     }
 
     /**
-     * Jawaban tidak: tidak apa-apa, logout dan ke Sign In untuk masuk pertama kali.
+     * Jawaban tidak: langsung ke Home.
+     * Alur: Verify OTP -> CompleteProfile -> Security Question: Menjawab Tidak -> Home
      */
     public function skipAction(): Action
     {
@@ -83,20 +84,7 @@ class SecurityQuestion extends Page
             ->action(function (): void {
                 session()->put('security_question_answered', true);
 
-                // Logout user agar harus Sign In terlebih dahulu. Wajib: `Login::mount()`
-                // memantulkan user yang sudah login balik ke panel, jadi tanpa
-                // logout halaman Sign In dilewati begitu saja.
-                auth()->logout();
-
-                // Buang penanda bypass 2FA dari tahap sebelum login, supaya
-                // sesi berikutnya tidak mewarisi status "sudah lolos 2FA".
-                // `2fa_passed` dibaca CheckTrustedDevice; tanpanya Sign In
-                // berikutnya bisa melewati halaman verifikasi.
-                session()->forget(['2fa_passed', 'trusted_device_validated']);
-
-                session()->regenerateToken();
-
-                $this->redirect(Filament::getPanel('welcome')->getLoginUrl());
+                $this->redirect(Home::getUrl());
             });
     }
 

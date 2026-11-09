@@ -125,7 +125,7 @@ class PackageFactory extends Factory
      */
     public function forCatalog(Catalog|int $catalog): static
     {
-        $id = $catalog instanceof Catalog ? $catalog->id : $catalog;
+        $id = $catalog instanceof Catalog ? $catalog->getKey() : $catalog;
         return $this->state(fn () => ['catalog_id' => $id]);
     }
 
@@ -134,7 +134,7 @@ class PackageFactory extends Factory
      */
     public function forCategory(Category|int $category): static
     {
-        $id = $category instanceof Category ? $category->id : $category;
+        $id = $category instanceof Category ? $category->getKey() : $category;
         return $this->state(fn () => ['category_id' => $id]);
     }
 

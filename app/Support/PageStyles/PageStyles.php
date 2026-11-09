@@ -151,7 +151,7 @@ class PageStyles
         'reviews'                   => \App\Filament\Admin\Resources\ReviewResource\ReviewResource::class,
         'users'                     => \App\Filament\Admin\Resources\UserResource\UserResource::class,
         'admins'                    => \App\Filament\Admin\Resources\AdminResource\AdminResource::class,
-        'wishlists'                 => \App\Filament\Admin\Resources\WishlistResource\WishlistResource::class,
+        'Favorites'                 => \App\Filament\Admin\Resources\FavoriteResource\FavoriteResource::class,
         'vouchers'                  => \App\Filament\Admin\Resources\VoucherResource\VoucherResource::class,
         'discounts'                 => \App\Filament\Admin\Resources\DiscountResource\DiscountResource::class,
         'carts'                     => \App\Filament\Admin\Resources\OrderResource\OrderResource::class,

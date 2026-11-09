@@ -104,7 +104,7 @@ SYMBOLS = {
     'uturn_left': 'u_turn_left', 'uturn_right': 'u_turn_right',
     'variable': 'data_object', 'video': 'videocam',
     'voucher': 'confirmation_number', 'wallet': 'account_balance_wallet',
-    'warning': 'warning', 'wedding-policy': 'policy', 'wishlist': 'favorite',
+    'warning': 'warning', 'wedding-policy': 'policy', 'Favorite': 'favorite',
     'wrench': 'build', 'x': 'close', 'x_circle': 'cancel',
     'zoom_in': 'zoom_in', 'zoom_out': 'zoom_out',
 }
@@ -192,7 +192,7 @@ PALETTE = {
     'text': ('#CBD5E1', '#64748B', '#1E293B'), 'text_badge': ('#7DD3FC', '#0EA5E9', '#0C4A6E'),
     # nama file semantik AppIcon
     'order': ('#6EE7B7', '#059669', '#064E3B'), 'history': ('#CBD5E1', '#64748B', '#1E293B'),
-    'voucher': ('#F9A8D4', '#EC4899', '#831843'), 'wishlist': ('#FDA4AF', '#E11D48', '#881337'),
+    'voucher': ('#F9A8D4', '#EC4899', '#831843'), 'Favorite': ('#FDA4AF', '#E11D48', '#881337'),
     'settings': ('#CBD5E1', '#64748B', '#1E293B'), 'profile': ('#93C5FD', '#3B82F6', '#1E3A8A'),
     'privacy': ('#6EE7B7', '#10B981', '#065F46'), 'help': ('#A5B4FC', '#6366F1', '#312E81'),
     'external-link': ('#7DD3FC', '#0EA5E9', '#0C4A6E'), 'messages': ('#93C5FD', '#3B82F6', '#1E3A8A'),

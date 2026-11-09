@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package wedding.user.v1;
+
+option go_package = "github.com/wedding/user/v1;userv1";
+option php_namespace = "App\\Grpc\\User\\V1";
+option php_metadata_namespace = "App\\Grpc\\User\\V1\\GPBMetadata";
+
+// Legal Service
+service LegalService {
+  rpc GetTermsOfService(GetTermsOfServiceRequest) returns (LegalContent);
+  rpc GetPrivacyPolicy(GetPrivacyPolicyRequest) returns (LegalContent);
+  rpc GetWeddingDecorationPolicy(GetWeddingDecorationPolicyRequest) returns (LegalContent);
+  rpc GetLegalPage(GetLegalPageRequest) returns (LegalPage);
+  rpc GetLegalPages(GetLegalPagesRequest) returns (LegalPagesResponse);
+  rpc GetAbout(GetAboutRequest) returns (AboutPage);
+  rpc GetHelpCenter(GetHelpCenterRequest) returns (HelpCenter);
+}
+
+// Legal Content (Terms, Privacy, Wedding Policy)
+message LegalContent {
+  int32 id = 1;
+  string title = 2;
+  string content = 3;
+  string updated_at = 4;
+}
+
+// Legal Page
+message LegalPage {
+  int32 id = 1;
+  string slug = 2;
+  string title = 3;
+  string content = 4;
+  string updated_at = 5;
+}
+
+// About Page
+message AboutPage {
+  string title = 1;
+  string content = 2;
+  string mission = 3;
+  string owner = 4;
+}
+
+// FAQ Item
+message FaqItem {
+  string question = 1;
+  string answer = 2;
+}
+
+// Help Center
+message HelpCenter {
+  string title = 1;
+  string subtitle = 2;
+  repeated FaqItem faqs = 3;
+  string contact_options = 4;
+}
+
+// Request messages
+message GetTermsOfServiceRequest {}
+message GetPrivacyPolicyRequest {}
+message GetWeddingDecorationPolicyRequest {}
+
+message GetLegalPageRequest {
+  string slug = 1;
+}
+
+message GetLegalPagesRequest {}
+
+message LegalPagesResponse {
+  repeated LegalPage pages = 1;
+}
+
+message GetAboutRequest {}
+message GetHelpCenterRequest {}

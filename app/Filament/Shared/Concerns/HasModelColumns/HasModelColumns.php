@@ -72,7 +72,17 @@ trait HasModelColumns
                 || str_ends_with($column, '_at')
                 || in_array($column, ['id', 'created_at', 'updated_at', 'deleted_at'], true))
             ->map(function (string $column) use ($instance): mixed {
-                $type = Schema::getColumnType($instance->getTable(), $column);
+                // PostgreSQL melaporkan nama tipe internalnya (bool, int8, ...),
+                // sedangkan match di bawah memakai nama tipe Laravel/MySQL.
+                $rawType = Schema::getColumnType($instance->getTable(), $column);
+                $type = match ($rawType) {
+                    'bool' => 'boolean',
+                    'int8' => 'bigint',
+                    'int4' => 'integer',
+                    'varchar' => 'string',
+                    'timestamptz' => 'timestamp',
+                    default => $rawType,
+                };
 
                 return match (true) {
                     $type === 'boolean' => Toggle::make($column),

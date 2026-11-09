@@ -1,0 +1,27 @@
+# Favorite Type Definitions
+# Wedding Flower Decoration App - Favorite GraphQL Types
+
+type Favorite @model(class: "App\\Models\\Favorite\\Favorite") {
+  id: ID!
+  user: User @belongsTo
+  catalog: Catalog @belongsTo
+  package: Package @belongsTo
+  createdAt: String!
+}
+
+type FavoriteAction {
+  Favorite: Favorite
+  action: FavoriteActionType!
+  message: String!
+}
+
+type Favoriteshare {
+  shareToken: String!
+  shareUrl: String!
+  expiresAt: String!
+}
+
+enum FavoriteActionType {
+  ADDED
+  REMOVED
+}

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Package\Package;
 use App\Models\Catalog\Catalog;
 use App\Services\CBIRService\CBIRService;
+use App\Support\CbirSearchLogger\CbirSearchLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -38,7 +39,12 @@ class CBIRController extends Controller
 
         $idsByType = collect($results)->groupBy('type');
 
-        $packageIds = $idsByType->get('package', collect())->pluck('owner_id')->all();
+        // AI Core keeps `package` as its storage/protobuf compatibility value;
+        // the public Laravel API exposes the same rows as catalog tiers.
+        $packageIds = $idsByType->get('package', collect())
+            ->merge($idsByType->get('tier', collect()))
+            ->pluck('owner_id')
+            ->all();
         $catalogIds = $idsByType->get('catalog', collect())->pluck('owner_id')->all();
 
         $packages = Package::with(['category'])
@@ -53,29 +59,36 @@ class CBIRController extends Controller
 
         $locale = app()->getLocale();
         $enrichedResults = collect($results)->map(function (array $res) use ($packages, $catalogs, $locale): ?array {
-            $type = $res['type'] ?? 'unknown';
+            $legacyType = $res['type'] ?? 'unknown';
+            $type = $legacyType === 'package' ? 'tier' : $legacyType;
             $id = (int) ($res['owner_id'] ?? 0);
 
-            $model = ($type === 'package') ? $packages->get($id) : (($type === 'catalog') ? $catalogs->get($id) : null);
+            $model = ($type === 'tier') ? $packages->get($id) : (($type === 'catalog') ? $catalogs->get($id) : null);
 
             if (! $model) {
                 return null;
             }
 
+            $data = [
+                'id' => $model->id,
+                'name' => $model->trans('name', $locale),
+                'slug' => $model->slug,
+                'description' => strip_tags($model->trans('description', $locale)),
+                'image_url' => $model->image_url,
+                'category' => $model->category?->name,
+            ];
+            if ($type === 'tier') {
+                $data['catalog_id'] = $model->catalog_id;
+                $data['price'] = $model->price;
+                $data['discount_price'] = $model->discount_price > 0 ? $model->discount_price : null;
+            }
+
             return [
                 'type' => $type,
+                'legacy_type' => $legacyType,
                 'similarity' => $res['similarity'] ?? 0,
                 'score' => $res['score'] ?? 0,
-                'data' => [
-                    'id' => $model->id,
-                    'name' => $model->trans('name', $locale),
-                    'slug' => $model->slug,
-                    'description' => strip_tags($model->trans('description', $locale)),
-                    'price' => $model->price,
-                    'discount_price' => $model->discount_price > 0 ? $model->discount_price : null,
-                    'image_url' => $model->image_url,
-                    'category' => $model->category?->name,
-                ],
+                'data' => $data,
             ];
         })->filter()->values();
 
@@ -83,6 +96,10 @@ class CBIRController extends Controller
             'cbir_mixed_results' => $enrichedResults->toArray(),
             'cbir_search_time' => $apiResponse['query_time_seconds'] ?? 0,
         ]);
+
+        // Riwayat pencarian visual (tabel `cbir_searches`). Tanpa ini tidak ada
+        // satu pun bukti di database bahwa fitur CBIR pernah dipakai.
+        CbirSearchLogger::recordUpload($request->user()?->id, $request->file('image'), $enrichedResults);
 
         return response()->json([
             'success' => true,
@@ -145,12 +162,15 @@ class CBIRController extends Controller
         }
 
         foreach ($catalogs as $catalog) {
-            $media = $catalog->getFirstMedia('catalog_image');
-            if ($media) {
+            // SEMUA foto, bukan `getFirstMedia()`: satu katalog punya lima foto
+            // galeri. Dengan hanya foto pertama, membangun indeks lewat endpoint
+            // ini membuang empat dari lima foto, dan pencarian dengan foto
+            // ke-2..5 tidak akan pernah menemukan katalognya.
+            foreach ($catalog->getMedia('catalog_image') as $media) {
                 if ($cbirService->indexMedia($media)) {
                     $cCount++;
                 } else {
-                    $errors[] = "Failed to index catalog ID {$catalog->id}";
+                    $errors[] = "Failed to index catalog ID {$catalog->id} (media {$media->id})";
                 }
             }
         }
@@ -169,7 +189,7 @@ class CBIRController extends Controller
     {
         try {
             $baseUrl = config('services.ai_core_url', 'http://127.0.0.1:5000');
-            $response = Http::get("{$baseUrl}/status");
+            $response = Http::timeout(10)->get("{$baseUrl}/status");
 
             if ($response->successful()) {
                 $status = $response->json();
@@ -179,8 +199,14 @@ class CBIRController extends Controller
                     'data' => [
                         'mode' => 'local',
                         'server_status' => 'online',
-                        // Accept both keys so it works before/after the AI Core rename.
-                        'indexed_catalogs' => $status['total_catalogs'] ?? $status['total_catalogs'] ?? 0,
+                        // Tiga angka, tiga arti (lihat AGENTS.md):
+                        //   indexed_catalogs -> PRODUK unik (type + owner_id)
+                        //   indexed_entries  -> baris indeks (= jumlah FOTO)
+                        //   total_catalogs (lama) -> jumlah foto, dipertahankan
+                        //     supaya klien versi lama tidak membaca 0.
+                        'indexed_catalogs' => $status['total_items'] ?? $status['total_catalogs'] ?? 0,
+                        'indexed_entries' => $status['total_entries'] ?? $status['total_catalogs'] ?? 0,
+                        'indexed_items_by_type' => $status['items_by_type'] ?? [],
                         'total_database_items' => Catalog::query()->count(),
                     ],
                 ]);
@@ -225,7 +251,10 @@ class CBIRController extends Controller
 
         $results = $apiResponse['results'] ?? [];
         $idsByType = collect($results)->groupBy('type');
-        $packageIds = $idsByType->get('package', collect())->pluck('owner_id')->all();
+        $packageIds = $idsByType->get('package', collect())
+            ->merge($idsByType->get('tier', collect()))
+            ->pluck('owner_id')
+            ->all();
         $catalogIds = $idsByType->get('catalog', collect())->pluck('owner_id')->all();
 
         $packages = Package::with(['category'])->whereIn('id', $packageIds)->get()->keyBy('id');
@@ -233,24 +262,31 @@ class CBIRController extends Controller
         $locale = app()->getLocale();
 
         $enrichedResults = collect($results)->map(function (array $res) use ($packages, $catalogs, $locale): ?array {
-            $type = $res['type'] ?? 'unknown';
+            $legacyType = $res['type'] ?? 'unknown';
+            $type = $legacyType === 'package' ? 'tier' : $legacyType;
             $id = (int) ($res['owner_id'] ?? 0);
-            $model = ($type === 'package') ? $packages->get($id) : (($type === 'catalog') ? $catalogs->get($id) : null);
+            $model = ($type === 'tier') ? $packages->get($id) : (($type === 'catalog') ? $catalogs->get($id) : null);
             if (! $model) return null;
+            $data = [
+                'id' => $model->id,
+                'name' => $model->trans('name', $locale),
+                'slug' => $model->slug,
+                'description' => strip_tags($model->trans('description', $locale)),
+                'image_url' => $model->image_url,
+                'category' => $model->category?->name,
+            ];
+            if ($type === 'tier') {
+                $data['catalog_id'] = $model->catalog_id;
+                $data['price'] = $model->price;
+                $data['discount_price'] = $model->discount_price > 0 ? $model->discount_price : null;
+            }
+
             return [
                 'type' => $type,
+                'legacy_type' => $legacyType,
                 'similarity' => $res['similarity'] ?? 0,
                 'score' => $res['score'] ?? 0,
-                'data' => [
-                    'id' => $model->id,
-                    'name' => $model->trans('name', $locale),
-                    'slug' => $model->slug,
-                    'description' => strip_tags($model->trans('description', $locale)),
-                    'price' => $model->price,
-                    'discount_price' => $model->discount_price > 0 ? $model->discount_price : null,
-                    'image_url' => $model->image_url,
-                    'category' => $model->category?->name,
-                ],
+                'data' => $data,
             ];
         })->filter()->values();
 
@@ -309,11 +345,24 @@ class CBIRController extends Controller
         ]);
     }
 
-    public function evaluate(CBIRService $cbirService)
+    public function evaluate(Request $request, CBIRService $cbirService)
     {
+        // Evaluasi menjalankan SELURUH indeks sebagai query. AI Core menyimpan
+        // hasilnya dan memakai ulang selama masih segar (default 300 detik),
+        // jadi request biasa selesai dalam milidetik. Permintaan hitung ulang
+        // (`?refresh=1`) masih bisa memakan ±15-30 detik, dan batas PHP untuk
+        // request web adalah 30 detik -> tanpa ini hasilnya HTTP 500
+        // "Maximum execution time of 30 seconds exceeded".
+        //
+        // `set_time_limit()` bersifat PROSES-WIDE dan tidak kembali sendiri,
+        // jadi nilainya disimpan dan dikembalikan di `finally`.
+        $previousLimit = (int) ini_get('max_execution_time');
+        @set_time_limit(120);
+
         try {
             $baseUrl = config('services.ai_core_url', 'http://127.0.0.1:5000');
-            $response = Http::timeout(120)->get("{$baseUrl}/api/evaluate");
+            $query = $request->boolean('refresh') ? '?refresh=1' : '';
+            $response = Http::timeout(110)->get("{$baseUrl}/api/evaluate{$query}");
 
             if ($response->successful()) {
                 return response()->json($response->json());
@@ -330,6 +379,8 @@ class CBIRController extends Controller
                 'message' => __('Layanan AI Core sedang offline'),
                 'metrics' => [],
             ]);
+        } finally {
+            @set_time_limit($previousLimit);
         }
     }
 }

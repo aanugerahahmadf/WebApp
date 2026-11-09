@@ -119,35 +119,7 @@ class PasswordSecurityPage extends Page
      */
     protected function getHeaderActions(): array
     {
-        if ($this->section === 'index') {
-            return [
-                Action::make('backToSettings')
-                    ->label(__('Kembali ke Pengaturan'))
-                    ->icon('/images/icons/arrow_left.svg')
-                    ->color('gray')
-                    ->url(SettingsPage::getUrl(panel: 'welcome')),
-            ];
-        }
-
-        $notificationDetailUrl = $this->notificationDetailReturnUrl();
-
-        if ($notificationDetailUrl) {
-            return [
-                Action::make('backToNotificationDetail')
-                    ->label(__('Kembali ke Detail Notifikasi'))
-                    ->icon('/images/icons/arrow_left.svg')
-                    ->color('gray')
-                    ->url($notificationDetailUrl),
-            ];
-        }
-
-        return [
-            Action::make('backToPasswordSecurity')
-                ->label(__('Kembali ke Kata Sandi dan Keamanan'))
-                ->icon('/images/icons/arrow_left.svg')
-                ->color('gray')
-                ->url(static::getUrl(panel: 'welcome')),
-        ];
+        return [];
     }
 
     private function notificationDetailReturnUrl(): ?string

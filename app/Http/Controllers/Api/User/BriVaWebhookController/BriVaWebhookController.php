@@ -331,9 +331,9 @@ class BriVaWebhookController extends Controller
             ]),
         ]);
 
-        if ($transaction->order) {
+        if ($order = $transaction->resolveOrder()) {
             try {
-                app(OrderController::class)->sendPaymentNotifications($transaction->order->fresh());
+                app(OrderController::class)->sendPaymentNotifications($order->fresh());
             } catch (\Throwable $e) {
                 Log::warning('[BRI] Gagal mengirim notifikasi pembayaran: '.$e->getMessage());
             }

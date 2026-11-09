@@ -4,13 +4,11 @@ namespace App\Http\Controllers\Api\User\AuthController;
 
 use App\Http\Controllers\Controller;
 use App\Mail\OtpMail\OtpMail;
-use App\Models\Admin\Admin;
 use App\Models\BackupCode\BackupCode;
 use App\Models\User\User;
 use App\Models\WhatsappOtp\WhatsappOtp;
 use App\Services\StorageService\StorageService;
 use App\Support\DeviceTrust\DeviceTrustService;
-use App\Support\PasswordPolicy\PasswordPolicy;
 use Firebase\JWT\JWK;
 use Firebase\JWT\JWT;
 use Illuminate\Database\QueryException;
@@ -51,289 +49,6 @@ class AuthController extends Controller
 
     /** Masa berlaku OTP verifikasi email / Google (menit). */
     public const OTP_VERIFY_TTL_MINUTES = 5;
-
-    public function register(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'full_name' => 'required|string|max:255',
-            'first_name' => 'nullable|string|max:255',
-            'mid_name' => 'nullable|string|max:255',
-            'last_name' => 'nullable|string|max:255',
-            'username' => 'required|string|max:255|unique:users|alpha_dash',
-            'email' => 'required|string|email|max:255|unique:users',
-            'whatsapp' => 'nullable|string|max:255',
-            'ktp_number' => 'nullable|string|max:20|unique:users,ktp_number',
-            'passport_number' => 'nullable|string|max:20|unique:users,passport_number',
-            'sim_number' => 'nullable|string|max:20|unique:users,sim_number',
-            'npwp_number' => 'nullable|string|max:20|unique:users,npwp_number',
-            'identity_type' => 'nullable|string|in:ktp,passport,sim,npwp|max:20',
-            'birth_place' => 'nullable|string|max:255',
-            'birth_date' => 'nullable|date',
-            'ktp_photo' => 'nullable|image|max:2048',
-            'selfie_photo' => 'nullable|image|max:5120',
-            'face_scan_photo' => 'nullable|image|max:5120',
-            'liveness_completed' => 'nullable|boolean',
-            'country' => 'nullable|string|max:255',
-            'province_id' => 'nullable|exists:indonesia_provinces,id',
-            'city_id' => 'nullable|exists:indonesia_cities,id',
-            'district_id' => 'nullable|exists:indonesia_districts,id',
-            'village_id' => 'nullable|exists:indonesia_villages,id',
-            'province_name' => 'nullable|string|max:255',
-            'city_name' => 'nullable|string|max:255',
-            'district_name' => 'nullable|string|max:255',
-            'village_name' => 'nullable|string|max:255',
-            'postal_code' => 'nullable|string|max:10',
-            'gender' => 'nullable|string|max:255',
-            'religion' => 'nullable|string|max:50',
-            'marital_status' => 'nullable|string|max:50',
-            'mother_name' => 'nullable|string|max:255',
-            'occupation' => 'nullable|string|max:100',
-            'income_range' => 'nullable|string|max:50',
-            'source_of_funds' => 'nullable|string|max:100',
-            'address' => 'nullable|string',
-            'password' => PasswordPolicy::confirmedRules(),
-            'profile_photo' => 'nullable|image|max:10240',
-            'avatar_url' => 'nullable|string|max:500',
-        ], [
-            'ktp_number.unique' => 'Nomor KTP sudah terdaftar oleh pengguna lain.',
-            'passport_number.unique' => 'Nomor Passport sudah terdaftar oleh pengguna lain.',
-            'sim_number.unique' => 'Nomor SIM sudah terdaftar oleh pengguna lain.',
-            'npwp_number.unique' => 'Nomor NPWP sudah terdaftar oleh pengguna lain.',
-        ]);
-
-        $validator->sometimes('ktp_number', 'required|size:16|unique:users,ktp_number', function ($input) {
-            return ($input->identity_type ?? '') === 'ktp';
-        });
-
-        $validator->sometimes('passport_number', 'required|min:6|unique:users,passport_number', function ($input) {
-            return ($input->identity_type ?? '') === 'passport';
-        });
-
-        $validator->sometimes('sim_number', 'required|min:6|max:20|unique:users,sim_number', function ($input) {
-            return ($input->identity_type ?? '') === 'sim';
-        });
-
-        $validator->sometimes('npwp_number', 'required|min:15|max:20|unique:users,npwp_number', function ($input) {
-            return ($input->identity_type ?? '') === 'npwp';
-        });
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => __('Gagal validasi'),
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        if (filled($request->whatsapp) && ! $this->isWhatsappVerified($request->whatsapp)) {
-            return response()->json([
-                'status' => 'error',
-                'message' => __('Nomor WhatsApp belum diverifikasi. Silakan verifikasi kode OTP terlebih dahulu.'),
-            ], 422);
-        }
-
-        $userData = [
-            'full_name' => $request->full_name,
-            'first_name' => $request->first_name,
-            'mid_name' => $request->mid_name,
-            'last_name' => $request->last_name,
-            'username' => $request->username,
-            'email' => $request->email,
-            'whatsapp' => $request->whatsapp,
-            'whatsapp_verified_at' => filled($request->whatsapp) ? now() : null,
-            'ktp_number' => $request->ktp_number,
-            'passport_number' => $request->passport_number,
-            'sim_number' => $request->sim_number,
-            'npwp_number' => $request->npwp_number,
-            'identity_type' => $request->identity_type,
-            'birth_place' => $request->birth_place,
-            'birth_date' => $request->birth_date,
-            'country' => $request->country,
-            'province_id' => $request->province_id,
-            'city_id' => $request->city_id,
-            'district_id' => $request->district_id,
-            'village_id' => $request->village_id,
-            'province_name' => $request->province_name,
-            'city_name' => $request->city_name,
-            'district_name' => $request->district_name,
-            'village_name' => $request->village_name,
-            'postal_code' => $request->postal_code,
-            'gender' => $request->gender,
-            'religion' => $request->religion,
-            'marital_status' => $request->marital_status,
-            'mother_name' => $request->mother_name,
-            'occupation' => $request->occupation,
-            'income_range' => $request->income_range,
-            'source_of_funds' => $request->source_of_funds,
-            'address' => $request->address,
-            'password' => $request->password,
-            'ip_address' => $request->ip(),
-        ];
-
-        if ($request->hasFile('ktp_photo')) {
-            $userData['ktp_photo'] = StorageService::upload($request->file('ktp_photo'), 'ktp-photos', 'local');
-        }
-
-        if ($request->hasFile('selfie_photo')) {
-            $userData['selfie_photo'] = StorageService::upload($request->file('selfie_photo'), 'selfies', 'local');
-        }
-
-        if ($request->hasFile('face_scan_photo')) {
-            $userData['face_scan_photo'] = StorageService::upload($request->file('face_scan_photo'), 'face-scans', 'local');
-        }
-
-        $userData['liveness_completed'] = $request->boolean('liveness_completed');
-
-        if ($request->hasFile('profile_photo')) {
-            $path = StorageService::upload($request->file('profile_photo'), 'avatars');
-            $userData['avatar_url'] = $path;
-        } elseif ($request->filled('avatar_url')) {
-            $userData['avatar_url'] = $request->avatar_url;
-        }
-
-        // Remove non-fillable sensitive fields; set them via forceFill after create
-        $sensitiveFields = array_intersect_key($userData, array_flip([
-            'liveness_completed',
-        ]));
-        $userData = array_diff_key($userData, $sensitiveFields);
-
-        $user = User::create($userData);
-        if ($sensitiveFields) {
-            $user->forceFill($sensitiveFields)->save();
-        }
-
-        $user->assignRole('user');
-
-        /** @var User $user */
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'status' => 'success',
-            'token' => $token,
-            'user' => $user,
-            'data' => [
-                'token' => $token,
-                'user' => $user,
-            ],
-        ], 201);
-    }
-
-    public function login(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'login' => 'required',
-            'password' => 'required',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => __('Validasi gagal'),
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        $login = $request->login;
-
-        // Sign in hanya menerima Email atau Username. Nomor KTP/Passport/SIM/
-        // NPWP tidak lagi jadi alias login, jadi query cukup satu kolom
-        // ter-index -- konsisten dengan SignIn.php di panel Filament.
-        $fieldType = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
-
-        $user = User::where($fieldType, $login)->first();
-
-        if (! $user || ! Hash::check($request->password, $user->password)) {
-            // Cek akun tim internal (admins table)
-            $admin = Admin::where($fieldType, $login)->first();
-            if ($admin && $admin->active_status && Hash::check($request->password, $admin->password)) {
-                $user = $admin->ensureStorefrontIdentity($request->password);
-            }
-        }
-
-        if (! $user || ! Hash::check($request->password, $user->password)) {
-            return response()->json([
-                'status' => 'error',
-                'message' => __('Data login tidak valid'),
-            ], 401);
-        }
-
-        if ($user->active_status === false) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Akun Anda telah dinonaktifkan oleh admin.',
-            ], 403);
-        }
-
-        if (! $user->active_status) {
-            $user->update(['active_status' => true]);
-        }
-
-        // 2FA aktif -> jangan terbitkan token dulu.
-        //
-        // Padanan middleware CheckTrustedDevice milik paket multi-2fa, yang
-        // di panel Filament mengarahkan ke OtpEmailOrTwoFactory sebelum
-        // halaman mana pun boleh dibuka. Mobile sebelumnya melompatinya
-        // seluruhnya: token langsung terbit begitu kata sandi cocok, jadi 2FA
-        // yang sudah aktif tidak pernah ditebak -- siapa pun yang punya kata
-        // sandi bisa masuk.
-        //
-        // Token baru terbit di verifyTwoFactor(), yaitu hanya setelah kode
-        // benar.
-        if ($this->requiresTwoFactor($user)) {
-            return $this->twoFactorChallenge($user);
-        }
-
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        // Jalur API ini tidak memicu Illuminate\Auth\Events\Login, jadi
-        // pengenalan perangkat "Apakah Ini Anda?" dipicu di sini.
-        DeviceTrustService::recognize($user);
-
-        return response()->json([
-            'status' => 'success',
-            'token' => $token,
-            'user' => $user,
-            'data' => [
-                'token' => $token,
-                'user' => $user,
-            ],
-        ]);
-    }
-
-    /* ---------------------------------------------------------------------
-     | Autentikasi dua faktor (padanan OtpEmailOrTwoFactory)
-     | ------------------------------------------------------------------ */
-
-    /** Cara verifikasi: kode dari aplikasi autentikasi (TOTP). */
-    public const TWO_FACTOR_METHOD_AUTHENTICATOR = 'authenticator';
-
-    /** Cara verifikasi: kode pemulihan XXXX-XXXX. */
-    public const TWO_FACTOR_METHOD_RECOVERY = 'recovery';
-
-    /** Cara verifikasi: kode 6 digit yang dikirim ke email. */
-    public const TWO_FACTOR_METHOD_EMAIL = 'email';
-
-    /** Berapa lama challenge 2FA berlaku (menit). */
-    protected const TWO_FACTOR_CHALLENGE_TTL_MINUTES = 10;
-
-    /** Berapa lama kode email 2FA berlaku (menit). */
-    protected const TWO_FACTOR_EMAIL_TTL_MINUTES = 10;
-
-    /** Key cache kode email 2FA. Sama dengan milik OtpEmailOrTwoFactory. */
-    protected const TWO_FACTOR_EMAIL_CACHE_KEY = '2fa_email_otp_';
-
-    /**
-     * Apakah akun ini wajib membuktikan identitas dua langkah?
-     *
-     * Syaratnya sama persis dengan CheckTrustedDevice milik paket:
-     * `two_factor_type` selain "none".
-     *
-     * `two_factor_enabled` sengaja TIDAK dipakai sebagai penentu. Keduanya
-     * bisa tidak sinkron -- `SecurityController::twoFactorToggle()` mengubah
-     * `two_factor_enabled` lewat toggle WhatsApp, sementara setup lewat
-     * TwoFactorySetup hanya mengisi `two_factor_type`. memakai yang kedua
-     * membuat kedua jalur itu sama-sama dihormati.
-     */
     protected function requiresTwoFactor(User $user): bool
     {
         return $user->two_factor_type !== null
@@ -633,130 +348,6 @@ class AuthController extends Controller
         ]);
     }
 
-    public function forgotPassword(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email',
-        ]);
-
-        $user = User::where('email', $request->email)->first(['*']);
-
-        if (! $user) {
-            return response()->json(['status' => 'success', 'message' => 'Jika email terdaftar, OTP telah dikirim.'], 200);
-        }
-
-        $otp = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-
-        User::where('email', $request->email)->update([
-            'otp_code' => $otp,
-            // 30 menit, bukan 5.
-            //
-            // OtpRequestPasswordReset::request() di panel Filament menyimpan
-            // OTP lupa kata sandi 30 menit (sama dengan VerifyOtp yang
-            // menandainya sah 30 menit). API ini memakai 5 menit, jadi
-            // pengguna yang membuka email-nya lewat -- hal yang paling
-            // sering terjadi, apalagi dengan email perusahaan yang
-            // Sometimes pengiriman WA ditunda -- user akan melihat OTP sudah
-            // kedaluwarsa
-            // padahal masih di bawah tenggat yang sama di web.
-            //
-            // VerifyOtp juga memanggil verifyOtp() dengan purpose
-            // forgot_password, jadi masa berlaku WAJIB sama untuk keduanya;
-            // kalau tidak, ada jeda di mana sheet reset akan menolak OTP
-            // yang baru saja dianggap sah.
-            'otp_expires_at' => now()->addMinutes(self::OTP_FORGOT_PASSWORD_TTL_MINUTES),
-            'otp_purpose' => 'forgot_password',
-        ]);
-
-        try {
-            Mail::to($request->email)->send(new OtpMail($otp, $user->name ?? 'Pengguna'));
-        } catch (\Throwable $e) {
-            // Mail gagal = OTP tidak akan pernah sampai. Hapus dari DB
-            // supaya VerifyOtp bisa-rules تحمل kebetulan tidak mungkin.
-            Log::error('Gagal kirim OTP lupa kata sandi ke '.$request->email.': '.$e->getMessage());
-
-            return response()->json([
-                'status' => 'error',
-                'message' => __('Kode OTP gagal dikirim. Periksa konfigurasi email lalu coba lagi.'),
-            ], 500);
-        }
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Instruksi reset password akan dikirim ke email Anda.',
-            'email' => $user->email,
-        ]);
-    }
-
-    /**
-     * Atur ulang kata sandi setelah OTP terverifikasi.
-     *
-     * Dua tahap, sama seperti VerifyOtp + OtpResetPassword di panel Filament:
-     * verifyOtp() menandai OTP forgot_password sudah sah di cache, lalu
-     * endpoint inilah yang menerimanya. both pihak menulis ke key cache yang
-     * sama (`otp_verified_for_<email>`), jadi kedua antarmuka tidak mungkin
-     * saling menagih OTP-nya dua kali.
-     *
-     * Field `email` dan `otp` tetap diterima dan keduanya WAJIB, karena
-     * authenticate-nya berarti "pengguna ini sudah membuktikan miliknya email
-     * dengan kode itu". Mobil mengirim keduanya; kode yang lolos adalah yang
-     * sudah diverifikasi, atau -- untuk klien yang lebih lama -- yang masih
-     * hidup di tabel.
-     */
-    public function resetPassword(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'otp' => 'required|string|size:6',
-            'password' => PasswordPolicy::confirmedRules(),
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => __('Validasi gagal'),
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        $email = $request->email;
-        $otp = (string) $request->otp;
-
-        // Sudah diverifikasi di verifyOtp()? (jalur normal)
-        $sudahDiverifikasi = Cache::get('otp_verified_for_'.$email);
-
-        $user = $sudahDiverifikasi
-            ? User::where('email', $email)->first(['*'])
-            : // Fallback: OTP forgot_password yang masih hidup di tabel.
-                User::where('email', $email)
-                ->where('otp_code', $otp)
-                ->where('otp_purpose', 'forgot_password')
-                ->where('otp_expires_at', '>', now())
-                ->first();
-
-        if (! $user) {
-            return response()->json(['status' => 'error', 'message' => __('Kode OTP tidak valid atau sudah kedaluwarsa')], 422);
-        }
-
-        // Token lama ikut dibuang: kata sandi berubah, jadi sesi yang dibuat
-        // dengan kata sandi lama tidak lagi mewakili akun ini.
-        $user->tokens()->delete();
-
-        $user->update([
-            'password' => $request->password,
-            'otp_code' => null,
-            'otp_expires_at' => null,
-            'otp_purpose' => null,
-        ]);
-
-        Cache::forget('otp_verified_for_'.$email);
-
-        return response()->json([
-            'status' => 'success',
-            'message' => __('Reset password berhasil'),
-        ]);
-    }
-
     public function clerkSync(Request $request)
     {
         $secret = config('services.clerk_sync_secret', env('CLERK_SYNC_SECRET', ''));
@@ -888,7 +479,7 @@ class AuthController extends Controller
                     'message' => __('User tidak ditemukan'),
                 ], 404);
             }
-            if (! $user->social_id || $user->social_type !== 'google') {
+            if (! $user->social_id || ! in_array($user->social_type, ['google', 'firebase_google', 'firebase'])) {
                 return response()->json([
                     'status' => 'error',
                     'message' => __('Email tidak terdaftar via Google'),
@@ -1029,40 +620,108 @@ class AuthController extends Controller
     public function googleLogin(Request $request)
     {
         $request->validate([
-            'id_token' => 'required|string',
+            'firebase_id_token' => 'nullable|string',
+            'google_id_token' => 'nullable|string',
+            'id_token' => 'nullable|string',
         ]);
 
-        // Verify Google ID token via Google's token info endpoint
-        try {
-            $response = Http::timeout(10)->get('https://oauth2.googleapis.com/tokeninfo', [
-                'id_token' => $request->id_token,
-            ]);
-        } catch (\Exception $e) {
+        $firebaseIdToken = $request->input('firebase_id_token') ?? $request->input('id_token');
+        $googleIdToken = $request->input('google_id_token');
+
+        if (! $firebaseIdToken && ! $googleIdToken) {
             return response()->json([
                 'status' => 'error',
-                'message' => __('Gagal memverifikasi token Google'),
-            ], 500);
+                'message' => __('Token Firebase atau Google diperlukan'),
+            ], 422);
         }
 
-        if (! $response->successful()) {
+        $email = null;
+        $googleId = null;
+        $name = null;
+        $avatarUrl = null;
+
+        // 1. Verifikasi token Firebase ID
+        if ($firebaseIdToken) {
+            // A. Coba Kreait Firebase Admin SDK jika file credentials ada
+            $credentialsPath = config('firebase.credentials');
+            if ($credentialsPath && file_exists($credentialsPath)) {
+                try {
+                    $firebaseAuth = app(\Kreait\Firebase\Contract\Auth::class);
+                    $verifiedToken = $firebaseAuth->verifyIdToken($firebaseIdToken);
+                    $googleId = (string) $verifiedToken->claims()->get('sub');
+                    $firebaseUser = $firebaseAuth->getUser($googleId);
+                    $email = $firebaseUser->email;
+                    $name = $firebaseUser->displayName ?: explode('@', $email)[0];
+                    $avatarUrl = $firebaseUser->photoUrl;
+                } catch (\Throwable $e) {
+                    Log::warning('[GoogleLogin] Kreait Firebase verification failed, falling back to Identity Toolkit REST', [
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+
+            // B. Verifikasi via Google Identity Toolkit REST API (resilient & tanpa file service account)
+            if (! $email) {
+                $apiKey = config('firebase.api_key') ?: env('FIREBASE_API_KEY');
+                if ($apiKey) {
+                    try {
+                        $response = Http::timeout(15)->post(
+                            'https://identitytoolkit.googleapis.com/v1/accounts:lookup?key='.$apiKey,
+                            ['idToken' => $firebaseIdToken]
+                        );
+
+                        if ($response->successful()) {
+                            $users = $response->json('users');
+                            if (! empty($users) && isset($users[0])) {
+                                $profile = $users[0];
+                                $googleId = $profile['localId'] ?? null;
+                                $email = $profile['email'] ?? null;
+                                $name = $profile['displayName'] ?? ($email ? explode('@', $email)[0] : 'User');
+                                $avatarUrl = $profile['photoUrl'] ?? null;
+                            }
+                        } else {
+                            Log::warning('[GoogleLogin] Identity Toolkit lookup response not successful', [
+                                'status' => $response->status(),
+                                'body' => $response->json(),
+                            ]);
+                        }
+                    } catch (\Throwable $e) {
+                        Log::error('[GoogleLogin] Identity Toolkit network exception', ['error' => $e->getMessage()]);
+                    }
+                }
+            }
+        }
+
+        // 2. Fallback verifikasi via Google OAuth2 tokeninfo jika token Google langsung
+        if (! $email && ($googleIdToken || $firebaseIdToken)) {
+            $tokenToTest = $googleIdToken ?: $firebaseIdToken;
+            try {
+                $response = Http::timeout(15)->get('https://oauth2.googleapis.com/tokeninfo', [
+                    'id_token' => $tokenToTest,
+                ]);
+
+                if ($response->successful()) {
+                    $data = $response->json();
+                    if (! empty($data['email'])) {
+                        $email = $data['email'];
+                        $googleId = $data['sub'] ?? ($data['user_id'] ?? null);
+                        $name = $data['name'] ?? explode('@', $email)[0];
+                        $avatarUrl = $data['picture'] ?? null;
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning('[GoogleLogin] Google OAuth tokeninfo fallback failed', ['error' => $e->getMessage()]);
+            }
+        }
+
+        if (! $email || ! $googleId) {
+            Log::warning('Firebase/Google token verification completely failed');
+
             return response()->json([
                 'status' => 'error',
-                'message' => __('Token Google tidak valid'),
+                'message' => __('Token Firebase tidak valid atau sudah kedaluwarsa'),
             ], 401);
         }
-
-        $payload = $response->json();
-        if (! isset($payload['email']) || ! isset($payload['sub'])) {
-            return response()->json([
-                'status' => 'error',
-                'message' => __('Token Google tidak valid'),
-            ], 401);
-        }
-
-        $googleId = $payload['sub'];
-        $email = $payload['email'];
-        $name = $payload['name'] ?? explode('@', $email)[0];
-        $avatarUrl = $payload['picture'] ?? null;
 
         $user = User::where('social_id', $googleId)
             ->orWhere('email', $email)
@@ -1072,7 +731,7 @@ class AuthController extends Controller
             if (! $user->social_id) {
                 $user->update([
                     'social_id' => $googleId,
-                    'social_type' => 'google',
+                    'social_type' => 'firebase_google',
                     'avatar_url' => $avatarUrl ?: $user->avatar_url,
                 ]);
             }
@@ -1095,27 +754,40 @@ class AuthController extends Controller
             // Sign in Google akun LAMA via API -- tidak memicu Login event.
             DeviceTrustService::recognize($user);
 
+            $needsOtp = is_null($user->email_verified_at);
+            $needsCompletion = method_exists($user, 'shouldCompleteProfile') && $user->shouldCompleteProfile();
+
             return response()->json([
                 'status' => 'success',
                 'message' => __('Login berhasil'),
                 'data' => [
                     'token' => $token,
                     'user' => $user,
-                    'needs_otp' => false,
-                    'needs_completion' => false,
+                    'needs_otp' => $needsOtp,
+                    'needs_completion' => $needsCompletion,
                 ],
             ]);
+        }
+
+        // Buat username unik yang aman
+        $username = explode('@', $email)[0];
+        $base = $username;
+        $i = 1;
+        while (User::query()->where('username', $username)->exists()) {
+            $username = $base.$i++;
         }
 
         // User doesn't exist — register with Google data
         try {
             $user = User::create([
                 'social_id' => $googleId,
-                'social_type' => 'google',
+                'social_type' => 'firebase_google',
+                'username' => $username,
                 'full_name' => $name,
                 'first_name' => explode(' ', $name)[0],
                 'last_name' => Str::after($name, ' ') ?: '',
                 'email' => $email,
+                'email_verified_at' => null,
                 'avatar_url' => $avatarUrl,
                 'active_status' => true,
                 // 2FA TIDAK PERNAH aktif untuk Google OAuth users.
@@ -1123,7 +795,10 @@ class AuthController extends Controller
                 'two_factor_enabled' => false,
             ]);
         } catch (QueryException $e) {
-            if ($e->errorInfo[1] == 1062) {
+            // MySQL: 1062 = Duplicate entry; PostgreSQL: 23505 = unique_violation
+            $sqlState = $e->errorInfo[0] ?? '';
+            $mysqlCode = $e->errorInfo[1] ?? 0;
+            if ($mysqlCode == 1062 || $sqlState === '23505') {
                 return response()->json([
                     'status' => 'error',
                     'message' => __('Akun Google kamu sudah terdaftar. Silakan masuk dengan email dan password.'),
@@ -1222,7 +897,10 @@ class AuthController extends Controller
                 'active_status' => true,
             ]);
         } catch (QueryException $e) {
-            if ($e->errorInfo[1] == 1062) {
+            // MySQL: 1062 = Duplicate entry; PostgreSQL: 23505 = unique_violation
+            $sqlState = $e->errorInfo[0] ?? '';
+            $mysqlCode = $e->errorInfo[1] ?? 0;
+            if ($mysqlCode == 1062 || $sqlState === '23505') {
                 return response()->json([
                     'status' => 'error',
                     'message' => __('Akun Facebook kamu sudah terdaftar. Silakan masuk dengan email dan password.'),

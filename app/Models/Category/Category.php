@@ -10,9 +10,12 @@ use App\Models\Catalog\Catalog;
 use App\Traits\HasTranslations\HasTranslations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Traits\ResolvesCamelCaseAttributes\ResolvesCamelCaseAttributes;
+
 
 class Category extends Model
 {
+    use ResolvesCamelCaseAttributes;
     use LegacyMorphClass;
     use HasFactory;
     use HasTranslations;

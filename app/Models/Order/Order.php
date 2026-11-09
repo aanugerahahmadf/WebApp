@@ -15,6 +15,9 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Traits\ResolvesCamelCaseAttributes\ResolvesCamelCaseAttributes;
+
 
 /**
  * @property int $id
@@ -73,8 +76,10 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Order extends Model
 {
+    use ResolvesCamelCaseAttributes;
     use LegacyMorphClass;
     use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'user_id',
@@ -88,6 +93,7 @@ class Order extends Model
         'booking_time',
         'quantity',
         'notes',
+        'cancelled_at',
     ];
 
     protected $casts = [
@@ -95,6 +101,7 @@ class Order extends Model
         'total_price' => 'decimal:2',
         'status' => OrderStatus::class,
         'payment_status' => OrderPaymentStatus::class,
+        'cancelled_at' => 'datetime',
     ];
 
     protected $appends = ['event_date'];

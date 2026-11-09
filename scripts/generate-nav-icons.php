@@ -80,7 +80,7 @@ $icons['voucher'] = [
 B,
 ];
 
-$icons['wishlist'] = [
+$icons['Favorite'] = [
     'main' => '#E11D48', 'accent' => '#FDA4AF',
     'body' => <<<'B'
   <path d="M12 20.2S4 15.4 4 9.9A4.4 4.4 0 0 1 12 7a4.4 4.4 0 0 1 8 2.9c0 5.5-8 10.3-8 10.3Z" stroke="#E11D48" stroke-width="1.6" stroke-linejoin="round"/>

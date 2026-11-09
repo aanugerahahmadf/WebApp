@@ -19,7 +19,7 @@
     >
         <div class="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-gray-200 bg-white/95 px-5 py-4 backdrop-blur dark:border-white/10 dark:bg-gray-900/95 sm:px-6">
             <h2 class="text-base font-semibold text-gray-950 dark:text-white">
-                {{ __('Ulasan dari :name', ['name' => $review->user?->full_name ?? __('Pengguna')]) }}
+                {{ __('Ulasan dari :name', ['name' => $review->reviewer_name]) }}
             </h2>
             <x-filament::icon-button icon="/images/icons/x.svg" color="gray" size="md" :label="__('Tutup')" x-on:click.stop="openReview = false" />
         </div>

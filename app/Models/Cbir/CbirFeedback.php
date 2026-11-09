@@ -5,9 +5,12 @@ namespace App\Models\Cbir;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Traits\ResolvesCamelCaseAttributes\ResolvesCamelCaseAttributes;
+
 
 class CbirFeedback extends Model
 {
+    use ResolvesCamelCaseAttributes;
     use HasFactory;
 
     protected $table = 'cbir_feedback';

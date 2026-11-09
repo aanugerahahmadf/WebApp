@@ -25,7 +25,7 @@ type User @model(class: "App\\Models\\User\\User") {
   updatedAt: String!
   orders: [Order!]! @hasMany
   reviews: [Review!]! @hasMany
-  wishlist: [Wishlist!]! @hasMany
+  Favorite: [Favorite!]! @hasMany
   addresses: [UserAddress!]! @hasMany
 }
 
@@ -47,7 +47,7 @@ type UserProfile {
   user: User!
   orderCount: Int!
   reviewCount: Int!
-  wishlistCount: Int!
+  FavoriteCount: Int!
   totalSpent: Float!
   favoriteCategory: Category
   joinedAt: String!

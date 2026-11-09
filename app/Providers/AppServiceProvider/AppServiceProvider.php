@@ -4,6 +4,8 @@ namespace App\Providers\AppServiceProvider;
 
 use App\Enums\RuntimePlatform\RuntimePlatform;
 use App\Support\AppIcon\VendorIconAliases;
+use App\Support\PostgresCaseInsensitiveCollation\PostgresCaseInsensitiveCollation;
+use Illuminate\Database\Events\MigrationsEnded;
 use App\Filament\Admin\Auth\SignIn\SignIn as AdminSignIn;
 use App\Filament\Admin\Auth\OtpEmailVerificationPrompt\OtpEmailVerificationPrompt as AdminOtpEmailVerificationPrompt;
 use App\Filament\Admin\Auth\OtpRequestPasswordReset\OtpRequestPasswordReset as AdminOtpRequestPasswordReset;
@@ -70,10 +72,11 @@ use App\Models\UserSession\UserSession;
 use App\Models\Voucher\Voucher;
 use App\Models\WeddingDecorationPolicy\WeddingDecorationPolicy;
 use App\Models\WhatsappOtp\WhatsappOtp;
-use App\Models\Wishlist\Wishlist;
+use App\Models\Favorite\Favorite;
 use App\Observers\MediaObserver\MediaObserver;
 use App\Observers\MessageObserver\MessageObserver;
 use App\Observers\OrderObserver\OrderObserver;
+use App\Support\AppsScriptMirror\AppsScriptMirror;
 use App\Observers\TransactionObserver\TransactionObserver;
 use App\Providers\Filament\UserPanelProvider\UserPanelProvider;
 use App\Providers\FirebaseServiceProvider\FirebaseServiceProvider;
@@ -103,11 +106,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
+use Psr\Http\Message\RequestInterface;
 use Spatie\Backup\BackupServiceProvider;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
@@ -275,6 +280,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->authenticateAiCoreHttpRequests();
+
         RateLimiter::for('api', function ($request) {
             return Limit::perMinute(config('security.rate_limits.api', 120))
                 ->by($request->user()?->getAuthIdentifier() ?: $request->ip());
@@ -417,7 +424,7 @@ class AppServiceProvider extends ServiceProvider
             'App\Models\Voucher' => Voucher::class,
             'App\Models\WeddingDecorationPolicy' => WeddingDecorationPolicy::class,
             'App\Models\WhatsappOtp' => WhatsappOtp::class,
-            'App\Models\Wishlist' => Wishlist::class,
+            'App\Models\Favorite' => Favorite::class,
         ]);
 
         // ═══════════════════════════════════════════════════════════
@@ -577,6 +584,14 @@ class AppServiceProvider extends ServiceProvider
         Message::observe(MessageObserver::class);
         Order::observe(OrderObserver::class);
         Transaction::observe(TransactionObserver::class);
+
+        /*
+         * Salinan order & review ke Google Apps Script (lihat
+         * app/Support/AppsScriptMirror). No-op selama
+         * GOOGLE_APPS_SCRIPT_ENABLED=false, jadi tidak ada permintaan jaringan
+         * yang muncul di jalur checkout sebelum integrasinya benar-benar dipasang.
+         */
+        AppsScriptMirror::boot();
         Livewire::component('edit-password-component', EditPasswordComponent::class);
         Livewire::component('mobile-settings-component', MobileSettingsComponent::class);
         Livewire::component('notification-settings-component', NotificationSettingsComponent::class);
@@ -731,5 +746,68 @@ class AppServiceProvider extends ServiceProvider
             },
             scopes: UserPanelProvider::class,
         );
+
+        // Kolom teks yang dibuat migration SETELAH 2026_11_03_000002 kembali
+        // memakai collation default database, artinya pencariannya kembali
+        // case-sensitive tanpa memunculkan error apa pun. Collation dipasang
+        // ulang tiap batch migration selesai: penerapannya idempoten dan no-op
+        // pada driver selain PostgreSQL.
+        Event::listen(MigrationsEnded::class, function (): void {
+            PostgresCaseInsensitiveCollation::apply();
+        });
+    }
+
+    /**
+     * Kirim X-AI-Core-Key ke SEMUA request HTTP menuju AI Core.
+     *
+     * Sebelum ini hanya jalur gRPC yang mengirim key (lewat metadata di
+     * AiCoreGrpcClient). Semua jalur HTTP -- CBIRService, FaceService,
+     * cbir:check, ai:sync, panel CBIR, GraphQL -- mengirim request tanpa
+     * header, sehingga begitu AI_CORE_API_KEY diaktifkan di AI Core semua
+     * jalur itu langsung 401. Middleware global ini menutup celah tersebut
+     * tanpa harus menyentuh setiap pemanggil.
+     *
+     * Key hanya dikirim ke origin AI Core yang dikonfigurasi; host lain
+     * (Midtrans, BRI, Apps Script, Ollama) tidak pernah menerimanya.
+     */
+    private function authenticateAiCoreHttpRequests(): void
+    {
+        Http::globalRequestMiddleware(function (RequestInterface $request): RequestInterface {
+            $key = trim((string) config('services.ai_core_api_key', ''));
+
+            if ($key === '') {
+                return $request;
+            }
+
+            $origins = array_filter([
+                $this->urlOrigin((string) config('services.ai_core_url', '')),
+                $this->urlOrigin((string) config('services.cbir_api_url', '')),
+            ]);
+
+            if (in_array($this->urlOrigin((string) $request->getUri()), $origins, true)) {
+                return $request->withHeader('X-AI-Core-Key', $key);
+            }
+
+            return $request;
+        });
+    }
+
+    /**
+     * Origin ternormalisasi (scheme + host + port) untuk perbandingan yang
+     * tidak tertipu trailing slash, huruf besar/kecil, atau port default.
+     */
+    private function urlOrigin(string $url): ?string
+    {
+        $parts = parse_url(trim($url));
+
+        if (! is_array($parts) || empty($parts['host'])) {
+            return null;
+        }
+
+        $scheme = strtolower((string) ($parts['scheme'] ?? 'http'));
+        $host = strtolower((string) $parts['host']);
+        $port = $parts['port'] ?? ($scheme === 'https' ? 443 : 80);
+
+        return "{$scheme}://{$host}:{$port}";
     }
 }

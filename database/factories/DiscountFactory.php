@@ -52,7 +52,7 @@ class DiscountFactory extends Factory
     {
         return $this->state(fn () => [
             'discountable_type' => Catalog::class,
-            'discountable_id' => $catalog instanceof Catalog ? $catalog->id : ($catalog ?? Catalog::factory()),
+            'discountable_id' => $catalog instanceof Catalog ? $catalog->getKey() : ($catalog ?? Catalog::factory()),
         ]);
     }
 
@@ -63,7 +63,7 @@ class DiscountFactory extends Factory
     {
         return $this->state(fn () => [
             'discountable_type' => Package::class,
-            'discountable_id' => $package instanceof Package ? $package->id : ($package ?? Package::factory()),
+            'discountable_id' => $package instanceof Package ? $package->getKey() : ($package ?? Package::factory()),
         ]);
     }
 

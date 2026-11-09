@@ -82,7 +82,7 @@ class SearchService
         
         $catalogs = Catalog::where('is_active', true)
             ->where('name', 'like', "%{$query}%")
-            ->select('id', 'name', 'slug', 'image_url')
+            ->select('id', 'name', 'slug')
             ->take($limit)
             ->get()
             ->map(function ($catalog) {
@@ -96,7 +96,7 @@ class SearchService
         
         $packages = Package::where('is_active', true)
             ->where('name', 'like', "%{$query}%")
-            ->select('id', 'name', 'slug', 'image_url')
+            ->select('id', 'name', 'slug')
             ->take($limit)
             ->get()
             ->map(function ($package) {
@@ -108,9 +108,9 @@ class SearchService
                 ];
             });
         
-        $categories = Category::where('is_active', true)
+        $categories = Category::query()
             ->where('name', 'like', "%{$query}%")
-            ->select('id', 'name', 'slug', 'image_url')
+            ->select('id', 'name', 'slug')
             ->take($limit)
             ->get()
             ->map(function ($category) {
@@ -118,7 +118,9 @@ class SearchService
                     'text' => $category->name,
                     'type' => \Weddingapp\Search\SuggestionType::CATEGORY,
                     'count' => 1,
-                    'imageUrl' => $category->image_url,
+                    // Categories have no image column or accessor; `icon` is
+                    // the only visual they carry.
+                    'imageUrl' => $category->icon,
                 ];
             });
         
@@ -231,7 +233,7 @@ class SearchService
             $basePackageQuery->where('category_id', $categoryId);
         }
         
-        $categoryCounts = Category::where('is_active', true)
+        $categoryCounts = Category::query()
             ->withCount([
                 'categoryCatalogs' => fn($q) => $q->where('is_active', true)->where('stock', '>', 0),
                 'packages' => fn($q) => $q->where('is_active', true),
@@ -377,7 +379,7 @@ class SearchService
 
     protected function searchCategories(string $query, int $limit)
     {
-        return Category::where('is_active', true)
+        return Category::query()
             ->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
                   ->orWhere('description', 'like', "%{$query}%");

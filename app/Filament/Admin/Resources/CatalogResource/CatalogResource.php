@@ -162,20 +162,12 @@ class CatalogResource extends Resource
                                 return (string) $category->getKey();
                             })
                             ->required(),
-                        Forms\Components\TextInput::make('price')
-                            ->label(__('Harga'))
-                            ->numeric()
-                            ->prefix('Rp')
-                            ->required(),
-                        Forms\Components\TextInput::make('discount_price')
-                            ->label(__('Harga Diskon'))
-                            ->numeric()
-                            ->prefix('Rp'),
                         Forms\Components\TextInput::make('stock')
                             ->label(__('Stok'))
                             ->numeric()
                             ->default(0)
-                            ->required(),
+                            ->disabled()
+                            ->dehydrated(false),
                         Forms\Components\Toggle::make('is_active')
                             ->label(__('Aktif'))
                             ->default(true),

@@ -107,7 +107,7 @@ trait HandlesTwoFactorAuthenticator
      * QR code untuk secret yang sedang aktif.
      *
      * Memakai API dan backend yang sama dengan paket, supaya kode yang dibuat
-     * di sini tetap bisa diverifikasi o-t-p-verify.
+     * di sini tetap bisa diverifikasi lewat OTP-Verify.
      */
     public function qrCodeHtml(): ?string
     {

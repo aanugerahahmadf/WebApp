@@ -61,7 +61,7 @@ message UserProfile {
   User user = 1;
   int32 order_count = 2;
   int32 review_count = 3;
-  int32 wishlist_count = 4;
+  int32 Favorite_count = 4;
   double total_spent = 5;
   Category favorite_category = 6;
   string joined_at = 7;

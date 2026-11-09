@@ -329,6 +329,11 @@ Route::redirect('/welcome/{path}', '/{path}')
     ->where('path', '.*');
 Route::redirect('/welcome', '/home');
 
+// URL lama halaman verifikasi 2FA. Slug lama (o-t-p-verify) berasal dari
+// nama kelas OTPVerify milik paket; halaman sekarang memakai slug
+// otp-verify, jadi bookmark lama diarahkan permanen.
+Route::redirect('/o-t-p-verify', '/otp-verify');
+
 // -----------------------------------------------------------------------------
 // LEGACY /user/* — panel 'user' sudah DILEBUR ke panel 'welcome' di root
 // (shopee-style). TIDAK ADA lagi URL /user/* yang melayani halaman; kalau
@@ -337,7 +342,7 @@ Route::redirect('/welcome', '/home');
 //   /user/home      -> /home
 //   /user/signin    -> /signin       (halaman auth panel itu sendiri)
 //   /user/settings  -> /settings
-//   /user/o-t-p-verify -> /o-t-p-verify
+//   /user/otp-verify -> /otp-verify
 //
 // Didaftarkan paling akhir supaya tidak menabrak route panel di root.
 // Query string dipertahankan otomatis oleh Route::redirect.
@@ -366,6 +371,10 @@ Route::prefix('chat-calls')->group(function (): void {
 // /user/register berakhir di /register yang 404.
 Route::redirect('/user/register', '/signup');
 Route::redirect('/user/login', '/signin');
+
+// Bookmark lama halaman verifikasi 2FA: satu lompatan langsung ke slug baru,
+// bukan lewat /user/{path} lalu /o-t-p-verify.
+Route::redirect('/user/o-t-p-verify', '/otp-verify');
 
 // POST /user/logout: tombol Sign Out di halaman lama masih mengirim ke sini.
 // Ditangani eksplisit karena Route::redirect hanya melayani GET; tanpa ini

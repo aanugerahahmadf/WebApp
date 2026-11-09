@@ -3,9 +3,7 @@
 namespace App\Console\Commands\CbirCheckCommand;
 
 use App\Models\Catalog\Catalog;
-use App\Models\Package\Package;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -37,32 +35,56 @@ class CbirCheckCommand extends Command
             ]);
         }
 
-        // Accept both the new canonical key and the legacy alias so the check
-        // works during and after the AI Core rollout.
-        $indexed = (int) ($status->json('total_catalogs') ?? 0);
+        // ── 1. Angka dari AI Core ───────────────────────────────────────────
+        // `total_entries` / `total_catalogs` = jumlah FOTO di indeks (satu
+        // katalog punya lima foto galeri). `total_items` = jumlah PRODUK unik
+        // (type + owner_id) — hanya angka ini yang bisa dibandingkan dengan
+        // jumlah katalog di database.
+        //
+        // Membandingkan jumlah foto dengan jumlah produk (perilaku lama)
+        // selalu menghasilkan "Lebih: 261" dan kesimpulan "tidak sehat",
+        // padahal indeksnya justru lengkap.
+        $entries     = (int) ($status->json('total_entries') ?? $status->json('total_catalogs') ?? 0);
+        $indexedItems = $status->json('total_items');
+        $indexedItems = $indexedItems === null ? null : (int) $indexedItems;
 
-        // ── 3. Hitung katalog yang seharusnya terindeks ─────────────────────
+        // ── 2. Yang seharusnya terindeks ────────────────────────────────────
         // Hanya katalog yang punya media gambar di collection `catalog_image`;
-        // paket tidak punya foto sendiri (foto ada di katalog), jadi tidak
-        // dihitung di sini.
-        $expectedCatalogs = Catalog::with(['media' => fn ($q) => $q->where('collection_name', 'catalog_image')])
-            ->get()
-            ->filter(fn ($c) => $c->media->isNotEmpty())
+        // paket tidak punya foto sendiri (foto ada di katalog).
+        $catalogsWithMedia = Catalog::query()
+            ->whereHas('media', fn ($q) => $q->where('collection_name', 'catalog_image'))
             ->count();
 
-        $expected = $expectedCatalogs;
-        $missing  = max(0, $expected - $indexed);
-        $extra    = max(0, $indexed - $expected);
-        $healthy = $expected > 0 && $missing === 0 && $extra === 0;
+        $expected = $catalogsWithMedia;
+        $expectedEntries = (int) \Spatie\MediaLibrary\MediaCollections\Models\Media::query()
+            ->where('collection_name', 'catalog_image')
+            ->count();
+
+        // Kalau AI Core lama belum mengirim `total_items`, jangan menebak:
+        // laporkan angkanya sebagai null dan anggap sehat selama foto yang
+        // terindeks tidak kurang dari jumlah media nyata.
+        if ($indexedItems === null) {
+            $missing = max(0, $expectedEntries - $entries);
+            $extra   = max(0, $entries - $expectedEntries);
+            $healthy = $expectedEntries > 0 && $missing === 0;
+        } else {
+            $missing = max(0, $expected - $indexedItems);
+            $extra   = max(0, $indexedItems - $expected);
+            $healthy = $expected > 0 && $missing === 0 && $extra === 0;
+        }
 
         $payload = [
             'ai_core_url'            => $aiCoreUrl,
             'ai_core_version'        => $health->json('version'),
             'ai_core_method'         => $health->json('method'),
             'ai_core_metric'         => $health->json('metric'),
-            'indexed_entries'        => $indexed,
+            // Entri = foto; item = produk. Keduanya dilaporkan supaya
+            // selisih 5x tidak lagi disalahartikan sebagai indeks berlebih.
+            'indexed_entries'        => $entries,
+            'indexed_items'          => $indexedItems,
             'expected_items'         => $expected,
-            'catalogs_with_media'    => $expectedCatalogs,
+            'expected_entries'       => $expectedEntries,
+            'catalogs_with_media'    => $catalogsWithMedia,
             'missing_from_index'     => $missing,
             'extra_in_index'         => $extra,
             'healthy'                => $healthy,
@@ -73,13 +95,15 @@ class CbirCheckCommand extends Command
         } else {
             $this->components->info('AI Core CBIR Health Check');
             $this->components->twoColumnDetail('AI Core URL', $aiCoreUrl);
-            $this->components->twoColumnDetail('Versi', $health->json('version'));
-            $this->components->twoColumnDetail('Metode', $health->json('method'));
-            $this->components->twoColumnDetail('Metrik', $health->json('metric'));
-            $this->components->twoColumnDetail('Tereindeks', (string) $indexed);
-            $this->components->twoColumnDetail('Diharapkan', (string) $expected);
+            $this->components->twoColumnDetail('Versi', (string) $health->json('version'));
+            $this->components->twoColumnDetail('Metode', (string) $health->json('method'));
+            $this->components->twoColumnDetail('Metrik', (string) $health->json('metric'));
+            $this->components->twoColumnDetail('Foto terindeks', (string) $entries);
+            $this->components->twoColumnDetail('Foto seharusnya', (string) $expectedEntries);
+            $this->components->twoColumnDetail('Produk terindeks', $indexedItems === null ? '-' : (string) $indexedItems);
+            $this->components->twoColumnDetail('Produk seharusnya', (string) $expected);
             $this->components->twoColumnDetail('Hilang', (string) $missing);
-            $this->components->twoColumnDetail('Lebih', (string) $extra);
+            $this->components->twoColumnDetail('Berlebih', (string) $extra);
             $this->components->twoColumnDetail('Sehat', $healthy ? '✓' : '✗');
         }
 

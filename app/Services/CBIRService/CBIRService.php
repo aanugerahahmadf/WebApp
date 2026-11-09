@@ -36,11 +36,11 @@ class CBIRService
             Log::info("CBIR Search initiated for file hash: {$fileHash}, topK: {$topK}");
 
             return Cache::remember($cacheKey, now()->addMinutes(5), function () use ($imageFile, $topK) {
-                // gRPC lebih dulu: AI Core sekarang dijalankan sebagai server
-                // gRPC (`python -m src.grpc.server`, :50052), dan Flask :5000
-                // tidak lagi mendengarkan. Kalau gRPC gagal (server mati,
-                // extension tidak ada), jalur HTTP lama tetap dipakai supaya
-                // perilaku sebelumnya tidak hilang.
+                // gRPC lebih dulu: AI Core melayani pencarian lewat server
+                // gRPC (`AI_CORE_GRPC_HOST`, default 127.0.0.1:15052). Kalau
+                // gRPC gagal (server mati, extension tidak ada), jalur HTTP
+                // lama ke Flask :5000 tetap dipakai supaya perilaku
+                // sebelumnya tidak hilang.
                 $viaGrpc = $this->searchViaGrpc($imageFile, $topK);
 
                 if ($viaGrpc !== null) {
@@ -153,8 +153,37 @@ class CBIRService
         return $this->grpcClient ??= app(AiCoreGrpcClient::class);
     }
 
+    /**
+     * Apakah operasi TULIS ke indeks CBIR boleh dilakukan.
+     *
+     * Satu tempat untuk seluruh jalur tulis (`indexMedia()`, `removeFromIndex()`,
+     * dan dengan sendirinya `IndexMediaToCBIR`, `MediaObserver`, serta
+     * `CBIRController::buildIndex()`).
+     *
+     * Kenapa perlu: `phpunit.xml` memakai `QUEUE_CONNECTION=sync`, jadi job
+     * indeks berjalan langsung di dalam test, dan `MediaObserver::deleted()`
+     * memanggil `removeFromIndex()`. Tanpa penjagaan, menjalankan test suite
+     * akan menulis gambar palsu ke `ai_core/data/metadata.json` sekaligus
+     * menghapus entri sungguhan — indeks menyusut diam-diam dan hasil
+     * pencarian produk jadi salah, tanpa satu pun error di layar.
+     */
+    public function writesAllowed(): bool
+    {
+        if (! app()->runningUnitTests()) {
+            return true;
+        }
+
+        return (bool) config('services.ai_core_writes_in_tests', false);
+    }
+
     public function indexMedia($media): bool
     {
+        if (! $this->writesAllowed()) {
+            Log::debug('[CBIR] indexMedia dilewati saat test suite (indeks nyata tidak disentuh).');
+
+            return true;
+        }
+
         try {
             // `model_type` yang tersimpan di tabel media adalah ALIAS morph map
             // ("App\Models\Catalog"), bukan FQCN ("App\Models\Catalog\Catalog").
@@ -236,6 +265,12 @@ class CBIRService
 
     public function removeFromIndex($mediaId): bool
     {
+        if (! $this->writesAllowed()) {
+            Log::debug('[CBIR] removeFromIndex dilewati saat test suite (indeks nyata tidak disentuh).');
+
+            return true;
+        }
+
         // gRPC terlebih dahulu, HTTP sebagai cadangan.
         if (AiCoreGrpcClient::isSupported() && (bool) config('services.ai_core_grpc_enabled', true)) {
             try {
@@ -342,6 +377,58 @@ class CBIRService
         } catch (\Exception $e) {
             Log::error('AI Core arithmetic ops error: ' . $e->getMessage());
         }
+        return [];
+    }
+
+    /**
+     * Ringkasan indeks dari AI Core (`GET /status`).
+     *
+     * Dua angka yang berbeda artinya (lihat AGENTS.md):
+     *   `total_entries` = jumlah BARIS indeks (= jumlah foto),
+     *   `total_items`   = jumlah PRODUK unik (type + owner_id).
+     *
+     * Mengembalikan array kosong kalau AI Core tidak menjawab -- pemanggil
+     * menampilkan "tidak diketahui", bukan 0 yang menyesatkan.
+     */
+    public function getStatus(int $timeout = 10): array
+    {
+        try {
+            $response = $this->http()->timeout($timeout)->get("{$this->baseUrl}/status");
+
+            if ($response->successful()) {
+                return $response->json() ?? [];
+            }
+
+            Log::warning('AI Core status tidak sukses', ['status' => $response->status()]);
+        } catch (\Exception $e) {
+            Log::warning('AI Core status error: '.$e->getMessage());
+        }
+
+        return [];
+    }
+
+    /**
+     * Hasil evaluasi CBIR (`GET /api/evaluate`).
+     *
+     * AI Core menyimpan hasilnya (TTL 300 detik), jadi panggilan biasa selesai
+     * dalam milidetik; hanya `$refresh = true` yang benar-benar menghitung
+     * ulang (±35 detik untuk 500 foto di mesin ini).
+     */
+    public function getEvaluation(bool $refresh = false, int $timeout = 110): array
+    {
+        try {
+            $url = "{$this->baseUrl}/api/evaluate".($refresh ? '?refresh=1' : '');
+            $response = $this->http()->timeout($timeout)->get($url);
+
+            if ($response->successful()) {
+                return $response->json() ?? [];
+            }
+
+            Log::warning('AI Core evaluate tidak sukses', ['status' => $response->status()]);
+        } catch (\Exception $e) {
+            Log::warning('AI Core evaluate error: '.$e->getMessage());
+        }
+
         return [];
     }
 

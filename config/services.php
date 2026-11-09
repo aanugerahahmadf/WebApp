@@ -38,6 +38,22 @@ return [
     'ai_core_url' => env('AI_CORE_URL', 'http://127.0.0.1:5000'),
     'ai_core_api_key' => env('AI_CORE_API_KEY'),
     'ai_core_timeout' => env('AI_CORE_TIMEOUT', 15),
+
+    /*
+     * Apakah operasi TULIS ke indeks CBIR (tambah/hapus entri) boleh jalan.
+     *
+     * Test suite memakai QUEUE_CONNECTION=sync, jadi `IndexMediaToCBIR`
+     * berjalan langsung saat sebuah media dibuat, dan `MediaObserver::deleted`
+     * langsung menghapus entri. Kalau AI Core hidup di mesin yang sama, satu
+     * kali `php artisan test` akan menulis gambar palsu ke
+     * `ai_core/data/metadata.json` dan menghapus entri sungguhan — indeks
+     * menyusut tanpa error apa pun, dan hasil pencarian jadi salah.
+     *
+     * Karena itu penulisan dimatikan otomatis saat `runningUnitTests()`.
+     * Set `AI_CORE_WRITES_IN_TESTS=true` hanya bila memang sedang menguji
+     * jalur tulis terhadap AI Core palsu (Http::fake).
+     */
+    'ai_core_writes_in_tests' => env('AI_CORE_WRITES_IN_TESTS', false),
     'ai_chat_context_messages' => env('AI_CHAT_CONTEXT_MESSAGES', 16),
 
     // Free, self-hosted conversational model. Ollama must run on the same
@@ -66,7 +82,7 @@ return [
      * gRPC memakai `host:port`, bukan URL.
      */
     'ai_core_grpc_enabled' => env('AI_CORE_GRPC_ENABLED', true),
-    'ai_core_grpc_host' => env('AI_CORE_GRPC_HOST', '127.0.0.1:50052'),
+    'ai_core_grpc_host' => env('AI_CORE_GRPC_HOST', '127.0.0.1:15052'),
     /*
      * 120 detik, bukan 15. Panggilan PERTAMA ke server gRPC memuat model
      * ekstraksi (torch) + `data/metadata.json` 20 MB, dan pada mesin ini
@@ -106,6 +122,37 @@ return [
         'spreadsheet_id' => env('GOOGLE_SHEETS_SPREADSHEET_ID', ''),
         'service_account_json' => env('GOOGLE_SHEETS_SERVICE_ACCOUNT_JSON', ''),
         'tab' => env('GOOGLE_SHEETS_TAB', 'ReviewsBackup'),
+    ],
+
+    /*
+     * Google Apps Script Web App — saluran sinkron yang sama dipakai Laravel,
+     * Flutter, Kotlin, dan AI Core (lihat apps_script/README.md).
+     *
+     * Ini BUKAN sumber kebenaran: harga, status order, expiry pembayaran, dan
+     * keputusan KYC tetap dari database Laravel (AGENTS.md §2). Kegagalan
+     * Apps Script tidak boleh menjatuhkan alur bisnis.
+     *
+     * URL wajib versi /exec bukan /dev, dan secret-nya WAJIB sama dengan
+     * WFD_SHARED_SECRET di Script Properties. Kredensial dikirim di BODY,
+     * bukan header: Web App Apps Script tidak bisa membaca custom HTTP header.
+     */
+    'google_apps_script' => [
+        'enabled' => filter_var(env('GOOGLE_APPS_SCRIPT_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
+        'exec_url' => env('GOOGLE_APPS_SCRIPT_EXEC_URL', ''),
+        'secret' => env('GOOGLE_APPS_SCRIPT_SECRET', ''),
+        'read_key' => env('GOOGLE_APPS_SCRIPT_READ_KEY', ''),
+        'source' => env('GOOGLE_APPS_SCRIPT_SOURCE', 'laravel'),
+        'timeout' => (int) env('GOOGLE_APPS_SCRIPT_TIMEOUT', 30),
+        'attempts' => (int) env('GOOGLE_APPS_SCRIPT_ATTEMPTS', 2),
+
+        // Modul yang ikut terkirim otomatis saat siklus bisnis berlangsung.
+        // Dimatikan satu per satu kalau kuota Apps Script jadi kendala.
+        'mirror' => [
+            'orders' => filter_var(env('GOOGLE_APPS_SCRIPT_MIRROR_ORDERS', true), FILTER_VALIDATE_BOOLEAN),
+            'reviews' => filter_var(env('GOOGLE_APPS_SCRIPT_MIRROR_REVIEWS', true), FILTER_VALIDATE_BOOLEAN),
+            'catalog' => filter_var(env('GOOGLE_APPS_SCRIPT_MIRROR_CATALOG', false), FILTER_VALIDATE_BOOLEAN),
+            'kyc' => filter_var(env('GOOGLE_APPS_SCRIPT_MIRROR_KYC', true), FILTER_VALIDATE_BOOLEAN),
+        ],
     ],
 
     'geonames' => [

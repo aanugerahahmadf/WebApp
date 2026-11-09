@@ -4,9 +4,18 @@
      * preview metode pembayaran. Gambarnya SATU: berkas statis
      * public/images/qris/qris.jpg (lewat App\Support\QrisImage\QrisImage),
      * bukan kolom `payment_methods.image_url` yang selalu NULL.
+     *
+     * Isinya sengaja RINGKAS: gambar QR, nominal, dan hitungan mundur.
+     * Tidak ada kalimat penjelasan tambahan.
+     *
+     * Parameter opsional:
+     * - $amount   : nominal yang harus dibayar (float|int|null)
+     * - $deadline : batas waktu (Carbon|null)
      */
     $qrisUrl = \App\Support\QrisImage\QrisImage::url();
     $qrisTitle = filled($method?->name ?? null) ? $method->name : __('QRIS');
+    $qrisAmount = isset($amount) ? (float) $amount : null;
+    $qrisDeadline = isset($deadline) && $deadline ? \Illuminate\Support\Carbon::parse($deadline) : null;
 @endphp
 
 @if ($qrisUrl)
@@ -23,12 +32,20 @@
             class="w-64 max-w-full rounded-xl border border-gray-200 bg-white object-contain p-2 shadow-sm dark:border-gray-800"
         />
 
-        <div class="flex flex-col items-center gap-1">
-            <span class="text-xs font-semibold text-gray-700 dark:text-gray-200">{{ $qrisTitle }}</span>
-            <span class="text-[11px] leading-relaxed text-gray-500 dark:text-gray-400">
-                {{ __('Pindai atau unduh gambar ini') }}
-            </span>
-        </div>
+        @if ($qrisAmount !== null && $qrisAmount > 0)
+            <div class="w-full rounded-xl bg-primary-50 p-3 dark:bg-primary-950">
+                <div class="text-xs font-semibold uppercase tracking-wide text-primary-600 dark:text-primary-400">
+                    {{ __('Nominal yang harus dibayar') }}
+                </div>
+                <div class="text-2xl font-bold tabular-nums text-primary-700 dark:text-primary-300">
+                    {{ \App\Support\PaymentWindow\PaymentWindow::format($qrisAmount) }}
+                </div>
+            </div>
+        @endif
+
+        @if ($qrisDeadline)
+            @include('Shared.components.payment-countdown.payment-countdown', ['deadline' => $qrisDeadline])
+        @endif
     </div>
 @else
     <x-filament::badge color="danger">

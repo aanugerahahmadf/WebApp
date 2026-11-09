@@ -11,10 +11,10 @@ use Illuminate\Support\Facades\Schema;
  *
  *   Tabel `users` = identitas PERONAL shoppers + tamu. Dipakai guard `web`,
  *   dipakai Sanctum untuk token HP, dan dipakai panel user + welcome.
- *   Kolomnya bercampur: KYC/KTP, budget pernikahan, wishlist, cart, app lock.
+ *   Kolomnya bercampur: KYC/KTP, budget pernikahan, Favorite, cart, app lock.
  *
  *   Tabel `admins` = identitas PEGAWAI. Dipakai guard `admin`, tidak pernah
- *   menyentuh Sanctum, tidak punya KYC/budget/wishlist/cart sama sekali.
+ *   menyentuh Sanctum, tidak punya KYC/budget/Favorite/cart sama sekali.
  *   Kolomnya hanya yang memang dibutuhkan buat kerja: nama, akun, jabatan,
  *   divisi, status aktif, dan jejak login.
  *

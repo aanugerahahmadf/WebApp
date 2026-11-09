@@ -525,7 +525,7 @@ class OrderResource extends Resource
                     // CreateReviews milik katalog yang dipesan itu, sama
                     // seperti tombol "Tulis Ulasan" di detail katalog.
                     Tables\Actions\Action::make('write_review')
-                        ->label(__('Tulis Ulasan'))
+                        ->label(__('Tulis Komentar Penilaian'))
                         ->icon('/images/icons/star.svg')
                         ->color('warning')
                         ->visible(fn ($record) => $record->status === OrderStatus::COMPLETED && filled($record->catalog_id))

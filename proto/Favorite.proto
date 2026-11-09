@@ -1,0 +1,129 @@
+syntax = "proto3";
+
+package weddingapp.Favorite;
+
+import "proto/auth.proto";
+import "proto/catalog.proto";
+import "proto/package.proto";
+
+option php_namespace = "App\\Grpc\\Favorite";
+option java_package = "com.weddingapp.Favorite";
+option csharp_namespace = "WeddingApp.Favorite";
+option go_package = "github.com/weddingapp/grpc/Favorite";
+
+service Favoriteservice {
+  rpc GetFavorite (GetFavoriteRequest) returns (FavoriteResponse);
+  rpc ToggleFavorite (ToggleFavoriteRequest) returns (FavoriteActionResponse);
+  rpc AddToFavorite (AddToFavoriteRequest) returns (FavoriteItemResponse);
+  rpc RemoveFromFavorite (RemoveFromFavoriteRequest) returns (RemoveFromFavoriteResponse);
+  rpc ClearFavorite (ClearFavoriteRequest) returns (ClearFavoriteResponse);
+  rpc IsInFavorite (IsInFavoriteRequest) returns (IsInFavoriteResponse);
+  rpc MoveToCart (MoveToCartRequest) returns (weddingapp.cart.CartItemResponse);
+  rpc ShareFavorite (ShareFavoriteRequest) returns (ShareFavoriteResponse);
+}
+
+message GetFavoriteRequest {
+  string access_token = 1;
+  int32 page = 2;
+  int32 per_page = 3;
+}
+
+message ToggleFavoriteRequest {
+  string access_token = 1;
+  int64 catalog_id = 2;
+  int64 package_id = 3;
+}
+
+message AddToFavoriteRequest {
+  string access_token = 1;
+  int64 catalog_id = 2;
+  int64 package_id = 3;
+}
+
+message RemoveFromFavoriteRequest {
+  string access_token = 1;
+  int64 Favorite_id = 2;
+}
+
+message ClearFavoriteRequest {
+  string access_token = 1;
+}
+
+message IsInFavoriteRequest {
+  string access_token = 1;
+  int64 catalog_id = 2;
+  int64 package_id = 3;
+}
+
+message MoveToCartRequest {
+  string access_token = 1;
+  int64 Favorite_id = 2;
+  int32 quantity = 3;
+}
+
+message ShareFavoriteRequest {
+  string access_token = 1;
+}
+
+message FavoriteResponse {
+  repeated FavoriteItem items = 1;
+  PaginationMeta pagination = 2;
+}
+
+message FavoriteActionResponse {
+  FavoriteItem Favorite = 1;
+  FavoriteActionType action = 2;
+  string message = 3;
+}
+
+message FavoriteItemResponse {
+  FavoriteItem item = 1;
+  string message = 2;
+}
+
+message RemoveFromFavoriteResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ClearFavoriteResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message IsInFavoriteResponse {
+  bool in_Favorite = 1;
+}
+
+message ShareFavoriteResponse {
+  string share_token = 1;
+  string share_url = 2;
+  string expires_at = 3;
+}
+
+message FavoriteItem {
+  int64 id = 1;
+  int64 user_id = 2;
+  int64 catalog_id = 3;
+  int64 package_id = 4;
+  weddingapp.catalog.Catalog catalog = 5;
+  weddingapp.package.Package package = 6;
+  string created_at = 7;
+}
+
+enum FavoriteActionType {
+  Favorite_ACTION_TYPE_UNSPECIFIED = 0;
+  ADDED = 1;
+  REMOVED = 2;
+}
+
+message PaginationMeta {
+  int32 current_page = 1;
+  int32 per_page = 2;
+  int32 total = 3;
+  int32 last_page = 4;
+  int32 from = 5;
+  int32 to = 6;
+  bool has_next_page = 7;
+  bool has_prev_page = 8;
+}

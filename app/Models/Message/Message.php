@@ -17,6 +17,8 @@ use Illuminate\Support\Carbon;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use App\Models\Traits\ResolvesCamelCaseAttributes\ResolvesCamelCaseAttributes;
+
 
 /**
  * @property int $id
@@ -75,6 +77,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  */
 class Message extends Model implements HasMedia
 {
+    use ResolvesCamelCaseAttributes;
     use LegacyMorphClass;
     use HasMediaConvertionRegistrations, SoftDeletes;
 

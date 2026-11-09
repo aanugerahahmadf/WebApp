@@ -282,7 +282,7 @@ trait HasDynamicBreadcrumbs
             'messages' => 'Pesan',
             'notifications' => 'Notifikasi',
             'carts' => 'Keranjang',
-            'wishlists' => 'Wishlist',
+            'Favorites' => 'Favorite',
             'histories' => 'Riwayat',
             'orders' => 'Pesanan',
             'packages' => 'Paket',

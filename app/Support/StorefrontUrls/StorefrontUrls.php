@@ -14,7 +14,7 @@ namespace App\Support\StorefrontUrls;
  *
  * Definisi "storefront":
  *   - URL bawaan panel Welcome setelah pindah ke '/': /home, /messages,
- *     /flowerdecorationscatalog, /settings, /orders, /carts, /wishlists, dst.
+ *     /flowerdecorationscatalog, /settings, /orders, /carts, /Favorites, dst.
  *   - URL legacy /welcome/* yang masih ada di bookmark lama (redirect di
  *     web.php ke URL root, jadi milik logika yang sama).
  *
@@ -74,7 +74,7 @@ class StorefrontUrls
     private const AUTHENTICATED_FIRST_SEGMENTS = [
         'carts',
         'orders',
-        'wishlists',
+        'Favorites',
         'reviews',
         'vouchers',
         'histories',
@@ -87,7 +87,7 @@ class StorefrontUrls
         'device-trust',
         'password-reset',
         'email-verification',
-        'o-t-p-verify',
+        'otp-verify',
     ];
 
     /**

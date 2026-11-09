@@ -24,7 +24,7 @@ TARGETS = [
     ('app/Models/Cart/Cart.php', 'product'),
     ('app/Models/Order/Order.php', 'product'),
     ('app/Models/Review/Review.php', 'product'),
-    ('app/Models/Wishlist/Wishlist.php', 'product'),
+    ('app/Models/Favorite/Favorite.php', 'product'),
 ]
 
 ALIAS_BLOCK = """
@@ -68,7 +68,7 @@ def wrap_cart(path, src):
 
 
 def wrap_generic(path, src):
-    """Review/Order/Wishlist use the short `belongsTo(X::class);` body."""
+    """Review/Order/Favorite use the short `belongsTo(X::class);` body."""
     pattern = re.compile(
         r'    public function product\(\)\r?\n'
         r'    \{\r?\n'

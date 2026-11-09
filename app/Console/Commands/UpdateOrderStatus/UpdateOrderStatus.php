@@ -4,6 +4,7 @@ namespace App\Console\Commands\UpdateOrderStatus;
 
 use App\Enums\OrderStatus\OrderStatus;
 use App\Models\Order\Order;
+use App\Support\PaymentWindow\PaymentWindow;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 
@@ -39,11 +40,20 @@ class UpdateOrderStatus extends Command
             $this->info("Successfully moved {$completedCount} orders to COMPLETED.");
         }
 
-        // 2. Auto Cancel: Jika pembayaran belum lunas setelah 2 hari, set ke CANCELLED
-        $cancelledCount = Order::where('status', OrderStatus::PENDING)
-            ->where('payment_status', 'unpaid')
-            ->where('created_at', '<', Carbon::now()->subDays(2))
-            ->update(['status' => OrderStatus::CANCELLED]);
+        // 2. Auto Cancel setelah satu payment window (24 jam secara default).
+        // save() sengaja dipakai agar observer mengembalikan stok dan mencatat riwayat.
+        $cancelledCount = 0;
+        Order::where('status', OrderStatus::PENDING)
+            ->whereIn('payment_status', ['unpaid', 'pending', 'failed'])
+            ->where('created_at', '<', Carbon::now()->subHours(PaymentWindow::expiryHours()))
+            ->chunkById(100, function ($orders) use (&$cancelledCount): void {
+                foreach ($orders as $order) {
+                    $order->status = OrderStatus::CANCELLED;
+                    $order->cancelled_at = now();
+                    $order->save();
+                    $cancelledCount++;
+                }
+            });
 
         if ($cancelledCount > 0) {
             $this->info("Successfully cancelled {$cancelledCount} unpaid orders.");

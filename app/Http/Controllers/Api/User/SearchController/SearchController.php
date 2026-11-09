@@ -18,6 +18,7 @@ use App\Models\User\User;
 use App\Models\Voucher\Voucher;
 use App\Models\WeddingDecorationPolicy\WeddingDecorationPolicy;
 use App\Services\CBIRService\CBIRService;
+use App\Support\CbirSearchLogger\CbirSearchLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -155,6 +156,8 @@ class SearchController extends Controller
             'status' => 'success',
             'data' => [
                 'packages' => $packages,
+                // Canonical domain name: Package rows are tiers of a catalog.
+                'tiers' => $packages,
                 'catalogs' => $catalogs,
                 'categories' => $categories,
                 'vouchers' => $vouchers,
@@ -369,7 +372,8 @@ class SearchController extends Controller
         $missingModels = [];
 
         foreach ($results as $r) {
-            $type = $r['type'] ?? 'catalog';
+            $legacyType = $r['type'] ?? 'catalog';
+            $type = $legacyType === 'package' ? 'tier' : $legacyType;
             $id = $r['owner_id'] ?? null;
 
             if (! $id) {
@@ -381,7 +385,7 @@ class SearchController extends Controller
                 continue;
             }
 
-            $model = $type === 'package'
+            $model = $type === 'tier'
                 ? Package::with(['category', 'media'])->find($id)
                 : Catalog::with(['category', 'media'])->find($id);
 
@@ -394,6 +398,7 @@ class SearchController extends Controller
 
             $mixedResults[] = [
                 'type' => $type,
+                'legacy_type' => $legacyType,
                 'similarity' => max(0, (float) ($r['similarity'] ?? 0)),
                 'score' => max(0, (float) ($r['score'] ?? 0)),
                 'data' => array_merge($model->toArray(), [
@@ -433,6 +438,9 @@ class SearchController extends Controller
 
         $minSimilarity = (float) config('services.cbir_min_similarity', 30.0);
         $mixedResults = array_values(array_filter($mixedResults, fn ($r) => ($r['similarity'] ?? 0) >= $minSimilarity));
+
+        // Riwayat pencarian visual dari aplikasi HP.
+        CbirSearchLogger::recordUpload($request->user()?->id, $request->file('image'), $mixedResults);
 
         return response()->json([
             'status' => 'success',

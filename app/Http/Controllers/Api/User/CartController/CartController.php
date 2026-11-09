@@ -37,9 +37,12 @@ class CartController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        if ($request->filled('tier_id') && ! $request->filled('package_id')) {
+            $request->merge(['package_id' => $request->input('tier_id')]);
+        }
         $validated = $request->validate([
-            'catalog_id' => 'nullable|exists:catalogs,id',
-            'package_id' => 'nullable|exists:packages,id',
+            'catalog_id' => 'required|exists:catalogs,id',
+            'package_id' => 'required|exists:packages,id',
             'quantity' => 'required|integer|min:1',
         ]);
 
@@ -56,15 +59,6 @@ class CartController extends Controller
         }
 
         // ── Stock validation ──
-        if (isset($validated['catalog_id'])) {
-            $catalog = \App\Models\Catalog\Catalog::find($validated['catalog_id']);
-            if ($catalog && $catalog->stock < $validated['quantity']) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Stok katalog tidak mencukupi. Stok tersedia: ' . $catalog->stock,
-                ], 422);
-            }
-        }
         if (isset($validated['package_id'])) {
             $package = \App\Models\Package\Package::find($validated['package_id']);
             if ($package && $package->stock < $validated['quantity']) {
@@ -118,7 +112,7 @@ class CartController extends Controller
         $validated = $request->validate(['quantity' => 'required|integer|min:1']);
 
         // ── Stock validation ──
-        $item = $cart->catalog ?? $cart->package;
+        $item = $cart->package;
         if ($item && $item->stock < $validated['quantity']) {
             return response()->json([
                 'status' => 'error',

@@ -79,7 +79,7 @@ class ReviewFactory extends Factory
     public function forPackage(Package|int|null $package = null): static
     {
         return $this->state(fn () => [
-            'package_id' => $package instanceof Package ? $package->id : ($package ?? Package::factory()),
+            'package_id' => $package instanceof Package ? $package->getKey() : ($package ?? Package::factory()),
             'catalog_id' => null,
         ]);
     }
@@ -90,7 +90,7 @@ class ReviewFactory extends Factory
     public function forCatalog(Catalog|int|null $catalog = null): static
     {
         return $this->state(fn () => [
-            'catalog_id' => $catalog instanceof Catalog ? $catalog->id : ($catalog ?? Catalog::factory()),
+            'catalog_id' => $catalog instanceof Catalog ? $catalog->getKey() : ($catalog ?? Catalog::factory()),
             'package_id' => null,
         ]);
     }

@@ -27,7 +27,7 @@ $edits = [
         ["belongsTo(Catalog::class, 'product_id')", "belongsTo(Catalog::class, 'catalog_id')"],
         ["'product_id',", "'catalog_id',"],
     ],
-    'app/Models/Wishlist/Wishlist.php' => [
+    'app/Models/Favorite/Favorite.php' => [
         ["belongsTo(Catalog::class, 'product_id')", "belongsTo(Catalog::class, 'catalog_id')"],
         ["'product_id',", "'catalog_id',"],
     ],

@@ -17,26 +17,38 @@ class CatalogController extends GraphQLDelegatingController
         $query = '
             query GetCatalogs(
                 $first: Int
-                $filter: CatalogFilter
-                $sort: CatalogSort
-                $after: String
+                $categoryId: ID
+                $featured: Boolean
+                $active: Boolean
+                $theme: String
+                $color: String
             ) {
-                catalogs(first: $first, filter: $filter, sort: $sort, after: $after) {
+                catalogs(
+                    first: $first
+                    categoryId: $categoryId
+                    featured: $featured
+                    active: $active
+                    theme: $theme
+                    color: $color
+                ) {
                     data {
                         id
                         name
                         slug
                         description
-                        price
-                        discountPrice
-                        finalPrice
-                        stock
+                         stock
                         isActive
                         isFeatured
                         isOutOfStock
                         image_url: imageUrl
                         thumbnail_url: thumbnailUrl
-                        gallery_urls: galleryUrls
+                        gallery_urls: galleryUrls {
+                            id
+                            url
+                            thumb
+                            collection
+                            order
+                        }
                         videoUrl
                         features
                         theme
@@ -44,8 +56,7 @@ class CatalogController extends GraphQLDelegatingController
                         minCapacity
                         maxCapacity
                         averageRating
-                        final_price
-                         is_wishlisted
+                         is_Favoriteed
                          tiers {
                              id
                              catalogId
@@ -81,21 +92,16 @@ class CatalogController extends GraphQLDelegatingController
         
         $variables = [
             'first' => $request->get('per_page', 20) === 'all' ? 200 : (int) $request->get('per_page', 20),
-            'filter' => $this->buildFilter($request),
-            'sort' => $this->buildSort($request),
-            'after' => $request->get('after'),
+            'categoryId' => $request->get('category_id'),
+            'featured' => $request->boolean('featured') ? true : null,
+            'active' => $request->has('active') ? $request->boolean('active') : null,
+            'theme' => $request->get('theme'),
+            'color' => $request->get('color'),
         ];
         
         // Remove null values
         $variables = array_filter($variables, fn($v) => $v !== null && $v !== []);
-        if (isset($variables['filter']) && empty($variables['filter'])) {
-            unset($variables['filter']);
-        }
-        if (isset($variables['sort']) && empty($variables['sort'])) {
-            unset($variables['sort']);
-        }
-        
-        return $this->graphqlRaw($query, $variables);
+        return $this->graphqlQuery($query, $variables);
     }
     
     /**
@@ -111,16 +117,19 @@ class CatalogController extends GraphQLDelegatingController
                     name
                     slug
                     description
-                    price
-                    discountPrice
-                    finalPrice
                     stock
                     isActive
                     isFeatured
                     isOutOfStock
                     image_url: imageUrl
                     thumbnail_url: thumbnailUrl
-                    gallery_urls: galleryUrls
+                    gallery_urls: galleryUrls {
+                        id
+                        url
+                        thumb
+                        collection
+                        order
+                    }
                     videoUrl
                     features
                     theme
@@ -128,8 +137,7 @@ class CatalogController extends GraphQLDelegatingController
                     minCapacity
                     maxCapacity
                     averageRating
-                    final_price
-                    is_wishlisted
+                     is_Favoriteed
                     category {
                         id
                         name
@@ -153,15 +161,15 @@ class CatalogController extends GraphQLDelegatingController
                             }
                         }
                     }
-                    tiers {
-                        id
-                        catalogId
-                        name
-                        description
-                        price
-                        discountPrice
-                        finalPrice
-                        stock
+                     tiers {
+                         id
+                         catalogId
+                         name
+                         description
+                         price
+                         discountPrice
+                         finalPrice
+                         stock
                         features
                         sortOrder
                         imageUrl
@@ -172,7 +180,7 @@ class CatalogController extends GraphQLDelegatingController
             }
         ';
         
-        return $this->graphqlRaw($query, ['id' => $id]);
+        return $this->graphqlQuery($query, ['id' => $id]);
     }
     
     /**
@@ -186,15 +194,15 @@ class CatalogController extends GraphQLDelegatingController
                 catalog(id: $id) {
                     id
                     name
-                    tiers {
-                        id
-                        catalogId
-                        name
-                        description
-                        price
-                        discountPrice
-                        finalPrice
-                        stock
+                     tiers {
+                         id
+                         catalogId
+                         name
+                         description
+                         price
+                         discountPrice
+                         finalPrice
+                         stock
                         features
                         sortOrder
                         imageUrl
@@ -202,8 +210,8 @@ class CatalogController extends GraphQLDelegatingController
                 }
             }
         ';
-        
-        return $this->graphqlRaw($query, ['id' => $id]);
+
+        return $this->graphqlQuery($query, ['id' => $id]);
     }
     
     /**
@@ -219,16 +227,19 @@ class CatalogController extends GraphQLDelegatingController
                     name
                     slug
                     description
-                    price
-                    discountPrice
-                    finalPrice
                     stock
                     isActive
                     isFeatured
                     isOutOfStock
                     image_url: imageUrl
                     thumbnail_url: thumbnailUrl
-                    gallery_urls: galleryUrls
+                    gallery_urls: galleryUrls {
+                        id
+                        url
+                        thumb
+                        collection
+                        order
+                    }
                     videoUrl
                     features
                     theme
@@ -236,15 +247,27 @@ class CatalogController extends GraphQLDelegatingController
                     minCapacity
                     maxCapacity
                     averageRating
-                    final_price
-                    is_wishlisted
-                    category {
+                     is_Favoriteed
+                     category {
                         id
                         name
                         slug
-                        description
-                    }
-                    createdAt
+                         description
+                     }
+                     tiers {
+                         id
+                         catalogId
+                         name
+                         description
+                         price
+                         discountPrice
+                         finalPrice
+                         stock
+                         features
+                         sortOrder
+                         imageUrl
+                      }
+                      createdAt
                     updatedAt
                 }
             }
@@ -252,7 +275,7 @@ class CatalogController extends GraphQLDelegatingController
         
         $perPage = min((int) $request->get('per_page', 10), 200);
         
-        return $this->graphqlRaw($query, ['first' => $perPage]);
+        return $this->graphqlQuery($query, ['first' => $perPage]);
     }
     
     /**
@@ -268,16 +291,19 @@ class CatalogController extends GraphQLDelegatingController
                     name
                     slug
                     description
-                    price
-                    discountPrice
-                    finalPrice
                     stock
                     isActive
                     isFeatured
                     isOutOfStock
                     image_url: imageUrl
                     thumbnail_url: thumbnailUrl
-                    gallery_urls: galleryUrls
+                    gallery_urls: galleryUrls {
+                        id
+                        url
+                        thumb
+                        collection
+                        order
+                    }
                     videoUrl
                     features
                     theme
@@ -285,15 +311,27 @@ class CatalogController extends GraphQLDelegatingController
                     minCapacity
                     maxCapacity
                     averageRating
-                    final_price
-                    is_wishlisted
-                    category {
+                    is_Favoriteed
+                     category {
                         id
                         name
                         slug
-                        description
-                    }
-                    createdAt
+                         description
+                     }
+                     tiers {
+                         id
+                         catalogId
+                         name
+                         description
+                         price
+                         discountPrice
+                         finalPrice
+                         stock
+                         features
+                         sortOrder
+                         imageUrl
+                     }
+                     createdAt
                     updatedAt
                 }
             }
@@ -301,7 +339,7 @@ class CatalogController extends GraphQLDelegatingController
         
         $perPage = min((int) $request->get('per_page', 10), 200);
         
-        return $this->graphqlRaw($query, ['first' => $perPage]);
+        return $this->graphqlQuery($query, ['first' => $perPage]);
     }
     
     /**
@@ -321,14 +359,6 @@ class CatalogController extends GraphQLDelegatingController
         
         if ($request->boolean('on_sale')) {
             $filter['onSale'] = true;
-        }
-        
-        if ($request->filled('min_price')) {
-            $filter['minPrice'] = (float) $request->min_price;
-        }
-        
-        if ($request->filled('max_price')) {
-            $filter['maxPrice'] = (float) $request->max_price;
         }
         
         if ($request->filled('active')) {
@@ -358,7 +388,7 @@ class CatalogController extends GraphQLDelegatingController
         $sortBy = $request->get('sort_by', 'created_at');
         $sortDirection = $request->get('sort_direction', 'desc');
         
-        $allowedSortFields = ['name', 'price', 'created_at', 'discount_price', 'rating', 'popularity'];
+        $allowedSortFields = ['name', 'created_at', 'rating', 'popularity'];
         if (!in_array($sortBy, $allowedSortFields, true)) {
             $sortBy = 'created_at';
         }
@@ -371,9 +401,7 @@ class CatalogController extends GraphQLDelegatingController
         // Map REST sort fields to GraphQL enum values
         $fieldMap = [
             'name' => 'NAME',
-            'price' => 'PRICE',
             'created_at' => 'CREATED_AT',
-            'discount_price' => 'PRICE', // GraphQL doesn't have separate DISCOUNT_PRICE
             'rating' => 'RATING',
             'popularity' => 'POPULARITY',
         ];

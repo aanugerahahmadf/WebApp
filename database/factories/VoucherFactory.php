@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Enums\DiscountType\DiscountType;
+use App\Models\Discount\Discount;
 use App\Models\Voucher\Voucher;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -92,8 +93,7 @@ class VoucherFactory extends Factory
     public function fixed(int $amount = 100000): static
     {
         return $this->state(fn () => [
-            'discount_type' => DiscountType::FIXED,
-            'discount_amount' => $amount,
+            'discount_id' => DiscountFactory::new()->fixed($amount),
         ]);
     }
 
@@ -103,8 +103,7 @@ class VoucherFactory extends Factory
     public function percentage(int $percent = 15): static
     {
         return $this->state(fn () => [
-            'discount_type' => DiscountType::PERCENTAGE,
-            'discount_amount' => $percent,
+            'discount_id' => DiscountFactory::new()->percentage($percent),
         ]);
     }
 
@@ -157,9 +156,11 @@ class VoucherFactory extends Factory
     public function highMinPurchase(float $min = 10000000): static
     {
         return $this->state(fn () => [
-            'min_purchase' => $min,
-            'discount_amount' => 500000,
-            'discount_type' => DiscountType::FIXED,
+            'discount_id' => Discount::factory()->state([
+                'min_purchase' => $min,
+                'value' => 500000,
+                'type' => DiscountType::FIXED,
+            ]),
         ]);
     }
 }

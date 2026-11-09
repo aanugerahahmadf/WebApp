@@ -45,6 +45,14 @@ class CbirGalleryIndexingTest extends TestCase
         // lewat jalur HTTP, jadi transportnya dipatok ke HTTP di sini.
         // (Jalur gRPC punya testnya sendiri.)
         config(['services.ai_core_grpc_enabled' => false]);
+
+        // Test di file ini SENGAJA menguji jalur TULIS indeks (satu panggilan
+        // `/api/index/add` per gambar galeri). `CBIRService::writesAllowed()`
+        // mematikan penulisan selama test suite supaya `ai_core/data/metadata.json`
+        // yang sungguhan tidak ikut berubah — jadi di sini penulisan dibuka
+        // kembali secara eksplisit. Tanpa ini `$calls` selalu kosong dan test
+        // gagal seolah-olah galeri tidak pernah diindeks.
+        config(['services.ai_core_writes_in_tests' => true]);
     }
 
     public function test_every_gallery_image_of_one_catalog_is_indexed(): void

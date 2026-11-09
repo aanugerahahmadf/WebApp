@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { BrowserWindow, Menu, clipboard, screen, shell, type BrowserWindowConstructorOptions, type MenuItemConstructorOptions } from 'electron';
+import { BrowserWindow, Menu, clipboard, screen, session, shell, type BrowserWindowConstructorOptions, type MenuItemConstructorOptions } from 'electron';
 import { createCapacitorElectronApp } from '@capawesome/capacitor-electron';
 
 import config from './capacitor.electron.config';
@@ -384,6 +384,40 @@ const capacitorApp = createCapacitorElectronApp({
             installKeyboardShortcuts(window);
 
             /**
+             * User-Agent standar Chrome tanpa token Electron / DekstopApp.
+             * Google OAuth memblokir autentikasi (403 disallowed_useragent /
+             * "This browser or app may not be secure") jika mendeteksi Electron.
+             */
+            const defaultUserAgent = session.defaultSession.getUserAgent();
+            const cleanUserAgent = defaultUserAgent
+                .replace(/Electron\/[0-9.]+\s?/, '')
+                .replace(/DekstopApp\/[0-9.]+\s?/, '')
+                .trim();
+
+            session.defaultSession.setUserAgent(cleanUserAgent);
+            window.webContents.setUserAgent(cleanUserAgent);
+
+            try {
+                session.defaultSession.webRequest.onBeforeSendHeaders(
+                    {
+                        urls: [
+                            'https://accounts.google.com/*',
+                            'https://*.google.com/*',
+                            'https://*.googleapis.com/*',
+                            'https://*.firebaseapp.com/*',
+                        ],
+                    },
+                    (details, callback) => {
+                        details.requestHeaders['User-Agent'] = cleanUserAgent;
+                        delete details.requestHeaders['X-Requested-With'];
+                        callback({ requestHeaders: details.requestHeaders });
+                    },
+                );
+            } catch {
+                // Abaikan jika handler sudah terpasang pada sesi sebelumnya
+            }
+
+            /**
              * Pop-up Google Identity Services WAJIB boleh dibuka di DALAM
              * aplikasi.
              *
@@ -393,21 +427,28 @@ const capacitorApp = createCapacitorElectronApp({
              * lintas aplikasi tidak mungkin -- jadi "Continue With Google"
              * tidak akan pernah selesai.
              *
-             * Sisanya tetap dibuka di browser sistem, sama seperti di
-             * website: aplikasi desktop bukan tempat menjelajah web.
+             * sandbox: false & contextIsolation: false pada popup WAJIB agar
+             * GIS dapat memanggil window.opener.postMessage() untuk mengirimkan
+             * credential kembali ke jendela utama.
              */
             window.webContents.setWindowOpenHandler(({ url }) => {
-                if (url.startsWith('https://accounts.google.com/')) {
+                const isGoogleAuth =
+                    url.startsWith('https://accounts.google.com') ||
+                    url.startsWith('https://accounts.youtube.com') ||
+                    url.startsWith('https://myaccount.google.com') ||
+                    url.startsWith('https://oauth2.googleapis.com');
+
+                if (isGoogleAuth) {
                     return {
                         action: 'allow',
                         overrideBrowserWindowOptions: {
-                            width: 480,
-                            height: 640,
+                            width: 500,
+                            height: 650,
                             autoHideMenuBar: true,
                             webPreferences: {
-                                contextIsolation: true,
+                                contextIsolation: false,
                                 nodeIntegration: false,
-                                sandbox: true,
+                                sandbox: false,
                             },
                         },
                     };
@@ -418,6 +459,11 @@ const capacitorApp = createCapacitorElectronApp({
                 }
 
                 return { action: 'deny' };
+            });
+
+            window.webContents.on('did-create-window', (childWindow) => {
+                childWindow.webContents.setUserAgent(cleanUserAgent);
+                childWindow.setMenuBarVisibility(false);
             });
 
             /**

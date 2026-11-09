@@ -556,7 +556,7 @@ karena "kayaknya cuma detail".
   Livewire menukar binding `redirect` di container dengan `Redirector`-nya
   sendiri, yang tidak punya `getTargetUrl()` dan tidak cocok dengan return type
   `?RedirectResponse`. `CatalogResource`/`PackageResource` (panel Welcome)
-  memanggilnya dari action wishlist/cart/chat, sehingga **setiap tamu** yang
+  memanggilnya dari action Favorite/cart/chat, sehingga **setiap tamu** yang
   menekan tombol itu mendapat TypeError. Solusinya bukan facade `Redirect`
   (ia juga membaca binding yang sama), tapi `new RedirectResponse(...)` untuk
   pemanggil yang butuh `getTargetUrl()`.

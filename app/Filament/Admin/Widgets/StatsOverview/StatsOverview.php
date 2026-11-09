@@ -17,7 +17,7 @@ use App\Filament\Admin\Resources\ReviewResource\ReviewResource;
 use App\Filament\Admin\Resources\TransactionResource\TransactionResource;
 use App\Filament\Admin\Resources\UserResource\UserResource;
 use App\Filament\Admin\Resources\VoucherResource\VoucherResource;
-use App\Filament\Admin\Resources\WishlistResource\WishlistResource;
+use App\Filament\Admin\Resources\FavoriteResource\FavoriteResource;
 use App\Models\Admin\Admin;
 use App\Models\Catalog\Catalog;
 use App\Models\Category\Category;
@@ -36,7 +36,7 @@ use App\Models\Transaction\Transaction;
 use App\Models\User\User;
 use App\Models\Voucher\Voucher;
 use App\Models\WeddingDecorationPolicy\WeddingDecorationPolicy;
-use App\Models\Wishlist\Wishlist;
+use App\Models\Favorite\Favorite;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Facades\Cache;
@@ -52,7 +52,7 @@ use Illuminate\Support\Facades\Cache;
  * | # | Kartu | Sumber |
  * |---|---|---|
  * | 1-10 | Data Master | Produk, Paket, Kategori, Pengguna, Admin Tim, Ulasan, Laporan, Opsi Referensi, Pusat Bantuan, Kebijakan |
- * | 11-18 | Transaksi | Pesanan, Belum Dibayar, Transaksi, Voucher, Diskon, Metode Pembayaran, Payment Gateway, Wishlist |
+ * | 11-18 | Transaksi | Pesanan, Belum Dibayar, Transaksi, Voucher, Diskon, Metode Pembayaran, Payment Gateway, Favorite |
  *
  * LABEL-NYA pakai kunci yang SUDAH ADA di `lang/id.json` DAN `lang/en.json`
  * (kuncinya baru juga ditambahkan ke kedua berkas itu). Kalau kuncinya tidak
@@ -195,11 +195,11 @@ class StatsOverview extends StatsOverviewWidget
                 ->color('warning')
                 ->url(PaymentGatewayResource::getUrl(panel: 'admin')),
 
-            Stat::make(__('Total Wishlist'), (string) $counts['wishlists'])
+            Stat::make(__('Total Favorite'), (string) $counts['Favorites'])
                 ->description(__('Produk tersimpan'))
-                ->descriptionIcon('/images/icons/wishlist.svg')
+                ->descriptionIcon('/images/icons/Favorite.svg')
                 ->color('gray')
-                ->url(WishlistResource::getUrl(panel: 'admin')),
+                ->url(FavoriteResource::getUrl(panel: 'admin')),
         ];
     }
 
@@ -239,7 +239,7 @@ class StatsOverview extends StatsOverviewWidget
                 'discounts' => Discount::query()->count(),
                 'payment_methods' => PaymentMethod::query()->count(),
                 'payment_gateways' => PaymentGateway::query()->count(),
-                'wishlists' => Wishlist::query()->count(),
+                'Favorites' => Favorite::query()->count(),
             ];
         });
     }

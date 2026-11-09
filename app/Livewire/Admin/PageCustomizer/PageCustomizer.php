@@ -22,7 +22,7 @@ use Livewire\Component;
  * (Admin, Catalog, Database Studio, Developer Studio, Discount, Help,
  * Maintenance, Order, Payment Gateway, Payment Method, Privacy Policy,
  * Reference Option, Report, Review, Terms of Service, Transaction, User,
- * Voucher, Wedding Decoration Policy, Wishlist).
+ * Voucher, Wedding Decoration Policy, Favorite).
  *
  * Mesin rendernya SATU render hook (`PanelsRenderHook::PAGE_END`) di
  * AdminPanelProvider memanggil view `Livewire.Admin.page-customizer.hook`

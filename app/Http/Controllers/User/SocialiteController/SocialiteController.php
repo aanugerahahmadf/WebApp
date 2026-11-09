@@ -278,16 +278,27 @@ class SocialiteController extends Controller
 
     private function redirectAfterLogin(User $user)
     {
-        // Tombol Google yang belum terdaftar (akun social baru, data minimal)
-        // wajib lewat Complete Profile dulu sebelum ke home.
+        // KASUS 1: Akun baru / email belum verifikasi -> Verify OTP Screen
+        if ($user->wasRecentlyCreated || is_null($user->email_verified_at)) {
+            return redirect()->route('filament.welcome.auth.email-verification.prompt');
+        }
+
+        // KASUS 2: Akun baru yang email-nya sudah terverifikasi tapi profil belum lengkap -> Complete Profile
         if (method_exists($user, 'shouldCompleteProfile') && $user->shouldCompleteProfile()) {
             return redirect()->route('filament.welcome.pages.complete-profile');
         }
 
-        // Callback ini hanya dilayani dari halaman auth panel user/welcome,
-        // jadi super_admin pun mendarat di home panel user. Sebelumnya role
-        // super_admin dipaksa ke `/admin`, padahal panel admin punya halaman
-        // sign-in sendiri (`/admin/signin`) tanpa tombol Google.
+        // KASUS 3: Akun TERDAFTAR + 2FA Aktif:
+        // Sesuai spec: Auth.php -> Otp Email Or Two Factory Screen -> Home
+        if (method_exists($user, 'hasSetupTwoFactor') && $user->hasSetupTwoFactor()) {
+            session()->forget(['2fa_passed', 'trusted_device_validated']);
+
+            return redirect()->route('filament.welcome.pages.otp-verify');
+        }
+
+        // KASUS 4: Akun TERDAFTAR + 2FA Tidak Aktif → langsung Home.
+        session(['2fa_passed' => true]);
+
         return redirect()->intended(route('filament.welcome.pages.home'));
     }
 }

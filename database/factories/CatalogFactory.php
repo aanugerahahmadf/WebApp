@@ -46,7 +46,8 @@ class CatalogFactory extends Factory
         $hasDiscount = fake()->boolean(35);
         $discountPrice = $hasDiscount ? round($price * fake()->randomFloat(2, 0.70, 0.90), 2) : null;
 
-        $descId = fake()->paragraphs(3, true) . "\n\nSpesifikasi: Termasuk rangkaian bunga impor segar, instalasi oleh tim profesional, dan garansi kesegaran hingga acara selesai.";
+        $paragraphs = fake()->paragraphs(3, true);
+        $descId = (is_array($paragraphs) ? implode("\n\n", $paragraphs) : (string) $paragraphs) . "\n\nSpesifikasi: Termasuk rangkaian bunga impor segar, instalasi oleh tim profesional, dan garansi kesegaran hingga acara selesai.";
         $descEn = "Premium wedding flower and decoration package. Includes fresh imported blooms, on-site professional styling, and setup/breakdown support.";
 
         return [
@@ -140,7 +141,7 @@ class CatalogFactory extends Factory
      */
     public function forCategory(Category|int $category): static
     {
-        $id = $category instanceof Category ? $category->id : $category;
+        $id = $category instanceof Category ? $category->getKey() : $category;
         return $this->state(fn () => ['category_id' => $id]);
     }
 

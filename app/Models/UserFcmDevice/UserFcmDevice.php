@@ -8,9 +8,12 @@ use App\Models\User\User;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Traits\ResolvesCamelCaseAttributes\ResolvesCamelCaseAttributes;
+
 
 class UserFcmDevice extends Model
 {
+    use ResolvesCamelCaseAttributes;
     use LegacyMorphClass;
     protected $fillable = [
         'user_id',

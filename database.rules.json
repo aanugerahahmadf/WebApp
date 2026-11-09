@@ -53,7 +53,7 @@
         ".validate": "newData.isObject()"
       }
     },
-    "wishlist": {
+    "Favorite": {
       "$user_id": {
         ".read": "auth.uid == $user_id",
         ".write": "auth.uid == $user_id",

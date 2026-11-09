@@ -4,7 +4,7 @@ namespace App\Filament\Welcome\Resources\CatalogResource\Pages\CreateReviews;
 
 use App\Filament\Welcome\Pages\Home\Home;
 use App\Filament\Welcome\Resources\CatalogResource\CatalogResource;
-use App\Filament\Welcome\Resources\ReviewResource\ReviewResource;
+use App\Filament\Welcome\Resources\MyReviewsResource\MyReviewsResource;
 use App\Models\Catalog\Catalog;
 use App\Models\Review\Review;
 use Filament\Facades\Filament;
@@ -221,7 +221,7 @@ class CreateReviews extends Page implements HasForms
             // Filament membangun form di tiap render.
             ->schema($this->choosingCatalog
                 ? []
-                : ReviewResource::itemReviewFields('catalog_id', (int) $this->getRecord()->getKey()))
+                : MyReviewsResource::itemReviewFields('catalog_id', (int) $this->getRecord()->getKey()))
             ->statePath('data');
     }
 
@@ -306,7 +306,7 @@ class CreateReviews extends Page implements HasForms
     {
         $search = trim($this->catalogSearch);
 
-        return ReviewResource::reviewableCatalogs()
+        return MyReviewsResource::reviewableCatalogs()
             ->when($search !== '', fn (Collection $catalogs) => $catalogs->filter(
                 fn (Catalog $catalog): bool => str_contains(
                     mb_strtolower((string) $catalog->name),
@@ -334,12 +334,12 @@ class CreateReviews extends Page implements HasForms
 
     public function getTitle(): string
     {
-        return __('Tulis Ulasan');
+        return __('Tulis Komentar Penilaian');
     }
 
     public function getHeading(): string
     {
-        return __('Tulis Ulasan');
+        return __('Tulis Komentar Penilaian');
     }
 
     public function getSubheading(): ?string
@@ -356,7 +356,7 @@ class CreateReviews extends Page implements HasForms
         if ($this->choosingCatalog) {
             return [
                 Home::getUrl() => __('Beranda'),
-                ReviewResource::getUrl('index') => ReviewResource::getNavigationLabel(),
+                MyReviewsResource::getUrl('index') => MyReviewsResource::getNavigationLabel(),
                 $this->getTitle(),
             ];
         }

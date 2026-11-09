@@ -18,6 +18,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Traits\ResolvesCamelCaseAttributes\ResolvesCamelCaseAttributes;
+
 
 /**
  * @property int $id
@@ -59,6 +61,7 @@ use Illuminate\Support\Facades\Auth;
  */
 class Inbox extends Model
 {
+    use ResolvesCamelCaseAttributes;
     use LegacyMorphClass;
     use SoftDeletes;
 

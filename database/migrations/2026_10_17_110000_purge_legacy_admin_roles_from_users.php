@@ -187,12 +187,12 @@ return new class extends Migration
     {
         return [
             'view_catalog', 'view_orders', 'view_reports', 'view_users',
-            'view_transactions', 'view_wishlists', 'view_vouchers',
+            'view_transactions', 'view_Favorites', 'view_vouchers',
             'view_reviews', 'view_discounts', 'view_helps',
             'view_payment_methods', 'view_payment_gateways', 'view_legal',
             'view_reference_options',
             'manage_catalog', 'manage_orders', 'manage_transactions',
-            'manage_users', 'manage_wishlists', 'manage_vouchers',
+            'manage_users', 'manage_Favorites', 'manage_vouchers',
             'manage_reviews', 'manage_reports', 'manage_discounts',
             'manage_helps', 'manage_payment_methods',
             'manage_payment_gateways', 'manage_legal',

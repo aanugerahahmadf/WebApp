@@ -19,7 +19,7 @@ import "wedding/user/v1/order.proto";
 import "wedding/user/v1/review.proto";
 import "wedding/user/v1/voucher.proto";
 import "wedding/user/v1/cart.proto";
-import "wedding/user/v1/wishlist.proto";
+import "wedding/user/v1/Favorite.proto";
 import "wedding/user/v1/cbir.proto";
 import "wedding/user/v1/search.proto";
 import "wedding/user/v1/home.proto";
@@ -36,7 +36,7 @@ import "wedding/user/v1/chat.proto";
 // - ReviewService (review.proto)
 // - VoucherService (voucher.proto)
 // - CartService (cart.proto)
-// - WishlistService (wishlist.proto)
+// - Favoriteservice (Favorite.proto)
 // - CbirService (cbir.proto)
 // - SearchService (search.proto)
 // - HomeService (home.proto)

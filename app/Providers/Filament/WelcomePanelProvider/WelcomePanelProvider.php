@@ -23,7 +23,7 @@ use App\Filament\Welcome\Pages\Home\Home;
 use App\Filament\Welcome\Pages\PrivacyTermsPage\PrivacyTermsPage;
 use App\Filament\Welcome\Pages\SettingsPage\SettingsPage;
 use App\Filament\Welcome\Resources\HistoryResource\HistoryResource;
-use App\Filament\Welcome\Resources\ReviewResource\ReviewResource;
+use App\Filament\Welcome\Resources\MyReviewsResource\MyReviewsResource;
 use App\Http\Middleware\AuthenticateWelcome\AuthenticateWelcome;
 use App\Http\Middleware\ClerkFilamentAuth\ClerkFilamentAuth;
 use App\Http\Middleware\EnsureProfileComplete\EnsureProfileComplete;
@@ -516,8 +516,8 @@ class WelcomePanelProvider extends PanelProvider
              * Panel::userMenuItems() hanya menambah.
              *
              * Karena itu yang dipakai di sini UserMulti2faPlugin -- turunan
-             * yang mendaftarkan OTPVerify (versi OtpEmailOrTwoFactory) +
-             * middleware saja.
+             * yang mendaftarkan halaman verifikasi OTP (OtpEmailOrTwoFactory)
+             * + middleware saja.
              */
             ->plugins([
                 UserMulti2faPlugin::make(),
@@ -555,8 +555,8 @@ class WelcomePanelProvider extends PanelProvider
                     ->url(fn (): string => HistoryResource::getUrl(panel: 'welcome'))
                     ->icon(AppIcon::HISTORY),
                 'ulasan' => MenuItem::make()
-                    ->label(fn (): string => __('Ulasan Saya'))
-                    ->url(fn (): string => ReviewResource::getUrl(panel: 'welcome'))
+                    ->label(fn (): string => __('Komentar Penilaian Katalog Saya'))
+                    ->url(fn (): string => MyReviewsResource::getUrl(panel: 'welcome'))
                     ->icon(AppIcon::REVIEW),
                 'privacy' => MenuItem::make()
                     ->label(fn (): string => __('Privasi & Ketentuan'))

@@ -94,9 +94,11 @@ class HomeResolver
     public function categories($root, array $args, GraphQLContext $context)
     {
         $first = $args['first'] ?? 10;
-        
-        return Category::where('is_active', true)
-            ->whereNull('parent_id')
+
+        // `categories` has no `is_active`/`parent_id` column: the model exposes
+        // `getIsActiveAttribute()` as a constant accessor, so filtering on the
+        // column throws 1054. Only the catalog side is filterable.
+        return Category::query()
             ->withCount(['categoryCatalogs' => fn($q) => $q->where('is_active', true)->where('stock', '>', 0)])
             ->orderBy('name')
             ->take($first)
@@ -162,7 +164,7 @@ class HomeResolver
         return [
             'totalCatalogs' => Catalog::where('is_active', true)->count(),
             'totalPackages' => Package::where('is_active', true)->count(),
-            'totalCategories' => Category::where('is_active', true)->count(),
+            'totalCategories' => Category::count(),
             // Do not expose a customer count; even aggregates can reveal
             // business/user activity and are not needed by the public home UI.
         ];

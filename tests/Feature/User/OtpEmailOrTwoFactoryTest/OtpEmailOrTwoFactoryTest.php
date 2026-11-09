@@ -7,9 +7,10 @@
  * Yang diuji di sini, semuanya perilaku yang tidak bisa dilihat dari
  * membaca kode:
  *
- *   1. CheckTrustedDevice milik paket mengarahkan ke route dengan NAMA yang
- *      sama seperti OTPVerify. Kalau nama itu berubah, middleware masuk
- *      redirect loop -- jadi URL dan route name diuji eksplisit.
+ *   1. Halaman memakai slug otp-verify, bukan slug bawaan paket
+ *      (o-t-p-verify). Middleware CheckTrustedDevice milik aplikasi harus
+ *      mengarah ke route ini -- kalau tidak, 2FA masuk redirect loop atau
+ *      404. URL dan route name diuji eksplisit.
  *
  *   2. TOTP asli dicek dengan Google2FA. Kode 6 digit sembarang harus
  *      ditolak; kode asli harus diterima.
@@ -23,15 +24,14 @@
 
 use App\Filament\User\Auth\OtpEmailOrTwoFactory\OtpEmailOrTwoFactory;
 use App\Filament\User\Pages\Home\Home;
+use App\Http\Middleware\CheckTrustedDevice\CheckTrustedDevice;
 use App\Models\BackupCode\BackupCode;
 use App\Models\User\User;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Livewire;
 use MixCode\FilamentMulti2fa\Enums\TwoFactorAuthType;
-use MixCode\FilamentMulti2fa\Middleware\CheckTrustedDevice;
 use MixCode\FilamentMulti2fa\Models\TrustDevice;
-use MixCode\FilamentMulti2fa\Pages\OTPVerify;
 
 beforeEach(function (): void {
     Filament::setCurrentPanel(Filament::getPanel('user'));
@@ -71,9 +71,9 @@ function totpSekarang(User $user): string
  * -----------------------------------------------------------------------
  */
 
-it('memakai route name yang sama dengan OTPVerify supaya middleware tidak loop', function (): void {
-    expect(OtpEmailOrTwoFactory::getRouteName())->toBe(OTPVerify::getRouteName())
-        ->and(OtpEmailOrTwoFactory::getUrl())->toBe(OTPVerify::getUrl());
+it('memakai route otp-verify, bukan route bawaan OTPVerify', function (): void {
+    expect(OtpEmailOrTwoFactory::getRouteName())->toBe('filament.welcome.pages.otp-verify')
+        ->and(OtpEmailOrTwoFactory::getUrl())->toBe(url('/otp-verify'));
 });
 
 it('CheckTrustedDevice masih mengarahkan ke halaman ini', function (): void {
@@ -94,7 +94,7 @@ it('halaman ini Sendiri TIDAK di-redirect middleware (cegah loop)', function ():
     $r->assertOk();
 });
 
-it('tetap mendaftarkan middleware yang sama', function (): void {
+it('tetap mendaftarkan middleware CheckTrustedDevice milik aplikasi', function (): void {
     expect(Filament::getPanel('user')->getAuthMiddleware())
         ->toContain(CheckTrustedDevice::class);
 });

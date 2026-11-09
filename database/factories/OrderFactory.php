@@ -37,11 +37,12 @@ class OrderFactory extends Factory
             'status' => $status,
             'payment_status' => match ($status) {
                 OrderStatus::PENDING => OrderPaymentStatus::UNPAID,
-                OrderStatus::CONFIRMED => fake()->randomElement([OrderPaymentStatus::PARTIAL, OrderPaymentStatus::PAID]),
+                OrderStatus::CONFIRMED => OrderPaymentStatus::PAID,
                 OrderStatus::PREPARING => OrderPaymentStatus::PAID,
                 OrderStatus::EVENT_DAY => OrderPaymentStatus::PAID,
                 OrderStatus::COMPLETED => OrderPaymentStatus::PAID,
                 OrderStatus::CANCELLED => fake()->randomElement([OrderPaymentStatus::CANCELLED, OrderPaymentStatus::REFUNDED]),
+                default => OrderPaymentStatus::UNPAID,
             },
             'booking_date' => Carbon::now()->addDays(fake()->numberBetween(7, 90)),
             'booking_time' => fake()->randomElement(['08:00', '09:00', '10:00', '13:00', '15:00', '18:00']),
@@ -56,7 +57,7 @@ class OrderFactory extends Factory
     public function forPackage(Package|int|null $package = null): static
     {
         return $this->state(fn () => [
-            'package_id' => $package instanceof Package ? $package->id : ($package ?? Package::factory()),
+            'package_id' => $package instanceof Package ? $package->getKey() : ($package ?? Package::factory()),
             'catalog_id' => null,
         ]);
     }
@@ -67,7 +68,7 @@ class OrderFactory extends Factory
     public function forCatalog(Catalog|int|null $catalog = null): static
     {
         return $this->state(fn () => [
-            'catalog_id' => $catalog instanceof Catalog ? $catalog->id : ($catalog ?? Catalog::factory()),
+            'catalog_id' => $catalog instanceof Catalog ? $catalog->getKey() : ($catalog ?? Catalog::factory()),
             'package_id' => null,
         ]);
     }
@@ -139,13 +140,6 @@ class OrderFactory extends Factory
     {
         return $this->state(fn () => [
             'payment_status' => OrderPaymentStatus::PAID,
-        ]);
-    }
-
-    public function partialPaid(): static
-    {
-        return $this->state(fn () => [
-            'payment_status' => OrderPaymentStatus::PARTIAL,
         ]);
     }
 

@@ -17,8 +17,8 @@ Flutter App → Laravel API (REST + GraphQL) → AI Core (Flask) → MySQL
 ### Laravel Backend (`Mobile-And-Backend/`)
 
 1. **`graphql.schema`** — GraphQL schema definition (450 lines)
-   - Queries: User, Category, Product, Package, Order, Review, Cart, Wishlist, Voucher, Notification, CBIR, Home, Search
-   - Mutations: Auth, Profile, Cart, Wishlist, Order, Review, CBIR Search, Notification, Voucher
+   - Queries: User, Category, Product, Package, Order, Review, Cart, Favorite, Voucher, Notification, CBIR, Home, Search
+   - Mutations: Auth, Profile, Cart, Favorite, Order, Review, CBIR Search, Notification, Voucher
    - Types: All entity types with relationships
 
 2. **`config/lighthouse.php`** — Lighthouse configuration
@@ -27,7 +27,7 @@ Flutter App → Laravel API (REST + GraphQL) → AI Core (Flask) → MySQL
    - `AuthResolver.php` — Login, register, logout, password reset
    - `ProfileResolver.php` — Update profile, change password
    - `CartResolver.php` — Add, update, remove, clear cart
-   - `WishlistResolver.php` — Toggle, remove wishlist
+   - `FavoriteResolver.php` — Toggle, remove Favorite
    - `OrderResolver.php` — Create order, cancel order
    - `ReviewResolver.php` — Create, update, delete review
    - `CbirResolver.php` — CBIR image search, arithmetic search, stats

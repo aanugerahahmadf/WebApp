@@ -5,6 +5,7 @@ namespace App\Filament\User\Pages\NotificationDetailPage;
 use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\User\Pages\Home\Home;
 use App\Filament\User\Pages\SettingsPage\PasswordSecurityPage\SecurityCheck\SignInActivity\SignInActivity;
+use App\Filament\User\Pages\DeviceTrustPrompt\DeviceTrustPrompt;
 use App\Models\User\User;
 use Filament\Actions\Action;
 use Filament\Pages\Page;
@@ -52,12 +53,15 @@ class NotificationDetailPage extends Page
             : null;
 
         $this->notificationDetail = [
-            'title' => (string) ($data['title'] ?? __('Notifikasi')),
-            'body' => (string) ($data['body'] ?? ''),
+            'title' => __((string) ($data['title'] ?? __('Notifikasi'))),
+            'body' => $this->localizeNotificationBody(
+                (string) ($data['title'] ?? ''),
+                (string) ($data['body'] ?? ''),
+            ),
             'icon' => (string) ($data['icon'] ?? '/images/icons/bell_alert.svg'),
             'received_at' => $notification->created_at?->translatedFormat('d F Y, H:i:s') ?? '-',
             'action_url' => $this->withNotificationReturnUrl($actionUrl),
-            'action_label' => is_array($firstAction) && is_string($firstAction['label'] ?? null) ? $firstAction['label'] : null,
+            'action_label' => is_array($firstAction) && is_string($firstAction['label'] ?? null) ? __($firstAction['label']) : null,
         ];
     }
 
@@ -84,13 +88,7 @@ class NotificationDetailPage extends Page
      */
     protected function getHeaderActions(): array
     {
-        $actions = [
-            Action::make('backToDashboard')
-                ->label(__('Kembali ke Beranda'))
-                ->icon('/images/icons/arrow_left.svg')
-                ->color('gray')
-                ->url(Home::getUrl(panel: 'user')),
-        ];
+        $actions = [];
 
         $actionUrl = $this->notificationDetail['action_url'] ?? null;
         $actionLabel = $this->notificationDetail['action_label'] ?? null;
@@ -122,15 +120,44 @@ class NotificationDetailPage extends Page
             || str_contains($title, 'sign in');
     }
 
+    private function localizeNotificationBody(string $title, string $body): string
+    {
+        $lowerTitle = mb_strtolower($title);
+
+        if (str_contains($lowerTitle, 'perangkat baru') || str_contains($lowerTitle, 'new device')) {
+            if (preg_match('/^Sign in dari perangkat yang belum pernah dipakai oleh akun Anda: (.+), dari (.+) \((.+)\) pada (.+)\. Kalau ini bukan Anda, keluarkan semua sesi sekarang\.$/u', $body, $matches)) {
+                return __('Sign in from a device that has not been used by your account: :device, from :ip (:location) at :time. If this was not you, sign out of all sessions now.', [
+                    'device' => $matches[1], 'ip' => $matches[2], 'location' => $matches[3], 'time' => $matches[4],
+                ]);
+            }
+        }
+
+        if (str_contains($lowerTitle, 'login terdeteksi') || str_contains($lowerTitle, 'login detected')) {
+            if (preg_match('/^Akun Anda telah digunakan dari (.+) \((.+), (.+)\) pada (.+)\.$/u', $body, $matches)) {
+                return __('Your account was used from :device (:ip, :location) at :time.', [
+                    'device' => $matches[1], 'ip' => $matches[2], 'location' => $matches[3], 'time' => $matches[4],
+                ]);
+            }
+        }
+
+        return __($body);
+    }
+
     private function withNotificationReturnUrl(?string $actionUrl): ?string
     {
         $signInActivityUrl = SignInActivity::getUrl(panel: 'user');
 
-        if (! $actionUrl || ! str_starts_with($actionUrl, $signInActivityUrl)) {
+        $deviceTrustUrl = url('/device-trust/');
+
+        if (! $actionUrl) {
             return $actionUrl;
         }
 
         if (str_contains($actionUrl, 'returnTo=')) {
+            return $actionUrl;
+        }
+
+        if (! str_starts_with($actionUrl, $signInActivityUrl) && ! str_starts_with($actionUrl, $deviceTrustUrl)) {
             return $actionUrl;
         }
 

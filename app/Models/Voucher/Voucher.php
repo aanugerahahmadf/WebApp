@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use App\Models\Traits\ResolvesCamelCaseAttributes\ResolvesCamelCaseAttributes;
+
 
 /**
  * @property int $id
@@ -35,6 +37,7 @@ use Illuminate\Support\Carbon;
  */
 class Voucher extends Model
 {
+    use ResolvesCamelCaseAttributes;
     use HasFactory;
     use LegacyMorphClass;
     use HasTranslations;

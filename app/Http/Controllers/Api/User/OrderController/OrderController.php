@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\User\OrderController;
 
 use App\Enums\OrderPaymentStatus\OrderPaymentStatus;
 use App\Enums\OrderStatus\OrderStatus;
+use App\Enums\PaymentStatus\PaymentStatus;
 use App\Events\OrderStatusUpdated\OrderStatusUpdated;
 use App\Http\Controllers\Controller;
 use App\Models\Message\Message;
@@ -21,6 +22,7 @@ use App\Services\MidtransService\MidtransService;
 use App\Services\PlatformNotificationService\PlatformNotificationService;
 use App\Services\StorageService\StorageService;
 use App\Support\ChatStaff\ChatStaff;
+use App\Support\PaymentWindow\PaymentWindow;
 use Dompdf\Dompdf;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -46,6 +48,7 @@ class OrderController extends Controller
                     'package',
                     'catalog.category',
                     'user:id,full_name',
+                    'latestTransaction',
                 ]);
 
             if ($request->has('status')) {
@@ -56,11 +59,29 @@ class OrderController extends Controller
                 $query->where('payment_status', $request->payment_status);
             }
 
-            if ($request->has('from_date') && $request->has('to_date')) {
-                $query->whereBetween('booking_date', [$request->from_date, $request->to_date]);
+            if ($request->has('from_date')) {
+                $query->whereDate('booking_date', '>=', $request->from_date);
             }
 
-            $orders = $query->latest()->paginate($request->get('per_page', 10));
+            if ($request->has('to_date')) {
+                $query->whereDate('booking_date', '<=', $request->to_date);
+            }
+
+            // History payment: metode dibaca dari transaksi aktif order.
+            $paymentType = $request->input('payment_type');
+            if (in_array($paymentType, ['virtual_account', 'qris'], true)) {
+                $query->whereHas('latestTransaction', function ($q) use ($paymentType): void {
+                    $q->where('checkout_payment_type', $paymentType);
+                });
+            }
+
+            $query->when(
+                in_array($request->input('sort'), ['oldest', 'newest'], true),
+                fn ($q): mixed => $q->orderBy('created_at', $request->input('sort') === 'oldest' ? 'asc' : 'desc'),
+                fn ($q): mixed => $q->latest()
+            );
+
+            $orders = $query->paginate($request->get('per_page', 10));
             $catalogs = $orders->items();
 
             $data = collect($catalogs)->map(function (Order $order) use ($locale) {
@@ -71,6 +92,7 @@ class OrderController extends Controller
                     'user_id' => $order->user_id,
                     'user_name' => $order->user?->full_name ?? '',
                     'package_id' => $order->package_id,
+                    'tier_id' => $order->package_id,
                     'catalog_id' => $order->catalog_id,
                     'title' => $pkg?->trans('name', $locale) ?? $order->catalog?->trans('name', $locale) ?? __('Pesanan'),
                     'order_number' => $order->order_number,
@@ -80,18 +102,18 @@ class OrderController extends Controller
                     'booking_date' => $order->booking_date?->format('Y-m-d'),
                     'event_date' => $order->booking_date?->format('Y-m-d'),
                     'notes' => $order->notes,
-                    'resource_type' => $order->package_id ? 'package' : 'catalog',
+                    'resource_type' => $order->package_id ? 'tier' : 'catalog',
+                    'legacy_resource_type' => $order->package_id ? 'package' : 'catalog',
                     'item' => $pkg ? [
                         'id' => $pkg->id,
                         'name' => $pkg->trans('name', $locale),
                         'price' => (float) $pkg->price,
                         'discount_price' => (float) ($pkg->discount_price ?? 0),
+                        'final_price' => (float) $pkg->final_price,
                         'image_url' => $pkg->image_url ?? null,
                     ] : ($order->catalog ? [
                         'id' => $order->catalog->id,
                         'name' => $order->catalog->trans('name', $locale),
-                        'price' => (float) $order->catalog->price,
-                        'discount_price' => (float) ($order->catalog->discount_price ?? 0),
                         'category' => $order->catalog->category?->name,
                         'image_url' => $order->catalog->image_url ?? null,
                     ] : null),
@@ -99,15 +121,27 @@ class OrderController extends Controller
                         'id' => $pkg->id,
                         'name' => $pkg->trans('name', $locale),
                         'price' => (float) $pkg->price,
+                        'discount_price' => (float) ($pkg->discount_price ?? 0),
+                        'final_price' => (float) $pkg->final_price,
+                    ] : null,
+                    // Canonical API vocabulary; `package` remains for older clients.
+                    'tier' => $pkg ? [
+                        'id' => $pkg->id,
+                        'tier_id' => $pkg->id,
+                        'name' => $pkg->trans('name', $locale),
+                        'price' => (float) $pkg->price,
+                        'discount_price' => (float) ($pkg->discount_price ?? 0),
+                        'final_price' => (float) $pkg->final_price,
                     ] : null,
                     'catalog' => $order->catalog ? [
                         'id' => $order->catalog->id,
                         'name' => $order->catalog->trans('name', $locale),
-                        'price' => (float) $order->catalog->price,
-                        'discount_price' => (float) ($order->catalog->discount_price ?? 0),
                         'category' => $order->catalog->category?->name,
                     ] : null,
-                ];
+                    'created_at' => $order->created_at?->toIso8601String(),
+                    'booking_time' => $this->eventTimeFor($order),
+                    'quantity' => (int) ($order->quantity ?? 1),
+                ] + $this->checkoutHistoryFields($order);
             })->all();
 
             return response()->json([
@@ -138,11 +172,14 @@ class OrderController extends Controller
     public function createOrder(Request $request)
     {
         try {
+            if ($request->filled('tier_id') && ! $request->filled('package_id')) {
+                $request->merge(['package_id' => $request->input('tier_id')]);
+            }
             $validatedData = $request->validate([
                 // Tanpa rule exists: biarkan findOrFail di bawah menangani
                 // package/catalog tidak ada dengan 404 (bukan 422 validation).
-                'package_id' => 'nullable|integer',
-                'catalog_id' => 'nullable|integer',
+                'package_id' => 'required|integer',
+                'catalog_id' => 'required|integer',
                 'event_date' => 'required|date|after_or_equal:today',
                 'event_time' => 'nullable|string',
                 'quantity' => 'nullable|integer|min:1',
@@ -152,54 +189,34 @@ class OrderController extends Controller
                 'voucher_code' => 'nullable|string|max:50',
             ]);
 
-            if (! filled($validatedData['package_id'] ?? null) && ! filled($validatedData['catalog_id'] ?? null)) {
+            $package = Package::with(['category', 'catalog'])->findOrFail($validatedData['package_id']);
+            // A Tier is always scoped to its parent Catalog. Never silently
+            // order a Tier from another Catalog.
+            if ((int) $package->catalog_id !== (int) $validatedData['catalog_id']) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => __('Pilih paket atau katalog terlebih dahulu'),
+                    'message' => __('Paket tidak termasuk dalam katalog yang dipilih'),
                 ], 422);
             }
-
-            $package = null;
-            $catalog = null;
-            if (filled($validatedData['package_id'] ?? null)) {
-                $package = Package::with(['category', 'catalog'])->findOrFail($validatedData['package_id']);
-                // A tier is always scoped to its parent catalog. When both
-                // IDs are sent by the mobile client, reject mismatches rather
-                // than silently ordering a tier from another catalog.
-                if (filled($validatedData['catalog_id'] ?? null)
-                    && (int) $package->catalog_id !== (int) $validatedData['catalog_id']) {
-                    return response()->json([
-                        'status' => 'error',
-                        'message' => __('Paket tidak termasuk dalam katalog yang dipilih'),
-                    ], 422);
-                }
-                $catalog = $package->catalog;
-            } elseif (filled($validatedData['catalog_id'] ?? null)) {
-                $catalog = Catalog::with('category')->findOrFail($validatedData['catalog_id']);
-            }
+            $catalog = $package->catalog;
 
             // 1. Atomic stock decrement
             $quantity = (int) ($validatedData['quantity'] ?? 1);
-            if ($package) {
-                $affected = DB::table('packages')
-                    ->where('id', $package->id)
-                    ->where('stock', '>=', $quantity)
-                    ->decrement('stock', $quantity);
-            } else {
-                $affected = DB::table('catalogs')
-                    ->where('id', $catalog->id)
-                    ->where('stock', '>=', $quantity)
-                    ->decrement('stock', $quantity);
-            }
+            $affected = DB::table('packages')
+                ->where('id', $package->id)
+                ->where('stock', '>=', $quantity)
+                ->decrement('stock', $quantity);
             if (! $affected) {
                 return response()->json([
                     'status' => 'error',
                     'message' => __('Stok tidak mencukupi'),
                 ], 400);
             }
+            // Catalog stock is a denormalized total of all tier stocks.
+            $package?->catalog?->syncStockFromTiers();
 
             // 3. Calculate prices with voucher
-            $itemPrice = (float) ($package?->final_price ?? $catalog?->final_price ?? $package?->price ?? $catalog?->price ?? 0);
+            $itemPrice = (float) ($package?->final_price ?? $package?->price ?? 0);
             $baseTotal = $itemPrice * $quantity;
             $discountAmount = 0;
             $voucherId = null;
@@ -297,6 +314,11 @@ class OrderController extends Controller
                         'total_amount' => (float) $transaction->total_amount,
                         'status' => $transaction->status,
                     ],
+                    'payment' => [
+                        'amount' => PaymentWindow::amount($order, $transaction),
+                        'deadline' => PaymentWindow::deadline($order, $transaction)?->toIso8601String(),
+                        'expiry_hours' => PaymentWindow::expiryHours(),
+                    ],
                     'payment_methods' => $paymentMethods,
                 ]),
             ], 201);
@@ -347,6 +369,11 @@ class OrderController extends Controller
                 'data' => [
                     'order' => $order,
                     'transaction' => $transaction,
+                    'payment' => [
+                        'amount' => PaymentWindow::amount($order, $transaction),
+                        'deadline' => PaymentWindow::deadline($order, $transaction)?->toIso8601String(),
+                        'expiry_hours' => PaymentWindow::expiryHours(),
+                    ],
                     'payment_methods' => $paymentMethods,
                 ],
             ]);
@@ -403,6 +430,8 @@ class OrderController extends Controller
                 ], 400);
             }
 
+            $this->tagCheckoutPaymentType($transaction, 'virtual_account');
+
             // VA sudah pernah dibuat? Kirim ulang tanpa panggil BRI lagi.
             if ($transaction->virtual_account_no
                 && (! $transaction->virtual_account_expiry || $transaction->virtual_account_expiry->isFuture())) {
@@ -413,6 +442,7 @@ class OrderController extends Controller
                         'virtual_account_no' => $transaction->virtual_account_no,
                         'virtual_account_name' => $transaction->virtual_account_name,
                         'virtual_account_expiry' => $transaction->virtual_account_expiry?->format('Y-m-d\TH:i:sP'),
+                        'amount' => PaymentWindow::amount($order, $transaction),
                     ],
                 ]);
             }
@@ -433,6 +463,7 @@ class OrderController extends Controller
                     'virtual_account_no' => $va['virtual_account_no'],
                     'virtual_account_name' => $va['virtual_account_name'],
                     'virtual_account_expiry' => $va['virtual_account_expiry'],
+                    'amount' => PaymentWindow::amount($order, $transaction),
                 ],
             ]);
         } catch (ModelNotFoundException $e) {
@@ -488,6 +519,8 @@ class OrderController extends Controller
                 ], 400);
             }
 
+            $this->tagCheckoutPaymentType($transaction, 'qris');
+
             // QRIS sudah pernah dibuat? Kirim ulang dari metadata tanpa panggil BRI lagi.
             $existing = ($transaction->metadata ?? [])['bri_qris']['qr_content'] ?? null;
             if ($existing) {
@@ -500,6 +533,8 @@ class OrderController extends Controller
                         'qr_content' => $existing,
                         'qr_expiry' => $meta['payload']['additionalInfo']['validityPeriod']
                             ?? $meta['validity_period'] ?? null,
+                        'amount' => PaymentWindow::amount($order, $transaction),
+                        'deadline' => PaymentWindow::deadline($order, $transaction)?->toIso8601String(),
                     ],
                 ]);
             }
@@ -516,7 +551,10 @@ class OrderController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => __('Kode QRIS berhasil dibuat'),
-                'data' => $qr,
+                'data' => array_merge($qr, [
+                    'amount' => PaymentWindow::amount($order, $transaction),
+                    'deadline' => PaymentWindow::deadline($order, $transaction)?->toIso8601String(),
+                ]),
             ]);
         } catch (ModelNotFoundException $e) {
             return response()->json([
@@ -543,7 +581,8 @@ class OrderController extends Controller
             $user = $order->user;
             $orderNumber = $order->order_number;
             $itemName = $order->package?->name ?? $order->catalog?->name ?? 'Pesanan';
-            $total = 'Rp '.number_format((float) $order->total_price, 0, ',', '.');
+            $transaction = $order->transactions()->latest()->first();
+            $total = PaymentWindow::format(PaymentWindow::amount($order, $transaction));
             $appName = config('app.name', 'Aplikasi');
 
             // 1. Database notification (bell icon)
@@ -668,7 +707,8 @@ class OrderController extends Controller
             $user = $order->user;
             $orderNumber = $order->order_number;
             $itemName = $order->package?->name ?? $order->catalog?->name ?? 'Pesanan';
-            $total = 'Rp '.number_format((float) $order->total_price, 0, ',', '.');
+            $transaction = $order->transactions()->latest()->first();
+            $total = PaymentWindow::format(PaymentWindow::amount($order, $transaction));
             $appName = config('app.name', 'Aplikasi');
 
             // 1. Database notification for user (bell icon)
@@ -1089,7 +1129,7 @@ class OrderController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'data' => array_merge($order->toArray(), [
+                'data' => array_merge($this->orderDetailPayload($order), [
                     'payment_methods' => $paymentMethods,
                 ]),
             ]);
@@ -1105,6 +1145,455 @@ class OrderController extends Controller
                 'status' => 'error',
                 'message' => __('Gagal mengambil detail pesanan'),
             ], 500);
+        }
+    }
+
+    /**
+     * Revisi pesanan sebelum dibayar: detail booking dan metode checkout
+     * (Virtual Account / QRIS). Order yang sudah lunas hanya menjadi history.
+     */
+    public function updateOrder(Request $request, $id)
+    {
+        try {
+            $order = Order::where('id', $id)
+                ->where('user_id', Auth::id())
+                ->firstOrFail(['*']);
+
+            if (! $this->canEditOrder($order)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => __('Pesanan sudah dibayar atau sedang diproses dan tidak dapat diubah lagi'),
+                ], 409);
+            }
+
+            $validatedData = $request->validate([
+                'event_date' => 'nullable|date|after_or_equal:today',
+                'event_time' => 'nullable|string|max:255',
+                'quantity' => 'nullable|integer|min:1',
+                'notes' => 'nullable|string|max:1000',
+                'whatsapp' => 'nullable|string|max:20',
+                'voucher_code' => 'nullable|string|max:50',
+                'payment_type' => 'nullable|string|in:virtual_account,qris',
+            ]);
+
+            $bri = app(BriService::class);
+            if ($request->has('payment_type') && $validatedData['payment_type'] !== null) {
+                $isVa = $validatedData['payment_type'] === 'virtual_account';
+                $enabled = $isVa ? $bri->snapEnabled() : ($bri->snapEnabled() && config('bri.qr_enabled', false));
+                if (! $enabled) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => $isVa
+                            ? __('Virtual Account BRI belum diaktifkan. Hubungi admin.')
+                            : __('QRIS BRI belum diaktifkan. Hubungi admin.'),
+                    ], 400);
+                }
+            }
+
+            // 1. Stok disesuaikan selisihnya saja; tier tidak boleh berganti
+            //    setelah order dibuat (harga dan slot event sudah terkunci).
+            $oldQuantity = (int) ($order->quantity ?? 1);
+            $newQuantity = array_key_exists('quantity', $validatedData)
+                ? (int) $validatedData['quantity']
+                : $oldQuantity;
+
+            if ($newQuantity !== $oldQuantity && $order->package) {
+                $delta = $newQuantity - $oldQuantity;
+                if ($delta > 0) {
+                    $affected = DB::table('packages')
+                        ->where('id', $order->package->id)
+                        ->where('stock', '>=', $delta)
+                        ->decrement('stock', $delta);
+                    if (! $affected) {
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => __('Stok tidak mencukupi'),
+                        ], 400);
+                    }
+                } else {
+                    DB::table('packages')
+                        ->where('id', $order->package->id)
+                        ->increment('stock', abs($delta));
+                }
+                $order->package?->catalog?->syncStockFromTiers();
+            }
+
+            // 2. Harga dihitung ulang dengan aturan yang sama seperti createOrder.
+            $itemPrice = (float) ($order->package?->final_price ?? $order->package?->price ?? $order->total_price);
+            $baseTotal = $itemPrice * $newQuantity;
+
+            $voucherCode = $request->has('voucher_code')
+                ? $validatedData['voucher_code']
+                : $this->linkedVoucherCode($order);
+            $voucher = $this->resolveCheckoutVoucher($voucherCode, $baseTotal);
+            $discountAmount = $voucher ? (int) $voucher->calculateDiscount($baseTotal) : 0;
+            $totalPrice = max(0, $baseTotal - $discountAmount);
+
+            // 3. Tulis field booking. `event_time` dipindah ke kolom booking_time
+            //    dan prefix lama di notes dibuang agar tidak tercatat dua kali.
+            $bookingDate = $validatedData['event_date'] ?? null;
+            $notes = $request->has('notes')
+                ? $this->stripEventTimeNote($validatedData['notes'])
+                : $this->stripEventTimeNote($order->notes);
+            $eventTime = $request->has('event_time')
+                ? $validatedData['event_time']
+                : $this->extractEventTimeNote($order->notes);
+            $bookingTime = $this->normalizeBookingTime($eventTime);
+
+            // Waktu yang tidak bisa dibaca sebagai jam (mis. "10.00 WIB") tetap
+            // disimpan pada notes, mengikuti konvensi createOrder.
+            if (! $bookingTime && filled($eventTime)) {
+                $notes = 'Waktu: '.$eventTime.($notes ? ' | '.$notes : '');
+            }
+
+            $order->update([
+                'total_price' => $totalPrice,
+                'quantity' => $newQuantity,
+                'booking_date' => $bookingDate ?? $order->booking_date,
+                'booking_time' => $bookingTime,
+                'notes' => $notes,
+            ]);
+
+            if ($request->has('whatsapp') && filled($validatedData['whatsapp'])) {
+                $user = Auth::user();
+                if ($user && $user->whatsapp !== $validatedData['whatsapp']) {
+                    $user->update(['whatsapp' => $validatedData['whatsapp']]);
+                }
+            }
+
+            $this->linkCheckoutVoucher($order, $voucher);
+            $order->refresh();
+
+            // 4. Nominal transaksi mengikuti order. VA/QRIS yang sudah terbit
+            //    dengan nominal lama dicabut supaya user checkout ulang.
+            $transaction = $this->activeTransaction($order);
+            $credentialsReset = false;
+            if ($transaction) {
+                $amountChanged = (float) $transaction->total_amount !== (float) $totalPrice;
+                if ($amountChanged) {
+                    $credentialsReset = $transaction->virtual_account_no !== null
+                        || isset($transaction->metadata['bri_qris']);
+
+                    // VA/QRIS yang terbit dengan nominal lama tidak lagi bisa
+                    // dipakai: webhook BRI membandingkan angka payload dengan
+                    // `total_amount` transaksi, jadi user harus checkout ulang.
+                    $metadata = $transaction->metadata ?? [];
+                    unset($metadata['bri_qris']);
+
+                    $transaction->update([
+                        'amount' => $totalPrice,
+                        'total_amount' => $totalPrice,
+                        'virtual_account_no' => null,
+                        'virtual_account_expiry' => null,
+                        'payment_url' => null,
+                        'metadata' => $metadata,
+                    ]);
+                }
+
+                if ($request->has('payment_type') && $validatedData['payment_type'] !== null) {
+                    $this->tagCheckoutPaymentType($transaction, $validatedData['payment_type']);
+                }
+            }
+
+            event(new OrderStatusUpdated([
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'status' => $order->status->value ?? (string) $order->status,
+                'payment_status' => $order->payment_status->value ?? (string) $order->payment_status,
+                'updated_at' => now()->toISOString(),
+            ], $order->user_id));
+
+            return response()->json([
+                'status' => 'success',
+                'message' => __('Pesanan berhasil diperbarui'),
+                'data' => array_merge($this->orderDetailPayload($order->fresh()), [
+                    'credentials_reset' => $credentialsReset,
+                    'payment_methods' => $this->paymentMethodsForResponse(),
+                ]),
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => __('Validasi gagal'),
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => __('Pesanan tidak ditemukan'),
+            ], 404);
+        } catch (\Exception $e) {
+            Log::error('[Order] updateOrder error: '.$e->getMessage());
+
+            return response()->json([
+                'status' => 'error',
+                'message' => __('Gagal memperbarui pesanan'),
+                'error' => null,
+            ], 500);
+        }
+    }
+
+    /**
+     * Hapus order dari history user. Baris order dan transaksinya tetap ada
+     * untuk audit, laporan, dan callback BRI yang masih bisa masuk.
+     */
+    public function deleteOrder($id)
+    {
+        try {
+            $order = Order::where('id', $id)
+                ->where('user_id', Auth::id())
+                ->firstOrFail(['*']);
+
+            if (! $this->canDeleteOrder($order)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => $order->payment_status === OrderPaymentStatus::PAID
+                        ? __('Pesanan yang sudah dibayar tidak dapat dihapus. Hubungi admin untuk refund.')
+                        : __('Pesanan yang sedang diproses tidak dapat dihapus'),
+                ], 409);
+            }
+
+            $order->delete();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => __('Pesanan berhasil dihapus dari riwayat'),
+                'data' => [
+                    'id' => (int) $order->id,
+                    'order_number' => $order->order_number,
+                    'deleted_at' => $order->deleted_at?->toIso8601String(),
+                ],
+            ]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => __('Pesanan tidak ditemukan'),
+            ], 404);
+        } catch (\Exception $e) {
+            Log::error('[Order] deleteOrder error: '.$e->getMessage());
+
+            return response()->json([
+                'status' => 'error',
+                'message' => __('Gagal menghapus pesanan'),
+                'error' => null,
+            ], 500);
+        }
+    }
+
+    /**
+     * Payload detail order: kolom model + field history checkout.
+     */
+    private function orderDetailPayload(Order $order): array
+    {
+        $history = $this->checkoutHistoryFields($order);
+
+        return array_merge($order->toArray(), $history);
+    }
+
+    /**
+     * Field riwayat pembayaran yang dibutuhkan daftar dan detail order mobile:
+     * metode yang dipakai, nomor VA / payload QRIS, nominal, dan deadline.
+     */
+    private function checkoutHistoryFields(Order $order): array
+    {
+        $transaction = $order->latestTransaction;
+        $type = $transaction?->checkout_payment_type;
+        $deadline = PaymentWindow::deadline($order, $transaction);
+        $amount = PaymentWindow::amount($order, $transaction);
+        $status = $order->payment_status instanceof OrderPaymentStatus
+            ? $order->payment_status->value
+            : (string) ($order->payment_status ?? 'unpaid');
+
+        if ($type === null && $transaction) {
+            $type = match ($transaction->payment_gateway) {
+                'bri_va' => 'virtual_account',
+                'bri_qris' => 'qris',
+                'midtrans' => 'payment_gateway',
+                default => null,
+            };
+        }
+
+        return [
+            'payment_type' => $type,
+            'payment_type_label' => match ($type) {
+                'virtual_account' => __('Virtual Account BRI'),
+                'qris' => __('QRIS'),
+                'payment_gateway' => __('Gerbang Pembayaran'),
+                'manual_transfer' => __('Transfer Manual'),
+                default => null,
+            },
+            'transaction_id' => $transaction?->id,
+            'transaction_status' => $transaction?->status instanceof PaymentStatus
+                ? $transaction->status->value
+                : $transaction?->status,
+            'event_time' => $this->eventTimeFor($order),
+            'va_number' => $type === 'virtual_account' ? $transaction?->virtual_account_no : null,
+            'va_name' => $type === 'virtual_account' ? $transaction?->virtual_account_name : null,
+            'va_expiry' => $type === 'virtual_account'
+                ? $transaction?->virtual_account_expiry?->toIso8601String()
+                : null,
+            'qris_payload' => $type === 'qris'
+                ? data_get($transaction?->metadata, 'bri_qris.qr_content')
+                : null,
+            'qris_expiry' => $type === 'qris'
+                ? (data_get($transaction?->metadata, 'bri_qris.payload.additionalInfo.validityPeriod')
+                    ?? data_get($transaction?->metadata, 'bri_qris.validity_period'))
+                : null,
+            'payment' => [
+                'amount' => $amount,
+                'amount_formatted' => PaymentWindow::format($amount),
+                'deadline' => $deadline?->toIso8601String(),
+                'expiry_hours' => PaymentWindow::expiryHours(),
+                'is_expired' => PaymentWindow::isExpired($deadline),
+                'status' => $status,
+                'paid_at' => $transaction?->paid_at?->toIso8601String(),
+            ],
+            'can_edit' => $this->canEditOrder($order),
+            'can_delete' => $this->canDeleteOrder($order),
+            'can_pay' => ! in_array($status, ['paid', 'refunded'], true)
+                && ! in_array($order->status, [OrderStatus::COMPLETED, OrderStatus::CANCELLED], true),
+        ];
+    }
+
+    /**
+     * Tandai metode checkout aktif pada transaksi. `payment_method` dipakai
+     * label display dari gateway, jadi tidak bisa dijadikan sumber kebenaran.
+     */
+    private function tagCheckoutPaymentType(Transaction $transaction, string $type): void
+    {
+        if ($transaction->checkout_payment_type === $type) {
+            return;
+        }
+
+        $transaction->update(['checkout_payment_type' => $type]);
+    }
+
+    private function canEditOrder(Order $order): bool
+    {
+        $paid = in_array($order->payment_status, [
+            OrderPaymentStatus::PAID,
+            OrderPaymentStatus::REFUNDED,
+        ], true);
+
+        return ! $paid && $order->status === OrderStatus::PENDING;
+    }
+
+    private function canDeleteOrder(Order $order): bool
+    {
+        if (in_array($order->payment_status, [OrderPaymentStatus::PAID, OrderPaymentStatus::REFUNDED], true)) {
+            return false;
+        }
+
+        return ! in_array($order->status, [
+            OrderStatus::PREPARING,
+            OrderStatus::EVENT_DAY,
+            OrderStatus::COMPLETED,
+        ], true);
+    }
+
+    private function activeTransaction(Order $order): ?Transaction
+    {
+        return Transaction::where('order_id', $order->id)
+            ->whereIn('status', ['pending', 'processing'])
+            ->latest()
+            ->first();
+    }
+
+    /**
+     * Waktu event. Kolom booking_time adalah sumber baru; order lama masih
+     * menyimpannya sebagai prefix "Waktu: …" di notes.
+     */
+    private function eventTimeFor(Order $order): ?string
+    {
+        return $order->booking_time ?: $this->extractEventTimeNote($order->notes);
+    }
+
+    /**
+     * Kolom booking_time bertipe TIME, jadi hanya jam yang bisa diterima.
+     */
+    private function normalizeBookingTime(?string $value): ?string
+    {
+        $value = trim((string) $value);
+        if (preg_match('/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/', $value, $matches) === 1) {
+            return sprintf('%02d:%02d:%02d', (int) $matches[1], (int) $matches[2], (int) ($matches[3] ?? 0));
+        }
+
+        return null;
+    }
+
+    private function extractEventTimeNote(?string $notes): ?string
+    {
+        $notes = (string) $notes;
+        if (! str_starts_with($notes, 'Waktu: ')) {
+            return null;
+        }
+
+        $separator = strpos($notes, ' | ');
+
+        return $separator === false
+            ? substr($notes, strlen('Waktu: '))
+            : substr($notes, strlen('Waktu: '), $separator - strlen('Waktu: '));
+    }
+
+    private function stripEventTimeNote(?string $notes): ?string
+    {
+        $notes = (string) $notes;
+        if (! str_starts_with($notes, 'Waktu: ')) {
+            return $notes === '' ? null : $notes;
+        }
+
+        $separator = strpos($notes, ' | ');
+        $rest = $separator === false ? '' : substr($notes, $separator + 3);
+
+        return $rest === '' ? null : $rest;
+    }
+
+    private function linkedVoucherCode(Order $order): ?string
+    {
+        $voucherId = DB::table('user_vouchers')
+            ->where('order_id', $order->id)
+            ->where('user_id', $order->user_id)
+            ->value('voucher_id');
+
+        return $voucherId ? Voucher::where('id', $voucherId)->value('code') : null;
+    }
+
+    private function resolveCheckoutVoucher(?string $code, float $baseTotal): ?Voucher
+    {
+        if (! filled($code)) {
+            return null;
+        }
+
+        $voucher = Voucher::with('discount')
+            ->where('code', $code)
+            ->where('is_active', true)
+            ->where(function ($q): void {
+                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
+            ->first(['*']);
+
+        return ($voucher && $voucher->isValidFor($baseTotal)) ? $voucher : null;
+    }
+
+    private function linkCheckoutVoucher(Order $order, ?Voucher $voucher): void
+    {
+        $previousId = DB::table('user_vouchers')
+            ->where('order_id', $order->id)
+            ->where('user_id', $order->user_id)
+            ->value('voucher_id');
+
+        if ($previousId && (! $voucher || (int) $previousId !== (int) $voucher->id)) {
+            DB::table('user_vouchers')
+                ->where('order_id', $order->id)
+                ->where('user_id', $order->user_id)
+                ->update(['order_id' => null]);
+        }
+
+        if ($voucher) {
+            $voucher->assignToUser($order->user_id);
+            $voucher->users()->updateExistingPivot($order->user_id, [
+                'order_id' => $order->id,
+            ]);
         }
     }
 

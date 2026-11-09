@@ -5,7 +5,7 @@ Corrective pass after rename_product_files_to_catalog.py.
 That script was too aggressive in two places:
 
 1. It rewrote the FOREIGN KEY literal `product_id` -> `catalog_id`.
-   The physical columns on carts / orders / reviews / wishlists are still
+   The physical columns on carts / orders / reviews / Favorites are still
    named `product_id` (no data migration was performed), so every one of those
    references has to go back to `product_id`.
 
@@ -44,7 +44,7 @@ MODELS_WITH_ALIAS = [
     os.path.join('app', 'Models', 'Cart', 'Cart.php'),
     os.path.join('app', 'Models', 'Order', 'Order.php'),
     os.path.join('app', 'Models', 'Review', 'Review.php'),
-    os.path.join('app', 'Models', 'Wishlist', 'Wishlist.php'),
+    os.path.join('app', 'Models', 'Favorite', 'Favorite.php'),
 ]
 
 

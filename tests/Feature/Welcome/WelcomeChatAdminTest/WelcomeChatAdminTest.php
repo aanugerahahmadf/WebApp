@@ -8,10 +8,10 @@
  * - chat_admin works for a signed-in customer (redirects to messages)
  * - chat_admin works for a guest (GuestIdentity path)
  * - chat_admin shows an error notification when no admin exists
- * - wishlist_detail adds to wishlist for a signed-in customer
- * - wishlist_detail removes from wishlist when already saved
- * - wishlist_detail redirects guest to login
- * - No 419 / CSRF error on wishlist_detail (no modal form)
+ * - Favorite_detail adds to Favorite for a signed-in customer
+ * - Favorite_detail removes from Favorite when already saved
+ * - Favorite_detail redirects guest to login
+ * - No 419 / CSRF error on Favorite_detail (no modal form)
  */
 
 use App\Filament\Welcome\Pages\MessagesPage\MessagesPage;
@@ -22,7 +22,7 @@ use App\Models\Inbox\Inbox;
 use App\Models\Message\Message;
 use App\Models\Catalog\Catalog;
 use App\Models\User\User;
-use App\Models\Wishlist\Wishlist;
+use App\Models\Favorite\Favorite;
 use App\Services\GuestIdentity\GuestIdentity;
 use App\Support\ChatStaff\ChatStaff;
 use Filament\Facades\Filament;
@@ -223,79 +223,79 @@ it('chat_admin works for a guest via GuestIdentity', function (): void {
 });
 
 // ---------------------------------------------------------------------------
-// wishlist_detail â€” Catalog
+// Favorite_detail â€” Catalog
 // ---------------------------------------------------------------------------
 
-it('wishlist_detail adds the catalog to the wishlist for a signed-in customer', function (): void {
+it('Favorite_detail adds the catalog to the Favorite for a signed-in customer', function (): void {
     actingAs($this->customer, 'web');
 
     Livewire::test(ViewCatalog::class, ['record' => $this->catalog->getKey()])
-        ->callInfolistAction('.wishlist_detailAction', 'wishlist_detail');
+        ->callInfolistAction('.Favorite_detailAction', 'Favorite_detail');
 
-    $this->assertDatabaseHas('wishlists', [
+    $this->assertDatabaseHas('Favorites', [
         'user_id'    => $this->customer->id,
         'catalog_id' => $this->catalog->id,
     ]);
 });
 
-it('wishlist_detail removes the catalog from the wishlist when already saved', function (): void {
+it('Favorite_detail removes the catalog from the Favorite when already saved', function (): void {
     actingAs($this->customer, 'web');
 
-    // Pre-insert the wishlist row
-    Wishlist::create([
+    // Pre-insert the Favorite row
+    Favorite::create([
         'user_id'    => $this->customer->id,
         'catalog_id' => $this->catalog->id,
     ]);
 
     Livewire::test(ViewCatalog::class, ['record' => $this->catalog->getKey()])
-        ->callInfolistAction('.wishlist_detailAction', 'wishlist_detail');
+        ->callInfolistAction('.Favorite_detailAction', 'Favorite_detail');
 
-    $this->assertDatabaseMissing('wishlists', [
+    $this->assertDatabaseMissing('Favorites', [
         'user_id'    => $this->customer->id,
         'catalog_id' => $this->catalog->id,
     ]);
 });
 
 /*
- * Bagian "wishlist_detail -- Package" DIHAPUS (tambah + hapus dari wishlist).
+ * Bagian "Favorite_detail -- Package" DIHAPUS (tambah + hapus dari Favorite).
  *
  * Keduanya memanggil `ViewPackage::class` yang sudah tidak ada, dan setiap
  * aturan yang mereka uji sudah punya pasangan katalog di atas dan di bawah.
- * Satu-satunya yang hilang adalah pengaman untuk kolom `wishlists.package_id`.
+ * Satu-satunya yang hilang adalah pengaman untuk kolom `Favorites.package_id`.
  *
  * Kalau halaman detail paket dihidupkan lagi, dua test ini perlu dikembalikan
  * dengan record `Package` yang benar-benar bisa di-resolve ViewCatalog.
  */
 
 // ---------------------------------------------------------------------------
-// wishlist_detail -- Guest redirect (no 419)
+// Favorite_detail -- Guest redirect (no 419)
 // ---------------------------------------------------------------------------
 
-it('wishlist_detail redirects a guest to the auth landing page without throwing 419', function (): void {
+it('Favorite_detail redirects a guest to the auth landing page without throwing 419', function (): void {
     // No actingAs â€” guest session. Tamu mendarat di /auth (Sign In +
     // Continue With Google), bukan form /signin.
     Livewire::test(ViewCatalog::class, ['record' => $this->catalog->getKey()])
-        ->callInfolistAction('.wishlist_detailAction', 'wishlist_detail')
+        ->callInfolistAction('.Favorite_detailAction', 'Favorite_detail')
         ->assertRedirect(route(AuthenticateWelcome::LOGIN_ROUTE));
 
-    // Wishlist row must NOT have been created
-    $this->assertDatabaseMissing('wishlists', ['catalog_id' => $this->catalog->id]);
+    // Favorite row must NOT have been created
+    $this->assertDatabaseMissing('Favorites', ['catalog_id' => $this->catalog->id]);
 });
 
 // ---------------------------------------------------------------------------
 // Idempotency -- double-click protection
 // ---------------------------------------------------------------------------
 
-it('double wishlist add only creates one row', function (): void {
+it('double Favorite add only creates one row', function (): void {
     actingAs($this->customer, 'web');
 
     $component = Livewire::test(ViewCatalog::class, ['record' => $this->catalog->getKey()]);
-    $component->callInfolistAction('.wishlist_detailAction', 'wishlist_detail');
+    $component->callInfolistAction('.Favorite_detailAction', 'Favorite_detail');
     // Toggle back off then on again
-    $component->callInfolistAction('.wishlist_detailAction', 'wishlist_detail');
-    $component->callInfolistAction('.wishlist_detailAction', 'wishlist_detail');
+    $component->callInfolistAction('.Favorite_detailAction', 'Favorite_detail');
+    $component->callInfolistAction('.Favorite_detailAction', 'Favorite_detail');
 
-    expect(Wishlist::where('user_id', $this->customer->id)
+    expect(Favorite::where('user_id', $this->customer->id)
         ->where('catalog_id', $this->catalog->id)
         ->count())->toBe(1);
 });

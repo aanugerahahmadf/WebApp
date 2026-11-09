@@ -30,10 +30,9 @@ type Query {
   # Categories
   category(id: ID @eq): Category @find
   categoryBySlug(slug: String!): Category @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CategoryResolver@bySlug")
-  categories(first: Int, active: Boolean @where(key: "is_active"), parentId: ID @where(key: "parent_id")): [Category!]! @paginate(defaultCount: 20)
-  allCategories(active: Boolean): [Category!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CategoryResolver@all")
-  categoryTree: [CategoryTree!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CategoryResolver@tree")
-  categoriesWithCounts(active: Boolean): [CategoryWithCounts!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CategoryResolver@withCounts")
+  categories(first: Int, type: String @where(key: "type")): [Category!]! @paginate(defaultCount: 20)
+  allCategories(type: String): [Category!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CategoryResolver@all")
+  categoriesWithCounts(type: String): [CategoryWithCounts!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CategoryResolver@withCounts")
 
   # Catalogs
   catalog(id: ID @eq, slug: String @eq): Catalog @find
@@ -41,8 +40,6 @@ type Query {
     first: Int
     categoryId: ID @where(key: "category_id")
     featured: Boolean @where(key: "is_featured")
-    minPrice: Float @where(key: "price", operator: ">=")
-    maxPrice: Float @where(key: "price", operator: "<=")
     active: Boolean @where(key: "is_active")
     theme: String @where(key: "theme")
     color: String @where(key: "color")
@@ -105,9 +102,9 @@ type Query {
   # Cart
   myCart: Cart @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CartResolver@myCart")
 
-  # Wishlist
-  myWishlist(first: Int): [Wishlist!]! @paginate(defaultCount: 50)
-  isInWishlist(catalogId: ID, packageId: ID): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\WishlistResolver@isInWishlist")
+  # Favorite
+  myFavorite(first: Int): [Favorite!]! @paginate(defaultCount: 50)
+  isInFavorite(catalogId: ID, packageId: ID): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\FavoriteResolver@isInFavorite")
 
   # CBIR
   cbirStats: CbirStats @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@stats")
@@ -120,10 +117,27 @@ type Query {
   promotions(first: Int): [Promotion!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\HomeResolver@promotions")
 
   # Search
-  search(query: String!, type: SearchType, first: Int): [SearchResult!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\SearchResolver@index")
+  # Bentuk hasilnya GROUPED (catalogs/packages/categories + total + took), sama
+  # seperti REST /api/search dan pesan protobuf `weddingapp.Search.SearchResults`.
+  # Deklarasi lama `[SearchResult!]!` adalah drift dari resolver dan membuat
+  # field ini selalu gagal dengan "Cannot return null for non-nullable field
+  # SearchResult.id". Tipe `SearchResult` sekarang tidak dirujuk field mana pun
+  # dan sengaja dibiarkan di schema (aturan proyek: koreksi kontrak, bukan
+  # menghapus definisi); jangan dipakai client sampai ada resolver yang
+  # mengembalikan bentuk datar itu.
+  search(query: String!, type: SearchType = BOTH, first: Int = 20, categoryId: ID, minPrice: Float, maxPrice: Float): SearchResults! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\SearchResolver@index")
   searchSuggestions(query: String!, limit: Int): [SearchSuggestion!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\SearchResolver@suggestions")
   popularSearches(limit: Int): [PopularSearch!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\SearchResolver@popular")
   searchFilters(query: String, categoryId: ID): SearchFilters @field(resolver: "App\\Http\\GraphQL\\Resolvers\\SearchResolver@filters")
+
+  # Notifications
+  myNotifications(first: Int, page: Int, unreadOnly: Boolean): NotificationList! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\NotificationResolver@index")
+  unreadNotificationCount: Int! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\NotificationResolver@unreadCount")
+
+  # Chat
+  myConversations: ConversationList! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ChatResolver@conversations")
+  conversationMessages(inboxId: ID!, first: Int): ChatMessageList! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ChatResolver@messages")
+  conversationUnreadCount: Int! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ChatResolver@unreadCount")
 }
 
 # ============================================================
@@ -160,13 +174,13 @@ type Mutation {
   syncCart(items: [SyncCartItemInput!]!): Cart @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CartResolver@sync")
   estimateShipping(addressId: ID!): ShippingEstimate @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CartResolver@estimateShipping")
 
-  # Wishlist
-  toggleWishlist(input: ToggleWishlistInput!): WishlistAction @field(resolver: "App\\Http\\GraphQL\\Resolvers\\WishlistResolver@toggle")
-  addToWishlist(input: ToggleWishlistInput!): Wishlist @field(resolver: "App\\Http\\GraphQL\\Resolvers\\WishlistResolver@add")
-  removeFromWishlist(wishlistId: ID!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\WishlistResolver@remove")
-  clearWishlist: Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\WishlistResolver@clear")
-  moveToCart(wishlistId: ID!, quantity: Int): CartItem @field(resolver: "App\\Http\\GraphQL\\Resolvers\\WishlistResolver@moveToCart")
-  shareWishlist: WishlistShare @field(resolver: "App\\Http\\GraphQL\\Resolvers\\WishlistResolver@share")
+  # Favorite
+  toggleFavorite(input: ToggleFavoriteInput!): FavoriteAction @field(resolver: "App\\Http\\GraphQL\\Resolvers\\FavoriteResolver@toggle")
+  addToFavorite(input: ToggleFavoriteInput!): Favorite @field(resolver: "App\\Http\\GraphQL\\Resolvers\\FavoriteResolver@add")
+  removeFromFavorite(FavoriteId: ID!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\FavoriteResolver@remove")
+  clearFavorite: Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\FavoriteResolver@clear")
+  moveToCart(FavoriteId: ID!, quantity: Int): CartItem @field(resolver: "App\\Http\\GraphQL\\Resolvers\\FavoriteResolver@moveToCart")
+  shareFavorite: Favoriteshare @field(resolver: "App\\Http\\GraphQL\\Resolvers\\FavoriteResolver@share")
 
   # Orders
   createOrder(input: CreateOrderInput!): Order @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@store")
@@ -207,6 +221,22 @@ type Mutation {
   rebuildCbirIndex: CbirIndexResult @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@rebuildIndex")
   addToCbirIndex(mediaId: ID!, imageUrl: String!, type: String!, metadata: JSON): CbirIndexResult @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@addToIndex")
   removeFromCbirIndex(mediaId: ID!): CbirIndexResult @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CbirResolver@removeFromIndex")
+
+  # Notifications
+  markNotificationAsRead(id: ID!): Boolean! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\NotificationResolver@markAsRead")
+  markAllNotificationsAsRead: Boolean! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\NotificationResolver@markAllAsRead")
+  deleteNotification(id: ID!): Boolean! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\NotificationResolver@destroy")
+  registerFcmToken(input: RegisterFcmTokenInput!): Boolean! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\NotificationResolver@registerFcmToken")
+
+  # Chat
+  sendChatMessage(input: SendChatMessageInput!): ChatMessage! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ChatResolver@sendMessage")
+  startChatConversation(input: StartChatConversationInput!): Conversation! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ChatResolver@startConversation")
+  markConversationAsRead(inboxId: ID!): Boolean! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ChatResolver@markInboxAsRead")
+  rateChatExperience(inboxId: ID!, rating: Int!, comment: String): Boolean! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ChatResolver@rateInbox")
+  starChatMessage(messageId: ID!): Boolean! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ChatResolver@starMessage")
+  addChatReaction(messageId: ID!, emoji: String!): Boolean! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ChatResolver@addReaction")
+  deleteChatMessage(messageId: ID!, deleteType: String!): Boolean! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ChatResolver@deleteMessage")
+  forwardChatMessage(messageId: ID!, targetInboxId: ID!): ChatMessage! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ChatResolver@forwardMessage")
 }
 
 # ============================================================
@@ -237,7 +267,7 @@ type User @model(class: "App\\Models\\User\\User") {
   updatedAt: String!
   orders: [Order!]! @hasMany
   reviews: [Review!]! @hasMany
-  wishlist: [Wishlist!]! @hasMany
+  Favorite: [Favorite!]! @hasMany
   addresses: [UserAddress!]! @hasMany
   profileCompletion: Float @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ProfileResolver@completion")
 }
@@ -260,7 +290,7 @@ type UserProfile {
   user: User!
   orderCount: Int!
   reviewCount: Int!
-  wishlistCount: Int!
+  FavoriteCount: Int!
   totalSpent: Float!
   favoriteCategory: Category
   joinedAt: String!
@@ -278,20 +308,18 @@ type Category @model(class: "App\\Models\\Category\\Category") {
   id: ID!
   name: String!
   slug: String!
+  type: String
+  icon: String
+  color: String
   description: String
   imageUrl: String
   isActive: Boolean!
-  parent: Category @belongsTo
-  children: [Category!]! @hasMany
   catalogs: [Catalog!]! @hasMany
   packages: [Package!]! @hasMany
+  categoryCatalogsCount: Int @rename(attribute: "category_catalogs_count")
+  categoryPackagesCount: Int @rename(attribute: "category_packages_count")
   createdAt: String!
   updatedAt: String!
-}
-
-type CategoryTree {
-  category: Category!
-  children: [CategoryTree!]!
 }
 
 type CategoryWithCounts {
@@ -306,13 +334,11 @@ type Catalog @model(class: "App\\Models\\Catalog\\Catalog") {
   name: String!
   slug: String!
   description: String
-  price: Float!
-  discountPrice: Float
-  finalPrice: Float!
   stock: Int!
   isActive: Boolean!
   isFeatured: Boolean!
   isOutOfStock: Boolean!
+  is_Favoriteed: Boolean!
   imageUrl: String
   thumbnailUrl: String
   galleryUrls: [GalleryImage!]!
@@ -325,6 +351,7 @@ type Catalog @model(class: "App\\Models\\Catalog\\Catalog") {
   category: Category @belongsTo
   averageRating: Float
   reviews: [Review!]! @hasMany
+  tiers: [Package!]! @hasMany
   createdAt: String!
   updatedAt: String!
 }
@@ -357,6 +384,9 @@ type Package @model(class: "App\\Models\\Package\\Package") {
   name: String!
   slug: String!
   description: String
+  catalogId: ID
+  stock: Int!
+  sortOrder: Int!
   price: Float!
   discountPrice: Float
   finalPrice: Float!
@@ -586,7 +616,7 @@ type ShippingEstimate {
   available: Boolean!
 }
 
-type Wishlist @model(class: "App\\Models\\Wishlist\\Wishlist") {
+type Favorite @model(class: "App\\Models\\Favorite\\Favorite") {
   id: ID!
   user: User @belongsTo
   catalog: Catalog @belongsTo
@@ -594,13 +624,13 @@ type Wishlist @model(class: "App\\Models\\Wishlist\\Wishlist") {
   createdAt: String!
 }
 
-type WishlistAction {
-  wishlist: Wishlist
-  action: WishlistActionType!
+type FavoriteAction {
+  Favorite: Favorite
+  action: FavoriteActionType!
   message: String!
 }
 
-type WishlistShare {
+type Favoriteshare {
   shareToken: String!
   shareUrl: String!
   expiresAt: String!
@@ -768,7 +798,6 @@ type HomeStats {
   totalCatalogs: Int!
   totalPackages: Int!
   totalCategories: Int!
-  happyCustomers: Int!
 }
 
 type SearchResult {
@@ -922,7 +951,7 @@ input UpdateCartItemInput {
   options: JSON
 }
 
-input ToggleWishlistInput {
+input ToggleFavoriteInput {
   catalogId: ID
   packageId: ID
 }
@@ -1185,9 +1214,124 @@ enum SearchSuggestionType {
   KEYWORD
 }
 
-enum WishlistActionType {
+enum FavoriteActionType {
   ADDED
   REMOVED
+}
+
+# ============================================================
+# NOTIFICATION TYPES
+# ============================================================
+
+type Notification {
+  id: ID!
+  type: String
+  title: String
+  body: String
+  data: JSON
+  readAt: String
+  createdAt: String
+  updatedAt: String
+}
+
+type NotificationList {
+  data: [Notification!]!
+  currentPage: Int!
+  lastPage: Int!
+  perPage: Int!
+  total: Int!
+  unreadCount: Int!
+}
+
+input RegisterFcmTokenInput {
+  token: String!
+  platform: String
+  deviceName: String
+}
+
+# ============================================================
+# CHAT TYPES
+# ============================================================
+
+type ChatParticipant {
+  id: ID
+  name: String!
+  profilePhoto: String
+  phone: String
+  callUrl: String
+}
+
+type ChatLastMessage {
+  id: ID!
+  message: String
+  createdAt: String!
+  senderId: ID!
+}
+
+type Conversation {
+  id: ID!
+  title: String!
+  otherUser: ChatParticipant
+  lastMessage: ChatLastMessage
+  unreadCount: Int!
+  csCategory: String
+  createdAt: String!
+  updatedAt: String!
+}
+
+type ConversationList {
+  data: [Conversation!]!
+  currentUserIsStaff: Boolean!
+}
+
+type ChatAttachment {
+  id: ID!
+  url: String!
+  originalUrl: String!
+  name: String
+  size: Int
+  mimeType: String
+}
+
+type ChatMessage {
+  id: ID!
+  inboxId: ID
+  message: String
+  senderId: ID!
+  senderName: String!
+  isMe: Boolean!
+  readBy: [String!]!
+  attachments: [ChatAttachment!]!
+  meta: JSON
+  createdAt: String!
+}
+
+type ChatMessageList {
+  data: [ChatMessage!]!
+  otherUser: ChatParticipant
+}
+
+input SendChatMessageInput {
+  inboxId: ID!
+  message: String
+  type: String
+  itemId: ID
+  itemName: String
+  itemPrice: Float
+  itemImage: String
+  orderId: ID
+  csCategory: String
+  replyToId: ID
+}
+
+input StartChatConversationInput {
+  withUserId: ID
+  type: String
+  itemId: ID
+  itemName: String
+  itemPrice: Float
+  itemImage: String
+  orderId: ID
 }
 
 # ============================================================
