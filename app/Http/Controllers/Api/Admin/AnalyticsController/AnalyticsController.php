@@ -59,9 +59,13 @@ class AnalyticsController extends Controller
 
     private function groupByDay(string $table, mixed $since): array
     {
+        $dateExpr = DB::connection()->getDriverName() === 'pgsql'
+            ? 'CAST(created_at AS date)'
+            : 'DATE(created_at)';
+
         return DB::table($table)
             ->where('created_at', '>=', $since)
-            ->select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(*) as total'))
+            ->select(DB::raw("{$dateExpr} as date"), DB::raw('COUNT(*) as total'))
             ->groupBy('date')->orderBy('date')->get()->mapWithKeys(fn ($row) => [$row->date => (int) $row->total])->all();
     }
 

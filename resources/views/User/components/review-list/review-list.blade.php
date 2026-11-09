@@ -10,7 +10,7 @@
         @php
             $hasComment = filled($review->comment);
             $hasMedia = filled($review->photo_urls);
-            $avatar = $review->user?->avatar_url ?: 'https://ui-avatars.com/api/?name='.urlencode($review->user?->full_name ?? 'U');
+            $avatar = $review->reviewer_avatar ?: 'https://ui-avatars.com/api/?name='.urlencode($review->reviewer_name ?: 'U');
         @endphp
         <article
             x-data="{ openReview: false }"
@@ -24,13 +24,13 @@
             <div class="flex min-w-0 items-start gap-2.5">
                 <img
                     src="{{ $avatar }}"
-                    alt="{{ $review->user?->full_name ?? __('Pengguna') }}"
+                    alt="{{ $review->reviewer_name }}"
                     class="h-10 w-10 shrink-0 rounded-full object-cover"
                     loading="lazy"
                 >
                 <div class="min-w-0 flex-1">
                     <div class="flex min-w-0 items-start justify-between gap-2">
-                        <p class="min-w-0 flex-1 truncate text-sm font-semibold">{{ $review->user?->full_name ?? __('Pengguna') }}</p>
+                        <p class="min-w-0 flex-1 truncate text-sm font-semibold">{{ $review->reviewer_name }}</p>
                         <form method="POST" action="{{ route('reviews.report', $review) }}" @click.stop class="shrink-0">
                             @csrf
                             <x-filament::button type="submit" color="danger" outlined size="xs" icon="/images/icons/flag.svg">{{ __('Lapor') }}</x-filament::button>

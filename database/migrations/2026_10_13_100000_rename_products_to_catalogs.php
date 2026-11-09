@@ -19,15 +19,12 @@ use Illuminate\Support\Facades\Schema;
  */
 return new class extends Migration
 {
-    /** Tables whose FK points at the renamed catalog table. */
-    protected const FK_TABLES = ['carts', 'orders', 'reviews', 'wishlists', 'packages'];
-
     public function up(): void
     {
         // ---------------------------------------------------------------
         // 1. Drop the constraints while the old names are still in place.
         // ---------------------------------------------------------------
-        foreach (self::FK_TABLES as $table) {
+        foreach (array_merge($this->favoriteTables(), ['packages']) as $table) {
             if (Schema::hasTable($table) && Schema::hasColumn($table, 'product_id')) {
                 $this->dropForeignKey($table, 'product_id');
             }
@@ -43,7 +40,7 @@ return new class extends Migration
         // ---------------------------------------------------------------
         // 3. Rename the FK columns.
         // ---------------------------------------------------------------
-        foreach (['carts', 'orders', 'reviews', 'wishlists'] as $table) {
+        foreach ($this->favoriteTables() as $table) {
             if (! Schema::hasTable($table) || ! Schema::hasColumn($table, 'product_id')) {
                 continue;
             }
@@ -54,7 +51,7 @@ return new class extends Migration
         // ---------------------------------------------------------------
         // 4. Rebuild the constraints against the renamed table.
         // ---------------------------------------------------------------
-        foreach (['carts', 'orders', 'reviews', 'wishlists'] as $table) {
+        foreach ($this->favoriteTables() as $table) {
             if (! Schema::hasTable($table) || ! Schema::hasColumn($table, 'catalog_id')) {
                 continue;
             }
@@ -82,7 +79,7 @@ return new class extends Migration
         // 5. Rename the leftover `products_*` index names.
         // ---------------------------------------------------------------
         $this->renameIndex('catalogs', 'products_category_id_foreign', 'catalogs_category_id_foreign');
-        foreach (['carts', 'orders', 'reviews', 'wishlists'] as $table) {
+        foreach ($this->favoriteTables() as $table) {
             $this->renameIndex($table, "{$table}_product_id_foreign", "{$table}_catalog_id_foreign");
         }
 
@@ -113,7 +110,7 @@ return new class extends Migration
 
         DB::table('categories')->where('type', 'catalog')->update(['type' => 'product']);
 
-        foreach (['carts', 'orders', 'reviews', 'wishlists'] as $table) {
+        foreach ($this->favoriteTables() as $table) {
             if (Schema::hasTable($table) && Schema::hasColumn($table, 'catalog_id')) {
                 $this->dropForeignKey($table, 'catalog_id');
             }
@@ -123,7 +120,7 @@ return new class extends Migration
             Schema::rename('catalogs', 'products');
         }
 
-        foreach (['carts', 'orders', 'reviews', 'wishlists'] as $table) {
+        foreach ($this->favoriteTables() as $table) {
             if (! Schema::hasTable($table) || ! Schema::hasColumn($table, 'catalog_id')) {
                 continue;
             }
@@ -147,36 +144,57 @@ return new class extends Migration
     }
 
     /**
-     * Rename whichever `{table}_{column}_foreign` constraint exists, tolerating
-     * a schema where the constraint was never created.
+     * Tabel favorit pernah bernama fisik `Favorites`; PostgreSQL menyimpan nama
+     * itu apa adanya sedangkan MySQL tidak peka huruf, jadi namanya dicari dulu.
+     *
+     * @return list<string>
+     */
+    protected function favoriteTables(): array
+    {
+        $tables = ['carts', 'orders', 'reviews'];
+
+        foreach (Schema::getTables() as $table) {
+            if (strtolower($table['name']) === 'favorites') {
+                $tables[] = $table['name'];
+            }
+        }
+
+        return $tables;
+    }
+
+    /**
+     * Drop whichever `{table}_{column}_foreign` constraint actually covers the
+     * column, tolerating a schema where it was never created.
+     *
+     * Introspection instead of try/catch matters: PostgreSQL aborts the whole
+     * migration transaction on the first failed statement, so a swallowed
+     * "constraint not found" error would poison every later step.
      */
     protected function dropForeignKey(string $table, string $column): void
     {
-        foreach ([
-            "{$table}_{$column}_foreign",
-            "{$table}_".str_replace('_id', '', $column)."_foreign",
-        ] as $name) {
-            try {
-                Schema::table($table, fn ($blueprint) => $blueprint->dropForeign($name));
+        $isSqlite = Schema::getConnection()->getDriverName() === 'sqlite';
 
-                return;
-            } catch (\Throwable $e) {
-                // Not present under that name — try the next candidate.
+        foreach (Schema::getForeignKeys($table) as $foreignKey) {
+            if (! in_array($column, $foreignKey['columns'], true)) {
+                continue;
             }
+
+            // SQLite tidak bisa melepas FK berdasarkan nama; grammar-nya
+            // menuntut kolom supaya tabel bisa dibangun ulang. Nama constraint
+            // dipakai di driver lain karena satu FK bisa mencakup banyak kolom.
+            $identifier = $isSqlite ? $foreignKey['columns'] : $foreignKey['name'];
+
+            Schema::table($table, fn ($blueprint) => $blueprint->dropForeign($identifier));
         }
     }
 
     protected function renameIndex(string $table, string $from, string $to): void
     {
-        if (! Schema::hasTable($table)) {
+        if (! Schema::hasTable($table) || ! Schema::hasIndex($table, $from)) {
             return;
         }
 
-        try {
-            Schema::table($table, fn ($blueprint) => $blueprint->renameIndex($from, $to));
-        } catch (\Throwable $e) {
-            // No index under that name; nothing to rename.
-        }
+        Schema::table($table, fn ($blueprint) => $blueprint->renameIndex($from, $to));
     }
 
     /**

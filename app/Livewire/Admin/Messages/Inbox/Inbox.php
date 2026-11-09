@@ -21,6 +21,7 @@ use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
@@ -131,7 +132,12 @@ class Inbox extends Component implements HasActions, HasForms
                 /** @var InboxModel|null $inbox */
                 $inbox = InboxModel::query()
                     ->whereJsonContains('user_ids', $userIds->toArray(), 'and', false)
-                    ->whereRaw('JSON_LENGTH(user_ids) = ?', [$totalUserIds])
+                    ->whereRaw(
+                        DB::getDriverName() === 'pgsql'
+                            ? 'jsonb_array_length(user_ids::jsonb) = ?'
+                            : 'JSON_LENGTH(user_ids) = ?',
+                        [$totalUserIds]
+                    )
                     ->when($data['title'] ?? null, function ($query, $title) {
                         return $query->where('title', $title);
                     })

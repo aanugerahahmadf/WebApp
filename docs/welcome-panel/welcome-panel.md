@@ -49,7 +49,7 @@ akun dan operasi yang mengubah data mengarahkan guest ke `/auth` serta menyimpan
 |---|---|
 | `/carts` | Keranjang |
 | `/orders` dan `/orders/{record}` | Pesanan |
-| `/wishlists` | Favorit |
+| `/Favorites` | Favorit |
 | `/reviews` | Ulasan pengguna |
 | `/vouchers` | Voucher |
 | `/histories` | Riwayat |
@@ -101,13 +101,13 @@ Aksi detail yang umum:
 | Chat Admin | Boleh melalui `GuestIdentity` | Membuka/melanjutkan inbox user |
 | Tambah keranjang | Redirect `/auth` | Menambah cart |
 | Checkout | Redirect/guard | Membuka wizard checkout |
-| Wishlist | Redirect `/auth` | Toggle wishlist langsung |
+| Favorite | Redirect `/auth` | Toggle Favorite langsung |
 | Ulasan | Redirect `/auth` | Membuka form ulasan |
 | Bagikan | Share dialog | Share dialog |
 | Laporkan | Redirect/flow chat | Mengirim laporan ke admin |
 
 Aksi Livewire/Filament yang membutuhkan navigasi memakai `$livewire->redirect()`
-ketika dipanggil dari infolist action. Aksi direct seperti wishlist tidak boleh
+ketika dipanggil dari infolist action. Aksi direct seperti Favorite tidak boleh
 diberi `->form()` kosong karena itu mengubahnya menjadi modal POST dan dapat
 menyebabkan kegagalan CSRF/session.
 

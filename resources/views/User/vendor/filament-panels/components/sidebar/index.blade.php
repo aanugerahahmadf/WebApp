@@ -251,6 +251,20 @@
                 class="fi-sidebar-mobile-close-btn ms-auto flex lg:hidden"
             />
         </header>
+
+        {{--
+            ROW SWITCHER DI BAWAH TOMBOL CLOSE (SEBELAH KANAN)
+        --}}
+        <div
+            x-show="$store.sidebar.isOpen"
+            x-transition:enter="transition delay-75"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            class="fi-sidebar-switchers-header flex items-center justify-end gap-2 px-6 py-3 border-b border-gray-950/5 dark:border-white/10"
+        >
+            @include('Shared.components.theme-switcher.theme-switcher')
+            @include('Welcome.filament-language-switcher.language-switcher.language-switcher')
+        </div>
     </div>
 
     <nav
@@ -348,7 +362,7 @@
             style="border-top: 0 !important;"
         >
             <div class="fi-sidebar-switchers flex items-center gap-1.5">
-                {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::SIDEBAR_NAV_START) }}
+                @include('Shared.components.notification-bell.notification-bell')
             </div>
 
             @if (filament()->auth()->check())

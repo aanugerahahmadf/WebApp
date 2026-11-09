@@ -419,7 +419,7 @@ class UserPanelProvider extends PanelProvider
              * Panel::userMenuItems() hanya menambah.
              *
              * Karena itu yang dipakai di sini UserMulti2faPlugin -- turunan
-             * yang mendaftarkan OTPVerify + middleware saja.
+             * yang mendaftarkan halaman verifikasi OTP + middleware saja.
              */
             ->plugins([
                 UserMulti2faPlugin::make(),
@@ -462,7 +462,7 @@ class UserPanelProvider extends PanelProvider
                     ->url(fn (): string => HistoryResource::getUrl())
                     ->icon(AppIcon::HISTORY),
                 'ulasan' => MenuItem::make()
-                    ->label(fn (): string => __('Ulasan Saya'))
+                    ->label(fn (): string => __('Komentar Penilaian Katalog Saya'))
                     ->url(fn (): string => ReviewResource::getUrl())
                     ->icon(AppIcon::REVIEW),
                 'privacy' => MenuItem::make()

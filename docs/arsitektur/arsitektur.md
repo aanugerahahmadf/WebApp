@@ -98,7 +98,7 @@ sebagai singleton di `AppServiceProvider`.
 
 ## Session `url.intended`
 
-Saat guest melakukan aksi yang butuh login (Add to Cart, wishlist, lapor,
+Saat guest melakukan aksi yang butuh login (Add to Cart, Favorite, lapor,
 ulasan), URL halaman asal disimpan di `session('url.intended')` sebelum
 diarahkan ke login. Dipakai oleh:
 

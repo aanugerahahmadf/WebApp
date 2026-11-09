@@ -1,0 +1,58 @@
+# Favorite Mutations
+# Wedding Flower Decoration App - Favorite GraphQL Mutations
+
+input ToggleFavoriteInput {
+  catalogId: ID
+  packageId: ID
+}
+
+type Mutation {
+  # Toggle Favorite (add if not exists, remove if exists)
+  toggleFavorite(input: ToggleFavoriteInput!): FavoriteAction @field(resolver: "App\\Http\\GraphQL\\Resolvers\\FavoriteResolver@toggle")
+  
+  # Add to Favorite explicitly
+  addToFavorite(input: ToggleFavoriteInput!): Favorite @field(resolver: "App\\Http\\GraphQL\\Resolvers\\FavoriteResolver@add")
+  
+  # Remove from Favorite
+  removeFromFavorite(FavoriteId: ID!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\FavoriteResolver@remove")
+  
+  # Clear entire Favorite
+  clearFavorite: Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\FavoriteResolver@clear")
+  
+  # Get current user's Favorite
+  myFavorite(first: Int = 50): [Favorite!]! @paginate(defaultCount: 50) @field(resolver: "App\\Http\\GraphQL\\Resolvers\\FavoriteResolver@myFavorite")
+  
+  # Check if item is in Favorite
+  isInFavorite(catalogId: ID, packageId: ID): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\FavoriteResolver@isInFavorite")
+  
+  # Move Favorite item to cart
+  moveToCart(FavoriteId: ID!, quantity: Int = 1): CartItem @field(resolver: "App\\Http\\GraphQL\\Resolvers\\FavoriteResolver@moveToCart")
+  
+  # Share Favorite
+  shareFavorite: Favoriteshare @field(resolver: "App\\Http\\GraphQL\\Resolvers\\FavoriteResolver@share")
+}
+
+type FavoriteAction {
+  Favorite: Favorite
+  action: FavoriteActionType!
+  message: String!
+}
+
+enum FavoriteActionType {
+  ADDED
+  REMOVED
+}
+
+type Favorite {
+  id: ID!
+  user: User @belongsTo
+  catalog: Catalog @belongsTo
+  package: Package @belongsTo
+  createdAt: String!
+}
+
+type Favoriteshare {
+  shareToken: String!
+  shareUrl: String!
+  expiresAt: String!
+}

@@ -4,9 +4,9 @@
         $currentSessionId = $this->currentSessionId();
     @endphp
 
-    <div class="mx-auto max-w-4xl space-y-6">
+    <div class="password-security-page mx-auto max-w-4xl space-y-6">
         @if ($section === 'index')
-            <section><h2 class="mb-3 text-sm font-semibold tracking-wide text-gray-500">{{ __('Sign In dan Pemulihan') }}</h2><div class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/10 dark:bg-gray-900">
+            <section><h2 class="mb-3 text-sm font-semibold tracking-wide text-gray-500 dark:text-gray-400">{{ __('Sign In dan Pemulihan') }}</h2><div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-gray-800">
                 @foreach ([
                     ['change-password', '/images/icons/lock.svg', __('Ubah Kata Sandi'), __('Perbarui kata sandi dan lindungi akun Anda.')],
                     ['two-factor', '/images/icons/shield_check.svg', __('Autentikasi Dua Faktor'), __('Atur WhatsApp, kode cadangan, dan perangkat tepercaya.')],
@@ -15,7 +15,7 @@
                     <a wire:navigate href="{{ \App\Filament\Welcome\Pages\SettingsPage\PasswordSecurityPage\PasswordSecurityPage::getUrl(['section' => $key], panel: 'welcome') }}" class="flex items-center gap-4 border-b border-gray-100 p-4 last:border-0 transition hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/5"><x-filament::icon :icon="$icon" class="h-6 w-6 text-primary-500" /><div class="min-w-0 flex-1"><p class="font-medium text-gray-950 dark:text-white">{{ $label }}</p><p class="text-sm text-gray-500">{{ $description }}</p></div><x-filament::icon icon="/images/icons/chevron_right.svg" class="h-5 w-5 text-gray-400" /></a>
                 @endforeach
             </div></section>
-            <section><h2 class="mb-3 text-sm font-semibold tracking-wide text-gray-500">{{ __('Pemeriksaan Keamanan') }}</h2><div class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/10 dark:bg-gray-900">
+            <section><h2 class="mb-3 text-sm font-semibold tracking-wide text-gray-500 dark:text-gray-400">{{ __('Pemeriksaan Keamanan') }}</h2><div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-gray-800">
                 @foreach ([
                     ['sign-in-activity', '/images/icons/map_pin.svg', __('Tempat Anda Sign In'), __('Lihat dan keluarkan sesi perangkat yang aktif.')],
                     ['recent-emails', '/images/icons/envelope.svg', __('Ubah Email'), __('Ganti email akun dengan verifikasi kode OTP.')],

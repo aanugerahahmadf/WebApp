@@ -9,7 +9,7 @@ use App\Models\Discount\Discount;
 use App\Models\Order\Order;
 use App\Models\Package\Package;
 use App\Models\Review\Review;
-use App\Models\Wishlist\Wishlist;
+use App\Models\Favorite\Favorite;
 
 use App\Support\AppPlatform\AppPlatform;
 use App\Traits\HasTranslations\HasTranslations;
@@ -21,9 +21,12 @@ use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use App\Models\Traits\ResolvesCamelCaseAttributes\ResolvesCamelCaseAttributes;
+
 
 class Catalog extends Model implements HasMedia
 {
+    use ResolvesCamelCaseAttributes;
     use LegacyMorphClass;
     use HasFactory, HasTranslations, InteractsWithMedia;
 
@@ -103,8 +106,6 @@ class Catalog extends Model implements HasMedia
         'description',
         'name_translations',
         'description_translations',
-        'price',
-        'discount_price',
         'stock',
         'is_active',
         'is_featured',
@@ -119,8 +120,6 @@ class Catalog extends Model implements HasMedia
         'features' => 'array',
         'name_translations' => 'json',
         'description_translations' => 'json',
-        'price' => 'decimal:2',
-        'discount_price' => 'decimal:2',
         'is_active' => 'boolean',
         'is_featured' => 'boolean',
         'stock' => 'integer',
@@ -130,8 +129,7 @@ class Catalog extends Model implements HasMedia
         'image_url',
         'thumbnail_url',
         'gallery_urls',
-        'final_price',
-        'is_wishlisted',
+        'is_Favoriteed',
         'video_url',
         'average_rating',
     ];
@@ -298,18 +296,61 @@ class Catalog extends Model implements HasMedia
         return $this->stock <= 0;
     }
 
-    public function getIsWishlistedAttribute(): bool
+    /**
+     * Kolom `is_active` disimpan snake_case, sedangkan field GraphQL `Catalog.isActive`
+     * camelCase. Tanpa accessor ini Lighthouse membaca `$model->isActive`, Eloquent
+     * tidak menemukan attribute itu (yang ada `is_active`), dan mengembalikan null --
+     * cukup untuk membuat query gagal dengan "Cannot return null for non-nullable
+     * field". Mengikuti pola `Category::getIsActiveAttribute()`.
+     */
+    public function getIsActiveAttribute(): bool
+    {
+        return (bool) ($this->attributes['is_active'] ?? false);
+    }
+
+    /**
+     * Pasangan `is_featured` <-> `Catalog.isFeatured`, alasan yang sama dengan
+     * `getIsActiveAttribute()` di atas.
+     */
+    public function getIsFeaturedAttribute(): bool
+    {
+        return (bool) ($this->attributes['is_featured'] ?? false);
+    }
+
+    /**
+     * Catalog stock is the aggregate availability of all of its tiers.
+     * The database column is kept as a denormalized value for filtering and
+     * sorting, while this accessor guarantees the API always exposes the
+     * tier-derived value when a catalog is read.
+     */
+    public function getStockAttribute($value): int
+    {
+        return (int) $this->tiers()->sum('stock');
+    }
+
+    public function syncStockFromTiers(): void
+    {
+        $total = (int) $this->tiers()->sum('stock');
+
+        static::withoutEvents(function () use ($total): void {
+            $this->newQuery()->whereKey($this->getKey())->update(['stock' => $total]);
+        });
+
+        $this->setRawAttributes(array_merge($this->getAttributes(), ['stock' => $total]));
+    }
+
+    public function getIsFavoriteedAttribute(): bool
     {
         try {
             if (auth('sanctum')->check()) {
-                return $this->wishlists()->where('user_id', auth('sanctum')->id())->exists();
+                return $this->Favorites()->where('user_id', auth('sanctum')->id())->exists();
             }
         } catch (\Throwable $e) {
         }
 
         try {
             if (class_exists(Filament::class) && Filament::auth()->check()) {
-                return $this->wishlists()->where('user_id', Filament::auth()->id())->exists();
+                return $this->Favorites()->where('user_id', Filament::auth()->id())->exists();
             }
         } catch (\Throwable $e) {
         }
@@ -350,9 +391,9 @@ class Catalog extends Model implements HasMedia
         return $this->hasMany(Review::class, 'catalog_id');
     }
 
-    public function wishlists()
+    public function Favorites()
     {
-        return $this->hasMany(Wishlist::class, 'catalog_id');
+        return $this->hasMany(Favorite::class, 'catalog_id');
     }
 
     public function discounts()
@@ -368,11 +409,6 @@ class Catalog extends Model implements HasMedia
     public function getAverageRatingAttribute(): float
     {
         return (float) number_format($this->reviews()->avg('rating') ?: 0, 1);
-    }
-
-    public function getFinalPriceAttribute(): float
-    {
-        return ($this->discount_price > 0) ? (float) $this->discount_price : (float) $this->price;
     }
 
     public function getBadgeStyleAttribute(): string

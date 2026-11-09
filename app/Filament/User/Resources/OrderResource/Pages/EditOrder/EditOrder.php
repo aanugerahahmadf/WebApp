@@ -14,15 +14,6 @@ class EditOrder extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\Action::make('back')
-                ->label(__('Kembali'))
-                ->icon('/images/icons/arrow_left.svg')
-                ->color('gray')
-                ->url(fn () => request()->query('from') === 'view'
-                    ? OrderResource::getUrl('view', ['record' => $this->record])
-                    : OrderResource::getUrl('index'))
-                ->extraAttributes(['wire:navigate' => true]),
-
             Actions\Action::make('view')
                 ->label(__('Lihat Detail'))
                 ->icon('/images/icons/eye.svg')

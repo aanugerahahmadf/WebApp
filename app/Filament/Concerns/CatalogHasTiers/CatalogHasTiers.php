@@ -3,6 +3,7 @@
 namespace App\Filament\Concerns\CatalogHasTiers;
 
 use App\Models\Catalog\Catalog;
+use App\Models\Package\Package;
 use Filament\Infolists\Components\ViewEntry;
 
 /**
@@ -39,7 +40,7 @@ trait CatalogHasTiers
     }
 
     /**
-     * Alpine-backed price block: shows the catalog price until a tier is chosen.
+     * Alpine-backed price block: shows the selected/first tier price.
      */
     protected static function catalogPriceEntry(): ViewEntry
     {
@@ -51,17 +52,16 @@ trait CatalogHasTiers
             ->view("{$panel}.components.catalog-price.catalog-price", fn (Catalog $record) => [
                 'catalogName' => (string) $record->name,
                 'selectedTierId' => static::selectedTierId(),
-                'price' => (float) $record->price,
-                'discountPrice' => $record->discount_price !== null ? (float) $record->discount_price : null,
                 'tiers' => static::tierPayload($record),
                 'catalogId' => (int) $record->getKey(),
+                'catalogStock' => (int) $record->stock,
             ]);
     }
 
     /**
      * JS-safe payload shared by the picker and the price block.
      *
-     * @return array<int, array{id:int, name:string, description:string, price:float, listPrice:float, discounted:bool, features:array<int, string>}>
+     * @return array<int, array{id:int, name:string, description:string, price:float, listPrice:float, discounted:bool, stock:int, features:array<int, string>}>
      */
     public static function tierPayload(Catalog $record): array
     {
@@ -74,10 +74,27 @@ trait CatalogHasTiers
                 'price' => (float) $tier->final_price,
                 'listPrice' => (float) $tier->price,
                 'discounted' => (float) $tier->price > (float) $tier->final_price,
+                'stock' => (int) $tier->stock,
                 'features' => array_values($tier->features ?? []),
             ])
             ->values()
             ->all();
+    }
+
+    /** Return the first ordered tier for display/preview purposes only. */
+    protected static function firstTier(Catalog $record): ?Package
+    {
+        return $record->tiers()->orderBy('sort_order')->orderBy('id')->first();
+    }
+
+    /** Tier currently selected on the detail page, or its first tier. */
+    protected static function selectedTier(Catalog $record): ?Package
+    {
+        $selectedId = static::selectedTierId();
+
+        return ($selectedId
+            ? $record->tiers()->whereKey($selectedId)->first()
+            : null) ?? static::firstTier($record);
     }
 
     /**

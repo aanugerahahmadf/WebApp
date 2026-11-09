@@ -23,9 +23,13 @@ class HomeController extends Controller
     {
         $query = $model::query()->where('created_at', '>=', now()->subDays(10)->startOfDay());
 
+        $dateExpr = DB::connection()->getDriverName() === 'pgsql'
+            ? 'CAST(created_at AS date)'
+            : 'date(created_at)';
+
         $rows = $sumColumn
-            ? $query->selectRaw('date(created_at) as date, sum('.$sumColumn.') as sum')->groupBy('date')
-            : $query->selectRaw('date(created_at) as date, count(*) as count')->groupBy('date');
+            ? $query->selectRaw("{$dateExpr} as date, sum({$sumColumn}) as sum")->groupBy('date')
+            : $query->selectRaw("{$dateExpr} as date, count(*) as count")->groupBy('date');
 
         $data = $rows->pluck($sumColumn ? 'sum' : 'count', 'date')->toArray();
 
@@ -45,7 +49,11 @@ class HomeController extends Controller
     private function monthlySeries(string $model, ?string $sumColumn = null): array
     {
         $driver = DB::connection()->getDriverName();
-        $monthExpr = $driver === 'sqlite' ? 'strftime("%m", created_at)' : 'MONTH(created_at)';
+        $monthExpr = match ($driver) {
+            'sqlite' => 'strftime("%m", created_at)',
+            'pgsql' => 'EXTRACT(MONTH FROM created_at)',
+            default => 'MONTH(created_at)',
+        };
 
         $query = $model::query()->where('created_at', '>=', now()->subMonths(6)->startOfMonth());
         $query = $sumColumn

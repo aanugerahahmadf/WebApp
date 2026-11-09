@@ -68,18 +68,18 @@ class LegalSeeder extends Seeder
         $this->command->line('  <info>✓</info> Privacy Policy seeded');
 
         $idPolicy = [
-            ['heading' => 'KEBIJAKAN DEKORASI', 'body' => 'Wedding Flowers Decorasi berkomitmen untuk menyediakan layanan dekorasi bunga pernikahan berkualitas tinggi. Seluruh desain dan tata rias dekorasi dilakukan oleh tim profesional kami dengan pengalaman bertahun-tahun di industri pernikahan.', 'is_italic' => false],
+            ['heading' => 'KEBIJAKAN DEKORASI', 'body' => 'Wedding Floral Decorations berkomitmen untuk menyediakan layanan dekorasi bunga pernikahan berkualitas tinggi. Seluruh desain dan tata rias dekorasi dilakukan oleh tim profesional kami dengan pengalaman bertahun-tahun di industri pernikahan.', 'is_italic' => false],
             ['heading' => 'PROSES PEMESANAN', 'body' => 'Pemesanan dekorasi dilakukan melalui platform resmi kami. Setelah pemesanan dikonfirmasi, tim kami akan menghubungi Anda untuk konsultasi desain dan detail teknis dekorasi sesuai dengan konsep pernikahan yang diinginkan.', 'is_italic' => true],
             ['heading' => 'KUALITAS LAYANAN', 'body' => 'Kami menjamin penggunaan bahan bunga segar dan material dekorasi berkualitas terbaik. Setiap dekorasi akan dipasang dan dirawat oleh tim profesional kami selama acara berlangsung.', 'is_italic' => false],
-            ['heading' => 'TANGGUNG JAWAB', 'body' => 'Wedding Flowers Decorasi bertanggung jawab penuh atas kualitas dan ketepatan waktu pemasangan dekorasi. Klien wajib memberikan akses lokasi yang memadai kepada tim kami pada hari pelaksanaan.', 'is_italic' => true],
+            ['heading' => 'TANGGUNG JAWAB', 'body' => 'Wedding Floral Decorations bertanggung jawab penuh atas kualitas dan ketepatan waktu pemasangan dekorasi. Klien wajib memberikan akses lokasi yang memadai kepada tim kami pada hari pelaksanaan.', 'is_italic' => true],
             ['heading' => 'KEBIJAKAN PEMBATALAN', 'body' => 'Pembatalan sepihak oleh klien dikenakan biaya sesuai ketentuan yang tercantum dalam perjanjian kerja sama. Pengembalian dana hanya berlaku untuk pembatalan yang dilakukan minimal 30 hari sebelum hari acara.', 'is_italic' => false],
         ];
 
         $enPolicy = [
-            ['heading' => 'DECORATION POLICY', 'body' => 'Wedding Flowers Decorasi is committed to providing high-quality wedding flower decoration services. All decoration designs and styling are carried out by our professional team with years of experience in the wedding industry.', 'is_italic' => false],
+            ['heading' => 'DECORATION POLICY', 'body' => 'Wedding Floral Decorations is committed to providing high-quality wedding flower decoration services. All decoration designs and styling are carried out by our professional team with years of experience in the wedding industry.', 'is_italic' => false],
             ['heading' => 'ORDERING PROCESS', 'body' => 'Decoration orders are made through our official platform. Once the order is confirmed, our team will contact you for design consultation and technical decoration details according to your desired wedding concept.', 'is_italic' => true],
             ['heading' => 'SERVICE QUALITY', 'body' => 'We guarantee the use of fresh flower materials and best quality decoration materials. Each decoration will be installed and maintained by our professional team throughout the event.', 'is_italic' => false],
-            ['heading' => 'RESPONSIBILITY', 'body' => 'Wedding Flowers Decorasi is fully responsible for the quality and timeliness of decoration installation. Clients must provide adequate location access to our team on the execution day.', 'is_italic' => true],
+            ['heading' => 'RESPONSIBILITY', 'body' => 'Wedding Floral Decorations is fully responsible for the quality and timeliness of decoration installation. Clients must provide adequate location access to our team on the execution day.', 'is_italic' => true],
             ['heading' => 'CANCELLATION POLICY', 'body' => 'Unilateral cancellation by the client is subject to fees according to the provisions stated in the cooperation agreement. Refunds only apply to cancellations made at least 30 days before the event day.', 'is_italic' => false],
         ];
 

@@ -28,7 +28,7 @@ Applies to `PackageResource` and `ProductResource` in the **Welcome panel**.
 | `buy_now_detail` | No | → login | → checkout | `redirect()` (page action) |
 | `add_to_cart_detail` | Yes (quantity) | → login | Cart create | `$livewire->redirect()` |
 | **`chat_admin`** | **No** | GuestIdentity | FilamentAuth | **`$livewire->redirect()`** |
-| **`wishlist_detail`** | **No** | → login | Wishlist toggle | `$livewire->redirect()` |
+| **`Favorite_detail`** | **No** | → login | Favorite toggle | `$livewire->redirect()` |
 | `write_review` | Yes (review form) | → login | Review create | `$livewire->redirect()` |
 | `report_review` | No | Hidden | ChatService | `$livewire->redirect()` |
 
@@ -73,18 +73,18 @@ Action::make('chat_admin')
 
 ---
 
-## `wishlist_detail` — Why No Form
+## `Favorite_detail` — Why No Form
 
 A `->form([Hidden::make('confirm')])` was previously on this action. Any `->form()` call
 makes Filament render a modal with a **Submit** button. The form submission is a POST
 request, and when the session has expired (e.g. tab left open overnight), Laravel returns
 a **419 Page Expired** CSRF error.
 
-The wishlist toggle has no data to collect from the user, so the form was removed:
+The Favorite toggle has no data to collect from the user, so the form was removed:
 
 ```php
 // Correct — direct action, no modal, no CSRF issue
-Action::make('wishlist_detail')
+Action::make('Favorite_detail')
     ->action(function ($record, Component $livewire) {
         if ($redirect = static::redirectGuestToLogin(...)) {
             $livewire->redirect($redirect->getTargetUrl(), navigate: true);

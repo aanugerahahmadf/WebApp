@@ -52,7 +52,7 @@ require __DIR__.'/user/CategoryController/CategoryController/CategoryController.
 require __DIR__.'/user/CatalogController/CatalogController/CatalogController.php';
 require __DIR__.'/user/SearchController/SearchController/SearchController.php';
 require __DIR__.'/user/CartController/CartController/CartController.php';
-require __DIR__.'/user/WishlistController/WishlistController/WishlistController.php';
+require __DIR__.'/user/FavoriteController/FavoriteController/FavoriteController.php';
 require __DIR__.'/user/OrderController/OrderController/OrderController.php';
 
 require __DIR__.'/user/VoucherController/VoucherController/VoucherController.php';
@@ -124,7 +124,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
         require __DIR__.'/admin/HelpController/HelpController/HelpController.php';
         require __DIR__.'/admin/NotificationController/NotificationController/NotificationController.php';
         require __DIR__.'/admin/MessageController/MessageController/MessageController.php';
-        require __DIR__.'/admin/WishlistController/WishlistController/WishlistController.php';
+        require __DIR__.'/admin/FavoriteController/FavoriteController/FavoriteController.php';
         require __DIR__.'/admin/ReportController/ReportController/ReportController.php';
     });
 });

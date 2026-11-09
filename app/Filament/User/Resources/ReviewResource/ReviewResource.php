@@ -5,6 +5,7 @@ namespace App\Filament\User\Resources\ReviewResource;
 use App\Filament\User\Resources\ReviewResource\Pages\ManageReviews\ManageReviews;
 
 use App\Filament\User\Resources\CatalogResource\CatalogResource;
+use App\Filament\Welcome\Resources\MyReviewsResource\MyReviewsResource;
 use App\Forms\Components\StarRating\StarRating;
 use App\Helpers\NativeNotificationHelper\NativeNotificationHelper;
 use App\Models\Catalog\Catalog;
@@ -105,7 +106,13 @@ class ReviewResource extends Resource
 
     public static function getGlobalSearchResultUrl(Model $record): ?string
     {
-        return static::getUrl('index');
+        // `static::getUrl('index')` di sini menunjuk route
+        // `filament.welcome.resources.reviews.index`, dan route itu TIDAK
+        // ADA: sumber daya legacy ini tidak ikut didaftarkan di
+        // WelcomePanelProvider setelah panel 'user' dilebur ke 'welcome'.
+        // Hasil pencarian global harus mendarat di halaman yang benar-benar
+        // hidup -- "Komentar Penilaian Katalog Saya" (`/my-reviews`).
+        return MyReviewsResource::getUrl('index');
     }
 
     public static function getNavigationGroup(): ?string
@@ -397,7 +404,7 @@ class ReviewResource extends Resource
                 // katalog yang belum dibeli -- halaman detail katalog memang
                 // sudah menawarkan hal yang sama.
                 Tables\Actions\Action::make('write_review')
-                    ->label(__('Tulis Ulasan'))
+                    ->label(__('Tulis Komentar Penilaian'))
                     ->button()
                     ->color('primary')
                     ->size('lg')

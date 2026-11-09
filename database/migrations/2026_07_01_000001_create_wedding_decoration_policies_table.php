@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('wedding_decoration_policies', function (Blueprint $table) {
             $table->id();
-            $table->string('title')->default('Kebijakan Wedding Flowers Decorasi');
+            $table->string('title')->default('Kebijakan Wedding Floral Decorations');
             $table->json('content');
             $table->timestamps();
         });

@@ -4,9 +4,12 @@ namespace App\Models\Search;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Traits\ResolvesCamelCaseAttributes\ResolvesCamelCaseAttributes;
+
 
 class SearchLog extends Model
 {
+    use ResolvesCamelCaseAttributes;
     use HasFactory;
 
     protected $table = 'search_logs';

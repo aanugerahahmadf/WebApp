@@ -4,6 +4,7 @@ namespace App\Http\GraphQL\Resolvers;
 
 use App\Models\Catalog\Catalog;
 use App\Models\Category\Category;
+use App\Models\Package\Package;
 use Illuminate\Support\Str;
 use Nuwave\Lighthouse\Support\Contracts\GraphQLContext;
 
@@ -19,7 +20,7 @@ class CatalogResolver
         return Catalog::where('is_featured', true)
             ->where('is_active', true)
             ->where('stock', '>', 0)
-            ->with('category')
+            ->with(['category', 'tiers'])
             ->latest()
             ->take($first)
             ->get();
@@ -32,10 +33,10 @@ class CatalogResolver
     {
         $first = $args['first'] ?? 10;
         
-        return Catalog::where('discount_price', '>', 0)
+        return Catalog::whereHas('tiers', fn ($query) => $query->where('discount_price', '>', 0))
             ->where('is_active', true)
             ->where('stock', '>', 0)
-            ->with('category')
+            ->with(['category', 'tiers'])
             ->latest()
             ->take($first)
             ->get();
@@ -114,7 +115,8 @@ class CatalogResolver
         $featuredCatalogs = Catalog::where('is_featured', true)->count();
         $outOfStockCatalogs = Catalog::where('stock', 0)->count();
         $lowStockCatalogs = Catalog::where('stock', '>', 0)->where('stock', '<=', 5)->count();
-        $totalValue = Catalog::sum('price');
+        // Catalog has no price. Admin value is the sum of active Tier prices.
+        $totalValue = Package::where('is_active', true)->sum('final_price');
         
         $byCategory = Category::withCount(['categoryCatalogs' => function ($q) {
             $q->where('is_active', true);
@@ -161,8 +163,6 @@ class CatalogResolver
             $input['slug'] = $originalSlug . '-' . $counter++;
         }
         
-        // Calculate final price
-        $input['final_price'] = $input['discount_price'] ?? $input['price'];
         $input['is_out_of_stock'] = ($input['stock'] ?? 0) <= 0;
         
         return Catalog::create($input);
@@ -181,13 +181,6 @@ class CatalogResolver
         
         $catalog = Catalog::findOrFail($args['id']);
         $input = $args['input'];
-        
-        // Calculate final price if price or discount_price changed
-        if (isset($input['price']) || isset($input['discount_price'])) {
-            $price = $input['price'] ?? $catalog->price;
-            $discountPrice = $input['discount_price'] ?? $catalog->discount_price;
-            $input['final_price'] = $discountPrice ?? $price;
-        }
         
         // Update stock status
         if (isset($input['stock'])) {

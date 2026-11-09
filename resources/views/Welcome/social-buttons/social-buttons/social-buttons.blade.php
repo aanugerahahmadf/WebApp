@@ -81,9 +81,16 @@
 
     <div class="flex flex-wrap items-center justify-center w-full gap-0 mt-2">
         <button type="button"
-            x-bind:class="!(agreed && remembered) ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[0.98]'"
+            x-bind:class="loading ? 'opacity-60 cursor-wait' : 'hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[0.98]'"
             x-on:click="
-                if (!(agreed && remembered)) return;
+                if (!agreed || !remembered) {
+                    new FilamentNotification()
+                        .title('Perhatian')
+                        .body('Silakan centang opsi Ingat Saya dan Setujui Syarat & Ketentuan untuk melanjutkan.')
+                        .warning()
+                        .send();
+                    return;
+                }
                 loading = true;
                 if (window.FirebaseAuthLogin) {
                     window.FirebaseAuthLogin()
@@ -100,7 +107,7 @@
                     window.location.href = googleUrl;
                 }
             "
-            x-bind:disabled="!(agreed && remembered) || loading"
+            x-bind:disabled="loading"
             class="flex items-center justify-center gap-3 w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm font-semibold shadow-sm transition-all duration-100">
             {{-- x-show dipakai bukan x-if/template — template tag tidak render di Android WebView lama --}}
             <x-filament::icon icon="/images/icons/refresh.svg" x-show="loading" style="display:none" class="animate-spin h-5 w-5 text-gray-500" />

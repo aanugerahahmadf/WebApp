@@ -1,0 +1,11 @@
+# Legal Queries
+
+extend type Query {
+  termsOfService: LegalContent @field(resolver: "App\\Http\\GraphQL\\Resolvers\\LegalResolver@termsOfService")
+  privacyPolicy: LegalContent @field(resolver: "App\\Http\\GraphQL\\Resolvers\\LegalResolver@privacyPolicy")
+  weddingDecorationPolicy: LegalContent @field(resolver: "App\\Http\\GraphQL\\Resolvers\\LegalResolver@weddingDecorationPolicy")
+  legalPage(slug: String!): LegalPage @field(resolver: "App\\Http\\GraphQL\\Resolvers\\LegalResolver@legalPage")
+  legalPages: [LegalPage!]! @field(resolver: "App\\Http\\GraphQL\\Resolvers\\LegalResolver@legalPages")
+  about: AboutPage @field(resolver: "App\\Http\\GraphQL\\Resolvers\\LegalResolver@about")
+  helpCenter: HelpCenter @field(resolver: "App\\Http\\GraphQL\\Resolvers\\LegalResolver@helpCenter")
+}

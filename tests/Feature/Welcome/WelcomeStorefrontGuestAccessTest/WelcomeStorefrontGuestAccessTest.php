@@ -148,8 +148,11 @@ test('a guest is sent to the welcome panel auth landing page from an account pag
 })->with([
     '/carts',
     '/orders',
-    '/wishlists',
-    '/reviews',
+    '/Favorites',
+    // '/reviews' sudah bukan halaman storefront: daftar ulasan lintas katalog
+    // pindah ke kartu + modal "Komentar Penilaian Katalog" di Beranda. Yang
+    // tersisa sebagai halaman hanya ulasan milik sendiri.
+    '/my-reviews',
     '/vouchers',
     '/histories',
     // `/settings` SENGAJA TIDAK ada di sini: halamannya punya bagian yang
@@ -303,7 +306,7 @@ test('the theme switcher is a dropdown offering all three modes', function (): v
 
 /**
  * The detail pages are public. Every button is visible to guests -- cart,
- * wishlist, review -- and redirects to the user panel login on submit, since
+ * Favorite, review -- and redirects to the user panel login on submit, since
  * each writes to user-owned state. Chat Admin is the exception: it works for
  * guests through a guest identity, because customer service has to be reachable
  * before anyone registers. A member who already reviewed an item has the review
@@ -314,7 +317,7 @@ test('a guest sees every catalog detail button, and each redirects to login', fu
         ->assertOk()
         ->assertSee(__('Masukkan ke Keranjang'))
         ->assertSee(__('Tambah ke Favorit'))
-        ->assertSee(__('Tulis Ulasan'))
+        ->assertSee(__('Tulis Komentar Penilaian'))
         ->assertSee(__('Chat Admin')) // the one that works without an account
         // The checkout link must not be reachable directly -- it is behind the
         // Add-to-Cart modal, whose submit action redirects to login.

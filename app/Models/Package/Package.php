@@ -9,7 +9,7 @@ use App\Models\Catalog\Catalog;
 use App\Models\Discount\Discount;
 use App\Models\Order\Order;
 use App\Models\Review\Review;
-use App\Models\Wishlist\Wishlist;
+use App\Models\Favorite\Favorite;
 
 use App\Support\AppPlatform\AppPlatform;
 use App\Traits\HasTranslations\HasTranslations;
@@ -19,6 +19,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use App\Models\Traits\ResolvesCamelCaseAttributes\ResolvesCamelCaseAttributes;
+
 
 /**
  * @property int $id
@@ -38,7 +40,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property Carbon|null $updated_at
  * @property-read Category|null $category
  * @property-read mixed $image_url
- * @property-read bool $is_wishlisted
+ * @property-read bool $is_Favoriteed
  * @property-read string|null $video_url
  * @property-read MediaCollection<int, Media> $media
  * @property-read int|null $media_count
@@ -46,8 +48,8 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property-read int|null $orders_count
  * @property-read Collection<int, Review> $reviews
  * @property-read int|null $reviews_count
- * @property-read Collection<int, Wishlist> $wishlists
- * @property-read int|null $wishlists_count
+ * @property-read Collection<int, Favorite> $Favorites
+ * @property-read int|null $Favorites_count
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Package newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Package newQuery()
@@ -80,7 +82,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property Carbon|null $createdAt
  * @property Carbon|null $updatedAt
  * @property-read mixed $imageUrl
- * @property-read bool $isWishlisted
+ * @property-read bool $isFavoriteed
  * @property-read string|null $videoUrl
  * @property-read int|null $mediaCount
  * @property-read bool|null $mediaExists
@@ -88,8 +90,8 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property-read bool|null $ordersExists
  * @property-read int|null $reviewsCount
  * @property-read bool|null $reviewsExists
- * @property-read int|null $wishlistsCount
- * @property-read bool|null $wishlistsExists
+ * @property-read int|null $FavoritesCount
+ * @property-read bool|null $FavoritesExists
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|\App\Models\Package\Package whereUpdatedAt($value)
  *
@@ -97,6 +99,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  */
 class Package extends Model implements HasMedia
 {
+    use ResolvesCamelCaseAttributes;
     use LegacyMorphClass;
     use HasFactory, HasTranslations, InteractsWithMedia;
 
@@ -175,10 +178,26 @@ class Package extends Model implements HasMedia
     protected $appends = [
         'image_url',
         'final_price',
-        'is_wishlisted',
+        'is_Favoriteed',
         'video_url',
         'average_rating',
+        'tier_id',
+        'resource_type',
     ];
+
+    /**
+     * Public API vocabulary: a Package row is a tier belonging to a Catalog.
+     * The database/model name remains Package for migration compatibility.
+     */
+    public function getTierIdAttribute(): int
+    {
+        return (int) $this->getKey();
+    }
+
+    public function getResourceTypeAttribute(): string
+    {
+        return 'tier';
+    }
 
     protected static function boot()
     {
@@ -188,6 +207,15 @@ class Package extends Model implements HasMedia
                 $package->slug = Str::slug($package->name).'-'.Str::random(5);
             }
         });
+        static::created(fn (Package $package) => $package->catalog?->syncStockFromTiers());
+        static::updated(function (Package $package): void {
+            $package->catalog?->syncStockFromTiers();
+            $oldCatalogId = $package->getOriginal('catalog_id');
+            if ($oldCatalogId && (int) $oldCatalogId !== (int) $package->catalog_id) {
+                Catalog::find($oldCatalogId)?->syncStockFromTiers();
+            }
+        });
+        static::deleted(fn (Package $package) => $package->catalog?->syncStockFromTiers());
     }
 
     public function getImageUrlAttribute()
@@ -211,12 +239,12 @@ class Package extends Model implements HasMedia
         return $this->stock <= 0;
     }
 
-    public function getIsWishlistedAttribute(): bool
+    public function getIsFavoriteedAttribute(): bool
     {
         // Prioritas: Sanctum (mobile API) dulu, baru Filament (web)
         try {
             if (auth('sanctum')->check()) {
-                return $this->wishlists()->where('user_id', auth('sanctum')->id())->exists();
+                return $this->Favorites()->where('user_id', auth('sanctum')->id())->exists();
             }
         } catch (\Throwable $e) {
             // Silently fail
@@ -224,7 +252,7 @@ class Package extends Model implements HasMedia
 
         try {
             if (class_exists(Filament::class) && Filament::auth()->check()) {
-                return $this->wishlists()->where('user_id', Filament::auth()->id())->exists();
+                return $this->Favorites()->where('user_id', Filament::auth()->id())->exists();
             }
         } catch (\Throwable $e) {
             // Silently fail
@@ -257,9 +285,9 @@ class Package extends Model implements HasMedia
         return $this->hasMany(Review::class);
     }
 
-    public function wishlists()
+    public function Favorites()
     {
-        return $this->hasMany(Wishlist::class);
+        return $this->hasMany(Favorite::class);
     }
 
     public function discounts()
@@ -279,7 +307,13 @@ class Package extends Model implements HasMedia
 
     public function getFinalPriceAttribute(): float
     {
-        return ($this->discount_price > 0) ? (float) $this->discount_price : (float) $this->price;
+        $price = (float) $this->price;
+        $discount = (float) $this->discount_price;
+
+        // A sale price is only valid when it is a real discount. This mirrors
+        // the mobile `hasDiscount` rule and keeps checkout from charging more
+        // than the displayed regular price.
+        return ($discount > 0 && $discount < $price) ? $discount : $price;
     }
 
     public function getBadgeStyleAttribute(): string

@@ -8,9 +8,12 @@ use App\Models\Review\Review;
 use App\Models\User\User;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Traits\ResolvesCamelCaseAttributes\ResolvesCamelCaseAttributes;
+
 
 class ReviewVote extends Model
 {
+    use ResolvesCamelCaseAttributes;
     use LegacyMorphClass;
     protected $fillable = [
         'user_id',

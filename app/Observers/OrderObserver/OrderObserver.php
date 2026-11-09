@@ -30,7 +30,18 @@ class OrderObserver
     public function updated(Order $order): void
     {
         if ($order->isDirty('status') && $order->status === OrderStatus::CANCELLED) {
-            if (in_array($order->payment_status, [OrderPaymentStatus::PAID, OrderPaymentStatus::PARTIAL])) {
+            $quantity = max(1, (int) ($order->quantity ?? 1));
+            if ($order->package) {
+                $order->package->increment('stock', $quantity);
+            } elseif ($order->catalog) {
+                $order->catalog->increment('stock', $quantity);
+            }
+
+            if (! $order->cancelled_at) {
+                $order->updateQuietly(['cancelled_at' => now()]);
+            }
+
+            if (in_array($order->payment_status, [OrderPaymentStatus::PAID])) {
                 $user = $order->user;
                 if ($user) {
                     $user->increment('balance', $order->total_price);

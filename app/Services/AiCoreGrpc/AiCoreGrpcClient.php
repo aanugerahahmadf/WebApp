@@ -18,7 +18,7 @@ use RuntimeException;
  *
  * Kenapa ini ada: `CBIRService` dulu HANYA bicara HTTP ke
  * `services.ai_core_url` (default `http://127.0.0.1:5000`, yaitu Flask).
- * Saat AI Core dijalankan sebagai server gRPC saja (`:50052`), semua
+ * Saat AI Core dijalankan sebagai server gRPC saja (`:15052`), semua
  * pencarian visual jadi gagal karena tidak ada yang mendengarkan di `:5000`.
  *
  * Kelas ini membuat jalur gRPC tersedia dengan kontrak yang sama seperti
@@ -41,7 +41,7 @@ class AiCoreGrpcClient
 
     public function __construct(?string $host = null, ?int $timeoutMs = null)
     {
-        $this->host = $host ?: (string) config('services.ai_core_grpc_host', '127.0.0.1:50052');
+        $this->host = $host ?: (string) config('services.ai_core_grpc_host', '127.0.0.1:15052');
         $this->timeoutMs = $timeoutMs ?: (int) config('services.ai_core_grpc_timeout_ms', 15000);
     }
 

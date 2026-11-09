@@ -2602,15 +2602,69 @@ body.fi-panel-admin :is(.fi-topbar, .fi-sidebar) {
     backdrop-filter: none !important;
 }
 
+body.fi-panel-welcome .password-security-page,
 body.fi-panel-user .password-security-page {
+    background-color: transparent !important;
+    background-image: none !important;
+}
+
+body.fi-panel-welcome .password-security-page > section,
+body.fi-panel-user .password-security-page > section {
     background-color: transparent !important;
 }
 
-body.fi-panel-user .password-security-card a {
+/* Password & Security: kedua kelompok pilihan memakai bahan kaca yang sama
+   dengan kartu Home, section, topbar, dan sidebar. Jangan gunakan background
+   solid dari utilitas Tailwind pada view; panel-glass.css dimuat paling akhir
+   agar perubahan ini langsung berlaku tanpa build. */
+body.fi-panel-welcome .password-security-page > section > div,
+body.fi-panel-user .password-security-page > section > div {
+    background-color: var(--fi-glass-bg) !important;
+    background-image: linear-gradient(var(--fi-glass-tint), var(--fi-glass-tint)) !important;
+    border: 1px solid var(--fi-glass-ring) !important;
+    border-radius: 12px !important;
+    box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 0.35),
+        0 1px 2px rgb(0 0 0 / 0.05),
+        0 12px 28px -16px rgb(0 0 0 / 0.35) !important;
+    -webkit-backdrop-filter: var(--fi-glass-blur) !important;
+    backdrop-filter: var(--fi-glass-blur) !important;
+}
+
+body.fi-panel-welcome .password-security-page a,
+body.fi-panel-user .password-security-page a {
     background-color: transparent;
 }
 
-.fi-panel-user .password-security-card a:hover,
-.fi-panel-user .password-security-card a:focus-visible {
+body.fi-panel-welcome .password-security-page a:hover,
+body.fi-panel-welcome .password-security-page a:focus-visible,
+body.fi-panel-user .password-security-page a:hover,
+body.fi-panel-user .password-security-page a:focus-visible {
     background-color: transparent !important;
+}
+
+/* Navigation back buttons are intentionally not shown in User/Welcome.
+   This covers both Filament actions and custom modal/chat controls, while
+   leaving browser Back, pagination, and camera flip controls untouched. */
+body.fi-panel-welcome :is(
+    .messages-page-back-link,
+    [aria-label*="Kembali"],
+    [aria-label*="Back"],
+    [title*="Kembali"],
+    [title*="Back"],
+    .back,
+    button:has(img[src*="/arrow_left.svg"]),
+    a:has(img[src*="/arrow_left.svg"])
+),
+body.fi-panel-user :is(
+    .messages-page-back-link,
+    [aria-label*="Kembali"],
+    [aria-label*="Back"],
+    [title*="Kembali"],
+    [title*="Back"],
+    .back,
+    button:has(img[src*="/arrow_left.svg"]),
+    a:has(img[src*="/arrow_left.svg"])
+) {
+    display: none !important;
 }

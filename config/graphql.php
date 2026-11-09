@@ -125,8 +125,8 @@ return [
     |
     */
     'security' => [
-        'max_query_complexity' => 1000,
-        'max_query_depth' => 10,
+        'max_query_complexity' => 3000,
+        'max_query_depth' => 15,
         'disable_introspection' => env('APP_ENV') === 'production',
     ],
 

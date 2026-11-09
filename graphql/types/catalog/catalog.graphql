@@ -6,9 +6,7 @@ type Catalog @model(class: "App\\Models\\Catalog\\Catalog") {
   name: String!
   slug: String!
   description: String
-  price: Float!
-  discountPrice: Float
-  finalPrice: Float!
+  # Catalog is a visual parent. All purchasable prices live on Package/Tier.
   stock: Int!
   isActive: Boolean!
   isFeatured: Boolean!
@@ -25,6 +23,7 @@ type Catalog @model(class: "App\\Models\\Catalog\\Catalog") {
   category: Category @belongsTo
   averageRating: Float
   reviews: [Review!]! @hasMany
+  tiers: [Package!]! @hasMany
   createdAt: String!
   updatedAt: String!
 }
@@ -55,8 +54,6 @@ input CatalogFilter {
   categoryId: ID
   featured: Boolean
   onSale: Boolean
-  minPrice: Float
-  maxPrice: Float
   active: Boolean
   theme: String
   color: String

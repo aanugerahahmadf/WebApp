@@ -230,7 +230,7 @@ it('a guest is redirected to the auth landing page when visiting account-only ro
 })->with([
     '/carts',
     '/orders',
-    '/wishlists',
+    '/Favorites',
     '/reviews',
 ]);
 

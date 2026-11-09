@@ -36,7 +36,9 @@ class CartFactory extends Factory
                     'Konfirmasi via WhatsApp',
                 ]),
                 'color_preference' => fake()->optional(0.4)->hexColor(),
-                'booking_date' => fake()->optional(0.6)->dateTimeBetween('+7 days', '+90 days')?->format('Y-m-d'),
+                'booking_date' => fake()->boolean(60)
+                    ? fake()->dateTimeBetween('+7 days', '+90 days')->format('Y-m-d')
+                    : null,
             ],
         ];
     }
@@ -48,7 +50,7 @@ class CartFactory extends Factory
     {
         return $this->state(fn () => [
             'catalog_id' => null,
-            'package_id' => $package instanceof Package ? $package->id : ($package ?? Package::factory()),
+            'package_id' => $package instanceof Package ? $package->getKey() : ($package ?? Package::factory()),
         ]);
     }
 
@@ -58,7 +60,7 @@ class CartFactory extends Factory
     public function withCatalog(Catalog|int|null $catalog = null): static
     {
         return $this->state(fn () => [
-            'catalog_id' => $catalog instanceof Catalog ? $catalog->id : ($catalog ?? Catalog::factory()),
+            'catalog_id' => $catalog instanceof Catalog ? $catalog->getKey() : ($catalog ?? Catalog::factory()),
             'package_id' => null,
         ]);
     }
@@ -68,7 +70,7 @@ class CartFactory extends Factory
      */
     public function forUser(User|int $user): static
     {
-        $id = $user instanceof User ? $user->id : $user;
+        $id = $user instanceof User ? $user->getKey() : $user;
         return $this->state(fn () => ['user_id' => $id]);
     }
 

@@ -296,8 +296,8 @@ curl -I http://10.0.2.2:8001/home   # mobile emulator
 curl -I http://localhost:8002/home  # desktop
 
 # 2. Aset platform ada?
-ls public/build/mobile/.vite/manifest.json
-ls public/build/desktop/.vite/manifest.json
+ls public/build/mobile/manifest.json
+ls public/build/desktop/manifest.json
 
 # 3. capacitor.config.json URL benar?
 cat app/Capacitor/DekstopApp/capacitor.config.json

@@ -71,6 +71,8 @@ class MessagesPage extends Page
                     ->whereHas('messages', function (Builder $query): void {
                         if (DB::getDriverName() === 'sqlite') {
                             $query->whereRaw('read_by NOT LIKE ?', ['%"1"%']);
+                        } elseif (DB::getDriverName() === 'pgsql') {
+                            $query->whereRaw("NOT (COALESCE(read_by::jsonb, '[]'::jsonb) @> to_jsonb(?::text))", ['1']);
                         } else {
                             $query->whereRaw('JSON_SEARCH(read_by, "one", ?) IS NULL', ['1']);
                         }

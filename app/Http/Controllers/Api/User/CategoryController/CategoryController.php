@@ -86,6 +86,9 @@ class CategoryController extends Controller
                 $category->load(['categoryPackages' => function ($query): void {
                     $query->with(['reviews'])->limit(10);
                 }])->loadCount('categoryPackages');
+                // The storage relation is still named categoryPackages for
+                // compatibility; public domain vocabulary is tiers.
+                $category->setRelation('tiers', $category->getRelation('categoryPackages'));
             }
 
             $locale = app()->getLocale();
@@ -124,6 +127,7 @@ class CategoryController extends Controller
             $data = $categories->map(function ($cat) use ($locale) {
                 $cat->name = $cat->trans('name', $locale);
                 $cat->description = $cat->trans('description', $locale);
+                $cat->setRelation('tiers', $cat->getRelation('categoryPackages'));
                 return $cat;
             });
 

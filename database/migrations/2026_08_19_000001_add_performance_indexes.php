@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\ForeignKeyIndexes\ForeignKeyIndexes;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -8,49 +9,65 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('transactions', function (Blueprint $table) {
-            $table->index('virtual_account_no');
-            $table->index('status');
-        });
-
-        Schema::table('user_vouchers', function (Blueprint $table) {
-            $table->index(['order_id', 'user_id']);
-        });
-
-        Schema::table('notifications', function (Blueprint $table) {
-            $table->index(['notifiable_type', 'notifiable_id', 'read_at']);
-        });
-
-        Schema::table('orders', function (Blueprint $table) {
-            $table->index(['user_id', 'status']);
-        });
-
-        Schema::table('fm_messages', function (Blueprint $table) {
-            $table->index(['inbox_id', 'created_at']);
-        });
+        $this->addIndexIfMissing('transactions', ['virtual_account_no']);
+        $this->addIndexIfMissing('transactions', ['status']);
+        $this->addIndexIfMissing('user_vouchers', ['order_id', 'user_id']);
+        $this->addIndexIfMissing('notifications', ['notifiable_type', 'notifiable_id', 'read_at']);
+        $this->addIndexIfMissing('orders', ['user_id', 'status']);
+        $this->addIndexIfMissing('fm_messages', ['inbox_id', 'created_at']);
     }
 
     public function down(): void
     {
-        Schema::table('transactions', function (Blueprint $table) {
-            $table->dropIndex(['virtual_account_no']);
-            $table->dropIndex(['status']);
-        });
+        Schema::disableForeignKeyConstraints();
 
-        Schema::table('user_vouchers', function (Blueprint $table) {
-            $table->dropIndex(['order_id', 'user_id']);
-        });
+        $this->dropIndexIfExists('transactions', ['virtual_account_no']);
+        $this->dropIndexIfExists('transactions', ['status']);
+        $this->dropIndexIfExists('user_vouchers', ['order_id', 'user_id']);
+        $this->dropIndexIfExists('notifications', ['notifiable_type', 'notifiable_id', 'read_at']);
+        $this->dropIndexIfExists('orders', ['user_id', 'status']);
+        $this->dropIndexIfExists('fm_messages', ['inbox_id', 'created_at']);
 
-        Schema::table('notifications', function (Blueprint $table) {
-            $table->dropIndex(['notifiable_type', 'notifiable_id', 'read_at']);
-        });
+        Schema::enableForeignKeyConstraints();
+    }
 
-        Schema::table('orders', function (Blueprint $table) {
-            $table->dropIndex(['user_id', 'status']);
-        });
+    /**
+     * @param  list<string>  $columns
+     */
+    private function addIndexIfMissing(string $table, array $columns): void
+    {
+        if (! $this->canIndex($table, $columns) || Schema::hasIndex($table, $columns)) {
+            return;
+        }
 
-        Schema::table('fm_messages', function (Blueprint $table) {
-            $table->dropIndex(['inbox_id', 'created_at']);
+        Schema::table($table, function (Blueprint $blueprint) use ($columns): void {
+            $blueprint->index($columns);
         });
+    }
+
+    /**
+     * @param  list<string>  $columns
+     */
+    private function dropIndexIfExists(string $table, array $columns): void
+    {
+        ForeignKeyIndexes::dropIndex($table, $columns);
+    }
+
+    /**
+     * @param  list<string>  $columns
+     */
+    private function canIndex(string $table, array $columns): bool
+    {
+        if (! Schema::hasTable($table)) {
+            return false;
+        }
+
+        foreach ($columns as $column) {
+            if (! Schema::hasColumn($table, $column)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 };

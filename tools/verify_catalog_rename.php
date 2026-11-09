@@ -55,7 +55,7 @@ foreach ([
     \App\Models\Cart\Cart::class,
     \App\Models\Order\Order::class,
     \App\Models\Review\Review::class,
-    \App\Models\Wishlist\Wishlist::class,
+    \App\Models\Favorite\Favorite::class,
     \App\Models\Package\Package::class,
 ] as $model) {
     $check('class loads: ' . $model, class_exists($model), true);
@@ -72,14 +72,14 @@ foreach ([
 }
 
 echo "\n== Canonical relation names (with product() kept as alias) ==\n";
-foreach ([\App\Models\Cart\Cart::class, \App\Models\Order\Order::class, \App\Models\Review\Review::class, \App\Models\Wishlist\Wishlist::class] as $m) {
+foreach ([\App\Models\Cart\Cart::class, \App\Models\Order\Order::class, \App\Models\Review\Review::class, \App\Models\Favorite\Favorite::class] as $m) {
     $ref = new ReflectionClass($m);
     $check($ref->getShortName() . '::catalog()', $ref->hasMethod('catalog'), true);
     $check($ref->getShortName() . '::product() alias', $ref->hasMethod('product'), true);
 }
 
 $catRef = new ReflectionClass(Catalog::class);
-foreach (['category', 'orders', 'reviews', 'wishlists'] as $rel) {
+foreach (['category', 'orders', 'reviews', 'Favorites'] as $rel) {
     $check('Catalog::' . $rel . '()', $catRef->hasMethod($rel), true);
 }
 $check('Category::catalogs()', method_exists(\App\Models\Category\Category::class, 'catalogs'), true);

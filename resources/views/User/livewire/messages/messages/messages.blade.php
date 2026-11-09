@@ -19,13 +19,6 @@
             <div style="--col-span-default: 1 / -1;" class="col-[var(--col-span-default)]">
                 <div class="flex gap-4 items-center">
 
-                    <a wire:navigate
-                        href="{{ \App\Filament\User\Pages\MessagesPage\MessagesPage::getUrl(panel: 'user', tenant: filament()->getTenant()) }}"
-                        class="p-2 -ml-1 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-white/10 transition"
-                        title="{{ __('Kembali') }}">
-                        <x-filament::icon icon="/images/icons/arrow_left.svg" class="w-5 h-5" />
-                    </a>
-
                     @php
                         $avatar = $selectedConversation->primary_avatar;
                         $alt = urlencode($selectedConversation->inbox_title);

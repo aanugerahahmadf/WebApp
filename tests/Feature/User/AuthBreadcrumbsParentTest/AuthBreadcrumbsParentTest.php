@@ -81,12 +81,12 @@ function authBreadcrumbProbe(): object
  * halaman yang sedang dibuka" memang tidak masuk akal dan memang tidak boleh
  * jadi parent crumb.
  *
- * `o-t-p-verify` dipilih karena itu halaman auth yang benar-benar ada dan
+ * `otp-verify` dipilih karena itu halaman auth yang benar-benar ada dan
  * tidak pernah dipakai sebagai referer di test manapun.
  */
 function arrivingFrom(?string $referer, ?string $intended = null): object
 {
-    $request = Request::create('/user/o-t-p-verify', 'GET');
+    $request = Request::create('/user/otp-verify', 'GET');
 
     if ($referer !== null) {
         $request->headers->set('referer', $referer);
@@ -226,7 +226,7 @@ test('an origin equal to the page being shown is not treated as a parent', funct
     // tanpa terjadi apa-apa.
     //
     // Skenario ini tidak diuji lewat arrivingFrom() karena path request-nya sudah
-    // dipatok di o-t-p-verify; diuji langsung di sini dengan request yang
+    // dipatok di otp-verify; diuji langsung di sini dengan request yang
     // path-nya sama dengan referer.
     $request = Request::create('/user/password-reset/verify', 'GET');
     $request->headers->set('referer', 'http://localhost/user/password-reset/verify');
@@ -267,7 +267,7 @@ test('a user panel page is only a valid origin for a signed in visitor', functio
     // Untuk tamu, halaman /user/* butuh auth sehingga tidak bisa jadi "asal
     // klik" yang bermakna; untuk user yang sudah login, URL itu dipakai apa
     // adanya.
-    $origin = 'http://localhost/wishlists';
+    $origin = 'http://localhost/Favorites';
 
     expect(arrivingFrom($origin)->parentCrumb())->toBeNull();
 

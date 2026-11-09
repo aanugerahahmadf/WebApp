@@ -59,7 +59,7 @@ it('label user menu mengikuti locale yang aktif', function (string $key, string 
 })->with([
     ['pengaturan', 'Pengaturan', 'Settings'],
     ['riwayat', 'Riwayat', 'History'],
-    ['ulasan', 'Ulasan Saya', 'My Review'],
+    ['ulasan', 'Komentar Penilaian Katalog Saya', 'My Catalog Ratings & Comments'],
     ['privacy', 'Privasi & Ketentuan', 'Privacy & Terms'],
     ['bantuan', 'Pusat Bantuan', 'Help Center'],
 ]);

@@ -20,12 +20,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx \
     supervisor \
     default-mysql-client \
+    libpq-dev \
+    postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 # --- PHP extensions (including gd for images) ---
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install -j"$(nproc)" \
-        pdo pdo_mysql mbstring exif pcntl bcmath gd intl zip opcache
+        pdo pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd intl zip opcache
 
 # --- Increase memory limit for image processing (seeders, CBIR) ---
 RUN echo "memory_limit = 512M" > /usr/local/etc/php/conf.d/memory-limit.ini

@@ -44,17 +44,53 @@ class FirebaseAuthController extends Controller
 
         Log::info("[FirebaseAuth] User {$user->id} ({$user->email}) logged in | new={$user->wasRecentlyCreated}");
 
+        // ── Alur Google Gateway ─────────────────────────────────────────────
+        //
+        // BELUM TERDAFTAR:
+        //   1. Menjawab Iya: Verify OTP Screen -> Complete Profile
+        //        -> Security Question (Iya) -> Two Factor Auth (Berhasil)
+        //        -> Auth.php -> Home
+        //   2. Menjawab Tidak: Verify OTP -> CompleteProfile
+        //        -> Security Question (Tidak) -> Home
+        //
+        // TERDAFTAR:
+        //   1. 2FA Aktif: Auth.php -> Otp Email Or Two Factory Screen -> Home
+        //   2. 2FA Tidak Aktif: Auth.php -> Home
+        // ────────────────────────────────────────────────────────────────────
+
+        // KASUS 1 — Akun baru: belum terdaftar atau email belum diverifikasi.
         if ($user->wasRecentlyCreated || is_null($user->email_verified_at)) {
             return response()->json([
                 'redirect' => route('filament.welcome.auth.email-verification.prompt'),
             ]);
         }
 
-        // Endpoint ini hanya dipanggil dari tombol "Masuk Dengan Google" yang
-        // ada di halaman auth panel user/welcome (panel admin punya halaman
-        // sign-in sendiri tanpa tombol Google). Jadi semua user — termasuk
-        // super_admin — diarahkan ke home panel user; sebelumnya super_admin
-        // dilempar ke /admin yang bukan tujuan dari halaman sign-in tsb.
+        // KASUS 2 — Akun baru yang email-nya sudah terverifikasi (jarang,
+        // misalnya Firebase sudah konfirmasi emailnya) tapi profil belum
+        // lengkap: wajib Complete Profile dulu.
+        if (method_exists($user, 'shouldCompleteProfile') && $user->shouldCompleteProfile()) {
+            return response()->json([
+                'redirect' => route('filament.welcome.pages.complete-profile'),
+            ]);
+        }
+
+        // Catatan: Belum Terdaftar (Menjawab Iya) TIDAK lewat callback ini
+        // kedua kali. Selesai TwoFactorAuth tetap login -> Auth.php ->
+        // Home (Auth::mount memantul). Jadi di sini tidak ada flag khusus.
+
+        // KASUS 3 — Akun TERDAFTAR + 2FA Aktif:
+        // Auth.php -> Otp Email Or Two Factory Screen -> Home
+        if (method_exists($user, 'hasSetupTwoFactor') && $user->hasSetupTwoFactor()) {
+            session()->forget(['2fa_passed', 'trusted_device_validated']);
+
+            return response()->json([
+                'redirect' => route('filament.welcome.pages.otp-verify'),
+            ]);
+        }
+
+        // KASUS 4 — Akun TERDAFTAR + 2FA Tidak Aktif → langsung Home.
+        session(['2fa_passed' => true]);
+
         return response()->json([
             'redirect' => route('filament.welcome.pages.home'),
         ]);
@@ -163,7 +199,7 @@ class FirebaseAuthController extends Controller
                 'social_id' => $localId,
                 'social_type' => 'firebase',
                 'avatar_url' => $photoUrl ? $this->downloadAvatar($photoUrl, null) : null,
-                'email_verified_at' => $emailVerified ? now() : null,
+                'email_verified_at' => null,
                 'active_status' => true,
                 'ip_address' => request()->ip(),
                 'password' => null,

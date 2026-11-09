@@ -136,10 +136,10 @@ enum SearchType {
   SEARCH_TYPE_BOTH = 3;
 }
 
-enum WishlistActionType {
-  WISHLIST_ACTION_TYPE_UNSPECIFIED = 0;
-  WISHLIST_ACTION_TYPE_ADDED = 1;
-  WISHLIST_ACTION_TYPE_REMOVED = 2;
+enum FavoriteActionType {
+  Favorite_ACTION_TYPE_UNSPECIFIED = 0;
+  Favorite_ACTION_TYPE_ADDED = 1;
+  Favorite_ACTION_TYPE_REMOVED = 2;
 }
 
 enum SearchSuggestionType {

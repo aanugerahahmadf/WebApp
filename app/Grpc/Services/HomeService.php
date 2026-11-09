@@ -45,8 +45,7 @@ class HomeService
             ->take(8)
             ->get();
         
-        $categories = Category::where('is_active', true)
-            ->whereNull('parent_id')
+        $categories = Category::query()
             ->withCount(['categoryCatalogs' => fn($q) => $q->where('is_active', true)->where('stock', '>', 0)])
             ->orderBy('name')
             ->take(10)
@@ -66,7 +65,7 @@ class HomeService
         $stats = [
             'totalCatalogs' => Catalog::where('is_active', true)->count(),
             'totalPackages' => Package::where('is_active', true)->count(),
-            'totalCategories' => Category::where('is_active', true)->count(),
+            'totalCategories' => Category::query()->count(),
             'happyCustomers' => Order::where('payment_status', 'paid')
                 ->distinct('user_id')
                 ->count('user_id'),

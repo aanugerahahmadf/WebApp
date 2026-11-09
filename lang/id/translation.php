@@ -113,6 +113,9 @@ return [
 
     // Review Modal
     'Tulis Ulasan' => 'Tulis Ulasan',
+    'Tulis Komentar Penilaian' => 'Tulis Komentar Penilaian',
+    'Komentar Penilaian Katalog' => 'Komentar Penilaian Katalog',
+    'Komentar Penilaian Katalog Saya' => 'Komentar Penilaian Katalog Saya',
     'Bagikan pengalaman Anda tentang paket ini.' => 'Bagikan pengalaman Anda tentang paket ini.',
     'Bagikan pengalaman Anda tentang produk ini.' => 'Bagikan pengalaman Anda tentang produk ini.',
     'Anda sudah menulis ulasan untuk paket ini.' => 'Anda sudah menulis ulasan untuk paket ini.',
@@ -223,7 +226,7 @@ return [
     'Berlaku hingga' => 'Berlaku hingga',
     'Belum ada promo' => 'Belum ada promo',
 
-    // Wishlist
+    // Favorite
     'Favorit Saya' => 'Favorit Saya',
     'Favorit Baru' => 'Favorit Baru',
     'Pilih Paket' => 'Pilih Paket',

@@ -27,7 +27,7 @@ use App\Models\Transaction\Transaction;
 use App\Models\User\User;
 use App\Models\User\UserAddress;
 use App\Models\Voucher\Voucher;
-use App\Models\Wishlist\Wishlist;
+use App\Models\Favorite\Favorite;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -156,11 +156,11 @@ class AllFactoriesComprehensiveTest extends TestCase
         $this->assertDatabaseHas('carts', ['id' => $cart->id]);
     }
 
-    public function test_wishlist_factory_creates_valid_wishlist(): void
+    public function test_Favorite_factory_creates_valid_Favorite(): void
     {
-        $wishlist = Wishlist::factory()->create();
-        $this->assertNotNull($wishlist->user_id);
-        $this->assertDatabaseHas('wishlists', ['id' => $wishlist->id]);
+        $Favorite = Favorite::factory()->create();
+        $this->assertNotNull($Favorite->user_id);
+        $this->assertDatabaseHas('Favorites', ['id' => $Favorite->id]);
     }
 
     public function test_transaction_factory_creates_valid_transaction(): void

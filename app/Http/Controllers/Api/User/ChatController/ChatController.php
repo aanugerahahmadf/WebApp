@@ -62,7 +62,7 @@ class ChatController extends Controller
                 ->where(function ($q) use ($user) {
                     $q->whereNull('read_by')
                         ->orWhere(function ($nested) use ($user) {
-                            $nested->whereNotJsonContains('read_by', (string) $user->id);
+                            $nested->whereJsonDoesntContain('read_by', (string) $user->id);
                         });
                 })
                 ->count();
@@ -401,7 +401,7 @@ class ChatController extends Controller
             ->where('user_id', '!=', $user->id)
             ->where(function ($q) use ($user) {
                 $q->whereNull('read_by')
-                    ->orWhereNotJsonContains('read_by', (string) $user->id);
+                    ->orWhereJsonDoesntContain('read_by', (string) $user->id);
             })
             ->count();
 
@@ -657,7 +657,7 @@ class ChatController extends Controller
             ->where('user_id', '!=', $user->id)
             ->where(function ($q) use ($userIdStr) {
                 $q->whereNull('read_by')
-                    ->orWhereNotJsonContains('read_by', $userIdStr);
+                    ->orWhereJsonDoesntContain('read_by', $userIdStr);
             })
             ->get(['id', 'read_by']);
 

@@ -7,12 +7,13 @@ use App\Filament\Welcome\Resources\CatalogResource\CatalogResource;
 use App\Http\Middleware\AuthenticateWelcome\AuthenticateWelcome;
 use App\Models\Cart\Cart;
 use App\Models\Catalog\Catalog;
-use App\Models\Wishlist\Wishlist;
+use App\Models\Favorite\Favorite;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Resources\Components\Tab;
 use Filament\Resources\Pages\ManageRecords;
 use App\Support\AppIcon\AppIcon;
+use App\Support\SqlExpression\SqlExpression;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Livewire\Features\SupportRedirects\Redirector as LivewireRedirector;
@@ -32,11 +33,11 @@ class ManageCatalogs extends ManageRecords
     //             ->icon('/images/icons/squares.svg')
     //             ->badge(fn () => $cbirCount ?? Catalog::count())
     //             ->badgeColor($cbirCount ? 'primary' : 'gray'),
-    //         'wishlist' => Tab::make(__('Favorit Saya'))
+    //         'Favorite' => Tab::make(__('Favorit Saya'))
     //             ->icon('/images/icons/heart.svg')
-    //             ->badge(fn () => Catalog::whereHas('wishlists', fn ($q) => $q->where('user_id', Filament::auth()->id()))->count())
+    //             ->badge(fn () => Catalog::whereHas('Favorites', fn ($q) => $q->where('user_id', Filament::auth()->id()))->count())
     //             ->badgeColor('danger')
-    //             ->modifyQueryUsing(fn (Builder $query) => $query->whereHas('wishlists', fn ($q) => $q->where('user_id', Filament::auth()->id()))),
+    //             ->modifyQueryUsing(fn (Builder $query) => $query->whereHas('Favorites', fn ($q) => $q->where('user_id', Filament::auth()->id()))),
     //         'orders' => Tab::make(__('Pesanan Saya'))
     //             ->icon('/images/icons/bag.svg')
     //             ->badge(fn () => Catalog::whereHas('orders', fn ($q) => $q->where('user_id', Filament::auth()->id()))->count())
@@ -54,7 +55,7 @@ class ManageCatalogs extends ManageRecords
 
         if ($ids = session()->get('cbir_catalog_results_ids')) {
             return $query->whereIn('id', $ids)
-                ->orderByRaw('FIELD(id, '.implode(',', $ids).')');
+                ->orderByRaw(SqlExpression::orderByIds($ids));
         }
 
         return $query;
@@ -79,14 +80,14 @@ class ManageCatalogs extends ManageRecords
         return redirect()->to(CatalogResource::getUrl('checkout', ['record' => $id]));
     }
 
-    public function toggleWishlist($id)
+    public function toggleFavorite($id)
     {
         if ($redirect = $this->redirectGuestToLogin()) {
             return $redirect;
         }
 
         $user = Filament::auth()->user();
-        $deleted = Wishlist::query()->where('user_id', $user->id)
+        $deleted = Favorite::query()->where('user_id', $user->id)
             ->where('catalog_id', $id)
             ->delete();
 
@@ -94,7 +95,7 @@ class ManageCatalogs extends ManageRecords
             $msg = __('Dihapus dari Favorit');
             Notification::make()->title($msg)->warning()->send();
         } else {
-            Wishlist::create([
+            Favorite::create([
                 'user_id' => $user->id,
                 'catalog_id' => $id,
             ]);
@@ -106,7 +107,7 @@ class ManageCatalogs extends ManageRecords
         $results = session('cbir_mixed_results', []);
         foreach ($results as &$res) {
             if (($res['type'] ?? '') === 'catalog' && ($res['data']['id'] ?? 0) == $id) {
-                $res['data']['is_wishlisted'] = ! $deleted;
+                $res['data']['is_Favoriteed'] = ! $deleted;
             }
         }
         session()->put('cbir_mixed_results', $results);
@@ -120,7 +121,8 @@ class ManageCatalogs extends ManageRecords
 
         $user = Filament::auth()->user();
 
-        Cart::incrementQuantity($user->id, $id, null);
+        $tierId = Catalog::find($id)?->tiers()->value('id');
+        Cart::incrementQuantity($user->id, $id, $tierId);
 
         Notification::make()
             ->title(__('Berhasil masuk keranjang'))
@@ -160,7 +162,7 @@ class ManageCatalogs extends ManageRecords
         return [
             'refresh_items' => '$refresh',
             'refresh_catalog' => '$refresh',
-            'toggle_wishlist' => 'toggleWishlist',
+            'toggle_Favorite' => 'toggleFavorite',
             'book_now' => 'bookNow',
             'clear_visual_search' => 'clearVisualSearch',
         ];

@@ -296,12 +296,12 @@ class CreateReviews extends Page implements HasForms
 
     public function getTitle(): string
     {
-        return __('Tulis Ulasan');
+        return __('Tulis Komentar Penilaian');
     }
 
     public function getHeading(): string
     {
-        return __('Tulis Ulasan');
+        return __('Tulis Komentar Penilaian');
     }
 
     public function getSubheading(): ?string

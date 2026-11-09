@@ -53,7 +53,7 @@ beforeEach(function (): void {
 // Catalog detail â€” Welcome panel
 // ---------------------------------------------------------------------------
 
-it('welcome catalog detail renders name, share, report, cart, chat, wishlist, review buttons', function (): void {
+it('welcome catalog detail renders name, share, report, cart, chat, Favorite, review buttons', function (): void {
     actingAs($this->customer, 'web');
 
     // `name_translations`, bukan `name` -- lihat catatan di `CatalogFactory`.
@@ -75,7 +75,7 @@ it('welcome catalog detail renders name, share, report, cart, chat, wishlist, re
         ->assertSee(__('Masukkan ke Keranjang'))
         ->assertSee(__('Chat Admin'))
         ->assertSee(__('Tambah ke Favorit'))
-        ->assertSee(__('Tulis Ulasan'))
+        ->assertSee(__('Tulis Komentar Penilaian'))
         ->assertSee('DISKON')
         ->assertSee('Fitur Satu');
 });
@@ -98,7 +98,7 @@ it('welcome catalog detail shows reviews when they exist', function (): void {
 
     Livewire::test(ViewCatalog::class, ['record' => $catalog->getKey()])
         ->assertSuccessful()
-        ->assertSee(__('Ulasan'))
+        ->assertSee(__('Komentar Penilaian Katalog'))
         ->assertSee('Reviewer Satu');
 });
 
@@ -119,7 +119,7 @@ it('welcome catalog detail hides the review button for a customer who already re
 
     Livewire::test(ViewCatalog::class, ['record' => $catalog->getKey()])
         ->assertSuccessful()
-        ->assertDontSee(__('Tulis Ulasan'));
+        ->assertDontSee(__('Tulis Komentar Penilaian'));
 });
 
 /*

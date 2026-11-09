@@ -15,7 +15,9 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('type');
             $table->morphs('notifiable');
-            $table->text('data');
+            // `json`, bukan `text`: tray notifikasi Filament menyaring lewat
+            // operator `->>` yang hanya ada di tipe JSON pada PostgreSQL.
+            $table->json('data');
             $table->timestamp('read_at')->nullable();
             $table->timestamps();
         });

@@ -12,16 +12,19 @@ use App\Forms\Components\CheckoutAddress\CheckoutAddress;
 use App\Forms\Components\CheckoutCalendarPicker\CheckoutCalendarPicker;
 use App\Models\Cart\Cart;
 use App\Models\Order\Order;
+use App\Models\Package\Package;
 use App\Models\PaymentMethod\PaymentMethod;
 use App\Models\Catalog\Catalog;
 use App\Models\Review\Review;
 use App\Models\Transaction\Transaction;
 use App\Models\Voucher\Voucher;
-use App\Models\Wishlist\Wishlist;
+use App\Models\Favorite\Favorite;
 use App\Services\BriService\BriService;
 use App\Services\ChatService\ChatService;
 use App\Support\AppIcon\AppIcon;
 use App\Support\AppPlatform\AppPlatform;
+use App\Support\PaymentWindow\PaymentWindow;
+use Carbon\CarbonInterface;
 use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Infolists;
@@ -68,12 +71,12 @@ class CatalogResource extends Resource
 
     public static function getGlobalSearchResultTitle(Model $record): string
     {
-        return __($record->name).($record->stock <= 0 ? ' ('.__('Stok Habis').')' : '');
+        return __($record->name).((static::firstTier($record)?->stock ?? 0) <= 0 ? ' ('.__('Stok Habis').')' : '');
     }
 
     public static function getGlobalSearchResultDetails(Model $record): array
     {
-        $price = $record->discount_price > 0 ? $record->discount_price : $record->price;
+        $tier = static::firstTier($record);
 
         // Rating di hasil pencarian HARUS bintang, tanpa angka sama sekali
         // (aturan tampilan storefront). Nilai rata-rata dibulatkan ke bintang
@@ -85,8 +88,8 @@ class CatalogResource extends Resource
 
         $details = [
             __('Kategori') => __($record->category?->name ?? '-'),
-            __('Harga') => 'Rp '.number_format($price, 0, ',', '.'),
-            __('Stok') => $record->stock.' '.__('Item'),
+            __('Harga Tier') => $tier ? 'Rp '.number_format((float) $tier->final_price, 0, ',', '.') : __('Belum ada tier'),
+            __('Stok') => (static::firstTier($record)?->stock ?? 0).' '.__('Item'),
         ];
 
         if ($rating !== null) {
@@ -161,18 +164,6 @@ class CatalogResource extends Resource
                     ->label(__('Kategori'))
                     ->relationship('category', 'name', fn ($query) => $query->where('type', 'catalog'))
                     ->preload(),
-                SelectFilter::make('has_discount')
-                    ->searchable()
-                    ->label(__('Diskon'))
-                    ->options([
-                        'yes' => __('Ada Diskon'),
-                        'no' => __('Tanpa Diskon'),
-                    ])
-                    ->query(fn (Builder $query, array $data) => match ($data['value'] ?? null) {
-                        'yes' => $query->where('discount_price', '>', 0),
-                        'no' => $query->where(fn ($q) => $q->whereNull('discount_price')->orWhere('discount_price', 0)),
-                        default => $query,
-                    }),
                 SelectFilter::make('min_rating')
                     ->searchable()
                     ->label(__('Rating Minimum'))
@@ -194,14 +185,10 @@ class CatalogResource extends Resource
                     ->label(__('Urutkan'))
                     ->options([
                         'latest' => __('Terbaru'),
-                        'price_asc' => __('Harga: Terendah'),
-                        'price_desc' => __('Harga: Tertinggi'),
                         'rating_desc' => __('Rating Tertinggi'),
                         'most_ordered' => __('Paling Banyak Dipesan'),
                     ])
                     ->query(fn (Builder $query, array $data) => match ($data['value'] ?? null) {
-                        'price_asc' => $query->reorder('price', 'asc'),
-                        'price_desc' => $query->reorder('price', 'desc'),
                         'latest' => $query->reorder('created_at', 'desc'),
                         'rating_desc' => $query->withAvg('reviews', 'rating')->reorder('reviews_avg_rating', 'desc'),
                         'most_ordered' => $query->withCount('orders')->reorder('orders_count', 'desc'),
@@ -291,7 +278,7 @@ class CatalogResource extends Resource
                                                     ->content(new HtmlString(
                                                         '<div class="rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-4">'.
                                                         '<div class="text-base font-bold text-gray-900 dark:text-white">'.e($record->name).'</div>'.
-                                                        '<div class="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mt-1">Rp '.number_format($record->final_price, 0, ',', '.').'</div>'.
+                                                         '<div class="text-sm text-gray-500 dark:text-gray-400 mt-1">'.__('Pilih tier untuk melihat harga').'</div>'.
                                                         '</div>'
                                                     )),
                                                 Forms\Components\TextInput::make('share_url')
@@ -341,7 +328,7 @@ class CatalogResource extends Resource
                                                         'type' => 'catalog',
                                                         'id' => $record->id,
                                                         'name' => $record->name,
-                                                        'price' => $record->final_price,
+                                                         'price' => static::firstTier($record)?->final_price,
                                                         'image' => $record->image_url,
                                                         'url' => CatalogResource::getUrl('view', ['record' => $record->id]),
                                                         'is_report' => true,
@@ -364,7 +351,7 @@ class CatalogResource extends Resource
                                      // CATALOG NAME + PRICE (one horizontal block)
                                      static::catalogPriceEntry(),
 
-                                    // RATING & DISKON BADGE (mobile _buildRatingBadge parity)
+                                     // RATING BADGE (Catalog has no own price/discount)
                                     Group::make([
                                         Infolists\Components\TextEntry::make('rating_badge')
                                             ->label('')
@@ -378,14 +365,7 @@ class CatalogResource extends Resource
                                              ->extraAttributes(['data-field' => 'catalogs.rating'])
                                              ->visible(fn ($record) => $record->reviews()->count() > 0),
 
-                                        Infolists\Components\TextEntry::make('discount_badge')
-                                            ->label('')
-                                            ->hiddenLabel()
-                                            ->badge()
-                                            ->color('danger')
-                                            ->state(fn ($record) => $record->discount_price > 0 ? __('DISKON') : '')
-                                            ->visible(fn ($record) => $record->discount_price > 0),
-                                    ])->extraAttributes(['class' => 'flex items-center gap-4 mb-4']),
+                                     ])->extraAttributes(['class' => 'flex items-center gap-4 mb-4']),
 
                                     // PRICE DISPLAY
                                     // Alpine-backed so it swaps to the selected
@@ -435,12 +415,12 @@ class CatalogResource extends Resource
                                     // PRIMARY CTA: BUY & CART
                                     Actions::make([
                                         Action::make('buy_now_detail')
-                                            ->label(fn ($record) => $record->stock > 0 ? __('Pesan Sekarang') : __('Stok Habis'))
-                                            ->icon(fn ($record) => $record->stock > 0 ? '/images/icons/cart.svg' : '/images/icons/x_circle.svg')
+                                             ->label(fn ($record) => (static::selectedTier($record)?->stock ?? 0) > 0 ? __('Pesan Sekarang') : __('Stok Habis'))
+                                             ->icon(fn ($record) => (static::selectedTier($record)?->stock ?? 0) > 0 ? '/images/icons/cart.svg' : '/images/icons/x_circle.svg')
                                             ->button()
-                                            ->color(fn ($record) => $record->stock > 0 ? 'success' : 'danger')
-                                            ->outlined(fn ($record) => $record->stock > 0)
-                                            ->disabled(fn ($record) => $record->stock <= 0)
+                                             ->color(fn ($record) => (static::selectedTier($record)?->stock ?? 0) > 0 ? 'success' : 'danger')
+                                             ->outlined(fn ($record) => (static::selectedTier($record)?->stock ?? 0) > 0)
+                                             ->disabled(fn ($record) => (static::selectedTier($record)?->stock ?? 0) <= 0)
                                             ->size(ActionSize::Large)
                                             // Tombol utama = chrome customizer
                                             // (ukuran/warna dari panel admin,
@@ -472,15 +452,15 @@ class CatalogResource extends Resource
                                                     ->required()
                                                     ->default(1)
                                                     ->minValue(1)
-                                                    ->maxValue(fn ($record) => $record->stock),
+                                                     ->maxValue(fn ($record) => max(0, (int) (static::selectedTier($record)?->stock ?? 0))),
                                             ])
-                                            ->action(function ($record, array $data) {
-                                                Cart::incrementQuantity(
-                                                    (int) auth()->id(),
-                                                    $record->id,
-                                                    null,
-                                                    (int) $data['quantity'],
-                                                );
+                                             ->action(function ($record, array $data, Component $livewire) {
+                                                 Cart::incrementQuantity(
+                                                     (int) auth()->id(),
+                                                     $record->id,
+                                                     (int) ($livewire->selectedTierId ?? static::firstTier($record)?->getKey()),
+                                                     (int) $data['quantity'],
+                                                 );
 
                                                 Notification::make()
                                                     ->title(__('Berhasil masuk keranjang'))
@@ -489,10 +469,10 @@ class CatalogResource extends Resource
                                                     ->icon('/images/icons/cart.svg')
                                                     ->send();
                                             })
-                                            ->visible(fn ($record) => $record->stock > 0),
+                                                     ->visible(fn ($record) => (static::selectedTier($record)?->stock ?? 0) > 0),
                                     ])->fullWidth()->extraAttributes(['class' => '!mb-0']),
 
-                                    // SECONDARY: CHAT & WISHLIST
+                                    // SECONDARY: CHAT & Favorite
                                     Actions::make([
                                         Action::make('chat_admin')
                                             ->label(__('Chat Admin'))
@@ -522,7 +502,7 @@ class CatalogResource extends Resource
                                                     'type' => 'catalog',
                                                     'id' => $record->id,
                                                     'name' => $record->name,
-                                                    'price' => $record->final_price,
+                                                     'price' => static::firstTier($record)?->final_price,
                                                     'image' => $record->image_url,
                                                     'url' => CatalogResource::getUrl('view', ['record' => $record->id]),
                                                 ], auth()->id());
@@ -530,12 +510,12 @@ class CatalogResource extends Resource
                                                 return redirect(MessagesPage::getUrl(['id' => $inbox->id]));
                                             }),
 
-                                        Action::make('wishlist_detail')
-                                            ->label(fn ($record) => $record->is_wishlisted ? __('Hapus dari Favorit') : __('Tambah ke Favorit'))
-                                            ->icon(fn ($record) => $record->is_wishlisted ? '/images/icons/heart.svg' : '/images/icons/heart.svg')
+                                        Action::make('Favorite_detail')
+                                            ->label(fn ($record) => $record->is_Favoriteed ? __('Hapus dari Favorit') : __('Tambah ke Favorit'))
+                                            ->icon(fn ($record) => $record->is_Favoriteed ? '/images/icons/heart.svg' : '/images/icons/heart.svg')
                                             ->button()
-                                            ->color(fn ($record) => $record->is_wishlisted ? 'danger' : 'gray')
-                                            ->outlined(fn ($record) => ! $record->is_wishlisted)
+                                            ->color(fn ($record) => $record->is_Favoriteed ? 'danger' : 'gray')
+                                            ->outlined(fn ($record) => ! $record->is_Favoriteed)
                                             ->size(ActionSize::Large)
                                             ->extraAttributes([
                                                 'class' => 'w-full flex-1 rounded-xl py-2 text-sm shadow-sm transition-all duration-300',
@@ -546,7 +526,7 @@ class CatalogResource extends Resource
                                             ])
                                             ->action(function ($record) {
                                                 $userId = Filament::auth()->id();
-                                                $deleted = Wishlist::query()->where('user_id', $userId)
+                                                $deleted = Favorite::query()->where('user_id', $userId)
                                                     ->where('catalog_id', $record->id)
                                                     ->delete();
 
@@ -557,7 +537,7 @@ class CatalogResource extends Resource
                                                         ->icon('/images/icons/heart.svg')
                                                         ->send();
                                                 } else {
-                                                    Wishlist::create([
+                                                    Favorite::create([
                                                         'user_id' => $userId,
                                                         'catalog_id' => $record->id,
                                                     ]);
@@ -573,7 +553,7 @@ class CatalogResource extends Resource
 
                                     Actions::make([
                                         Action::make('write_review')
-                                            ->label(__('Tulis Ulasan'))
+                                            ->label(__('Tulis Komentar Penilaian'))
                                             ->icon('/images/icons/star.svg')
                                             ->color('warning')
                                             ->button()
@@ -592,7 +572,7 @@ class CatalogResource extends Resource
                                     ])->fullWidth()->extraAttributes(['class' => '!mt-2']),
 
                                     // REVIEWS (mobile _buildReviewCard parity)
-                                    Infolists\Components\Section::make(__('Ulasan'))
+                                    Infolists\Components\Section::make(__('Komentar Penilaian Katalog'))
                                         ->icon('/images/icons/chat_dots.svg')
                                         ->iconColor('warning')
                                         ->compact()
@@ -674,11 +654,27 @@ class CatalogResource extends Resource
             $user->update(['whatsapp' => $data['whatsapp']]);
         }
 
-        // Stock Check
-        if ($catalog->stock < $data['quantity']) {
+        // Tier yang dipilih adalah satu-satunya sumber harga dan stok.
+        $packageId = $data['package_id'] ?? null;
+        $package = $packageId ? $catalog->tiers()->whereKey($packageId)->first() : null;
+        if (! $package) {
+            Notification::make()
+                ->title(__('Tier wajib dipilih'))
+                ->body(__('Pilih salah satu tier sebelum melanjutkan checkout.'))
+                ->danger()
+                ->send();
+
+            return null;
+        }
+
+        $unitPrice = (float) $package->final_price;
+
+        // Stock selalu berasal dari tier.
+        $availableStock = (int) $package->stock;
+        if ($availableStock < $data['quantity']) {
             Notification::make()
                 ->title(__('Stok Tidak Cukup'))
-                ->body(__('Mohon maaf, stok tersedia hanya :count.', ['count' => $catalog->stock]))
+                ->body(__('Mohon maaf, stok tersedia hanya :count.', ['count' => $availableStock]))
                 ->danger()
                 ->send();
 
@@ -686,13 +682,11 @@ class CatalogResource extends Resource
         }
 
         // Decrease Stock
-        $catalog->decrement('stock', $data['quantity']);
+        $package->decrement('stock', $data['quantity']);
 
         // Voucher discount
         $voucherId = $data['voucher_id'] ?? null;
         $voucherDiscount = (float) ($data['voucher_discount'] ?? 0);
-        $totalBeforeVoucher = $catalog->final_price * (int) $data['quantity'];
-        $finalPrice = max(0, $totalBeforeVoucher - $voucherDiscount);
 
         // Payment method
         $paymentMethodId = $data['payment_method_id'] ?? null;
@@ -703,6 +697,23 @@ class CatalogResource extends Resource
         $isVirtualAccount = $pm !== null && $pm->type === 'virtual_account';
         $adminFee = (float) ($pm?->fee ?? 0);
 
+        // Rumus tagihan SATU sumber dengan preview checkout
+        // (`checkoutPayable()`): harga tier x jumlah - diskon voucher,
+        // lalu + biaya admin. `$finalPrice` sengaja TANPA biaya admin karena
+        // itu yang disimpan sebagai `orders.total_price`.
+        $finalPrice = PaymentWindow::payable(
+            $unitPrice,
+            $data['quantity'],
+            $voucherDiscount,
+            0,
+        );
+        $totalAmount = PaymentWindow::payable(
+            $unitPrice,
+            $data['quantity'],
+            $voucherDiscount,
+            $adminFee,
+        );
+
         // Default statuses
         $orderStatus = OrderStatus::PENDING;
         $orderPaymentStatus = $isCreditCard ? OrderPaymentStatus::PAID : OrderPaymentStatus::PENDING;
@@ -710,6 +721,7 @@ class CatalogResource extends Resource
         // Create Order
         $order = Order::create([
             'user_id' => $user->id,
+            'package_id' => $package?->id,
             'catalog_id' => $catalog->id,
             'order_number' => 'ORD-ITM-'.strtoupper(str()->random(8)),
             'total_price' => $finalPrice,
@@ -757,7 +769,7 @@ class CatalogResource extends Resource
             'reference_number' => $reference,
             'amount' => $finalPrice,
             'admin_fee' => $adminFee,
-            'total_amount' => $finalPrice + $adminFee,
+            'total_amount' => $totalAmount,
             'payment_gateway' => $pm?->type ?? 'manual',
             'payment_method' => $pm?->name,
             'payment_method_id' => $pm?->id,
@@ -803,7 +815,41 @@ class CatalogResource extends Resource
         return redirect()->route('filament.welcome.resources.orders.index');
     }
 
-    public static function getCheckoutWizardSteps(Catalog $catalog): array
+    /**
+     * Harga satuan yang benar-benar ditagihkan: harga TIER yang dipilih.
+     *
+     * Ini yang membuat "harga katalog / tier / package" di halaman detail
+     * TIDAK BISA berbeda dari nominal yang tertulis di QRIS dan Virtual
+     * Account: keduanya memakai method ini.
+     */
+    public static function checkoutUnitPrice(Catalog $catalog, mixed $packageId): float
+    {
+        $package = $packageId ? $catalog->tiers()->whereKey($packageId)->first() : null;
+
+        return (float) ($package?->final_price ?? 0);
+    }
+
+    /**
+     * Nominal yang akan ditagihkan pada wizard checkout, dihitung dari state
+     * form saat ini (tier, jumlah, voucher, metode pembayaran).
+     *
+     * Nominal QRIS/VA DAN `handleCheckout()` memakai rumus yang sama dari
+     * `PaymentWindow::payable()`, jadi angka yang dilihat pembeli tidak
+     * mungkin berbeda dari angka yang disimpan ke
+     * `transactions.total_amount` -- dan `total_amount` itulah yang
+     * dicocokkan webhook BRI.
+     */
+    public static function checkoutPayable(Catalog $catalog, Forms\Get $get, ?PaymentMethod $method): float
+    {
+        return PaymentWindow::payable(
+            static::checkoutUnitPrice($catalog, $get('package_id')),
+            $get('quantity') ?? 1,
+            $get('voucher_discount') ?? 0,
+            $method?->fee ?? 0,
+        );
+    }
+
+    public static function getCheckoutWizardSteps(Catalog $catalog, ?Package $tier = null, ?CarbonInterface $deadline = null): array
     {
         return [
             Forms\Components\Wizard\Step::make(__('Detail Acara'))
@@ -811,6 +857,11 @@ class CatalogResource extends Resource
                 ->schema([
                     Forms\Components\Section::make(__('Pilih Waktu & Kebutuhan'))
                         ->schema([
+                            // Tier (paket) yang dipilih di halaman detail katalog.
+                            // HARGA TIER INI yang dipakai untuk order, QRIS, dan
+                            // Virtual Account -- bukan harga dasar katalog.
+                            Forms\Components\Hidden::make('package_id')
+                                ->default($tier?->getKey()),
                             CheckoutCalendarPicker::make('booking_date')
                                 ->label(__('Rencana Tanggal Acara'))
                                 ->required()
@@ -828,7 +879,7 @@ class CatalogResource extends Resource
                                 ->required()
                                 ->default(1)
                                 ->minValue(1)
-                                ->maxValue($catalog->stock)
+                                ->maxValue(max(0, (int) ($tier?->stock ?? 0)))
                                 ->columnSpanFull(),
                             // Alamat acara: GPS + Google Places + tombol Edit. Dulu
                             // `Textarea::make('notes')`, yang hanya menerima teks bebas
@@ -870,17 +921,19 @@ class CatalogResource extends Resource
                                 ->searchable()
                                 ->label(__('Voucher Tersedia'))
                                 ->prefixIcon('/images/icons/ticket.svg')
-                                ->options(function () use ($catalog) {
+                                ->options(function (Forms\Get $get) use ($catalog) {
                                     $user = Filament::auth()->user();
                                     if (! $user) {
                                         return [];
                                     }
 
+                                    $tierPrice = static::checkoutUnitPrice($catalog, $get('package_id'));
+
                                     $vouchers = Voucher::query()->where('is_active', true)
                                         ->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()))
                                         ->whereHas('users', fn ($q) => $q->where('users.id', $user->id)->whereNull('user_vouchers.used_at'))
                                         ->get()
-                                        ->filter(fn (Voucher $v) => $v->isValidFor($catalog->final_price));
+                                        ->filter(fn (Voucher $v) => $tierPrice > 0 && $v->isValidFor($tierPrice));
 
                                     return $vouchers->mapWithKeys(function (Voucher $v) {
                                         $amount = $v->discount_type === DiscountType::PERCENTAGE
@@ -901,8 +954,9 @@ class CatalogResource extends Resource
                                         return;
                                     }
                                     $voucher = Voucher::find($state);
-                                    if ($voucher && $voucher->isValidFor($catalog->final_price)) {
-                                        $discount = $voucher->calculateDiscount($catalog->final_price);
+                                    $tierPrice = static::checkoutUnitPrice($catalog, $get('package_id'));
+                                    if ($voucher && $tierPrice > 0 && $voucher->isValidFor($tierPrice)) {
+                                        $discount = $voucher->calculateDiscount($tierPrice);
                                         $set('voucher_discount', $discount);
                                         $set('_voucher_info', 'valid:'.$voucher->id.':'.$discount.':'.$voucher->description);
                                     } else {
@@ -932,13 +986,14 @@ class CatalogResource extends Resource
                                 ->visible(fn (Forms\Get $get) => str_starts_with((string) $get('_voucher_info'), 'valid:'))
                                 ->content(function (Forms\Get $get) use ($catalog) {
                                     $discount = (float) $get('voucher_discount');
-                                    $final = $catalog->final_price - $discount;
+                                    $tierPrice = static::checkoutUnitPrice($catalog, $get('package_id'));
+                                    $final = max(0, ($tierPrice * ((int) ($get('quantity') ?: 1))) - $discount);
 
                                     return new HtmlString(
                                         '<div class="flex flex-col gap-2 p-4 bg-success-50 dark:bg-success-950 rounded-xl border border-success-200 dark:border-success-800">'.
                                             '<div class="flex justify-between text-sm">'.
-                                                '<span class="text-gray-600 dark:text-gray-400">'.__('Harga Katalog').'</span>'.
-                                                '<span class="font-semibold">Rp '.number_format($catalog->final_price, 2, ',', '.').'</span>'.
+                                                 '<span class="text-gray-600 dark:text-gray-400">'.__('Harga Tier').'</span>'.
+                                                 '<span class="font-semibold">Rp '.number_format($tierPrice, 2, ',', '.').'</span>'.
                                             '</div>'.
                                             '<div class="flex justify-between text-sm text-success-600 dark:text-success-400">'.
                                                 '<span class="flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" /></svg> '.__('Diskon Voucher').'</span>'.
@@ -977,16 +1032,43 @@ class CatalogResource extends Resource
                             // begitu pembeli memilih QRIS. Sumber gambarnya
                             // public/images/qris/qris.jpg (QrisImage), bukan
                             // kolom image_url yang selalu NULL.
+                            //
+                            // NOMINAL ikut dikirim: QRIS toko ini statis,
+                            // jadi pembeli mengetik sendiri nominalnya di
+                            // aplikasi bank/e-wallet. Angka di layar harus
+                            // sama dengan `total_amount` yang dicocokkan
+                            // webhook, kalau tidak pembayaran tidak LUNAS.
                             Forms\Components\Placeholder::make('qris_preview')
                                 ->hiddenLabel()
                                 ->columnSpanFull()
                                 ->visible(fn (Forms\Get $get): bool => PaymentMethod::isQris((int) $get('payment_method_id')))
-                                ->content(function (Forms\Get $get): HtmlString {
+                                ->content(function (Forms\Get $get) use ($catalog, $deadline): HtmlString {
                                     $method = PaymentMethod::find((int) $get('payment_method_id'));
 
                                     return new HtmlString(
                                         view('Shared.components.qris-card.qris-card', [
                                             'method' => $method,
+                                            'amount' => static::checkoutPayable($catalog, $get, $method),
+                                            'deadline' => $deadline,
+                                        ])->render()
+                                    );
+                                }),
+                            // Virtual Account BRI: nomornya baru dibuat setelah
+                            // pesanan tersimpan (nomor itu memuat id pesanan),
+                            // jadi yang ditampilkan di sini nominal + masa
+                            // berlakunya + nama pemilik VA.
+                            Forms\Components\Placeholder::make('va_preview')
+                                ->hiddenLabel()
+                                ->columnSpanFull()
+                                ->visible(fn (Forms\Get $get): bool => PaymentMethod::find((int) $get('payment_method_id'))?->type === 'virtual_account')
+                                ->content(function (Forms\Get $get) use ($catalog, $deadline): HtmlString {
+                                    $method = PaymentMethod::find((int) $get('payment_method_id'));
+
+                                    return new HtmlString(
+                                        view('Shared.components.va-preview.va-preview', [
+                                            'amount' => static::checkoutPayable($catalog, $get, $method),
+                                            'name' => Transaction::virtualAccountNameFor(Filament::auth()->user()),
+                                            'deadline' => $deadline,
                                         ])->render()
                                     );
                                 }),
@@ -1007,7 +1089,7 @@ class CatalogResource extends Resource
                                 ->content($catalog->name),
                             Forms\Components\Placeholder::make('price_summary')
                                 ->label(__('Total Harga'))
-                                ->content('Rp '.number_format($catalog->final_price, 0, ',', '.'))
+                                ->content(fn (Forms\Get $get) => 'Rp '.number_format(static::checkoutPayable($catalog, $get, PaymentMethod::find((int) $get('payment_method_id'))), 0, ',', '.'))
                                 ->extraAttributes(['class' => 'text-primary-600 dark:text-primary-400 font-bold text-2xl']),
                         ]),
                 ]),

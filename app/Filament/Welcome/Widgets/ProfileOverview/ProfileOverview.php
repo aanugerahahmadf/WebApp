@@ -6,7 +6,7 @@ use App\Filament\Welcome\Pages\EditProfilePage\EditProfilePage;
 use App\Filament\Welcome\Resources\HistoryResource\HistoryResource;
 
 use App\Filament\Welcome\Resources\CatalogResource\CatalogResource;
-use App\Filament\Welcome\Resources\ReviewResource\ReviewResource;
+use App\Filament\Welcome\Resources\MyReviewsResource\MyReviewsResource;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use App\Support\AppIcon\AppIcon;
@@ -81,7 +81,7 @@ class ProfileOverview extends BaseWidget
                 ->extraAttributes([
                     'class' => 'home-stat-card profile-stat-card cursor-pointer hover:scale-105 transition-transform h-full',
                     'style' => 'grid-column: 1 / -1;',
-                    'onclick' => "window.location.href='".ReviewResource::getUrl()."'",
+                    'onclick' => "window.location.href='".MyReviewsResource::getUrl()."'",
                 ]),
         ];
     }

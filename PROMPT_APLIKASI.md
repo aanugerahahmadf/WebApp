@@ -124,11 +124,11 @@
 ### Core Models
 | Model | Fields Kunci | Relasi |
 |-------|-------------|--------|
-| **User** | full_name, username, email, password, phone, whatsapp, address, avatar_url, balance, budget, wedding_date, theme_preference, color_preference, event_concept, dream_venue, ip_address, login_city, login_region, login_country, latitude, longitude, active_status, social_id, social_type, gender | hasMany orders, wishlists, transactions, withdrawals; belongsToMany vouchers |
+| **User** | full_name, username, email, password, phone, whatsapp, address, avatar_url, balance, budget, wedding_date, theme_preference, color_preference, event_concept, dream_venue, ip_address, login_city, login_region, login_country, latitude, longitude, active_status, social_id, social_type, gender | hasMany orders, Favorites, transactions, withdrawals; belongsToMany vouchers |
 | **WeddingFlowersDecorasi** | name, slug, description, address, latitude, longitude, rating, is_verified, phone, whatsapp, email, instagram, operational_hours | hasMany packages, products, reviews; mediaCollections: logo, gallery, videos |
 | **Category** | name, slug, icon, color, description | hasMany packages |
-| **Package** | wedding_flowers_decorasi_id, category_id, name, slug, description, price, discount_price, is_featured, features (json), theme, color, min_capacity, max_capacity, stock, article_id | belongsTo category, weddingFlowersDecorasi; hasMany orders, reviews, wishlists; mediaCollections: package_image, videos |
-| **Product** | wedding_flowers_decorasi_id, category_id, name, slug, description, price, discount_price, stock, is_featured | belongsTo category, weddingFlowersDecorasi; hasMany orders, reviews, wishlists |
+| **Package** | wedding_flowers_decorasi_id, category_id, name, slug, description, price, discount_price, is_featured, features (json), theme, color, min_capacity, max_capacity, stock, article_id | belongsTo category, weddingFlowersDecorasi; hasMany orders, reviews, Favorites; mediaCollections: package_image, videos |
+| **Product** | wedding_flowers_decorasi_id, category_id, name, slug, description, price, discount_price, stock, is_featured | belongsTo category, weddingFlowersDecorasi; hasMany orders, reviews, Favorites |
 | **Banner** | title, description, image, link, sort_order, is_active | - |
 
 ### Commerce Models
@@ -136,7 +136,7 @@
 |-------|-------------|--------|
 | **Cart** | user_id, (product_id OR package_id), quantity, meta (json) | belongsTo user, product, package |
 | **Order** | user_id, package_id/product_id, order_number, total_price, status (enum), payment_status (enum), booking_date, booking_time, quantity, notes | belongsTo user, package, product; hasMany transactions |
-| **Wishlist** | user_id, (product_id OR package_id) | polymorphic wishlistable |
+| **Favorite** | user_id, (product_id OR package_id) | polymorphic Favoriteable |
 | **Voucher** | code, type (fixed/percentage), value, min_purchase, max_discount, usage_limit, user_limit, is_active, expires_at | belongsToMany users (pivot: claimed_at, used_at, order_id) |
 | **Review** | user_id, package_id/product_id, rating, review | belongsTo user, package, product |
 
@@ -256,14 +256,14 @@
 | GET | `/api/packages/featured` | Paket unggulan |
 | GET | `/api/packages/on-sale` | Paket diskon |
 
-### Wishlist
+### Favorite
 | Method | Endpoint | Deskripsi |
 |--------|----------|-----------|
-| GET | `/api/wishlist` | List wishlist |
-| POST | `/api/wishlist/toggle` | Toggle wishlist |
-| GET | `/api/wishlist/{packageId}/check` | Cek wishlist |
-| POST | `/api/wishlist/bulk-add` | Bulk add |
-| DELETE | `/api/wishlist/{packageId}` | Hapus wishlist |
+| GET | `/api/Favorite` | List Favorite |
+| POST | `/api/Favorite/toggle` | Toggle Favorite |
+| GET | `/api/Favorite/{packageId}/check` | Cek Favorite |
+| POST | `/api/Favorite/bulk-add` | Bulk add |
+| DELETE | `/api/Favorite/{packageId}` | Hapus Favorite |
 
 ### Chat/Messages
 | Method | Endpoint | Deskripsi |
@@ -406,7 +406,7 @@
 - Profile & wedding preferences
 - Browse packages & products
 - Shopping cart
-- Wishlist
+- Favorite
 - Orders & booking
 - Payment & invoices
 - Wallet & topup
@@ -456,7 +456,7 @@
 
 **Shopping Features:**
 - Cart (polymorphic: product or package items)
-- Wishlist (toggle, bulk add, check)
+- Favorite (toggle, bulk add, check)
 - Voucher (fixed amount / percentage, usage limits, claim system)
 - Invoice PDF (downloadable via dompdf)
 
@@ -637,7 +637,7 @@ network: wedding-flower-decorations
 | **BudgetWidget** | Budget tracker |
 | **UpcomingEventWidget** | Upcoming wedding event |
 | **RecentTransactionsWidget** | Recent transactions |
-| **WishlistWidget** | Favorite items |
+| **FavoriteWidget** | Favorite items |
 
 ---
 
@@ -751,7 +751,7 @@ php artisan test
 3. **Order Number**: Format otomatis (ORD-timestamp-random)
 4. **Midtrans Order ID**: Format `MID-{Timestamp}-{ID}` untuk tracking
 5. **24 Jam Expiry**: Semua transaksi Midtrans expire dalam 24 jam
-6. **Wishlist Uniqueness**: Cegah duplicate product/package di wishlist
+6. **Favorite Uniqueness**: Cegah duplicate product/package di Favorite
 7. **Voucher Usage Limit**: Batas penggunaan global + per user
 8. **Cart Deduplication**: Jika item sudah ada di cart, increment quantity
 9. **Notification Deduplication**: Cegah notifikasi ganda dalam 60 detik (Cache lock)

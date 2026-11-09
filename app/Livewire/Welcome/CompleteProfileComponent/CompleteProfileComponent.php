@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Welcome\CompleteProfileComponent;
 
+use App\Filament\User\Auth\SecurityQuestion\SecurityQuestion;
+
 use App\Forms\Components\BirthPlaceDatePicker\BirthPlaceDatePicker;
 use App\Forms\Components\CalendarPicker\CalendarPicker;
 use App\Models\User\User;
@@ -744,7 +746,7 @@ class CompleteProfileComponent extends Component implements HasForms, HasActions
                 ->success()
                 ->send();
 
-            $this->redirectRoute('filament.welcome.pages.home');
+            $this->redirect(SecurityQuestion::getUrl());
         } catch (\Exception $e) {
             Notification::make()
                 ->title(__('Gagal menyimpan profil'))

@@ -11,9 +11,12 @@ use App\Models\User\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Traits\ResolvesCamelCaseAttributes\ResolvesCamelCaseAttributes;
+
 
 class Cart extends Model
 {
+    use ResolvesCamelCaseAttributes;
     use HasFactory;
     use LegacyMorphClass;
     protected $fillable = [
@@ -28,6 +31,18 @@ class Cart extends Model
         'meta' => 'array',
         'quantity' => 'integer',
     ];
+
+    protected $appends = ['tier_id', 'resource_type'];
+
+    public function getTierIdAttribute(): ?int
+    {
+        return $this->package_id === null ? null : (int) $this->package_id;
+    }
+
+    public function getResourceTypeAttribute(): string
+    {
+        return $this->package_id !== null ? 'tier' : 'catalog';
+    }
 
     public function user(): BelongsTo
     {
@@ -45,6 +60,12 @@ class Cart extends Model
     public function package(): BelongsTo
     {
         return $this->belongsTo(Package::class);
+    }
+
+    /** Canonical domain alias; `package()` remains for storage compatibility. */
+    public function tier(): BelongsTo
+    {
+        return $this->package();
     }
 
     public function getItemAttribute()
@@ -90,7 +111,9 @@ class Cart extends Model
             return 0;
         }
 
-        $price = $item->discount_price > 0 ? $item->discount_price : $item->price;
+        // Tier owns the price. Use the model accessor so cart and checkout
+        // cannot disagree when a promo is present.
+        $price = (float) ($item->final_price ?? $item->price);
 
         return $price * $this->quantity;
     }

@@ -116,7 +116,7 @@ it('setiap kartu statistik adalah tautan ke halaman admin yang relevan', functio
         '/admin/discounts',
         '/admin/payment-methods',
         '/admin/payment-gateways',
-        '/admin/wishlists',
+        '/admin/Favorites',
     ] as $path) {
         expect($html)->toContain('href="'.url($path).'"');
     }

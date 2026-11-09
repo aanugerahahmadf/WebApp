@@ -56,7 +56,7 @@ use App\Filament\Admin\Exports\UserVoucherExporter\UserVoucherExporter;
 use App\Filament\Admin\Exports\VoucherExporter\VoucherExporter;
 use App\Filament\Admin\Exports\WeddingDecorationPolicyExporter\WeddingDecorationPolicyExporter;
 use App\Filament\Admin\Exports\WhatsappOtpExporter\WhatsappOtpExporter;
-use App\Filament\Admin\Exports\WishlistExporter\WishlistExporter;
+use App\Filament\Admin\Exports\FavoriteExporter\FavoriteExporter;
 use App\Support\ExportText\ExportText;
 use Carbon\Carbon;
 use Dompdf\Dompdf;
@@ -165,7 +165,7 @@ class DataExportService
             'refund_requests' => ['label' => __('Permintaan Refund'), 'filename' => 'permintaan-refund.xlsx', 'exporter' => RefundRequestExporter::class, 'group' => self::GROUP_ORDER],
             'transactions' => ['label' => __('Transaksi'), 'filename' => 'transaksi.xlsx', 'exporter' => TransactionExporter::class, 'group' => self::GROUP_ORDER],
             'carts' => ['label' => __('Keranjang'), 'filename' => 'keranjang.xlsx', 'exporter' => CartExporter::class, 'group' => self::GROUP_ORDER],
-            'wishlists' => ['label' => __('Favorit'), 'filename' => 'favorit.xlsx', 'exporter' => WishlistExporter::class, 'group' => self::GROUP_ORDER],
+            'Favorites' => ['label' => __('Favorit'), 'filename' => 'favorit.xlsx', 'exporter' => FavoriteExporter::class, 'group' => self::GROUP_ORDER],
 
             // ── Ulasan & laporan ──────────────────────────────────────────
             'reviews' => ['label' => __('Ulasan'), 'filename' => 'ulasan.xlsx', 'exporter' => ReviewExporter::class, 'group' => self::GROUP_REVIEW],

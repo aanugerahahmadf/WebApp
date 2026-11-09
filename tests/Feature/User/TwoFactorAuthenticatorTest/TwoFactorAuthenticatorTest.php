@@ -20,13 +20,13 @@
  *      mengetik angka sembarang.
  */
 
+use App\Filament\User\Auth\OtpEmailOrTwoFactory\OtpEmailOrTwoFactory;
 use App\Filament\User\Pages\SettingsPage\PasswordSecurityPage\PasswordSecurityPage;
 use App\Filament\User\Pages\SettingsPage\PasswordSecurityPage\SignInAndRecovery\TwoFactorySetup\TwoFactorySetup;
 use App\Models\User\User;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Route;
 use MixCode\FilamentMulti2fa\Enums\TwoFactorAuthType;
-use MixCode\FilamentMulti2fa\Pages\OTPVerify;
 
 
 // Page::getRouteName() milik Filament butuh panel aktif. Tanpa panel yang
@@ -45,9 +45,9 @@ it('mendaftarkan halaman setup dan verifikasi OTP di panel User saja', function 
     // Hanya panel User. Panel Welcome melayani tamu dan panel Admin dipakai
     // staf, sehingga 2FA tidak relevan di sana.
     expect($routes)->toContain(TwoFactorySetup::getRouteName())
-        ->and($routes)->toContain(OTPVerify::getRouteName())
+        ->and($routes)->toContain(OtpEmailOrTwoFactory::getRouteName())
         ->and(TwoFactorySetup::getRouteName())->toStartWith('filament.welcome.')
-        ->and(OTPVerify::getRouteName())->toStartWith('filament.welcome.');
+        ->and(OtpEmailOrTwoFactory::getRouteName())->toStartWith('filament.welcome.');
 });
 
 it('tidak mendaftarkan halaman setup milik paket', function (): void {
@@ -103,7 +103,7 @@ it('minta kode OTP setelah 2FA aktif', function (): void {
 
     $this->actingAs($user)
         ->get('/home')
-        ->assertRedirect(OTPVerify::getUrl());
+        ->assertRedirect(OtpEmailOrTwoFactory::getUrl());
 });
 
 it('tidak meminta OTP kalau 2FA belum diaktifkan', function (): void {

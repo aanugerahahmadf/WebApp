@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\User\SecurityController\SecurityController;
 
 use App\Http\Controllers\Controller;
 use App\Models\User\User;
+use App\Models\IdentityDocument\IdentityDocument;
 use App\Models\WhatsappOtp\WhatsappOtp;
 use App\Services\FaceService\FaceService;
 use App\Services\StorageService\StorageService;
@@ -13,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -36,7 +38,12 @@ class ProfileController extends Controller
 
             // Prepare user data
             $data = $user->toArray();
+            unset(
+                $data['ktp_number'], $data['sim_number'], $data['npwp_number'],
+                $data['passport_number'], $data['ktp_photo'], $data['ktp_photo_url'],
+            );
             $data['roles'] = $user->roles()->pluck('name')->toArray();
+            $data['identity_documents'] = $this->identityDocumentsPayload($user);
 
             return response()->json([
                 'status' => 'success',
@@ -114,22 +121,7 @@ class ProfileController extends Controller
                     Rule::unique('users')->ignore($user->id),
                 ],
                 'identity_type' => 'nullable|string|in:ktp,passport,sim,npwp|max:20',
-                'ktp_number' => [
-                    'nullable', 'string', 'max:20',
-                    Rule::unique('users')->ignore($user->id),
-                ],
-                'passport_number' => [
-                    'nullable', 'string', 'max:20',
-                    Rule::unique('users')->ignore($user->id),
-                ],
-                'sim_number' => [
-                    'nullable', 'string', 'max:20',
-                    Rule::unique('users')->ignore($user->id),
-                ],
-                'npwp_number' => [
-                    'nullable', 'string', 'max:20',
-                    Rule::unique('users')->ignore($user->id),
-                ],
+                'document_number' => 'nullable|string|max:50',
             ];
 
             if ($request->has('password') && filled($request->password)) {
@@ -137,6 +129,18 @@ class ProfileController extends Controller
             }
 
             $validatedData = $request->validate($rules);
+
+            // Identity numbers belong to the document model, not to users.
+            // Accept the old field names from existing mobile builds, but store
+            // them exactly once in identity_documents.
+            $numberField = 'document_number';
+            $documentType = $validatedData['identity_type'] ?? $user->identity_type ?? 'ktp';
+            if (array_key_exists($numberField, $validatedData) && filled($validatedData[$numberField])) {
+                    $document = $user->identityDocuments()->firstOrNew(['document_type' => $documentType]);
+                    $document->document_number = $validatedData[$numberField];
+                    $document->save();
+            }
+            unset($validatedData[$numberField]);
 
             // Enforce WhatsApp OTP verification before saving/updating whatsapp
             if (isset($validatedData['whatsapp']) && filled($validatedData['whatsapp'])) {
@@ -351,7 +355,7 @@ class ProfileController extends Controller
                         ->whereIn('status', ['pending', 'confirmed'])
                         ->count(),
                     'paid_orders' => $user->orders()->where('payment_status', 'paid')->count(),
-                    'wishlist_count' => $user->wishlists()->count(),
+                    'Favorite_count' => $user->Favorites()->count(),
                     'unread_notifications' => $user->unreadNotifications()->count(),
                     'total_spent' => $user->orders()->sum('total_price'),
                 ],
@@ -454,26 +458,44 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update KTP (Nomor KTP)
+     * Update one identity document number.
      */
-    public function updateKtp(Request $request)
+    public function updateDocument(Request $request, ?string $documentType = null)
     {
         try {
-            $request->validate([
-                'ktp_number' => [
-                    'required', 'string', 'size:16',
-                    Rule::unique('users')->ignore($user->id),
-                ],
-            ]);
-
             /** @var User $user */
             $user = Auth::user();
-            $user->update(['ktp_number' => $request->ktp_number]);
+            $documentType = strtolower((string) ($documentType ?: $request->input('document_type', $user->identity_type ?: 'ktp')));
+            $fields = [
+                'ktp' => ['number' => 'ktp_number', 'message' => 'Nomor KTP', 'rules' => ['digits:16']],
+                'sim' => ['number' => 'sim_number', 'message' => 'Nomor SIM', 'rules' => ['string', 'min:6', 'max:50']],
+                'npwp' => ['number' => 'npwp_number', 'message' => 'Nomor NPWP', 'rules' => ['string', 'min:15', 'max:20']],
+                'passport' => ['number' => 'passport_number', 'message' => 'Nomor Passport', 'rules' => ['string', 'min:6', 'max:20', 'regex:/^[A-Za-z0-9]+$/']],
+            ];
+            if (! isset($fields[$documentType])) {
+                throw ValidationException::withMessages(['document_type' => __('Jenis dokumen tidak didukung.')]);
+            }
+            $field = $fields[$documentType];
+            $number = $request->input('document_number', $request->input($field['number'], $request->input('ktp_number')));
+            $request->merge([$field['number'] => $number]);
+            $document = $user->identityDocuments()->firstOrNew(['document_type' => $documentType]);
+
+            $request->validate([
+                'document_type' => ['nullable', Rule::in(array_keys($fields))],
+                $field['number'] => array_merge(['required'], $field['rules'], [Rule::unique('identity_documents', 'document_number')->ignore($document->id)]),
+            ]);
+
+            $user->update(['identity_type' => $documentType]);
+            $document->document_number = $number;
+            $document->save();
 
             return response()->json([
                 'status' => 'success',
-                'message' => __('Nomor KTP berhasil diperbarui'),
-                'data' => $user->fresh(),
+                'message' => __($field['message'].' berhasil diperbarui'),
+                'data' => [
+                    'document_type' => $documentType,
+                    'identity_document' => $document->fresh()->toArray(),
+                ],
             ]);
         } catch (ValidationException $e) {
             return response()->json([
@@ -484,71 +506,88 @@ class ProfileController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => __('Gagal memperbarui Nomor KTP'),
+                'message' => __('Gagal memperbarui nomor dokumen'),
                 'error' => null,
             ], 500);
         }
     }
 
     /**
-     * Upload KTP photo (foto atau video; frame video diekstrak server-side)
+     * Upload one identity document photo or video.
      */
-    public function uploadKtp(Request $request, FaceService $faceService)
+    public function uploadDocument(Request $request, FaceService $faceService, ?string $documentType = null)
     {
         try {
             /** @var User $user */
             $user = Auth::user();
+            $documentType = strtolower((string) ($documentType ?: $request->input('document_type', $user->identity_type ?: 'ktp')));
+            if (! in_array($documentType, ['ktp', 'sim', 'npwp', 'passport'], true)) {
+                throw ValidationException::withMessages(['document_type' => __('Jenis dokumen tidak didukung.')]);
+            }
+
+            $file = $request->file('document_photo')
+                ?: $request->file($documentType.'_photo')
+                ?: $request->file('ktp_photo');
 
             $request->validate([
-                'ktp_photo' => 'required|file|mimes:jpeg,png,jpg,mp4,mov,m4v,webm,3gp|max:51200', // foto 5MB / video 50MB
+                'document_type' => 'nullable|in:ktp,sim,npwp,passport',
             ]);
+            if (! $file) {
+                throw ValidationException::withMessages(['document_photo' => __('Foto dokumen wajib diunggah.')]);
+            }
+            Validator::make(['document_photo' => $file], [
+                'document_photo' => 'required|file|mimes:jpeg,png,jpg,mp4,mov,m4v,webm,3gp|max:51200',
+            ])->validate();
 
-            if ($user->ktp_photo) {
-                StorageService::delete($user->ktp_photo);
+            $document = $user->identityDocuments()->firstOrNew(['document_type' => $documentType]);
+            if ($document->photo_path) {
+                StorageService::delete($document->photo_path);
             }
 
             /* Kirim identity_type sebagai doc_type hint. Tanpa ini AI Core hanya
              * auto-detect dari OCR, padahal client sudah tahu dokumen apa yang
              * sedang dipindai — akurat untuk KTP, dan jauh lebih andal untuk
              * SIM/NPWP/Pasport yang layout-nya mirip satu sama lain. */
-            $docType = $user->identity_type ?: null;
+            $docType = $documentType;
 
             [$path, $ai] = $this->storeKycUpload(
-                $request->file('ktp_photo'),
-                'ktp-photos',
-                'ktp_'.$user->id.'_'.time(),
+                $file,
+                'identity-documents/'.$documentType,
+                $documentType.'_'.$user->id.'_'.time(),
                 $faceService,
-                fn (string $realPath) => $faceService->verifyKtp($realPath, $docType)
+                    fn (string $realPath) => $faceService->verifyKtp($realPath, $docType)
             );
 
-            $docUpdate = $this->documentVerificationUpdate($user, $ai);
+            $docUpdate = $this->documentVerificationUpdate($user, $ai, $document);
 
-            $user->forceFill(array_merge(['ktp_photo' => $path], $docUpdate))->save();
+            $document->fill([
+                'user_id' => $user->id,
+                'photo_path' => $path,
+                'ai_document_type' => $ai['document_type'] ?? $documentType,
+                'ai_document_number' => $ai['document_number'] ?? null,
+                'ai_reason' => $ai['reason'] ?? null,
+                'ai_reason_code' => $ai['reason_code'] ?? null,
+                'ai_blocking_issue' => $ai['blocking_issue'] ?? null,
+                'ai_score' => $ai['score'] ?? null,
+                'ai_verified' => (bool) ($ai['verified'] ?? false),
+                'ai_number_matches_profile' => $docUpdate['doc_ai_number_matches_profile'] ?? null,
+                'ai_verified_at' => ($ai['verified'] ?? false) ? now() : null,
+            ])->save();
+
+            // Identity data lives in identity_documents only. Do not mirror it
+            // into the legacy ktp_* columns.
+            $user->forceFill(['identity_type' => $documentType])->save();
 
             $ktpVerified = ($ai['success'] ?? false) && ($ai['verified'] ?? false);
 
             return response()->json([
                 'status' => 'success',
                 'message' => $ktpVerified
-                    ? __('Foto KTP tervalidasi komputer visi')
-                    : __('Foto KTP berhasil diunggah'),
+                    ? __('Foto dokumen tervalidasi komputer visi')
+                    : __('Foto dokumen berhasil diunggah'),
                 'data' => [
-                    'ktp_photo' => $user->ktp_photo,
-                    'ktp_photo_url' => $user->ktp_photo_url,
-                    'ktp_ai_verified' => (bool) $ktpVerified,
-                    'ktp_ai_score' => $ai['score'] ?? null,
-                    // Nama resmi dokumen (Kartu Tanda Penduduk / Surat Izin Mengemudi /
-                    // Passport / Nomor Pokok Wajib Pajak) atau pesan error layanan.
-                    'ktp_ai_reason' => $ai['reason'] ?? ($ai['message'] ?? 'AI_UNAVAILABLE'),
-                    // Kode diagnostik kegagalan validasi, mis. NO_FACE / BLURRY /
-                    // WRONG_ASPECT / UNKNOWN_DOCUMENT. Null bila tidak gagal.
-                    'ktp_ai_reason_code' => $ai['reason_code'] ?? null,
-                    'ktp_ai_blocking_issue' => $ai['blocking_issue'] ?? null,
-                    'ktp_ai_document_type' => $ai['document_type'] ?? null,
-                    'ktp_ai_document_number' => $ai['document_number'] ?? null,
-                    // true = nomor OCR cocok dengan nomor di profil; false = tidak
-                    // cocok; null = belum bisa dibandingkan.
-                    'ktp_ai_number_matches_profile' => $docUpdate['doc_ai_number_matches_profile'] ?? null,
+                    'document_type' => $documentType,
+                    'identity_documents' => $this->identityDocumentsPayload($user->fresh()),
                 ],
             ]);
         } catch (ValidationException $e) {
@@ -560,7 +599,7 @@ class ProfileController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => __('Gagal mengunggah foto KTP'),
+                'message' => __('Gagal mengunggah foto dokumen'),
                 'error' => null,
             ], 500);
         }
@@ -586,8 +625,12 @@ class ProfileController extends Controller
 
             // Computer Vision: bandingkan selfie dengan KTP milik user (jika ada)
             $reference = null;
-            if ($user->ktp_photo) {
-                $absolute = StorageService::path($user->ktp_photo);
+            $referenceDocument = $user->identityDocuments()
+                ->where('document_type', 'ktp')
+                ->whereNotNull('photo_path')
+                ->first();
+            if ($referenceDocument?->photo_path) {
+                $absolute = StorageService::path($referenceDocument->photo_path);
                 if (file_exists($absolute)) {
                     $reference = $absolute;
                 }
@@ -652,7 +695,11 @@ class ProfileController extends Controller
                 'liveness_completed' => 'sometimes|boolean',
             ]);
 
-            if (! $user->ktp_photo) {
+            $referenceDocument = $user->identityDocuments()
+                ->where('document_type', 'ktp')
+                ->whereNotNull('photo_path')
+                ->first();
+            if (! $referenceDocument) {
                 return response()->json([
                     'status' => 'error',
                     'message' => __('Unggah foto KTP terlebih dahulu untuk verifikasi wajah'),
@@ -664,7 +711,7 @@ class ProfileController extends Controller
             }
 
             // Computer Vision: bandingkan face scan dengan KTP milik user
-            $reference = StorageService::path($user->ktp_photo);
+            $reference = StorageService::path($referenceDocument->photo_path);
 
             [$path, $ai] = $this->storeKycUpload(
                 $request->file('face_scan_photo'),
@@ -733,9 +780,13 @@ class ProfileController extends Controller
                 'occupation' => 5,
                 'income_range' => 5,
                 'source_of_funds' => 5,
-                'ktp_photo' => 10,
+                'identity_document' => 10,
                 'selfie_photo' => 10,
             ];
+            $hasIdentityDocument = $user->identityDocuments()
+                ->where(function ($query): void {
+                    $query->whereNotNull('document_number')->orWhereNotNull('photo_path');
+                })->exists();
 
             $score = 0;
             foreach ($profileItems as $field => $weight) {
@@ -743,12 +794,12 @@ class ProfileController extends Controller
                     if ($user->email_verified_at) {
                         $score += $weight;
                     }
-                } elseif (! empty($user->$field)) {
+                } elseif ($field === 'identity_document' ? $hasIdentityDocument : ! empty($user->$field)) {
                     $score += $weight;
                 }
             }
 
-            if (! empty($user->ktp_number) || ! empty($user->passport_number) || ! empty($user->sim_number) || ! empty($user->npwp_number)) {
+            if ($hasIdentityDocument) {
                 $score += 10;
             }
 
@@ -774,8 +825,9 @@ class ProfileController extends Controller
                         'occupation' => ! empty($user->occupation),
                         'income_range' => ! empty($user->income_range),
                         'source_of_funds' => ! empty($user->source_of_funds),
-                        'ktp_number' => ! empty($user->ktp_number) || ! empty($user->passport_number) || ! empty($user->sim_number) || ! empty($user->npwp_number),
-                        'ktp_photo' => ! empty($user->ktp_photo),
+                        // UI compatibility key; the value is backed by the
+                        // identity_documents relation, not users.ktp_number.
+                        'document_number' => $hasIdentityDocument,
                         'selfie_photo' => ! empty($user->selfie_photo),
                         'identity_verified' => ! empty($user->identity_verified_at),
                     ],
@@ -793,9 +845,9 @@ class ProfileController extends Controller
     }
 
     /**
-     * Get user's wishlist catalogs
+     * Get user's Favorite catalogs
      */
-    public function getWishlist(Request $request)
+    public function getFavorite(Request $request)
     {
         try {
             /** @var User $user */
@@ -808,7 +860,7 @@ class ProfileController extends Controller
                 ], 401);
             }
 
-            $query = $user->wishlists()->with(['package.category', 'package.reviews']);
+            $query = $user->Favorites()->with(['package.category', 'package.reviews']);
 
             // Apply sorting
             $sortBy = $request->get('sort_by', 'created_at');
@@ -826,23 +878,23 @@ class ProfileController extends Controller
 
             $query->orderBy($sortBy, $sortDirection);
 
-            $wishlistItems = $query->paginate($request->get('per_page', 10));
+            $FavoriteItems = $query->paginate($request->get('per_page', 10));
 
             return response()->json([
                 'status' => 'success',
-                'data' => $wishlistItems->items(),
+                'data' => $FavoriteItems->items(),
                 'pagination' => [
-                    'current_page' => $wishlistItems->currentPage(),
-                    'last_page' => $wishlistItems->lastPage(),
-                    'per_page' => $wishlistItems->perPage(),
-                    'total' => $wishlistItems->total(),
-                    'has_more_pages' => $wishlistItems->hasMorePages(),
+                    'current_page' => $FavoriteItems->currentPage(),
+                    'last_page' => $FavoriteItems->lastPage(),
+                    'per_page' => $FavoriteItems->perPage(),
+                    'total' => $FavoriteItems->total(),
+                    'has_more_pages' => $FavoriteItems->hasMorePages(),
                 ],
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => __('Gagal mengambil wishlist'),
+                'message' => __('Gagal mengambil Favorite'),
                 'error' => null,
             ], 500);
         }
@@ -887,7 +939,7 @@ class ProfileController extends Controller
      * @param  array<string, mixed>  $ai
      * @return array<string, mixed>
      */
-    private function documentVerificationUpdate(User $user, array $ai): array
+    private function documentVerificationUpdate(User $user, array $ai, ?IdentityDocument $document = null): array
     {
         // Layanan gagal (offline / timeout): jangan sentuh data yang ada.
         // Menyimpan null di sini akan menghapus bukti hasil scan sebelumnya.
@@ -905,7 +957,7 @@ class ProfileController extends Controller
             'doc_ai_blocking_issue' => $ai['blocking_issue'] ?? null,
             'doc_ai_score' => $ai['score'] ?? null,
             'doc_ai_verified_at' => $verified ? now() : null,
-            'doc_ai_number_matches_profile' => $this->documentNumberMatchesProfile($user, $ai),
+            'doc_ai_number_matches_profile' => $this->documentNumberMatchesProfile($user, $ai, $document),
             'kyc_status' => null,
         ];
     }
@@ -919,14 +971,16 @@ class ProfileController extends Controller
      *
      * @param  array<string, mixed>  $ai
      */
-    private function documentNumberMatchesProfile(User $user, array $ai): ?bool
+    private function documentNumberMatchesProfile(User $user, array $ai, ?IdentityDocument $document = null): ?bool
     {
         $found = trim((string) ($ai['document_number'] ?? ''));
         if ($found === '') {
             return null; // Tidak ada nomor terbaca: tidak bisa disimpulkan apa pun.
         }
 
-        $profile = match ($ai['document_type'] ?? null) {
+        // Read legacy columns only as a migration fallback for existing users;
+        // all new writes go to identity_documents.
+        $profile = $document?->document_number ?? match ($ai['document_type'] ?? null) {
             'ktp' => $user->ktp_number,
             'passport' => $user->passport_number,
             'sim' => $user->sim_number,
@@ -949,6 +1003,36 @@ class ProfileController extends Controller
         }
 
         return strtoupper($profile) === strtoupper($found);
+    }
+
+    /**
+     * Return a stable document shape for all supported identity types.
+     * The old ktp_* response fields remain only as compatibility aliases.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    private function identityDocumentsPayload(User $user): array
+    {
+        $documents = $user->identityDocuments()->get()->keyBy('document_type');
+        return collect(['ktp', 'sim', 'npwp', 'passport'])->mapWithKeys(function (string $type) use ($documents): array {
+            $document = $documents->get($type);
+
+            return [$type => [
+                'document_type' => $type,
+                'document_number' => $document?->document_number,
+                'photo' => $document?->photo_path,
+                'photo_url' => $document?->photo_url,
+                'ai_document_type' => $document?->ai_document_type,
+                'ai_document_number' => $document?->ai_document_number,
+                'ai_reason' => $document?->ai_reason,
+                'ai_reason_code' => $document?->ai_reason_code,
+                'ai_blocking_issue' => $document?->ai_blocking_issue,
+                'ai_verified' => $document?->ai_verified,
+                'ai_score' => $document?->ai_score,
+                'ai_number_matches_profile' => $document?->ai_number_matches_profile,
+                'ai_verified_at' => $document?->ai_verified_at,
+            ]];
+        })->all();
     }
 
     /**

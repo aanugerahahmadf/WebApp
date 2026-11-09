@@ -1359,6 +1359,16 @@ class CatalogSeeder extends Seeder
                         ? (int) round($tierPrice * (100 - $tier['discount_pct']) / 100)
                         : null);
 
+                // Stok adalah milik tier, bukan angka tetap untuk semua
+                // katalog. Gunakan stok dasar seed katalog lama sebagai titik
+                // awal lalu tambahkan urutan tier. Dengan begitu kelima tier
+                // dalam satu Catalog selalu memiliki stok berbeda (dan tidak
+                // ada clamp ke nol yang dapat membuat angkanya sama). Seed
+                // ulang menghasilkan angka yang sama, tetapi setiap Catalog
+                // tidak otomatis memiliki total 50.
+                $catalogBaseStock = max(1, (int) $catalog->getRawOriginal('stock'));
+                $tierStock = $catalogBaseStock + (int) $tier['sort_order'];
+
                 Package::updateOrCreate(
                     // Slug menyertakan tier_key supaya setiap katalog punya
                     // paket sendiri dengan nama file unik, dan slug-nya tetap
@@ -1380,7 +1390,7 @@ class CatalogSeeder extends Seeder
                         ],
                         'price' => $tierPrice,
                         'discount_price' => $discountPrice,
-                        'stock' => 10,
+                        'stock' => $tierStock,
                         'is_active' => true,
                         'is_featured' => $tier['tier_key'] === 'full',
                         // Array of STRING, bukan [['id' =>, 'en' =>]].

@@ -84,7 +84,7 @@ class GraphQLQueryTest extends TestCase
                     data {
                         id
                         name
-                        price
+                        stock
                     }
                     paginatorInfo {
                         total

@@ -22,7 +22,7 @@ use App\Filament\Admin\Exports\TransactionExporter\TransactionExporter;
 use App\Filament\Admin\Exports\UserExporter\UserExporter;
 use App\Filament\Admin\Exports\VoucherExporter\VoucherExporter;
 use App\Filament\Admin\Exports\WeddingDecorationPolicyExporter\WeddingDecorationPolicyExporter;
-use App\Filament\Admin\Exports\WishlistExporter\WishlistExporter;
+use App\Filament\Admin\Exports\FavoriteExporter\FavoriteExporter;
 use Filament\Actions\CreateAction;
 use Filament\Actions\ExportAction;
 use Filament\Tables\Actions\ActionGroup;
@@ -161,7 +161,7 @@ trait HasStandardActions
             \App\Filament\Admin\Resources\VoucherResource\VoucherResource::class => VoucherExporter::class,
             \App\Filament\Admin\Resources\WeddingDecorationPolicyResource\WeddingDecorationPolicyResource::class => WeddingDecorationPolicyExporter::class,
             \App\Filament\Admin\Resources\WebsiteMobileCustomizerResource\WebsiteMobileCustomizerResource::class => FmAppSettingExporter::class,
-            \App\Filament\Admin\Resources\WishlistResource\WishlistResource::class => WishlistExporter::class,
+            \App\Filament\Admin\Resources\FavoriteResource\FavoriteResource::class => FavoriteExporter::class,
             default => null,
         };
     }

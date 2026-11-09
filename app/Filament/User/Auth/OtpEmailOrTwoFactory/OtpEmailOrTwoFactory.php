@@ -41,12 +41,13 @@ use PragmaRX\Google2FA\Google2FA;
  *
  * Kenapa turunan OTPVerify dan bukan Page baru:
  *
- *   Middleware CheckTrustedDevice milik paket mengarahkan ke
- *   OTPVerify::getRouteName(), dan menolaknya kalau request sudah berada di
- *   route itu -- kalau tidak, middleware akan mengulang redirect tanpa henti.
- *   Route name diturunkan dari getSlug(), jadi halaman ini override
- *   getSlug() dengan slug yang sama persis. Namanya tidak berubah, link lama
- *   tidak rusak, dan middleware tidak masuk loop.
+ *   Middleware CheckTrustedDevice milik paket selalu mengarahkan ke
+ *   OTPVerify::getRouteName() -- route bawaan paket yang slug-nya diturunkan
+ *   dari nama kelas OTPVerify (o-t-p-verify). Halaman ini memakai slug
+ *   otp-verify, jadi panel mendaftarkan App\Http\Middleware\CheckTrustedDevice
+ *   (turunan middleware paket) yang mengarah ke route halaman ini. Dengan
+ *   begitu tidak ada redirect loop, dan URL lama /o-t-p-verify tetap hidup
+ *   lewat redirect di routes/web/web.php.
  *
  * Kenapa OTP email memakai Cache dan bukan generateTwoFactorOTPCode() milik
  * paket:
@@ -104,8 +105,8 @@ class OtpEmailOrTwoFactory extends OTPVerify implements HasForms
 
     public static function getSlug(): string
     {
-        // Sama persis dengan OTPVerify. Lihat catatan di docblock kelas.
-        return 'o-t-p-verify';
+        // URL halaman ini: /otp-verify. Lihat catatan di docblock kelas.
+        return 'otp-verify';
     }
 
     public function mount(): void

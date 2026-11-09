@@ -23,30 +23,28 @@ export default defineConfig({
   csp: {
     policy: [
       "default-src 'self'",
-      // Google Identity Services dimuat dari accounts.google.com. Tanpa
-      // host itu di sini, "Continue With Google" gagal dengan "Gagal
-      // memuat Google Identity Services."
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com",
-      "style-src 'self' 'unsafe-inline'",
-       "img-src 'self' data: blob: https:",
+      // Google Identity Services dimuat dari accounts.google.com & apis.google.com.
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://*.gstatic.com",
+      "style-src 'self' 'unsafe-inline' https://*.gstatic.com",
+      "img-src 'self' data: blob: https:",
       "font-src 'self' data: https:",
       "media-src 'self' blob: https:",
-       "connect-src 'self' https: wss:",
-      // Pop-up Google One Tap / token client hidup di frame Google.
-      "frame-src 'self' https://accounts.google.com",
+      "connect-src 'self' https: wss: ws: http:",
+      // Pop-up Google One Tap / token client hidup di frame Google & Firebase auth.
+      "frame-src 'self' https://accounts.google.com https://content.googleapis.com https://*.firebaseapp.com",
       "object-src 'none'",
       "base-uri 'self'",
     ].join('; '),
 
     devPolicy: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com",
-      "style-src 'self' 'unsafe-inline'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://*.gstatic.com",
+      "style-src 'self' 'unsafe-inline' https://*.gstatic.com",
       "img-src 'self' data: blob: https: http:",
       "font-src 'self' data: https:",
       "media-src 'self' blob: https:",
       "connect-src 'self' https: wss: ws: http:",
-      "frame-src 'self' https://accounts.google.com",
+      "frame-src 'self' https://accounts.google.com https://content.googleapis.com https://*.firebaseapp.com",
       "object-src 'none'",
       "base-uri 'self'",
     ].join('; '),

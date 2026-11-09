@@ -18,7 +18,7 @@ use Illuminate\Support\Str;
  * the way the reference site behaves, so this middleware keeps the gate but
  * punches a hole for the public paths below.
  *
- * Everything else (cart, orders, wishlist, messages, settings, profile, search,
+ * Everything else (cart, orders, Favorite, messages, settings, profile, search,
  * logout) is still closed to guests, and a guest who lands on one of those is
  * redirected to the user panel's auth landing page (/auth), which does
  * have auth pages. The intended URL is kept in the session by Laravel's
@@ -65,7 +65,7 @@ class AuthenticateWelcome extends Authenticate
         'settings',
 
         // SHOPEE-STYLE: halaman auth sekarang HIDUP DI PANEL INI juga
-        // (/signin, /signup, /auth, /password-reset/*, /o-t-p-verify,
+        // (/signin, /signup, /auth, /password-reset/*, /otp-verify,
         // /email-verification/*). Tamu HARUS bisa membukanya -- sebaliknya
         // tamu yang menekan pintu auth akan di-redirect oleh middleware ini
         // ke LOGIN_ROUTE, yang adalah HALAMAN YANG SAMA -> langgeng.
@@ -77,7 +77,7 @@ class AuthenticateWelcome extends Authenticate
         'auth/*',
         'password-reset',
         'password-reset/*',
-        'o-t-p-verify',
+        'otp-verify',
         'email-verification',
         'email-verification/*',
     ];
@@ -97,7 +97,7 @@ class AuthenticateWelcome extends Authenticate
      *
      * Alasannya tetap dari dulu: panel Welcome punya banyak pintu akun yang
      * hanya butuh satu
-     * aksi -- tambah keranjang, wishlist, checkout -- dan sebagian pengguna
+     * aksi -- tambah keranjang, Favorite, checkout -- dan sebagian pengguna
      * sudah punya pintu masuk yang tidak butuh email/kata sandi. Menugaskan
      * tamu yang menekan "Masukkan ke Keranjang" ke form email/kata sandi
      * menutup halaman itu tanpa Google, padahal tombolnya ada di halaman yang

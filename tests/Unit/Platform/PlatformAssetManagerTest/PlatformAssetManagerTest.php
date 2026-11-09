@@ -90,7 +90,7 @@ class PlatformAssetManagerTest extends TestCase
             $this->assertSame(
                 $expectedManifestPath,
                 $manifestPath,
-                "Manifest path should be public_path('{$expectedAssetDirectory}/.vite/manifest.json')"
+                "Manifest path should be public_path('{$expectedAssetDirectory}/manifest.json')"
             );
 
             // Dan file itu harus benar-benar ada -- kalau build dihapus atau
@@ -174,13 +174,14 @@ class PlatformAssetManagerTest extends TestCase
             // Verify path structure matches expected pattern
             // Normalize path separators for cross-platform compatibility
             $normalizedPath = str_replace('\\', '/', $manifestPath);
+            $canonicalManifestPath = public_path("{$mode->assetDirectory()}/manifest.json");
             $expectedPattern = file_exists($canonicalManifestPath)
                 ? "/build\\/{$mode->value}\\/manifest\\.json$/"
                 : "/build\\/{$mode->value}\\/\\.vite\\/manifest\\.json$/";
             $this->assertMatchesRegularExpression(
                 $expectedPattern,
                 $normalizedPath,
-                "Manifest path should end with 'build/{$mode->value}/.vite/manifest.json' for {$mode->value} mode"
+                "Manifest path should end with 'build/{$mode->value}/manifest.json' for {$mode->value} mode"
             );
         }
     }

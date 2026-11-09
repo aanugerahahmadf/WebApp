@@ -3,9 +3,9 @@
 namespace App\Filament\Welcome\Widgets\QuickAccessWidget;
 
 use App\Filament\Welcome\Resources\CatalogResource\CatalogResource;
-use App\Filament\Welcome\Resources\ReviewResource\ReviewResource;
+use App\Filament\Welcome\Resources\MyReviewsResource\MyReviewsResource;
 use App\Filament\Welcome\Resources\VoucherResource\VoucherResource;
-use App\Filament\Welcome\Resources\WishlistResource\WishlistResource;
+use App\Filament\Welcome\Resources\FavoriteResource\FavoriteResource;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use App\Support\AppIcon\AppIcon;
@@ -57,20 +57,20 @@ class QuickAccessWidget extends BaseWidget
                     'onclick' => "window.location.href='" . route('filament.welcome.resources.flowerdecorationscatalog.index') . "'",
                 ]),
 
-            Stat::make(__('Ulasan'), null)
+            Stat::make(__('Komentar Penilaian Katalog Saya'), null)
                 ->icon('/images/icons/star.svg')
                 ->color('warning')
                 ->extraAttributes([
                     'class' => 'home-stat-card home-stat-action cursor-pointer hover:scale-105 transition-transform h-full',
-                    'onclick' => "window.location.href='" . route('filament.welcome.resources.reviews.index') . "'",
+                    'onclick' => "window.location.href='" . MyReviewsResource::getUrl('index') . "'",
                 ]),
 
             Stat::make(__('Favorit'), null)
-                ->icon(AppIcon::WISHLIST)
+                ->icon(AppIcon::Favorite)
                 ->color('danger')
                 ->extraAttributes([
                     'class' => 'home-stat-card home-stat-action cursor-pointer hover:scale-105 transition-transform h-full',
-                    'onclick' => "window.location.href='" . route('filament.welcome.resources.wishlists.index') . "'",
+                    'onclick' => "window.location.href='" . route('filament.welcome.resources.Favorites.index') . "'",
                 ]),
 
             Stat::make(__('Voucher'), null)

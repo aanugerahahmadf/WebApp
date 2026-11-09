@@ -382,7 +382,7 @@ class ProfileService extends BaseGrpcService
             'user' => $this->transformUser($user),
             'order_count' => $user->orders()->count(),
             'review_count' => $user->reviews()->count(),
-            'wishlist_count' => $user->wishlist()->count(),
+            'Favorite_count' => $user->Favorite()->count(),
             'total_spent' => (float) $user->orders()->where('payment_status', 'paid')->sum('total_price'),
             'favorite_category' => $favoriteCategory,
             'joined_at' => $this->formatTimestamp($user->created_at),

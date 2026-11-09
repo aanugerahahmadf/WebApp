@@ -7,6 +7,7 @@ use App\Filament\Welcome\Pages\Home\Home;
 use App\Models\Package\Package;
 use App\Models\Catalog\Catalog;
 use App\Services\CBIRService\CBIRService;
+use App\Support\CbirSearchLogger\CbirSearchLogger;
 use emmanpbarrameda\FilamentTakePictureField\Forms\Components\TakePicture;
 use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -330,6 +331,13 @@ session()->forget(['cbir_mixed_results', 'cbir_package_results_ids', 'cbir_searc
             session()->put('cbir_search_time', $response['query_time_seconds'] ?? 0);
             session()->put('cbir_context', 'package');
 
+            // Riwayat pencarian visual (tabel `cbir_searches`).
+            CbirSearchLogger::record(
+                auth()->id(),
+                $this->relativePublicPath($file->getPathname()),
+                $mixedResults
+            );
+
             $topScore = number_format(($mixedResults[0]['similarity'] ?? 0), 1);
             $this->statusMessage = __('Berhasil menemukan :count hasil!', [
                 'count' => count($mixedResults),
@@ -339,6 +347,25 @@ session()->forget(['cbir_mixed_results', 'cbir_package_results_ids', 'cbir_searc
             $this->statusMessage = __('Tidak ada dekorasi yang cocok.');
             Log::info('CBIR Search: No matching decorations found by AI Core.');
         }
+    }
+
+    /**
+     * Path foto kueri relatif terhadap disk `public` (untuk kolom
+     * `cbir_searches.query_image_url`). File di luar disk itu dikembalikan
+     * sebagai null supaya tidak tersimpan path sistem yang membocorkan
+     * struktur folder server.
+     */
+    private function relativePublicPath(string $absolutePath): ?string
+    {
+        $root = str_replace('\\', '/', Storage::disk('public')->path(''));
+
+        $normalized = str_replace('\\', '/', $absolutePath);
+
+        if (! str_starts_with($normalized, $root)) {
+            return null;
+        }
+
+        return ltrim(substr($normalized, strlen($root)), '/');
     }
 
     private function buildCbirMixedResults(array $results): array

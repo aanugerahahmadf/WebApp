@@ -27,7 +27,7 @@ type User @model(class: "App\\Models\\User\\User") {
   profileCompletion: Float @field(resolver: "App\\Http\\GraphQL\\Resolvers\\ProfileResolver@completion")
   orders: [Order!]! @hasMany
   reviews: [Review!]! @hasMany
-  wishlist: [Wishlist!]! @hasMany
+  Favorite: [Favorite!]! @hasMany
 }
 
 # Category Types
@@ -49,9 +49,6 @@ type Catalog @model(class: "App\\Models\\Catalog\\Catalog") {
   name: String!
   slug: String!
   description: String
-  price: Float!
-  discountPrice: Float
-  finalPrice: Float!
   stock: Int!
   isActive: Boolean!
   isFeatured: Boolean!
@@ -147,8 +144,8 @@ type CartItem @model(class: "App\\Models\\Cart\\Cart") {
   createdAt: String!
 }
 
-# Wishlist Types
-type Wishlist @model(class: "App\\Models\\Wishlist\\Wishlist") {
+# Favorite Types
+type Favorite @model(class: "App\\Models\\Favorite\\Favorite") {
   id: ID!
   user: User @belongsTo
   catalog: Catalog @belongsTo
@@ -308,8 +305,6 @@ type Query {
     first: Int
     categoryId: ID @where(key: "category_id")
     featured: Boolean @where(key: "is_featured")
-    minPrice: Float @where(key: "price", operator: ">=")
-    maxPrice: Float @where(key: "price", operator: "<=")
     active: Boolean @where(key: "is_active")
     theme: String @where(key: "theme")
     color: String @where(key: "color")
@@ -373,9 +368,9 @@ type Mutation {
   removeFromCart(cartItemId: ID!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CartResolver@remove")
   clearCart: Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\CartResolver@clear")
 
-  # Wishlist
-  toggleWishlist(catalogId: ID): Wishlist @field(resolver: "App\\Http\\GraphQL\\Resolvers\\WishlistResolver@toggle")
-  removeWishlist(wishlistId: ID!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\WishlistResolver@remove")
+  # Favorite
+  toggleFavorite(catalogId: ID): Favorite @field(resolver: "App\\Http\\GraphQL\\Resolvers\\FavoriteResolver@toggle")
+  removeFavorite(FavoriteId: ID!): Boolean @field(resolver: "App\\Http\\GraphQL\\Resolvers\\FavoriteResolver@remove")
 
   # Orders
   createOrder(input: CreateOrderInput!): Order @field(resolver: "App\\Http\\GraphQL\\Resolvers\\OrderResolver@store")

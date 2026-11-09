@@ -48,28 +48,6 @@ class ViewOrder extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\Action::make('back')
-                ->label(__('Kembali'))
-                ->icon('/images/icons/arrow_left.svg')
-                ->color('gray')
-                ->url(function () {
-                    $from = request()->query('from');
-                    $inboxId = request()->query('inbox');
-
-                    if ($from === 'messages') {
-                        return $inboxId
-                            ? MessagesPage::getUrl(['id' => $inboxId])
-                            : MessagesPage::getUrl();
-                    }
-
-                    if ($from === 'view') {
-                        return OrderResource::getUrl('view', ['record' => $this->record]);
-                    }
-
-                    return OrderResource::getUrl('index');
-                })
-                ->extraAttributes(['wire:navigate' => true]),
-
             Actions\EditAction::make()
                 ->label(__('Edit Pesanan'))
                 ->icon('/images/icons/pencil.svg')

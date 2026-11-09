@@ -25,14 +25,14 @@ class WeddingUserService
         \App\Grpc\User\V1\GPBMetadata\Review::initOnce();
         \App\Grpc\User\V1\GPBMetadata\Voucher::initOnce();
         \App\Grpc\User\V1\GPBMetadata\Cart::initOnce();
-        \App\Grpc\User\V1\GPBMetadata\Wishlist::initOnce();
+        \App\Grpc\User\V1\GPBMetadata\Favorite::initOnce();
         \App\Grpc\User\V1\GPBMetadata\Cbir::initOnce();
         \App\Grpc\User\V1\GPBMetadata\Search::initOnce();
         \App\Grpc\User\V1\GPBMetadata\Home::initOnce();
         \App\Grpc\User\V1\GPBMetadata\Notification::initOnce();
         \App\Grpc\User\V1\GPBMetadata\Chat::initOnce();
         $pool->internalAddGeneratedFile(
-            "\x0A\xE1\x04\x0A*wedding/user/v1/wedding_user_service.proto\x12\x0Fwedding.user.v1\x1A\x1Awedding/user/v1/auth.proto\x1A\x1Dwedding/user/v1/profile.proto\x1A\x1Ewedding/user/v1/category.proto\x1A\x1Dwedding/user/v1/catalog.proto\x1A\x1Dwedding/user/v1/package.proto\x1A\x1Bwedding/user/v1/order.proto\x1A\x1Cwedding/user/v1/review.proto\x1A\x1Dwedding/user/v1/voucher.proto\x1A\x1Awedding/user/v1/cart.proto\x1A\x1Ewedding/user/v1/wishlist.proto\x1A\x1Awedding/user/v1/cbir.proto\x1A\x1Cwedding/user/v1/search.proto\x1A\x1Awedding/user/v1/home.proto\x1A\"wedding/user/v1/notification.proto\x1A\x1Awedding/user/v1/chat.protoBUZ!github.com/wedding/user/v1;userv1\xCA\x02\x10App\\Grpc\\User\\V1\xE2\x02\x1CApp\\Grpc\\User\\V1\\GPBMetadatab\x06proto3"
+            "\x0A\xE1\x04\x0A*wedding/user/v1/wedding_user_service.proto\x12\x0Fwedding.user.v1\x1A\x1Awedding/user/v1/auth.proto\x1A\x1Dwedding/user/v1/profile.proto\x1A\x1Ewedding/user/v1/category.proto\x1A\x1Dwedding/user/v1/catalog.proto\x1A\x1Dwedding/user/v1/package.proto\x1A\x1Bwedding/user/v1/order.proto\x1A\x1Cwedding/user/v1/review.proto\x1A\x1Dwedding/user/v1/voucher.proto\x1A\x1Awedding/user/v1/cart.proto\x1A\x1Ewedding/user/v1/Favorite.proto\x1A\x1Awedding/user/v1/cbir.proto\x1A\x1Cwedding/user/v1/search.proto\x1A\x1Awedding/user/v1/home.proto\x1A\"wedding/user/v1/notification.proto\x1A\x1Awedding/user/v1/chat.protoBUZ!github.com/wedding/user/v1;userv1\xCA\x02\x10App\\Grpc\\User\\V1\xE2\x02\x1CApp\\Grpc\\User\\V1\\GPBMetadatab\x06proto3"
         , true);
 
         static::$is_initialized = true;

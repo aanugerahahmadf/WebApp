@@ -1958,7 +1958,7 @@ SEMANTIC_FILES = {
     'order': 'bag',
     'history': 'clock',
     'voucher': 'ticket',
-    'wishlist': 'heart',
+    'Favorite': 'heart',
     'settings': 'cog',
     'profile': 'user_circle',
     'privacy': 'shield_check',

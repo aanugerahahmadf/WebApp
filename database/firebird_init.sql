@@ -107,8 +107,8 @@ CREATE TABLE carts (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Wishlist table
-CREATE TABLE wishlists (
+-- Favorite table
+CREATE TABLE Favorites (
     id GENERATOR ALWAYS AS IDENTITY(1,1) PRIMARY KEY,
     user_id INTEGER REFERENCES users(id),
     product_id INTEGER REFERENCES products(id),
@@ -159,7 +159,7 @@ CREATE INDEX idx_orders_number ON orders(order_number);
 CREATE INDEX idx_reviews_product ON reviews(product_id);
 CREATE INDEX idx_reviews_package ON reviews(package_id);
 CREATE INDEX idx_carts_user ON carts(user_id);
-CREATE INDEX idx_wishlists_user ON wishlists(user_id);
+CREATE INDEX idx_Favorites_user ON Favorites(user_id);
 CREATE INDEX idx_vouchers_code ON vouchers(code);
 CREATE INDEX idx_media_model ON media(model_type, model_id);
 

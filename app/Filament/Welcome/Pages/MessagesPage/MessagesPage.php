@@ -75,6 +75,11 @@ class MessagesPage extends Page
                         // Pesan yang read_by-nya tidak mengandung userId ini
                         if (DB::getDriverName() === 'sqlite') {
                             $query->whereRaw('read_by NOT LIKE ?', ["%\"{$userId}\"%"]);
+                        } elseif (DB::getDriverName() === 'pgsql') {
+                            $query->whereRaw(
+                                "NOT (COALESCE(read_by::jsonb, '[]'::jsonb) @> to_jsonb(?::text))",
+                                [(string) $userId]
+                            );
                         } else {
                             $query->whereRaw(
                                 'JSON_SEARCH(read_by, "one", ?) IS NULL',

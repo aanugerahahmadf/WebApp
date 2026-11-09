@@ -16,7 +16,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('discounts', function (Blueprint $table) {
-            $table->string('name');
+            $table->string('name', 255)->nullable();
         });
     }
 };

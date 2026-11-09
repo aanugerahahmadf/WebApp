@@ -4,6 +4,7 @@ namespace App\Filament\User\Pages\DeviceTrustPrompt;
 
 use App\Filament\Concerns\HasDynamicBreadcrumbs;
 use App\Filament\Welcome\Pages\Home\Home;
+use App\Filament\Welcome\Pages\NotificationDetailPage\NotificationDetailPage;
 use App\Filament\Welcome\Pages\SettingsPage\PasswordSecurityPage\PasswordSecurityPage;
 use App\Models\TrustedDevice\TrustedDevice;
 use App\Models\User\User;
@@ -11,6 +12,7 @@ use App\Support\DeviceTrust\DeviceTrustService;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Auth;
 
 /*
@@ -44,6 +46,8 @@ class DeviceTrustPrompt extends Page
     /** Perangkat sudah direspons? Nyala kembali tombol. */
     public bool $answered = false;
 
+    public ?string $returnTo = null;
+
     public static function getSlug(): string
     {
         return 'device-trust/{id}';
@@ -55,6 +59,11 @@ class DeviceTrustPrompt extends Page
      */
     public function mount(string $id): void
     {
+        $candidateReturnTo = request()->query('returnTo') ?: url()->previous();
+        $this->returnTo = is_string($candidateReturnTo)
+            && str_starts_with($candidateReturnTo, url('/notifications/'))
+            ? $candidateReturnTo
+            : null;
         $user = Auth::user();
 
         abort_unless($user instanceof User, 403);
@@ -63,6 +72,31 @@ class DeviceTrustPrompt extends Page
             ->whereKey($id)
             ->where('user_id', $user->getKey())
             ->firstOrFail();
+
+        // Existing notifications may contain the old action URL without a
+        // `returnTo` query parameter. Resolve that notification here so the
+        // breadcrumb remains a real clickable link even for old records.
+        if (! $this->returnTo) {
+            $deviceUrl = url('/device-trust/'.$this->reviewDevice->getKey());
+            $notification = DatabaseNotification::query()
+                ->where('notifiable_id', $user->getKey())
+                ->where('notifiable_type', $user->getMorphClass())
+                ->latest()
+                ->get()
+                ->first(function (DatabaseNotification $notification) use ($deviceUrl): bool {
+                    return collect($notification->data['actions'] ?? [])->contains(
+                        fn ($action): bool => is_array($action)
+                            && is_string($action['url'] ?? null)
+                            && str_starts_with($action['url'], $deviceUrl),
+                    );
+                });
+
+            if ($notification) {
+                $this->returnTo = NotificationDetailPage::getUrl([
+                    'id' => $notification->getKey(),
+                ], panel: 'welcome');
+            }
+        }
 
         $this->answered = $this->reviewDevice->trusted_at !== null;
     }
@@ -85,13 +119,7 @@ class DeviceTrustPrompt extends Page
     /** @return array<Action> */
     protected function getHeaderActions(): array
     {
-        return [
-            Action::make('backToHome')
-                ->label(__('Kembali ke Beranda'))
-                ->icon('/images/icons/arrow_left.svg')
-                ->color('gray')
-                ->url(Home::getUrl(panel: 'welcome')),
-        ];
+        return [];
     }
 
     /**
@@ -131,9 +159,16 @@ class DeviceTrustPrompt extends Page
 
     public function getBreadcrumbs(): array
     {
-        return [
-            ...$this->breadcrumbParentCrumb(),
-            $this->getTitle(),
-        ];
+        $breadcrumbs = $this->breadcrumbParentCrumb();
+
+        if ($this->returnTo) {
+            $breadcrumbs[$this->returnTo] = __('Detail Notifikasi');
+        } else {
+            $breadcrumbs[] = __('Detail Notifikasi');
+        }
+
+        $breadcrumbs[static::getUrl(['id' => $this->reviewDevice?->getKey()], panel: 'welcome')] = $this->getTitle();
+
+        return $breadcrumbs;
     }
 }

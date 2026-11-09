@@ -66,7 +66,7 @@ class NotificationSettingsComponent extends Component implements HasForms
                             Toggle::make('payment')->label(__('Pembayaran'))->helperText(__('Tagihan, pembayaran berhasil, refund, dan pengingat pembayaran.')),
                             
                             Toggle::make('promotions')->label(__('Promo dan voucher'))->helperText(__('Diskon, voucher, dan penawaran khusus.')),
-                            Toggle::make('wishlist')->label(__('Favorit dan wishlist'))->helperText(__('Perubahan ketersediaan atau harga item favorit.')),
+                            Toggle::make('Favorite')->label(__('Favorit dan Favorite'))->helperText(__('Perubahan ketersediaan atau harga item favorit.')),
                             Toggle::make('reviews')->label(__('Ulasan'))->helperText(__('Ulasan baru dan tanggapan atas ulasan Anda.')),
                             Toggle::make('system')->label(__('Pembaruan sistem'))->helperText(__('Informasi fitur, pemeliharaan, dan pengumuman layanan.')),
                             Toggle::make('security')->label(__('Keamanan akun'))->helperText(__('Sign In baru, perubahan akun, dan aktivitas mencurigakan.')),
@@ -119,7 +119,7 @@ class NotificationSettingsComponent extends Component implements HasForms
         return [
             'enabled' => true, 'in_app' => true, 'email' => true, 'whatsapp' => false,
             'chat' => true, 'booking' => true, 'payment' => true,
-            'promotions' => true, 'wishlist' => true, 'reviews' => true, 'system' => true,
+            'promotions' => true, 'Favorite' => true, 'reviews' => true, 'system' => true,
             'security' => true, 'digest_frequency' => 'instant', 'quiet_hours_enabled' => false,
             'quiet_hours_start' => '22:00', 'quiet_hours_end' => '07:00', 'sound' => true,
         ];
@@ -128,7 +128,7 @@ class NotificationSettingsComponent extends Component implements HasForms
     /** @return list<string> */
     private function toggleKeys(): array
     {
-        return ['enabled', 'in_app', 'email', 'whatsapp', 'chat', 'booking', 'payment', 'promotions', 'wishlist', 'reviews', 'system', 'security', 'sound'];
+        return ['enabled', 'in_app', 'email', 'whatsapp', 'chat', 'booking', 'payment', 'promotions', 'Favorite', 'reviews', 'system', 'security', 'sound'];
     }
 
     public function render(): View

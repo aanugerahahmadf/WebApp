@@ -85,7 +85,7 @@ $ps = $order->payment_status instanceof OrderPaymentStatus
     : OrderPaymentStatus::tryFrom((string) $order->payment_status);
 $psVal   = $ps?->value ?? '';
 $psLabel = $ps?->getLabel() ?? $psVal;
-$isPaid  = in_array($psVal, ['paid', 'partial']);
+$isPaid  = in_array($psVal, ['paid']);
 $badgeClass = match($psVal) {
     'paid'    => 'badge-paid',
     'partial' => 'badge-partial',
@@ -165,7 +165,7 @@ if ($item) {
     }
 }
 
-$appName = config('app.name', 'Wedding Flowers Decorasi');
+$appName = config('app.name', 'Wedding Floral Decorations');
 $now     = now()->format('d M Y, H:i');
 @endphp
 

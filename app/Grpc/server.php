@@ -6,7 +6,7 @@
  * Start the gRPC server:
  * php app/Grpc/server.php
  * 
- * The server listens on port 50051 by default.
+ * The server listens on port 15051 by default (GRPC_PORT).
  */
 
 require __DIR__ . '/../../vendor/autoload.php';
@@ -17,7 +17,7 @@ use App\Grpc\Services\CatalogService;
 use App\Grpc\Services\PackageService;
 use App\Grpc\Services\OrderService;
 use App\Grpc\Services\CartService;
-use App\Grpc\Services\WishlistService;
+use App\Grpc\Services\Favoriteservice;
 use App\Grpc\Services\ReviewService;
 use App\Grpc\Services\VoucherService;
 use App\Grpc\Services\CbirService;
@@ -29,7 +29,7 @@ $app = require_once __DIR__ . '/../../bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
-$port = env('GRPC_PORT', 50051);
+$port = env('GRPC_PORT', 15051);
 
 // Create gRPC server
 $server = new Server();
@@ -40,7 +40,7 @@ $catalogService = new CatalogService();
 $packageService = new PackageService();
 $orderService = new OrderService();
 $cartService = new CartService();
-$wishlistService = new WishlistService();
+$Favoriteservice = new Favoriteservice();
 $reviewService = new ReviewService();
 $voucherService = new VoucherService();
 $cbirService = new CbirService();
@@ -54,7 +54,7 @@ $server->handle(function ($call, $method) use (
     $packageService,
     $orderService,
     $cartService,
-    $wishlistService,
+    $Favoriteservice,
     $reviewService,
     $voucherService,
     $cbirService,
@@ -72,7 +72,7 @@ $server->handle(function ($call, $method) use (
             '/wedding.user.v1.PackageService/',
             '/wedding.user.v1.OrderService/',
             '/wedding.user.v1.CartService/',
-            '/wedding.user.v1.WishlistService/',
+            '/wedding.user.v1.Favoriteservice/',
             '/wedding.user.v1.ReviewService/',
             '/wedding.user.v1.VoucherService/',
             '/wedding.user.v1.CbirService/',
@@ -85,7 +85,7 @@ $server->handle(function ($call, $method) use (
             '/weddingapp.package.PackageService/',
             '/weddingapp.order.OrderService/',
             '/weddingapp.cart.CartService/',
-            '/weddingapp.wishlist.WishlistService/',
+            '/weddingapp.Favorite.Favoriteservice/',
             '/weddingapp.review.ReviewService/',
             '/weddingapp.voucher.VoucherService/',
             '/weddingapp.cbir.CbirService/',
@@ -97,10 +97,10 @@ $server->handle(function ($call, $method) use (
 
     $method = str_replace([
         '/ResendVerification', '/GetMyCart', '/ApplyVoucherToCart',
-        '/RemoveVoucherFromCart', '/GetMyWishlist', '/GetMyVouchers',
+        '/RemoveVoucherFromCart', '/GetMyFavorite', '/GetMyVouchers',
     ], [
         '/ResendVerificationEmail', '/GetCart', '/ApplyVoucher',
-        '/RemoveVoucher', '/GetWishlist', '/GetVouchers',
+        '/RemoveVoucher', '/GetFavorite', '/GetVouchers',
     ], $method);
 
     switch ($method) {
@@ -216,23 +216,23 @@ $server->handle(function ($call, $method) use (
         case '/weddingapp.cart.CartService/EstimateShipping':
             return $cartService->EstimateShipping($call, $call->getRequest());
 
-        // Wishlist Service
-        case '/weddingapp.wishlist.WishlistService/GetWishlist':
-            return $wishlistService->GetWishlist($call, $call->getRequest());
-        case '/weddingapp.wishlist.WishlistService/ToggleWishlist':
-            return $wishlistService->ToggleWishlist($call, $call->getRequest());
-        case '/weddingapp.wishlist.WishlistService/AddToWishlist':
-            return $wishlistService->AddToWishlist($call, $call->getRequest());
-        case '/weddingapp.wishlist.WishlistService/RemoveFromWishlist':
-            return $wishlistService->RemoveFromWishlist($call, $call->getRequest());
-        case '/weddingapp.wishlist.WishlistService/ClearWishlist':
-            return $wishlistService->ClearWishlist($call, $call->getRequest());
-        case '/weddingapp.wishlist.WishlistService/IsInWishlist':
-            return $wishlistService->IsInWishlist($call, $call->getRequest());
-        case '/weddingapp.wishlist.WishlistService/MoveToCart':
-            return $wishlistService->MoveToCart($call, $call->getRequest());
-        case '/weddingapp.wishlist.WishlistService/ShareWishlist':
-            return $wishlistService->ShareWishlist($call, $call->getRequest());
+        // Favorite Service
+        case '/weddingapp.Favorite.Favoriteservice/GetFavorite':
+            return $Favoriteservice->GetFavorite($call, $call->getRequest());
+        case '/weddingapp.Favorite.Favoriteservice/ToggleFavorite':
+            return $Favoriteservice->ToggleFavorite($call, $call->getRequest());
+        case '/weddingapp.Favorite.Favoriteservice/AddToFavorite':
+            return $Favoriteservice->AddToFavorite($call, $call->getRequest());
+        case '/weddingapp.Favorite.Favoriteservice/RemoveFromFavorite':
+            return $Favoriteservice->RemoveFromFavorite($call, $call->getRequest());
+        case '/weddingapp.Favorite.Favoriteservice/ClearFavorite':
+            return $Favoriteservice->ClearFavorite($call, $call->getRequest());
+        case '/weddingapp.Favorite.Favoriteservice/IsInFavorite':
+            return $Favoriteservice->IsInFavorite($call, $call->getRequest());
+        case '/weddingapp.Favorite.Favoriteservice/MoveToCart':
+            return $Favoriteservice->MoveToCart($call, $call->getRequest());
+        case '/weddingapp.Favorite.Favoriteservice/ShareFavorite':
+            return $Favoriteservice->ShareFavorite($call, $call->getRequest());
 
         // Review Service
         case '/weddingapp.review.ReviewService/GetReviews':

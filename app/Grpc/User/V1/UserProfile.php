@@ -27,9 +27,9 @@ class UserProfile extends \Google\Protobuf\Internal\Message
      */
     protected $review_count = 0;
     /**
-     * Generated from protobuf field <code>int32 wishlist_count = 4;</code>
+     * Generated from protobuf field <code>int32 Favorite_count = 4;</code>
      */
-    protected $wishlist_count = 0;
+    protected $Favorite_count = 0;
     /**
      * Generated from protobuf field <code>double total_spent = 5;</code>
      */
@@ -52,7 +52,7 @@ class UserProfile extends \Google\Protobuf\Internal\Message
      *     @type \App\Grpc\User\V1\User $user
      *     @type int $order_count
      *     @type int $review_count
-     *     @type int $wishlist_count
+     *     @type int $Favorite_count
      *     @type float $total_spent
      *     @type \App\Grpc\User\V1\Category $favorite_category
      *     @type string $joined_at
@@ -140,23 +140,23 @@ class UserProfile extends \Google\Protobuf\Internal\Message
     }
 
     /**
-     * Generated from protobuf field <code>int32 wishlist_count = 4;</code>
+     * Generated from protobuf field <code>int32 Favorite_count = 4;</code>
      * @return int
      */
-    public function getWishlistCount()
+    public function getFavoriteCount()
     {
-        return $this->wishlist_count;
+        return $this->Favorite_count;
     }
 
     /**
-     * Generated from protobuf field <code>int32 wishlist_count = 4;</code>
+     * Generated from protobuf field <code>int32 Favorite_count = 4;</code>
      * @param int $var
      * @return $this
      */
-    public function setWishlistCount(int $var)
+    public function setFavoriteCount(int $var)
     {
         GPBUtil::checkInt32($var);
-        $this->wishlist_count = $var;
+        $this->Favorite_count = $var;
 
         return $this;
     }

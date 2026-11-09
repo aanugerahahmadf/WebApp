@@ -22,7 +22,7 @@ type UserProfile {
   user: User!
   orderCount: Int!
   reviewCount: Int!
-  wishlistCount: Int!
+  FavoriteCount: Int!
   totalSpent: Float!
   favoriteCategory: Category
   joinedAt: String!
@@ -30,7 +30,7 @@ type UserProfile {
 
 type UserActivity {
   id: ID!
-  type: String! # ORDER, REVIEW, WISHLIST, LOGIN
+  type: String! # ORDER, REVIEW, Favorite, LOGIN
   description: String!
   metadata: JSON
   createdAt: String!

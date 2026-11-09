@@ -10,7 +10,6 @@ enum OrderPaymentStatus: string implements HasColor, HasIcon, HasLabel
 {
     case UNPAID = 'unpaid';
     case PENDING = 'pending';
-    case PARTIAL = 'partial';
     case PAID = 'paid';
     case FAILED = 'failed';
     case REFUNDED = 'refunded';
@@ -21,7 +20,6 @@ enum OrderPaymentStatus: string implements HasColor, HasIcon, HasLabel
         return match ($this) {
             self::UNPAID => __('Belum Bayar'),
             self::PENDING => __('Menunggu Konfirmasi'),
-            self::PARTIAL => __('DP / Sebagian'),
             self::PAID => __('Lunas'),
             self::FAILED => __('Gagal'),
             self::REFUNDED => __('Refund'),
@@ -34,7 +32,6 @@ enum OrderPaymentStatus: string implements HasColor, HasIcon, HasLabel
         return match ($this) {
             self::UNPAID => 'danger',
             self::PENDING => 'warning',
-            self::PARTIAL => 'info',
             self::PAID => 'success',
             self::FAILED => 'danger',
             self::REFUNDED => 'gray',
@@ -47,7 +44,6 @@ enum OrderPaymentStatus: string implements HasColor, HasIcon, HasLabel
         return match ($this) {
             self::UNPAID => '/images/icons/x_circle.svg',
             self::PENDING => '/images/icons/clock.svg',
-            self::PARTIAL => '/images/icons/banknotes.svg',
             self::PAID => '/images/icons/check_circle.svg',
             self::FAILED => '/images/icons/alert.svg',
             self::REFUNDED => '/images/icons/refresh.svg',

@@ -26,14 +26,14 @@ use App\Filament\Admin\Resources\VoucherResource\Pages\ManageVouchers\ManageVouc
 // adalah Page (bukan ManageRecords), jadi tidak punya tabel dan tidak
 // termasuk daftar halaman ber-pagination.
 use App\Filament\Admin\Resources\WeddingDecorationPolicyResource\Pages\ManageWeddingDecorationPolicies\ManageWeddingDecorationPolicies;
-use App\Filament\Admin\Resources\WishlistResource\Pages\ManageWishlists\ManageWishlists as AdminManageWishlists;
+use App\Filament\Admin\Resources\FavoriteResource\Pages\ManageFavorites\ManageFavorites as AdminManageFavorites;
 use App\Filament\User\Resources\CartResource\Pages\ManageCarts\ManageCarts;
 use App\Filament\User\Resources\CatalogResource\Pages\ManageCatalogs\ManageCatalogs;
 use App\Filament\User\Resources\HistoryResource\Pages\ListHistories\ListHistories;
 use App\Filament\User\Resources\OrderResource\Pages\ManageOrders\ManageOrders;
 use App\Filament\User\Resources\ReviewResource\Pages\ManageReviews\ManageReviews;
 use App\Filament\User\Resources\VoucherResource\Pages\ManageVouchers\ManageVouchers;
-use App\Filament\User\Resources\WishlistResource\Pages\ManageWishlists\ManageWishlists;
+use App\Filament\User\Resources\FavoriteResource\Pages\ManageFavorites\ManageFavorites;
 use App\Models\Admin\Admin;
 use App\Models\User\User;
 use App\Support\AppPlatform\AppPlatform;
@@ -121,7 +121,7 @@ function userListPages(): array
         ManageCatalogs::class,
         ManageReviews::class,
         ManageVouchers::class,
-        ManageWishlists::class,
+        ManageFavorites::class,
     ];
 }
 
@@ -156,7 +156,7 @@ function adminListPages(): array
         AdminManageVouchers::class,
         // (dihapus: WebsiteMobileCustomizer bukan list page lagi)
         ManageWeddingDecorationPolicies::class,
-        AdminManageWishlists::class,
+        AdminManageFavorites::class,
     ];
 }
 

@@ -275,7 +275,6 @@
                                                     $payBadgeLabel = $livePaymentStatus->getLabel();
                                                     $payBadgeBg = match($livePaymentStatus) {
                                                         \App\Enums\OrderPaymentStatus\OrderPaymentStatus::PAID    => '#16a34a',
-                                                        \App\Enums\OrderPaymentStatus\OrderPaymentStatus::PARTIAL => '#0284c7',
                                                         \App\Enums\OrderPaymentStatus\OrderPaymentStatus::PENDING => '#d97706',
                                                         \App\Enums\OrderPaymentStatus\OrderPaymentStatus::REFUNDED => '#6b7280',
                                                         default => '#dc2626', // unpaid, failed, cancelled

@@ -5,7 +5,7 @@ namespace App\Filament\User\Widgets\ShortcutStats;
 use App\Models\Cart\Cart;
 use App\Models\Order\Order;
 use App\Models\Catalog\Catalog;
-use App\Models\Wishlist\Wishlist;
+use App\Models\Favorite\Favorite;
 use Filament\Support\Enums\IconPosition;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -91,13 +91,13 @@ class ShortcutStats extends BaseWidget
                     'onclick' => "window.location.href='".route('filament.welcome.resources.orders.index')."'",
                 ]),
 
-            Stat::make(__('Favorit'), Wishlist::query()->where('user_id', $user->id)->count('id'))
+            Stat::make(__('Favorit'), Favorite::query()->where('user_id', $user->id)->count('id'))
                 ->description(__('Tersimpan'))
                 ->descriptionIcon('/images/icons/heart.svg', IconPosition::Before)
                 ->color('danger')
                 ->extraAttributes([
                     'class' => 'home-stat-card home-stat-action cursor-pointer hover:scale-105 transition-transform h-full',
-                    'onclick' => "window.location.href='".route('filament.welcome.resources.wishlists.index')."'",
+                    'onclick' => "window.location.href='".route('filament.welcome.resources.Favorites.index')."'",
                 ]),
 
             Stat::make(__('Voucher Aktif'), $user->vouchers()->whereNull('user_vouchers.used_at')->count())

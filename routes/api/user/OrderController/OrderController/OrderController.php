@@ -16,6 +16,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/bookings/{id}/upload-proof', [OrderController::class, 'uploadProof']);
     Route::get('/bookings/track/{orderNumber}', [OrderController::class, 'trackOrder']);
     Route::get('/bookings/{id}', [OrderController::class, 'show']);
+    Route::put('/bookings/{id}', [OrderController::class, 'updateOrder']);
+    Route::delete('/bookings/{id}', [OrderController::class, 'deleteOrder']);
     Route::post('/bookings/{id}/cancel', [OrderController::class, 'cancelOrder']);
     Route::get('/bookings/{id}/invoice', [OrderController::class, 'downloadInvoice']);
     Route::post('/bookings/{id}/invoice/email', [OrderController::class, 'sendInvoiceEmail']);
@@ -29,6 +31,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/orders/{id}/pay', [OrderController::class, 'initiatePayment']);
     Route::post('/orders/{id}/upload-proof', [OrderController::class, 'uploadProof']);
     Route::get('/orders/{id}', [OrderController::class, 'show']);
+    Route::put('/orders/{id}', [OrderController::class, 'updateOrder']);
+    Route::delete('/orders/{id}', [OrderController::class, 'deleteOrder']);
     Route::post('/orders/{id}/cancel', [OrderController::class, 'cancelOrder']);
     Route::get('/orders/{id}/invoice', [OrderController::class, 'downloadInvoice']);
     Route::post('/orders/{id}/invoice/email', [OrderController::class, 'sendInvoiceEmail']);

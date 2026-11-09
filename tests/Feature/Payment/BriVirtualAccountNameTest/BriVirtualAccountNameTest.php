@@ -260,6 +260,60 @@ test('rekening tujuan tetap rekening admin, bukan rekening pemesan', function ()
         ->and($result['virtual_account_no'])->not->toBe('421201032041536');
 });
 
+test('customerNo mengikat user DAN pesanan, bukan hanya user', function () {
+    $user = User::factory()->create(['full_name' => 'Andi Pratama']);
+    $transaction = vaTransactionFor($user);
+
+    fakeSnapTokenAndCreateVa();
+
+    app(BriService::class)->createVirtualAccount($transaction);
+
+    $body = capturedCreateVaBody();
+    $customerNo = (string) $body['customerNo'];
+
+    // 10 digit user + 6 digit pesanan. Dua angka ini yang membuat webhook BRI
+    // bisa memisahkan pembayaran dua pesanan dari user yang sama.
+    expect($customerNo)->toHaveLength(16)
+        ->and(substr($customerNo, 0, 10))->toBe(str_pad((string) $user->id, 10, '0', STR_PAD_LEFT))
+        ->and(substr($customerNo, 10))->toBe(str_pad((string) $transaction->order_id, 6, '0', STR_PAD_LEFT))
+        // Nomor VA tidak boleh mengandung nomor rekening settlement.
+        ->and($body['virtualAccountNo'])->not->toContain('421201032041536');
+});
+
+test('nomor Virtual Account untuk pesanan yang sama tetap sama saat diulang', function () {
+    $user = User::factory()->create(['full_name' => 'Andi Pratama']);
+    $transaction = vaTransactionFor($user);
+
+    $seen = [];
+
+    Http::fake([
+        '*/snap/v1.0/access-token/b2b' => Http::response(['accessToken' => 'fake-b2b-token'], 200),
+        '*/snap/v1.0/transfer-va/create-va' => Http::response([
+            'responseCode' => '2009000',
+            'virtualAccountData' => ['virtualAccountNo' => '880800000000001'],
+        ], 200),
+    ]);
+
+    $bri = app(BriService::class);
+    $bri->createVirtualAccount($transaction);
+    // Cache token di-flush supaya panggilan kedua benar-benar mengirim
+    // create-va lagi, bukan memakai state dari panggilan pertama.
+    Cache::store('array')->flush();
+    $bri->createVirtualAccount($transaction->fresh());
+
+    foreach (Http::recorded() as $pair) {
+        if (! str_contains($pair[0]->url(), '/transfer-va/create-va')) {
+            continue;
+        }
+        $seen[] = json_decode($pair[0]->body(), true)['virtualAccountNo'];
+    }
+
+    // BRI menolak create-va kedua untuk trxId yang sama kalau nomornya
+    // berbeda, jadi retry WAJIB menghasilkan nomor yang identik.
+    expect($seen)->toHaveCount(2)
+        ->and($seen[0])->toBe($seen[1]);
+});
+
 test('body request ke BRI adalah objek JSON, bukan string JSON', function () {
     $user = User::factory()->create(['full_name' => 'Rangga Saputra']);
 

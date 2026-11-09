@@ -22,9 +22,16 @@ class ReviewController extends Controller
     public function store(Request $request)
     {
         try {
+            if ($request->filled('tier_id') && ! $request->filled('package_id')) {
+                $request->merge(['package_id' => $request->input('tier_id')]);
+            }
             $validatedData = $request->validate([
                 'package_id' => 'nullable|exists:packages,id',
                 'catalog_id' => 'nullable|exists:catalogs,id',
+                'order_id' => 'nullable|exists:orders,id',
+                'variation' => 'nullable|string|max:255',
+                'specifications' => 'nullable|array',
+                'is_anonymous' => 'nullable|boolean',
                 'rating' => 'required|integer|min:1|max:5',
                 'comment' => 'nullable|string|max:1000',
                 'title' => 'nullable|string|max:255',
@@ -41,6 +48,10 @@ class ReviewController extends Controller
             }
 
             $order = Order::where('user_id', Auth::id())
+                ->when(
+                    filled($validatedData['order_id'] ?? null),
+                    fn ($q) => $q->whereKey($validatedData['order_id'])
+                )
                 ->where(function ($q) use ($validatedData): void {
                     if (filled($validatedData['package_id'] ?? null)) {
                         $q->where('package_id', $validatedData['package_id']);
@@ -87,13 +98,22 @@ class ReviewController extends Controller
                 }
             }
 
+            $variationName = $validatedData['variation'] ?? null;
+            if (! $variationName && $order && $order->package) {
+                $variationName = $order->package->name;
+            }
+
             $review = Review::create([
                 'user_id' => Auth::id(),
+                'order_id' => $validatedData['order_id'] ?? $order->id,
                 'package_id' => $validatedData['package_id'] ?? null,
                 'catalog_id' => $validatedData['catalog_id'] ?? null,
                 'rating' => $validatedData['rating'],
                 'title' => $validatedData['title'] ?? null,
                 'comment' => $validatedData['comment'] ?? null,
+                'variation' => $variationName,
+                'specifications' => $validatedData['specifications'] ?? null,
+                'is_anonymous' => (bool) ($validatedData['is_anonymous'] ?? false),
                 'photo' => $photoPaths[0] ?? null,
                 'photos' => $photoPaths,
             ]);
@@ -161,10 +181,229 @@ class ReviewController extends Controller
             $query->where('rating', '>=', $request->min_rating);
         }
 
-        if ($request->boolean('with_photo')) {
+        if ($request->boolean('with_photo') || $request->boolean('with_media')) {
             $query->where(function ($q) {
-                $q->whereNotNull('photo')->orWhereNotNull('photos');
+                $q->whereNotNull('photo')->where('photo', '<>', '')
+                    ->orWhereJsonLength('photos', '>', 0);
             });
+        }
+
+        if ($request->boolean('with_comment')) {
+            $query->whereNotNull('comment')->where('comment', '<>', '');
+        }
+    }
+
+    /**
+     * Query dasar semua daftar ulasan.
+     *
+     * Relasi yang dipakai accessor dimuat di sini supaya serialisasi tidak
+     * memicu N+1.
+     */
+    private function baseQuery()
+    {
+        return Review::query()->with([
+            'user:id,full_name,username,avatar_url',
+            'catalog:id,name,name_translations',
+            'catalog.media',
+            'package:id,name,name_translations',
+            'package.media',
+            'replies' => function ($q) {
+                $q->with('user:id,full_name,username,avatar_url');
+            },
+        ]);
+    }
+
+    /**
+     * Filter konteks: pencarian dan item tertentu. Summary memakai filter ini
+     * supaya angka rata-rata mengikuti konteks halaman.
+     */
+    private function applyContextFilters($query, Request $request): void
+    {
+        if ($request->filled('search')) {
+            $query->search((string) $request->input('search'));
+        }
+
+        if ($request->filled('catalog_id')) {
+            $query->where('catalog_id', $request->input('catalog_id'));
+        }
+
+        if ($request->filled('package_id')) {
+            $query->where('package_id', $request->input('package_id'));
+        }
+
+        if ($request->boolean('verified_only')) {
+            $query->whereNotNull('order_id');
+        }
+    }
+
+    /**
+     * Filter yang mempersempit daftar tanpa mengubah summary.
+     */
+    private function applyNarrowFilters($query, Request $request): void
+    {
+        if ($request->filled('rating')) {
+            $query->where('rating', $request->input('rating'));
+        }
+
+        if ($request->filled('min_rating')) {
+            $query->where('rating', '>=', $request->input('min_rating'));
+        }
+
+        if ($request->boolean('with_photo') || $request->boolean('with_media')) {
+            $query->withMedia();
+        }
+
+        if ($request->boolean('with_comment')) {
+            $query->withComment();
+        }
+    }
+
+    /**
+     * Ringkasan rating untuk query apa pun.
+     */
+    private function summaryForQuery($query): array
+    {
+        $total = (clone $query)->count();
+        $avg = (clone $query)->avg('rating');
+
+        $distribution = [];
+        for ($i = 5; $i >= 1; $i--) {
+            $count = (clone $query)->where('rating', $i)->count();
+            $distribution[] = [
+                'star' => $i,
+                'count' => $count,
+                'percentage' => $total > 0 ? round(($count / $total) * 100, 1) : 0,
+            ];
+        }
+
+        $withPhotoCount = (clone $query)->withMedia()->count();
+
+        return [
+            'average' => $avg ? round((float) $avg, 1) : 0,
+            'total' => $total,
+            'with_photo_count' => $withPhotoCount,
+            'with_media_count' => $withPhotoCount,
+            'with_comment_count' => (clone $query)->withComment()->count(),
+            'verified_count' => (clone $query)->whereNotNull('order_id')->count(),
+            'distribution' => $distribution,
+        ];
+    }
+
+    /**
+     * Payload ulasan yang aman untuk daftar publik.
+     *
+     * Ulasan anonim tidak membocorkan user_id/relasi user; nama tersamar tetap
+     * tampil seperti di Shopee.
+     */
+    private function serializeReview(Review $review, ?int $viewerId, bool $anonymize = true): array
+    {
+        $review->loadMissing([
+            'user:id,full_name,username,avatar_url',
+            'catalog:id,name,name_translations',
+            'catalog.media',
+            'package:id,name,name_translations',
+            'package.media',
+            'replies.user:id,full_name,username,avatar_url',
+        ]);
+
+        $data = $review->toArray();
+        $isAnonymous = $anonymize && (bool) $review->is_anonymous;
+        $actualName = $review->user?->full_name
+            ?? $review->user?->username
+            ?? __('Pengguna');
+
+        $data['reviewer_name'] = $isAnonymous ? $review->masked_username : $actualName;
+        $data['reviewer_avatar'] = $isAnonymous ? null : $review->user?->avatar_url;
+        $data['is_verified_purchase'] = $review->is_verified_purchase;
+        $data['is_voted'] = $review->isVotedBy($viewerId);
+        $data['item_name'] = $review->item_name;
+        $data['item_image_url'] = $review->item_image_url;
+
+        if ($isAnonymous) {
+            $data['user'] = null;
+            $data['user_id'] = null;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Payload pagination yang konsisten di semua endpoint daftar.
+     */
+    private function paginationPayload($paginator): array
+    {
+        return [
+            'current_page' => $paginator->currentPage(),
+            'last_page' => $paginator->lastPage(),
+            'per_page' => $paginator->perPage(),
+            'total' => $paginator->total(),
+            'has_more_pages' => $paginator->hasMorePages(),
+        ];
+    }
+
+    /**
+     * Daftar ulasan dari semua pengguna (kartu + modal "Komentar Penilaian Katalog").
+     *
+     * `search` tetap dilayani untuk kompatibilitas, tapi tidak lagi dipakai UI
+     * mana pun: Beranda dan sheet katalog menyaring lewat chip, bukan teks bebas.
+     *
+     * Query params: search, catalog_id, package_id, rating, min_rating,
+     * with_photo, with_comment, verified_only, sort, page, per_page.
+     */
+    public function getAllReviews(Request $request)
+    {
+        try {
+            $context = $this->baseQuery();
+            $this->applyContextFilters($context, $request);
+            $summary = $this->summaryForQuery($context);
+
+            $query = $this->baseQuery();
+            $this->applyContextFilters($query, $request);
+            $this->applyNarrowFilters($query, $request);
+            $this->applySort($query, $request);
+
+            $perPage = min(50, max(1, (int) $request->get('per_page', 10)));
+            $paginator = $query->paginate($perPage);
+            $userId = Auth::id();
+
+            $items = collect($paginator->items())
+                ->map(fn (Review $review): array => $this->serializeReview($review, $userId))
+                ->values();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $items,
+                'summary' => $summary,
+                'pagination' => $this->paginationPayload($paginator),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => __('Gagal mengambil ulasan pengguna'),
+                'error' => null,
+            ], 500);
+        }
+    }
+
+    /**
+     * Ringkasan rating semua ulasan (tanpa filter rating).
+     */
+    public function getAllRatingSummary(Request $request)
+    {
+        try {
+            $context = $this->baseQuery();
+            $this->applyContextFilters($context, $request);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $this->summaryForQuery($context),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => __('Gagal mengambil ringkasan ulasan'),
+                'error' => null,
+            ], 500);
         }
     }
 
@@ -174,36 +413,25 @@ class ReviewController extends Controller
     public function getPackageReviews($packageId, Request $request)
     {
         try {
-            $query = Review::with([
-                'user:id,full_name,avatar_url',
-                'replies' => function ($q) {
-                    $q->with('user:id,full_name,avatar_url');
-                },
-            ])
-                ->where('package_id', $packageId);
+            $context = $this->baseQuery()->where('package_id', $packageId);
+            $summary = $this->summaryForQuery($context);
 
-            $this->applyFilters($query, $request);
+            $query = $this->baseQuery()->where('package_id', $packageId);
+            $this->applyNarrowFilters($query, $request);
             $this->applySort($query, $request);
 
-            $userId = Auth::id();
             $reviews = $query->paginate($request->get('per_page', 10));
+            $userId = Auth::id();
 
-            $items = $reviews->getCollection()->map(function ($review) use ($userId) {
-                $review->is_voted = $review->isVotedBy($userId);
-
-                return $review;
-            });
+            $items = collect($reviews->items())
+                ->map(fn (Review $review): array => $this->serializeReview($review, $userId))
+                ->values();
 
             return response()->json([
                 'status' => 'success',
                 'data' => $items,
-                'pagination' => [
-                    'current_page' => $reviews->currentPage(),
-                    'last_page' => $reviews->lastPage(),
-                    'per_page' => $reviews->perPage(),
-                    'total' => $reviews->total(),
-                    'has_more_pages' => $reviews->hasMorePages(),
-                ],
+                'summary' => $summary,
+                'pagination' => $this->paginationPayload($reviews),
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -220,36 +448,25 @@ class ReviewController extends Controller
     public function getCatalogReviews($catalogId, Request $request)
     {
         try {
-            $query = Review::with([
-                'user:id,full_name,avatar_url',
-                'replies' => function ($q) {
-                    $q->with('user:id,full_name,avatar_url');
-                },
-            ])
-                ->where('catalog_id', $catalogId);
+            $context = $this->baseQuery()->where('catalog_id', $catalogId);
+            $summary = $this->summaryForQuery($context);
 
-            $this->applyFilters($query, $request);
+            $query = $this->baseQuery()->where('catalog_id', $catalogId);
+            $this->applyNarrowFilters($query, $request);
             $this->applySort($query, $request);
 
-            $userId = Auth::id();
             $reviews = $query->paginate($request->get('per_page', 10));
+            $userId = Auth::id();
 
-            $items = $reviews->getCollection()->map(function ($review) use ($userId) {
-                $review->is_voted = $review->isVotedBy($userId);
-
-                return $review;
-            });
+            $items = collect($reviews->items())
+                ->map(fn (Review $review): array => $this->serializeReview($review, $userId))
+                ->values();
 
             return response()->json([
                 'status' => 'success',
                 'data' => $items,
-                'pagination' => [
-                    'current_page' => $reviews->currentPage(),
-                    'last_page' => $reviews->lastPage(),
-                    'per_page' => $reviews->perPage(),
-                    'total' => $reviews->total(),
-                    'has_more_pages' => $reviews->hasMorePages(),
-                ],
+                'summary' => $summary,
+                'pagination' => $this->paginationPayload($reviews),
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -279,33 +496,13 @@ class ReviewController extends Controller
     private function ratingSummary(string $column, $id)
     {
         try {
-            $total = Review::where($column, $id)->count();
-            $avg = Review::where($column, $id)->avg('rating');
-
-            $distribution = [];
-            for ($i = 5; $i >= 1; $i--) {
-                $count = Review::where($column, $id)->where('rating', $i)->count();
-                $distribution[] = [
-                    'star' => $i,
-                    'count' => $count,
-                    'percentage' => $total > 0 ? round(($count / $total) * 100, 1) : 0,
-                ];
-            }
-
-            $withPhotoCount = Review::where($column, $id)
-                ->where(function ($q) {
-                    $q->whereNotNull('photo')->orWhereNotNull('photos');
-                })
-                ->count();
+            $summary = $this->summaryForQuery(
+                Review::query()->where($column, $id)
+            );
 
             return response()->json([
                 'status' => 'success',
-                'data' => [
-                    'average' => $avg ? round((float) $avg, 1) : 0,
-                    'total' => $total,
-                    'with_photo_count' => $withPhotoCount,
-                    'distribution' => $distribution,
-                ],
+                'data' => $summary,
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -454,24 +651,31 @@ class ReviewController extends Controller
     public function getUserReviews(Request $request)
     {
         try {
-            $query = Review::with(['package.media', 'catalog.media', 'user:id,full_name,avatar_url', 'replies' => function ($q) {
-                $q->with('user:id,full_name,avatar_url');
-            }])
-                ->where('user_id', Auth::id())
-                ->orderByDesc('created_at');
+            $userId = (int) Auth::id();
 
-            $reviews = $query->paginate($request->get('per_page', 10));
+            $context = $this->baseQuery()->forUser($userId);
+            $this->applyContextFilters($context, $request);
+            $summary = $this->summaryForQuery($context);
+
+            $query = $this->baseQuery()->forUser($userId);
+            $this->applyContextFilters($query, $request);
+            $this->applyNarrowFilters($query, $request);
+            $this->applySort($query, $request);
+
+            $perPage = min(50, max(1, (int) $request->get('per_page', 10)));
+            $reviews = $query->paginate($perPage);
+
+            $items = collect($reviews->items())
+                // Pemilik ulasan tetap melihat namanya sendiri, tetapi badge
+                // "anonim" tetap dikirim lewat flag is_anonymous.
+                ->map(fn (Review $review): array => $this->serializeReview($review, $userId, false))
+                ->values();
 
             return response()->json([
                 'status' => 'success',
-                'data' => $reviews->items(),
-                'pagination' => [
-                    'current_page' => $reviews->currentPage(),
-                    'last_page' => $reviews->lastPage(),
-                    'per_page' => $reviews->perPage(),
-                    'total' => $reviews->total(),
-                    'has_more_pages' => $reviews->hasMorePages(),
-                ],
+                'data' => $items,
+                'summary' => $summary,
+                'pagination' => $this->paginationPayload($reviews),
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -488,29 +692,31 @@ class ReviewController extends Controller
     public function getUserPublicReviews($userId, Request $request)
     {
         try {
-            $query = Review::with([
-                'user:id,full_name,avatar_url',
-                'package:id,name,name_translations',
-                'catalog:id,name,name_translations',
-                'replies' => function ($q) {
-                    $q->with('user:id,full_name,avatar_url');
-                },
-            ])
-                ->where('user_id', $userId)
-                ->orderByDesc('created_at');
+            $viewerId = Auth::id();
+            $targetId = (int) $userId;
+
+            $context = $this->baseQuery()->forUser($targetId);
+            $summary = $this->summaryForQuery($context);
+
+            $query = $this->baseQuery()->forUser($targetId);
+            $this->applyNarrowFilters($query, $request);
+            $this->applySort($query, $request);
 
             $reviews = $query->paginate($request->get('per_page', 10));
 
+            $items = collect($reviews->items())
+                ->map(fn (Review $review): array => $this->serializeReview(
+                    $review,
+                    $viewerId,
+                    $viewerId === null || (int) $viewerId !== $targetId,
+                ))
+                ->values();
+
             return response()->json([
                 'status' => 'success',
-                'data' => $reviews->items(),
-                'pagination' => [
-                    'current_page' => $reviews->currentPage(),
-                    'last_page' => $reviews->lastPage(),
-                    'per_page' => $reviews->perPage(),
-                    'total' => $reviews->total(),
-                    'has_more_pages' => $reviews->hasMorePages(),
-                ],
+                'data' => $items,
+                'summary' => $summary,
+                'pagination' => $this->paginationPayload($reviews),
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -535,6 +741,7 @@ class ReviewController extends Controller
                 'rating' => 'sometimes|required|integer|min:1|max:5',
                 'comment' => 'sometimes|nullable|string|max:1000',
                 'title' => 'sometimes|nullable|string|max:255',
+                'is_anonymous' => 'sometimes|boolean',
                 'photo' => 'nullable|file|mimes:jpeg,png,jpg,webp,mp4,mov,m4v,webm,3gp|max:51200',
                 'photos' => 'nullable|array|max:6',
                 'photos.*' => 'file|mimes:jpeg,png,jpg,webp,mp4,mov,m4v,webm,3gp|max:51200',

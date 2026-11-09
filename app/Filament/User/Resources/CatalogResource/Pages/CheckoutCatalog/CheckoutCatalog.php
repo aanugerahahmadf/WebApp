@@ -35,11 +35,22 @@ class CheckoutCatalog extends Page implements HasForms
      */
     public ?int $selectedTierId = null;
 
+    /**
+     * Batas waktu pembayaran yang ditampilkan di langkah pembayaran.
+     *
+     * Disimpan sebagai PROPERTI (bukan dihitung ulang tiap render) supaya
+     * hitungan mundur tidak reset setiap kali form di-render ulang. Nilainya
+     * 24 jam sejak halaman checkout dibuka -- pesanan sendiri belum ada di
+     * titik ini, jadi belum punya `created_at`.
+     */
+    public ?string $paymentDeadline = null;
+
     public function mount(int|string $record): void
     {
         $this->record = $this->resolveRecord($record);
 
         $this->selectedTierId = $this->resolveSelectedTierId();
+        $this->paymentDeadline = \App\Support\PaymentWindow\PaymentWindow::deadlineFromNow()->toDateTimeString();
 
         $this->form->fill([
             'quantity' => 1,
@@ -53,7 +64,11 @@ class CheckoutCatalog extends Page implements HasForms
         return $form
             ->schema([
                 Wizard::make()
-                    ->steps(CatalogResource::getCheckoutWizardSteps($this->record))
+                    ->steps(CatalogResource::getCheckoutWizardSteps(
+                        $this->record,
+                        $this->selectedTier(),
+                        $this->paymentDeadline ? \Illuminate\Support\Carbon::parse($this->paymentDeadline) : null,
+                    ))
                     ->submitAction(new HtmlString(
                         '<div class="flex justify-end mt-4">'.
                         '<button type="submit" class="fi-btn fi-btn-size-md fi-btn-color-success relative grid-flow-col items-center justify-center font-semibold outline-none transition duration-75 focus-visible:ring-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm ring-1 ring-emerald-600 px-4 py-2 cursor-pointer">'.

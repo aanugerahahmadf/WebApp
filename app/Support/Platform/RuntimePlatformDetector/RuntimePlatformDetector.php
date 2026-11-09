@@ -25,9 +25,15 @@ class RuntimePlatformDetector
                 PlatformMode::Desktop => $this->detectDesktopPlatform($request),
             };
         } catch (\Throwable $e) {
+            // `error` berisi PESAN exception, `exception` nama kelasnya, dan
+            // `trace` jejak lengkap. Nama kelas saja tidak cukup untuk
+            // mendiagnosis kegagalan deteksi: dua RuntimeException berbeda
+            // penyebabnya akan terlihat sama di log.
             Log::warning('Platform detection failed', [
                 'mode' => $mode->value,
+                'error' => $e->getMessage(),
                 'exception' => $e::class,
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return RuntimePlatform::WebsiteWindows;

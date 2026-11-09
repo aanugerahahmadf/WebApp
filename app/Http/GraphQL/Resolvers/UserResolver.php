@@ -37,7 +37,7 @@ class UserResolver
 
         $orderCount = $user->orders()->count();
         $reviewCount = $user->reviews()->count();
-        $wishlistCount = $user->wishlist()->count();
+        $FavoriteCount = $user->Favorite()->count();
         $totalSpent = $user->orders()
             ->where('payment_status', 'paid')
             ->sum('total_price');
@@ -57,7 +57,7 @@ class UserResolver
             'user' => $user,
             'orderCount' => $orderCount,
             'reviewCount' => $reviewCount,
-            'wishlistCount' => $wishlistCount,
+            'FavoriteCount' => $FavoriteCount,
             'totalSpent' => $totalSpent,
             'favoriteCategory' => $favoriteCategory,
             'joinedAt' => $user->created_at,
@@ -119,18 +119,18 @@ class UserResolver
                 ];
             });
 
-        // Recent wishlist additions
-        $wishlist = \App\Models\Wishlist\Wishlist::where('user_id', $userId)
+        // Recent Favorite additions
+        $Favorite = \App\Models\Favorite\Favorite::where('user_id', $userId)
             ->latest()
             ->take($first)
             ->get()
             ->map(function ($item) {
                 return [
-                    'id' => 'wishlist_' . $item->id,
-                    'type' => 'WISHLIST',
-                    'description' => 'Added to wishlist: ' . ($item->catalog?->name ?? $item->package?->name),
+                    'id' => 'Favorite_' . $item->id,
+                    'type' => 'Favorite',
+                    'description' => 'Added to Favorite: ' . ($item->catalog?->name ?? $item->package?->name),
                     'metadata' => [
-                        'wishlist_id' => $item->id,
+                        'Favorite_id' => $item->id,
                         'catalog_id' => $item->catalog_id,
                         'package_id' => $item->package_id,
                     ],
@@ -138,7 +138,7 @@ class UserResolver
                 ];
             });
 
-        $activities = $activities->concat($orders)->concat($reviews)->concat($wishlist)
+        $activities = $activities->concat($orders)->concat($reviews)->concat($Favorite)
             ->sortByDesc('createdAt')
             ->take($first)
             ->values();

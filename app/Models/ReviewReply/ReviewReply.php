@@ -9,9 +9,12 @@ use App\Models\User\User;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Traits\ResolvesCamelCaseAttributes\ResolvesCamelCaseAttributes;
+
 
 class ReviewReply extends Model
 {
+    use ResolvesCamelCaseAttributes;
     use HasFactory;
     use LegacyMorphClass;
     protected $fillable = [

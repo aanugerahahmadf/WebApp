@@ -1,0 +1,35 @@
+# Legal Types
+
+type LegalContent {
+  id: ID
+  title: String
+  content: String
+  updatedAt: String
+}
+
+type LegalPage {
+  id: ID!
+  slug: String!
+  title: String
+  content: String
+  updatedAt: String
+}
+
+type AboutPage {
+  title: String!
+  content: String
+  mission: String
+  owner: String
+}
+
+type FaqItem {
+  question: String
+  answer: String
+}
+
+type HelpCenter {
+  title: String!
+  subtitle: String
+  faqs: [FaqItem!]
+  contactOptions: JSON
+}

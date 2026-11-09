@@ -2,13 +2,13 @@
 
 use App\Enums\RuntimePlatform\RuntimePlatform;
 use App\Http\Middleware\AuthenticateWelcome\AuthenticateWelcome;
+use App\Http\Middleware\CheckTrustedDevice\CheckTrustedDevice;
 use App\Http\Middleware\EnsureProfileComplete\EnsureProfileComplete;
 use App\Models\User\User;
 use App\Support\AppPlatform\AppPlatform;
 use Database\Factories\HistoryFactory;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use MixCode\FilamentMulti2fa\Middleware\CheckTrustedDevice;
 use Spatie\Permission\Models\Role;
 
 use function Pest\Laravel\actingAs;
@@ -127,7 +127,7 @@ test('the welcome panel is routed', function (string $path): void {
     '/histories',
     '/flowerdecorationscatalog',
     '/vouchers',
-    '/wishlists',
+    '/Favorites',
     '/carts',
     '/reviews',
     // `/welcome/flowerdecorationspackagecatalog` dihapus dari dataset ini:

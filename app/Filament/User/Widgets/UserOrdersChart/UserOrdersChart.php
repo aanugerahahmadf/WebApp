@@ -26,7 +26,11 @@ class UserOrdersChart extends ChartWidget
         $userId = Auth::id();
 
         $driver = DB::connection()->getDriverName();
-        $monthExpr = $driver === 'sqlite' ? 'strftime("%m", created_at)' : 'MONTH(created_at)';
+        $monthExpr = match ($driver) {
+            'sqlite' => 'strftime("%m", created_at)',
+            'pgsql' => 'EXTRACT(MONTH FROM created_at)',
+            default => 'MONTH(created_at)',
+        };
 
         $data = Order::query()
             ->where('user_id', $userId)

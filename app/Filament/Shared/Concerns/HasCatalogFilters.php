@@ -14,8 +14,8 @@ use Illuminate\Support\Collection;
  * public property Livewire yang di-bind langsung dari blade.
  *
  * Semua penyaringan dilakukan di PHP setelah satu query mengambil katalog aktif
- * (saat ini ~100 baris). Itu sengaja: grid butuh `final_price` (harga diskon yang
- * dihitung di accessor), rata-rata rating, dan hitungan pesanan sekaligus, dan
+ * (saat ini ~100 baris). Itu sengaja: grid butuh tier price, rata-rata rating,
+ * dan hitungan pesanan sekaligus, dan
  * memindahkannya ke SQL akan menduplikasi logika accessor model.
  */
 trait HasCatalogFilters
@@ -208,7 +208,7 @@ trait HasCatalogFilters
     {
         $catalogs = Catalog::query()
             ->where('is_active', true)
-            ->with(['category', 'media'])
+            ->with(['category', 'media', 'tiers'])
             ->withAvg('reviews', 'rating')
             ->withCount(['reviews', 'orders'])
             ->get();
@@ -307,7 +307,7 @@ trait HasCatalogFilters
             }
 
             if ($pricePreset !== null) {
-                $price = (float) $catalog->final_price;
+                $price = $this->catalogLowestTierPrice($catalog);
 
                 if ($pricePreset['min'] !== null && $price < $pricePreset['min']) {
                     return false;
@@ -319,7 +319,7 @@ trait HasCatalogFilters
             }
 
             if ($customMinPrice !== null || $customMaxPrice !== null) {
-                $price = (float) $catalog->final_price;
+                $price = $this->catalogLowestTierPrice($catalog);
 
                 if ($customMinPrice !== null && $price < $customMinPrice) {
                     return false;
@@ -334,11 +334,11 @@ trait HasCatalogFilters
                 return false;
             }
 
-            if ($this->catalogDiscountOnly && (float) $catalog->discount_price <= 0) {
+            if ($this->catalogDiscountOnly && ! $this->catalogHasTierDiscount($catalog)) {
                 return false;
             }
 
-            if ($this->catalogInStockOnly && (int) $catalog->stock <= 0) {
+            if ($this->catalogInStockOnly && ! $catalog->tiers->contains(fn ($tier): bool => (int) $tier->stock > 0)) {
                 return false;
             }
 
@@ -361,8 +361,8 @@ trait HasCatalogFilters
             'rating' => $catalogs->sortByDesc('orders_count')
                 ->sortByDesc('reviews_avg_rating')
                 ->values(),
-            'price_low' => $catalogs->sortBy(fn (Catalog $catalog): float => (float) $catalog->final_price)->values(),
-            'price_high' => $catalogs->sortByDesc(fn (Catalog $catalog): float => (float) $catalog->final_price)->values(),
+            'price_low' => $catalogs->sortBy(fn (Catalog $catalog): float => $this->catalogLowestTierPrice($catalog))->values(),
+            'price_high' => $catalogs->sortByDesc(fn (Catalog $catalog): float => $this->catalogLowestTierPrice($catalog))->values(),
             'discount' => $catalogs->sortByDesc(fn (Catalog $catalog): float => $this->catalogDiscountPercent($catalog))->values(),
             'name_asc' => $catalogs->sortBy(fn (Catalog $catalog): string => mb_strtolower((string) $catalog->name))->values(),
             'oldest' => $catalogs->sortBy('created_at')->values(),
@@ -371,8 +371,8 @@ trait HasCatalogFilters
     }
 
     /**
-     * Preset harga memakai `final_price` (harga setelah diskon) supaya hasil
-     * filter sama dengan angka yang tampil di kartu.
+     * Preset harga memakai harga tier terendah supaya katalog dapat ditemukan
+     * berdasarkan salah satu tier yang tersedia.
      *
      * @param  Collection<int, Catalog>  $catalogs
      * @return array<string, array{label: string, min: int|null, max: int|null, count: int}>
@@ -390,7 +390,7 @@ trait HasCatalogFilters
 
         foreach ($presets as $key => $preset) {
             $presets[$key]['count'] = $catalogs->filter(function (Catalog $catalog) use ($preset): bool {
-                $price = (float) $catalog->final_price;
+                $price = $this->catalogLowestTierPrice($catalog);
 
                 if ($preset['min'] !== null && $price < $preset['min']) {
                     return false;
@@ -503,14 +503,33 @@ trait HasCatalogFilters
 
     protected function catalogDiscountPercent(Catalog $catalog): float
     {
-        $price = (float) $catalog->price;
-        $discountPrice = (float) $catalog->discount_price;
+        return $catalog->tiers
+            ->map(function ($tier): float {
+                $price = (float) $tier->price;
+                $discountPrice = (float) $tier->discount_price;
 
-        if ($price <= 0 || $discountPrice <= 0) {
-            return 0.0;
-        }
+                return $price > 0 && $discountPrice > 0
+                    ? (($price - $discountPrice) / $price) * 100
+                    : 0.0;
+            })
+            ->max() ?? 0.0;
+    }
 
-        return (($price - $discountPrice) / $price) * 100;
+    protected function catalogLowestTierPrice(Catalog $catalog): float
+    {
+        return (float) $catalog->tiers
+            ->map(fn ($tier): float => (float) $tier->final_price)
+            ->filter(fn (float $price): bool => $price > 0)
+            ->min();
+    }
+
+    protected function catalogHasTierDiscount(Catalog $catalog): bool
+    {
+        return $catalog->tiers->contains(function ($tier): bool {
+            return (float) $tier->price > 0
+                && (float) $tier->discount_price > 0
+                && (float) $tier->discount_price < (float) $tier->price;
+        });
     }
 
     protected function resetCatalogPage(): void

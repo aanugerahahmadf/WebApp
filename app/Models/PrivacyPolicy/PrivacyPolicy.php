@@ -5,9 +5,12 @@ use App\Models\Traits\LegacyMorphClass\LegacyMorphClass;
 
 use App\Traits\HasTranslations\HasTranslations;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Traits\ResolvesCamelCaseAttributes\ResolvesCamelCaseAttributes;
+
 
 class PrivacyPolicy extends Model
 {
+    use ResolvesCamelCaseAttributes;
     use LegacyMorphClass;
     use HasTranslations;
 

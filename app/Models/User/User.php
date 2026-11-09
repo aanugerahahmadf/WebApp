@@ -10,9 +10,10 @@ use App\Models\Report\Report;
 use App\Models\Transaction\Transaction;
 use App\Models\TrustedDevice\TrustedDevice;
 use App\Models\UserFcmDevice\UserFcmDevice;
+use App\Models\IdentityDocument\IdentityDocument;
 use App\Models\UserSession\UserSession;
 use App\Models\Voucher\Voucher;
-use App\Models\Wishlist\Wishlist;
+use App\Models\Favorite\Favorite;
 
 use App\Models\Traits\HasFilamentMessages\HasFilamentMessages;
 use App\Support\AvatarUrl\AvatarUrl;
@@ -27,6 +28,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Notifications\DatabaseNotificationCollection;
@@ -42,6 +44,8 @@ use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
+use App\Models\Traits\ResolvesCamelCaseAttributes\ResolvesCamelCaseAttributes;
+
     use MixCode\FilamentMulti2fa\Enums\TwoFactorAuthType;
     use MixCode\FilamentMulti2fa\Traits\UsingTwoFA;
 
@@ -94,8 +98,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read int|null $roles_count
  * @property-read Collection<int, PersonalAccessToken> $tokens
  * @property-read int|null $tokens_count
- * @property-read Collection<int, Wishlist> $wishlists
- * @property-read int|null $wishlists_count
+ * @property-read Collection<int, Favorite> $Favorites
+ * @property-read int|null $Favorites_count
  *
  * @method \Illuminate\Database\Eloquent\Builder allConversations()
  * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
@@ -173,13 +177,14 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read bool|null $rolesExists
  * @property-read int|null $tokensCount
  * @property-read bool|null $tokensExists
- * @property-read int|null $wishlistsCount
- * @property-read bool|null $wishlistsExists
+ * @property-read int|null $FavoritesCount
+ * @property-read bool|null $FavoritesExists
  *
  * @mixin \Eloquent
  */
 class User extends Authenticatable implements FilamentUser, HasAvatar, HasName, MustVerifyEmail
 {
+    use ResolvesCamelCaseAttributes;
     use LegacyMorphClass;
     /** @use HasFactory<UserFactory> */
     use HasApiTokens;
@@ -333,6 +338,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName, 
         'face_scan_photo_url',
     ];
 
+    public function identityDocuments(): HasMany
+    {
+        return $this->hasMany(IdentityDocument::class);
+    }
+
     protected $with = ['roles'];
 
     /**
@@ -413,9 +423,9 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasName, 
         return $this->hasMany(Order::class);
     }
 
-    public function wishlists()
+    public function Favorites()
     {
-        return $this->hasMany(Wishlist::class);
+        return $this->hasMany(Favorite::class);
     }
 
     public function reports()

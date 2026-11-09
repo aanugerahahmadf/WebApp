@@ -73,11 +73,11 @@
     $standardTier = $record->tiers()
         ->where('name_translations->en', 'Standard Flower Decoration Package')
         ->first() ?? $record->tiers()->first();
-    $standardPrice = $standardTier?->price ?? $record->price;
-    $fp  = $standardTier?->final_price ?? ($record->discount_price > 0 ? $record->discount_price : ($record->final_price ?? $record->price));
+    $standardPrice = (float) ($standardTier?->price ?? 0);
+    $fp  = (float) ($standardTier?->final_price ?? 0);
     $pct = $standardTier && $standardPrice > $fp
         ? round(($standardPrice - $fp) / $standardPrice * 100)
-        : ($record->discount_price > 0 ? round(($record->price - $record->discount_price) / $record->price * 100) : null);
+        : null;
     // $urlResolver (opsional): closure yang mengembalikan URL kartu.
     // Default-nya halaman detail katalog. Dipakai halaman "Tulis Ulasan"
     // supaya kartunya MENGGUNAKAN komponen yang sama (ukuran + isi identik
@@ -86,7 +86,8 @@
         ? $urlResolver($record)
         : \App\Filament\User\Resources\CatalogResource\CatalogResource::getUrl('view', ['record' => $record]);
     $img = $record->image_url ?? asset('images/placeholders/image-placeholder.svg');
-    $stock = $record->stock ?? 0;
+    // Catalog stock is the aggregate of every tier, not only Standard.
+    $stock = (int) $record->stock;
     $stockClass = $stock <= 0 ? 'catalog-stock-out' : ($stock <= 3 ? 'catalog-stock-low' : 'catalog-stock-ok');
     $stockLabel = $stock <= 0 ? __('Habis') : $stock . ' ' . __('Tersedia');
     $catName = __($record->category?->name) ?? null;
@@ -116,7 +117,7 @@
         <div style="height:2.2rem;display:flex;flex-direction:column;justify-content:flex-start;gap:0;margin-bottom:3px;">
             <span class="catalog-price" data-field="catalogs.price">Rp{{ number_format($fp, 0, ',', '.') }}</span>
             <span class="catalog-price-original" style="min-height:1rem;">
-                @if($pct)Rp{{ number_format($standardTier ? $standardPrice : $record->price, 0, ',', '.') }}@endif
+                @if($pct)Rp{{ number_format($standardPrice, 0, ',', '.') }}@endif
             </span>
         </div>
         <div class="catalog-footer">

@@ -50,7 +50,7 @@ $ps = $order->payment_status instanceof OrderPaymentStatus
     : OrderPaymentStatus::tryFrom((string) $order->payment_status);
 
 $statusVal   = $ps?->value ?? '';
-$isPaid      = in_array($statusVal, ['paid', 'partial']);
+$isPaid      = in_array($statusVal, ['paid']);
 $isFailed    = in_array($statusVal, ['failed']);
 $statusLabel = $ps?->getLabel() ?? $statusVal;
 $statusClass = $isFailed ? 'status-failed' : ($isPaid ? 'status-paid' : 'status-pending');
@@ -73,7 +73,7 @@ $os = $order->status instanceof OrderStatus
 $orderStatusLabel = $os?->getLabel() ?? (string) $order->status;
 
 $orderUrl   = config('app.url') . '/user/orders';
-$appName    = config('app.name', 'Wedding Flowers Decorasi');
+$appName    = config('app.name', 'Wedding Floral Decorations');
 $userName   = $user->full_name ?? $user->username ?? __('Pelanggan');
 $adminEmail = \App\Models\User\User::whereHas('roles', fn($q) => $q->where('name','super_admin'))
     ->value('email') ?? config('mail.from.address');

@@ -3,9 +3,9 @@
 namespace App\Filament\Shared\Plugins\UserMulti2faPlugin;
 
 use App\Filament\User\Auth\OtpEmailOrTwoFactory\OtpEmailOrTwoFactory;
+use App\Http\Middleware\CheckTrustedDevice\CheckTrustedDevice;
 use Filament\Panel;
 use MixCode\FilamentMulti2fa\FilamentMulti2faPlugin;
-use MixCode\FilamentMulti2fa\Middleware\CheckTrustedDevice;
 
 /**
  * Plugin 2FA panel User.
@@ -13,7 +13,7 @@ use MixCode\FilamentMulti2fa\Middleware\CheckTrustedDevice;
  * Turunan FilamentMulti2faPlugin, tapi mendaftarkan lebih sedikit.
  *
  * Paket aslinya mendaftarkan tiga hal sekaligus:
- *   1. halaman OTPVerify            -- dipakai
+ *   1. halaman verifikasi OTP (OtpEmailOrTwoFactory) -- dipakai
  *   2. halaman TwoFactorySetup      -- tidak dipakai
  *   3. item menu "2FA Setup"        -- tidak dipakai
  *   4. middleware CheckTrustedDevice -- dipakai
@@ -51,10 +51,11 @@ class UserMulti2faPlugin extends FilamentMulti2faPlugin
         $panel
             ->pages([
                 // Bukan OTPVerify::class milik paket. OtpEmailOrTwoFactory
-                // menurunkan OTPVerify dan memakai slug yang sama persis,
-                // jadi route name, URL, dan pengecekan routeIs() di
-                // CheckTrustedDevice semuanya tidak berubah -- hanya isi
-                // halamannya yang diganti.
+                // menurunkan OTPVerify dan memakai slug sendiri (otp-verify).
+                // Middleware CheckTrustedDevice yang didaftarkan di bawah
+                // adalah turunan milik aplikasi yang mengarah ke route
+                // halaman ini, jadi routeIs() di middleware tetap konsisten
+                // dan tidak masuk redirect loop.
                 //
                 // Yang diganti: tiga cara verifikasi dalam satu halaman
                 // (kode email / aplikasi autentikasi / kode pemulihan), dan

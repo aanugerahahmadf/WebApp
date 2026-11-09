@@ -78,16 +78,6 @@
                 </div>
             @endif
 
-            @if ($backToSettingsUrl)
-                {{-- Pengganti getHeaderActions() yang dulu bergantung pada wrapper Filament. --}}
-                <x-filament::link
-                    :href="$backToSettingsUrl"
-                    :icon="filament()->getIcon('/images/icons/arrow_left.svg')"
-                    class="messages-page-back-link"
-                >
-                    {{ __('Kembali ke Pengaturan') }}
-                </x-filament::link>
-            @endif
         </div>
     </div>
 

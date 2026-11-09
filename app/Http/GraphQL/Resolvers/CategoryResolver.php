@@ -23,47 +23,13 @@ class CategoryResolver
     {
         $query = Category::query();
 
-        if (isset($args['active'])) {
-            $query->where('is_active', $args['active']);
+        // The discriminator is `categories.type` (catalog|package). There is no
+        // `is_active` column, so the old filter always threw 1054.
+        if (isset($args['type'])) {
+            $query->where('type', $args['type']);
         }
 
         return $query->orderBy('name')->get();
-    }
-
-    /**
-     * Get category tree (hierarchical)
-     */
-    public function tree($root, array $args, GraphQLContext $context)
-    {
-        $categories = Category::where('is_active', true)
-            ->with('children')
-            ->whereNull('parent_id')
-            ->orderBy('name')
-            ->get();
-
-        return $categories->map(function ($category) {
-            return $this->buildTree($category);
-        });
-    }
-
-    /**
-     * Recursively build category tree
-     */
-    private function buildTree(Category $category): array
-    {
-        $children = $category->children
-            ->where('is_active', true)
-            ->sortBy('name')
-            ->map(function ($child) {
-                return $this->buildTree($child);
-            })
-            ->values()
-            ->toArray();
-
-        return [
-            'category' => $category,
-            'children' => $children,
-        ];
     }
 
     /**
@@ -71,22 +37,24 @@ class CategoryResolver
      */
     public function withCounts($root, array $args, GraphQLContext $context)
     {
-        $active = $args['active'] ?? true;
-
-        return Category::query()
-            ->when($active, fn(Builder $q) => $q->where('is_active', true))
+        $query = Category::query()
             ->withCount([
                 'categoryCatalogs' => fn(Builder $q) => $q->where('is_active', true),
                 'categoryPackages' => fn(Builder $q) => $q->where('is_active', true),
-            ])
-            ->orderBy('name')
+            ]);
+
+        if (isset($args['type'])) {
+            $query->where('type', $args['type']);
+        }
+
+        return $query->orderBy('name')
             ->get()
             ->map(function ($category) {
                 return [
                     'category' => $category,
-                    'catalogCount' => $category->category_catalogs_count,
-                    'packageCount' => $category->packages_count,
-                    'totalItems' => $category->category_catalogs_count + $category->packages_count,
+                    'catalogCount' => (int) $category->category_catalogs_count,
+                    'packageCount' => (int) $category->category_packages_count,
+                    'totalItems' => (int) $category->category_catalogs_count + (int) $category->category_packages_count,
                 ];
             });
     }

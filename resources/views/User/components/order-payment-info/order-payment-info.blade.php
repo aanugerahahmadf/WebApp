@@ -4,21 +4,42 @@
     $pm = $tx?->payment_method_id ? \App\Models\PaymentMethod\PaymentMethod::find($tx->payment_method_id) : null;
     $methodName = $pm?->name ?? $tx?->payment_method ?? '-';
     $methodType = $pm?->type ?? $tx?->payment_gateway ?? 'manual';
-    $payable = in_array($order?->payment_status?->value, ['unpaid', 'pending', 'failed', 'partial']);
-    $deadline = \Carbon\Carbon::parse($order?->created_at)->addHours(24);
-    $expired = $deadline->isPast();
+    $payable = in_array($order?->payment_status?->value, ['unpaid', 'pending', 'failed']);
+
+    // NOMINAL dan BATAS WAKTU diambil dari satu sumber yang sama dengan
+    // webhook BRI (`App\Support\PaymentWindow\PaymentWindow`). Sebelumnya
+    // kartu ini menampilkan `total_price` dan memakai batas 24 jam yang
+    // dihitung sendiri, padahal webhook mencocokkan `total_amount`
+    // (harga + biaya admin) dan VA punya `virtual_account_expiry` sendiri.
+    $amount = \App\Support\PaymentWindow\PaymentWindow::amount($order, $tx);
+    $deadline = \App\Support\PaymentWindow\PaymentWindow::deadline($order, $tx);
+    $expired = \App\Support\PaymentWindow\PaymentWindow::isExpired($deadline);
 
     // Virtual Account BRI: nomor yang dipesan unik per transaksi. Rekening
     // statis di tabel payment_methods HANYA berlaku untuk metode transfer
     // manual, jadi tidak boleh ditampilkan di sini -- kalau iya, user akan
     // transfer ke rekening admin dan pembayarannya tidak bisa dicocokkan.
     $isVirtualAccount = $methodType === 'virtual_account';
+    $isQris = $methodType === 'qris';
+    $qrisImage = $pm?->type === 'qris' && $pm?->qris_image_url ? $pm->qris_image_url : null;
     $vaNumber = $isVirtualAccount ? $tx?->virtual_account_no : null;
     $vaName = $isVirtualAccount ? $tx?->virtual_account_name : null;
-    $vaExpiry = $isVirtualAccount ? $tx?->virtual_account_expiry : null;
+    $vaExpiry = $isVirtualAccount ? ($tx?->virtual_account_expiry ?? $deadline) : null;
 @endphp
 
 <div class="space-y-3">
+    {{-- NOMINAL: paling atas, karena inilah angka yang harus diketik pembeli
+         di m-banking / aplikasi e-wallet. Tanpa angka ini nominal yang
+         ditransfer bisa berbeda dan pembayaran tidak pernah cocok. --}}
+    @if ($amount > 0)
+        <div class="rounded-xl border-2 border-primary-300 bg-primary-50 p-4 dark:border-primary-700 dark:bg-primary-950">
+            <div class="text-sm text-gray-600 dark:text-gray-400">{{ __('Nominal yang harus dibayar') }}</div>
+            <div class="text-3xl font-bold tabular-nums text-primary-700 dark:text-primary-300">
+                {{ \App\Support\PaymentWindow\PaymentWindow::format($amount) }}
+            </div>
+        </div>
+    @endif
+
     <div class="flex flex-col gap-2 rounded-xl bg-gray-50 dark:bg-white/5 p-4">
         <div class="flex items-center justify-between">
             <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('Metode Pembayaran') }}</span>
@@ -26,7 +47,7 @@
                 @if ($pm?->image_url)
                     <img src="{{ $pm->image_url }}" alt="{{ $methodName }}" class="h-5 w-5 object-contain">
                 @endif
-                {{ \App\Models\PaymentMethod\PaymentMethod::typeLabel((string) $methodType) }} Â· {{ $methodName }}
+                {{ \App\Models\PaymentMethod\PaymentMethod::typeLabel((string) $methodType) }} &middot; {{ $methodName }}
             </span>
         </div>
 
@@ -36,6 +57,7 @@
                 <span class="font-semibold">{{ $pm->bank_name }}</span>
             </div>
         @endif
+
         {{-- Virtual Account: nomor VA milik transaksi. Rekening statis dari
              payment_methods TIDAK PERNAH ditampilkan di sini, bahkan kalau
              VA gagal dibuat -- kalau iya user akan transfer ke rekening
@@ -53,7 +75,7 @@
                 @if ($vaExpiry)
                     <div class="flex items-center justify-between text-sm">
                         <span class="text-gray-600 dark:text-gray-400">{{ __('Berlaku sampai') }}</span>
-                        <span class="font-semibold">{{ \Carbon\Carbon::parse($vaExpiry)->translatedFormat('d F Y H:i') }}</span>
+                        <span class="font-semibold">{{ \Illuminate\Support\Carbon::parse($vaExpiry)->translatedFormat('d F Y H:i') }}</span>
                     </div>
                 @endif
             @else
@@ -61,6 +83,14 @@
                     {{ __('Nomor Virtual Account belum tersedia. Silakan hubungi admin.') }}
                 </div>
             @endif
+        @elseif ($isQris)
+            {{-- QRIS statis: gambar + nominal + hitungan mundur dalam satu
+                 kartu bersama (dipakai juga oleh preview checkout). --}}
+            @include('Shared.components.qris-card.qris-card', [
+                'method' => $pm,
+                'amount' => $amount,
+                'deadline' => $deadline,
+            ])
         @else
             @if ($pm?->account_number)
                 <div class="flex items-center justify-between text-sm">
@@ -75,16 +105,11 @@
                 </div>
             @endif
         @endif
+
         @if ($pm && $pm->fee > 0)
             <div class="flex items-center justify-between text-sm">
                 <span class="text-gray-600 dark:text-gray-400">{{ __('Biaya Admin') }}</span>
-                <span class="font-semibold">Rp {{ number_format($pm->fee, 0, ',', '.') }}</span>
-            </div>
-        @endif
-
-        @if ($pm?->type === 'qris' && $pm?->qris_image_url)
-            <div class="mt-2 flex justify-center">
-                <img src="{{ $pm->qris_image_url }}" alt="QRIS" class="max-h-56 rounded-lg bg-white object-contain p-2 shadow-sm">
+                <span class="font-semibold">{{ \App\Support\PaymentWindow\PaymentWindow::format($pm->fee) }}</span>
             </div>
         @endif
 
@@ -103,41 +128,10 @@
         </div>
     @endif
 
-    @if ($paymentStatus && ! $expired)
-        <div class="rounded-xl border border-warning-300 bg-warning-50 dark:bg-warning-950 p-4">
-            <div class="mb-1 text-sm font-semibold text-warning-700 dark:text-warning-300">{{ __('Batas Waktu Pembayaran') }}</div>
-            <div
-                x-data="paymentCountdown('{{ $deadline->format('Y-m-d H:i:s') }}')"
-                x-init="init()"
-                class="text-2xl font-semibold tabular-nums text-warning-700 dark:text-warning-300"
-                x-text="display"
-            ></div>
-            <div class="mt-1 text-xs text-gray-600 dark:text-gray-400">{{ __('Batas akhir') }}: {{ $deadline->translatedFormat('d F Y H:i') }}</div>
-        </div>
-        <script>
-            function paymentCountdown(deadline) {
-                return {
-                    deadline: new Date(deadline.replace(' ', 'T')).getTime(),
-                    display: '',
-                    init() {
-                        this.tick();
-                        setInterval(() => this.tick(), 1000);
-                    },
-                    tick() {
-                        const diff = this.deadline - Date.now();
-                        if (diff <= 0) { this.display = '{{ __("Waktu pembayaran telah berakhir") }}'; return; }
-                        const d = Math.floor(diff / 86400000);
-                        const h = Math.floor((diff % 86400000) / 3600000);
-                        const m = Math.floor((diff % 3600000) / 60000);
-                        const s = Math.floor((diff % 60000) / 1000);
-                        this.display = d.toString().padStart(2, '0') + ' : ' +
-                            h.toString().padStart(2, '0') + ' : ' +
-                            m.toString().padStart(2, '0') + ' : ' +
-                            s.toString().padStart(2, '0');
-                    }
-                };
-            }
-        </script>
+    {{-- Hitungan mundur 24 jam. QRIS sudah menampilkan hitungannya sendiri di
+         dalam kartu, jadi jangan dirender dua kali di halaman yang sama. --}}
+    @if ($payable && ! $isQris && $deadline && ! $expired)
+        @include('Shared.components.payment-countdown.payment-countdown', ['deadline' => $deadline])
     @elseif ($payable && $expired)
         <div class="rounded-xl border border-danger-strong bg-danger-50 dark:bg-danger-950 p-4 text-danger-700 dark:text-danger-300">
             {{ __('Waktu pembayaran telah berakhir. Pesanan dapat dibatalkan atau hubungi admin.') }}

@@ -159,6 +159,9 @@ async function gisPopupLogin() {
     });
 }
 
+// Preload GIS script eagerly so tokenClient is ready without async delay on user click
+loadGisScript().catch(() => {});
+
 /**
  * Entry point used by the social-buttons / welcome Google button.
  * Returns a promise so the caller can toggle the loading state.

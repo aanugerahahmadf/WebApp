@@ -6,12 +6,12 @@
 <div x-data="{ previewPhoto: null }" class="space-y-3 text-gray-900 dark:text-white">
     <div class="flex items-center gap-3">
         <img
-            src="{{ $review->user?->avatar_url ?: 'https://ui-avatars.com/api/?name='.urlencode($review->user?->full_name ?? 'U') }}"
-            alt="{{ $review->user?->full_name ?? __('Pengguna') }}"
+            src="{{ $review->reviewer_avatar ?: 'https://ui-avatars.com/api/?name='.urlencode($review->reviewer_name ?: 'U') }}"
+            alt="{{ $review->reviewer_name }}"
             class="h-10 w-10 rounded-full object-cover"
         >
         <div>
-            <p class="font-semibold">{{ $review->user?->full_name ?? __('Pengguna') }}</p>
+            <p class="font-semibold">{{ $review->reviewer_name }}</p>
             <span class="inline-flex items-center gap-1" role="img" aria-label="{{ __('Rating') }} {{ $review->rating }} dari 5">
                 @for ($star = 1; $star <= 5; $star++)
                     <x-filament::icon icon="/images/icons/star.svg" @class(['h-5 w-5', 'text-amber-400' => $star <= (int) $review->rating, 'text-gray-300 dark:text-gray-600' => $star > (int) $review->rating]) />
@@ -37,7 +37,7 @@
                 >
                     <img
                         src="{{ $photo }}"
-                        alt="{{ __('Foto ulasan dari :name', ['name' => $review->user?->full_name ?? __('Pengguna')]) }}"
+                        alt="{{ __('Foto ulasan dari :name', ['name' => $review->reviewer_name]) }}"
                         class="h-20 w-full cursor-zoom-in object-cover transition duration-200 group-hover:scale-105"
                     >
                 </button>

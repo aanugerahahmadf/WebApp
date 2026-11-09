@@ -33,6 +33,7 @@ class Transaction extends Model
         'total_amount',
         'payment_gateway',
         'payment_method',
+        'checkout_payment_type',
         'payment_method_id',
         'payment_url',
         'virtual_account_no',
@@ -142,6 +143,17 @@ class Transaction extends Model
         return $this->belongsTo(Order::class);
     }
 
+    /**
+     * Order tetap harus selesai pembayarannya walau user menghapusnya dari
+     * history (soft delete). Uang yang masuk ke VA/QRIS tidak boleh menggantung.
+     */
+    public function resolveOrder(): ?Order
+    {
+        return $this->order_id === null
+            ? null
+            : Order::withTrashed()->find($this->order_id);
+    }
+
     public function markAsSuccess(): void
     {
         DB::transaction(function () {
@@ -159,15 +171,22 @@ class Transaction extends Model
                 // Balance di-increment oleh TransactionObserver::updated()
                 // (dengan guard idempotent getOriginal). Jangan increment di sini
                 // ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â duplikasi bikin saldo bertambah 2x.
-            } elseif ($transaction->type === TransactionType::ORDER && $transaction->order) {
-                $transaction->order->update([
+            } elseif ($transaction->type === TransactionType::ORDER
+                && ($order = $transaction->resolveOrder())) {
+                // Pembayaran yang benar-benar masuk selalu menampakkan
+                // kembali order yang sempat dihapus user dari history.
+                if ($order->trashed()) {
+                    $order->restore();
+                }
+
+                $order->update([
                     'status' => OrderStatus::CONFIRMED,
                     'payment_status' => OrderPaymentStatus::PAID,
                 ]);
 
                 event(new OrderStatusUpdated([
-                    'order_id' => $transaction->order_id,
-                    'order_number' => $transaction->order->order_number,
+                    'order_id' => $order->id,
+                    'order_number' => $order->order_number,
                     'status' => 'confirmed',
                     'payment_status' => 'paid',
                     'updated_at' => now()->toISOString(),
@@ -175,14 +194,14 @@ class Transaction extends Model
 
                 try {
                     $voucherLink = DB::table('user_vouchers')
-                        ->where('order_id', $transaction->order_id)
+                        ->where('order_id', $order->id)
                         ->where('user_id', $transaction->user_id)
                         ->first();
 
                     if ($voucherLink && $voucherLink->voucher_id) {
                         $voucher = Voucher::find($voucherLink->voucher_id);
                         if ($voucher) {
-                            $voucher->markAsUsedBy($transaction->user_id, $transaction->order_id);
+                            $voucher->markAsUsedBy($transaction->user_id, $order->id);
                         }
                     }
                 } catch (\Throwable $e) {
@@ -199,15 +218,15 @@ class Transaction extends Model
             'notes' => $reason ?? $this->notes,
         ]);
 
-        if ($this->type === TransactionType::ORDER && $this->order) {
-            $this->order->update([
+        if ($this->type === TransactionType::ORDER && ($order = $this->resolveOrder())) {
+            $order->update([
                 'payment_status' => OrderPaymentStatus::FAILED,
             ]);
 
             event(new OrderStatusUpdated([
-                'order_id' => $this->order_id,
-                'order_number' => $this->order->order_number,
-                'status' => $this->order->status->value ?? (string) $this->order->status,
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'status' => $order->status->value ?? (string) $order->status,
                 'payment_status' => 'failed',
                 'updated_at' => now()->toISOString(),
             ], $this->user_id));

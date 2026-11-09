@@ -27,7 +27,8 @@ return new class extends Migration
 
         // foreignUuid -> foreignId. whole table dibangun ulang karena
         // menukar tipe kolom jadi foreign key tidak bisa dilakukan di_place.
-        if (Schema::getColumnType('trust_devices', 'user_id') === 'bigint') {
+        // PostgreSQL melaporkan tipe bigint sebagai "int8".
+        if (in_array(Schema::getColumnType('trust_devices', 'user_id'), ['bigint', 'int8'], true)) {
             return;
         }
 
