@@ -107,7 +107,7 @@ test('a guest request never writes a language row', function (): void {
     // `SetLocale` butuh user yang sudah login untuk menulis. Kalau nanti
     // ditambahkan cabang yang menulis untuk tamu, baris dengan model_id kosong
     // akan menumpuk dan tidak pernah punya pemilik.
-    get('/signin?locale=id')->assertOk();
+    get('/auth?locale=id')->assertOk();
 
     expect(UserLanguage::query()->count())->toBe(0);
 });

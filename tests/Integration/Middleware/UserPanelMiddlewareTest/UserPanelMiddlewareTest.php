@@ -91,7 +91,7 @@ function userHome(): string
 
 function userSignIn(): string
 {
-    return route('filament.welcome.auth.login');
+    return Auth::getUrl();
 }
 
 /**
@@ -146,12 +146,10 @@ test('a guest is redirected from a private page to the auth landing page', funct
     expect($response->getStatusCode())->toBe(302);
 });
 
-test('a guest can still open the sign in page and the auth landing page', function (): void {
-    // `/signin` dan `/auth` harus terbuka untuk tamu. Kalau salah satu
-    // ikut terkunci, tidak ada pintu masuk sama sekali untuk orang yang belum
-    // punya akun -- dan `/auth` adalah satu-satunya tempat tombol Google,
-    // yaitu satu-satunya jalur pendaftaran yang masih hidup.
-    get(userSignIn())->assertOk();
+test('a guest can still open the auth landing page', function (): void {
+    // `/auth` adalah landing auth (termasuk Google Firebase Gateway) dan harus
+    // terbuka untuk tamu. Kalau ikut terkunci, tidak ada pintu masuk sama
+    // sekali untuk orang yang belum punya akun.
     get(Auth::getUrl())->assertOk();
 });
 
