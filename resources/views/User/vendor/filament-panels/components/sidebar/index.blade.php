@@ -141,6 +141,7 @@
 {{-- format-ignore-start --}}
 <aside
     x-data="{}"
+    x-init="if (window.innerWidth < 1024 || window.Capacitor) { $store.sidebar.close() }"
     style="background-color: var(--fi-chrome-bg) !important; background-image: none !important; border: 0 !important; box-shadow: none !important; -webkit-backdrop-filter: blur(12px) saturate(160%) !important; backdrop-filter: blur(12px) saturate(160%) !important;"
     @if (filament()->isSidebarCollapsibleOnDesktop() && (! filament()->hasTopNavigation()))
         x-cloak

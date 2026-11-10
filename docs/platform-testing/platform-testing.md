@@ -144,12 +144,12 @@ dijalankan **dari dalam folder shell**_itulah satu-satunya tempat `npx cap`
 dan `npm run android` tersedia.
 
 ```bash
-cd app/Capacitor/DekstopApp     # atau app/Capacitor/DekstopAdminApp
+cd app/Capacitor/Application     # atau app/Capacitor/DekstopAdminApp
 ```
 
 | shell   | `appId`                        | panel  |
 |---------|--------------------------------|--------|
-| DekstopApp | `id.dekorasi.pengantin.user`    | `/home`  |
+| Application | `id.dekorasi.pengantin.user`    | `/home`  |
 | DekstopAdminApp| `id.dekorasi.pengantin.admin`   | `/admin` |
 
 Server yang dipanggil shell diatur lewat:

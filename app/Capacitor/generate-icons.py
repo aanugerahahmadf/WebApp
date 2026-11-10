@@ -61,7 +61,7 @@ SOURCE = (BACKEND / "public" / "images" / "logo.png").resolve()
 
 # The shells that get the icon set. Both wrap the same Laravel server, so
 # both carry the same brand mark.
-APPS = ("DekstopApp", "DekstopAdminApp")
+APPS = ("Application", "DekstopAdminApp")
 
 WHITE = (255, 255, 255, 255)
 

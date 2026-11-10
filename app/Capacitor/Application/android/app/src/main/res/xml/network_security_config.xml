@@ -5,7 +5,7 @@
     Production traffic stays https-only, so this file is safe to ship: point the
     app at your real domain with
 
-        npm run set:url -- https://dekorasi.example.com/home
+        npm run set:url - - https://dekorasi.example.com/home
 
     and none of the cleartext exceptions below are used.
 
@@ -19,7 +19,7 @@
     Testing on a PHYSICAL device? Android has no CIDR support here: `<domain>`
     must be a literal host. Add your machine's LAN address as its own entry,
     e.g. `<domain includeSubdomains="false">192.168.1.50</domain>`, and make
-    sure `php artisan serve --host=0.0.0.0` binds to the network rather than
+    sure `php artisan serve - -host=0.0.0.0` binds to the network rather than
     127.0.0.1.
 -->
 <network-security-config>

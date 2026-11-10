@@ -10,8 +10,7 @@ use App\Filament\User\Auth\LoginResponse\LoginResponse;
 use App\Filament\User\Auth\OtpEmailVerificationPrompt\OtpEmailVerificationPrompt;
 use App\Filament\User\Auth\OtpRequestPasswordReset\OtpRequestPasswordReset;
 use App\Filament\User\Auth\OtpResetPassword\OtpResetPassword;
-use App\Filament\User\Auth\SignIn\SignIn;
-use App\Filament\User\Auth\SignUp\SignUp;
+// SignIn/SignUp dinonaktifkan (gunakan Google Firebase Gateway via halaman Auth).
 use App\Filament\User\Auth\SecurityQuestion\SecurityQuestion;
 use App\Filament\User\Auth\TwoFactorAuth\TwoFactorAuth;
 use App\Filament\User\Auth\VerifyOtp\VerifyOtp;
@@ -159,14 +158,9 @@ class WelcomePanelProvider extends PanelProvider
             // lewat redirect legacy di web.php: /welcome/* -> root (blok
             // LEGACY WELCOME) dan /user/* -> root (blok LEGACY USER).
             ->path('/')
-            // Halaman auth panel ini (semua bergaya simple fullscreen). Slug
-            // diturunkan dari loginRouteSlug/registrationRouteSlug, sama seperti
-            // panel user yang lama -- jadi URL auth tidak berubah bentuk:
-            // /signin dan /signup.
-            ->login(SignIn::class)
-            ->loginRouteSlug('signin')
-            ->registration(SignUp::class)
-            ->registrationRouteSlug('signup')
+            // SignIn/SignUp dinonaktifkan; auth menggunakan Google Firebase
+            // Gateway di halaman /auth. Password reset & verifikasi email tetap
+            // terdaftar untuk alur OTP/keamanan yang masih aktif.
             ->passwordReset(OtpRequestPasswordReset::class, OtpResetPassword::class)
             // Parameter KEDUA `false` WAJIB, bukan default `true`.
             //
@@ -374,10 +368,8 @@ class WelcomePanelProvider extends PanelProvider
                     // di-pointing ke Auth::class (UserAuth::getUrl()) supaya
                     // perubahan slug/path cuma perlu diubah di satu tempat.
                     'loginUrl' => UserAuth::getUrl(),
-                    // Pendaftaran sekarang sama-sama milik panel ini
-                    // (->registration(SignUp::class)); ambil dari panel agar
-                    // slug yang ganti ikut.
-                    'signUpUrl' => Filament::getPanel('welcome')->getRegistrationUrl(),
+                    // Pendaftaran dinonaktifkan.
+                    'signUpUrl' => null,
                 ]),
             )
             ->renderHook(

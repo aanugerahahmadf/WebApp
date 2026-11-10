@@ -76,7 +76,7 @@ URL canonical berada di root; URL `/user/*` dan `/welcome/*` hanya redirect lega
 
 - Panel storefront + akun: `welcome` di root, home `/home`.
 - Panel admin: `admin` di `/admin`.
-- Shell user: `app/Capacitor/DekstopApp`.
+- Shell user: `app/Capacitor/Application`.
 - Shell admin: `app/Capacitor/DekstopAdminApp`.
 - URL `/user/*` dan `/welcome/*` adalah legacy redirect, bukan path panel aktif.
 - `serve:web`, `serve:mobile`, dan `serve:desktop` hanya menerima `--host`,

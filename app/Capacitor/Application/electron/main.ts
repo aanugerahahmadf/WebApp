@@ -384,14 +384,15 @@ const capacitorApp = createCapacitorElectronApp({
             installKeyboardShortcuts(window);
 
             /**
-             * User-Agent standar Chrome tanpa token Electron / DekstopApp.
+             * User-Agent standar Chrome tanpa token Electron / Application.
              * Google OAuth memblokir autentikasi (403 disallowed_useragent /
              * "This browser or app may not be secure") jika mendeteksi Electron.
              */
             const defaultUserAgent = session.defaultSession.getUserAgent();
             const cleanUserAgent = defaultUserAgent
                 .replace(/Electron\/[0-9.]+\s?/, '')
-                .replace(/DekstopApp\/[0-9.]+\s?/, '')
+                .replace(/Application\/[0-9.]+\s?/, '')
+                .replace(/Application\/[0-9.]+\s?/, '')
                 .trim();
 
             session.defaultSession.setUserAgent(cleanUserAgent);

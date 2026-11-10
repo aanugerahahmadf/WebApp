@@ -12,7 +12,7 @@ jendelanya.
 > (`/signin`, `/signup`, `/auth`, OTP), dan seluruh halaman akun.
 
 ```
-app/Capacitor/DekstopApp/
+app/Capacitor/Application/
 ├── src/                    # halaman peluncur (fallback, bukan entry point Electron)
 ├── electron/
 │   ├── main.ts             # main process: origin tepercaya + halaman pertama
@@ -32,7 +32,7 @@ cd ../../..
 php artisan serve --host=127.0.0.1 --port=8000
 
 # 2. Jalankan aplikasi desktop
-cd app/Capacitor/DekstopApp
+cd app/Capacitor/Application
 npm install
 npm --prefix electron install
 npm run desktop

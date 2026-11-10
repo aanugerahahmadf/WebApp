@@ -20,6 +20,11 @@ class CatalogSeeder extends Seeder
         putenv('TEMP=' . sys_get_temp_dir());
         putenv('TMP=' . sys_get_temp_dir());
 
+        // Jangan pakai memory_limit. Untuk menghindari OOM saat seeding banyak
+        // gambar, konversi media dinonaktifkan sementara selama proses seed;
+        // file asli tetap disimpan ke media collection.
+        $this->withoutMediaConversionsDuringSeed();
+
         $this->command->info('--- Seeding All Catalogs (100 items) ---');
 
         $cats = Category::where('type', 'catalog')->get()->keyBy('slug');
@@ -973,6 +978,7 @@ class CatalogSeeder extends Seeder
         array &$missingSources,
         int $totalCatalogs,
     ): void {
+        @ini_set('memory_limit', '512M');
         foreach ($catalogs as $i => $data) {
             $catalogNumber = $i + 1;
             $slug = Str::slug($data['name']);
@@ -1033,7 +1039,7 @@ class CatalogSeeder extends Seeder
             );
 
             // 5 foto per katalog, sliding window:
-            //   Katalog 1 → 1-5, Katalog 2 → 2-6, ... Katalog 98 → 98-100 + 1-2, ...
+            //   Katalog 1 â†’ 1-5, Katalog 2 â†’ 2-6, ... Katalog 98 â†’ 98-100 + 1-2, ...
             //
             // PENTING -- tiga detail yang dulu salah dan membuat grid katalog
             // kehilangan foto:
@@ -1061,6 +1067,15 @@ class CatalogSeeder extends Seeder
             $totalImages = 100;
             $imagesPerCatalog = 5;
             $startImage = (($catalogNumber - 1) % $totalImages) + 1;
+
+            // Resume-friendly: skip if catalog already has expected images.
+            if ($catalog->getMedia('catalog_image')->count() >= $imagesPerCatalog) {
+                $this->command->line("  <info>OK</info> [{$catalogNumber}/{$totalCatalogs}] {$data['name']} (media sudah ada, dilewati)");
+                if ($catalogNumber % 10 === 0) {
+                    gc_collect_cycles();
+                }
+                continue;
+            }
 
             // Hapus media lama SETELAH semua file sumber dipastikan ada.
             //
@@ -1091,7 +1106,7 @@ class CatalogSeeder extends Seeder
                     $imagesPerCatalog,
                 ));
 
-                $this->command->line("  <info>✓</info> [{$catalogNumber}/{$totalCatalogs}] {$data['name']} (media lama dipertahankan)");
+                $this->command->line("  <info>OK</info> [{$catalogNumber}/{$totalCatalogs}] {$data['name']} (media lama dipertahankan)");
 
                 continue;
             }
@@ -1138,7 +1153,11 @@ class CatalogSeeder extends Seeder
                 $attached++;
             }
 
-            $this->command->line("  <info>✓</info> [{$catalogNumber}/{$totalCatalogs}] {$data['name']} ({$attached} gambar)");
+            $this->command->line("  <info>OK</info> [{$catalogNumber}/{$totalCatalogs}] {$data['name']} ({$attached} gambar)");
+            unset($sources, $category, $nameTranslations, $descTranslations);
+            if ($catalogNumber % 5 === 0) {
+                gc_collect_cycles();
+            }
         }
 
         if ($missingSources) {
@@ -1409,10 +1428,40 @@ class CatalogSeeder extends Seeder
     }
 
     /**
+     * Nonaktifkan pembuatan konversi media selama seeding.
+     *
+     * Konversi katalog (thumb/medium/large) dijalankan sinkron via GD dan bisa
+     * menghabiskan memori saat memproses banyak gambar. Seeder hanya perlu
+     * menyimpan file asli; konversi dapat dibuat belakangan jika diperlukan.
+     */
+    private function withoutMediaConversionsDuringSeed(): void
+    {
+        if (! class_exists(\Spatie\MediaLibrary\Conversions\FileManipulator::class)) {
+            return;
+        }
+
+        app()->instance(
+            \Spatie\MediaLibrary\Conversions\FileManipulator::class,
+            new class extends \Spatie\MediaLibrary\Conversions\FileManipulator
+            {
+                public function createDerivedFiles(
+                    \Spatie\MediaLibrary\MediaCollections\Models\Media $media,
+                    array $onlyConversionNames = [],
+                    bool $onlyMissing = false,
+                    bool $withResponsiveImages = false,
+                    bool $queueAll = false,
+                ): void {
+                    // Skip conversions during seed to avoid GD/image memory spikes.
+                }
+            }
+        );
+    }
+
+    /**
      * Folder gambar sumber katalog, sudah di-resolve ke path absolut.
      *
      * Urutan path: dulu `database_path('seeders/catalog-images')`, lalu
-     * `public/images/catalog`. Yang pertama lebih 안전 karena dijamin di luar
+     * `public/images/catalog`. Yang pertama lebih aman karena dijamin di luar
      * tree storage media.
      *
      * @return string Path absolut. Caller wajib mengecek `is_dir()` -- nilai

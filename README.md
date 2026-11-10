@@ -283,8 +283,8 @@ adalah perintah yang relevan untuk deployment web.
 | Target | Perintah mulai server | Perintah aset | Shell |
 |---|---|---|---|
 | Web | `php artisan serve:web` | `npm run build:web` | — (browser) |
-| Android/iOS | `php artisan serve:mobile` | `npm run build:mobile` | `app/Capacitor/DekstopApp` atau `DekstopAdminApp` |
-| Windows/macOS | `php artisan serve:desktop` | `npm run build:desktop` | `app/Capacitor/DekstopApp` atau `DekstopAdminApp` |
+| Android/iOS | `php artisan serve:mobile` | `npm run build:mobile` | `app/Capacitor/Application` atau `DekstopAdminApp` |
+| Windows/macOS | `php artisan serve:desktop` | `npm run build:desktop` | `app/Capacitor/Application` atau `DekstopAdminApp` |
 
 Periksa atau reset status platform:
 
@@ -311,7 +311,7 @@ sebelum menyiapkan target native.
 
 > **Semua perintah di bawah dijalankan di dalam folder shell**, bukan di root
 > server. `npm run android`, `npm run sync`, `npm run set:url`, dan `npx cap`
-> hanya ada di `app/Capacitor/{DekstopApp,DekstopAdminApp}/package.json`.
+> hanya ada di `app/Capacitor/{Application,DekstopAdminApp}/package.json`.
 
 Script yang tersedia di dalam folder shell:
 
@@ -326,7 +326,7 @@ Script yang tersedia di dalam folder shell:
 
 **Mobile (Android, storefront/user):**
 ```bash
-cd app/Capacitor/DekstopApp
+cd app/Capacitor/Application
 npm run sync
 npm run android
 npx cap run android -l          # live reload (dev)
@@ -340,7 +340,7 @@ Opsi live-reload milik Capacitor CLI: `-l`/`--live-reload`, `--host`,
 
 **Mobile (iOS — hanya macOS):**
 ```bash
-cd app/Capacitor/DekstopApp
+cd app/Capacitor/Application
 npm run sync
 npm run ios
 npx cap run ios -l
@@ -351,22 +351,22 @@ Untuk aplikasi admin, jalankan perintah yang sama dari
 
 **Desktop (Windows):**
 ```bash
-cd app/Capacitor/DekstopApp
+cd app/Capacitor/Application
 npm run sync
 npm --prefix electron run build
 npx electron-builder --config electron/electron-builder.config.js --win
-# Output: app/Capacitor/DekstopApp/electron/dist/*.exe, *.zip
+# Output: app/Capacitor/Application/electron/dist/*.exe, *.zip
 ```
 
 Untuk aplikasi admin, ganti folder menjadi `app/Capacitor/DekstopAdminApp`.
 
 **Desktop (macOS):**
 ```bash
-cd app/Capacitor/DekstopApp
+cd app/Capacitor/Application
 npm run sync
 npm --prefix electron run build
 npx electron-builder --config electron/electron-builder.config.js --mac
-# Output: app/Capacitor/DekstopApp/electron/dist/*.dmg, *.zip
+# Output: app/Capacitor/Application/electron/dist/*.dmg, *.zip
 ```
 
 Untuk aplikasi admin, ganti folder menjadi `app/Capacitor/DekstopAdminApp`.
@@ -376,7 +376,7 @@ Untuk paket distributable tanpa penginstall (cek cepat):
 
 **Set URL Shell (wajib sebelum build produksi):**
 ```bash
-cd app/Capacitor/DekstopApp
+cd app/Capacitor/Application
 npm run set:url -- https://dekorasi.example.com/user
 
 cd app/Capacitor/DekstopAdminApp
@@ -532,7 +532,7 @@ Di Windows PowerShell, gunakan `vendor\bin\pint.bat` dan
 | `app/Support/` | Helper bersama (AppPlatform, Platform/*, MobileNav, Phone) |
 | `app/Enums/` | Enum domain dan platform |
 | `app/Console/Commands/ServePlatformCommand/` | `serve:web|mobile|desktop` |
-| `app/Capacitor/DekstopApp/` | Shell Capacitor user (android, ios, electron) |
+| `app/Capacitor/Application/` | Shell Capacitor user (android, ios, electron) |
 | `app/Capacitor/DekstopAdminApp/` | Shell Capacitor admin |
 | `config/` | Konfigurasi aplikasi, termasuk `app-platform.php` |
 | `database/` | Migrasi, factory, seeder |
@@ -610,7 +610,7 @@ di environment build — jangan pakai `--ignore-platform-req`, karena itu
 menyembunyikan ketidaksesuaian lock file dengan platform.
 
 **`npm run android` / `npx cap` tidak ditemukan.**
-Perintah itu hanya ada di dalam `app/Capacitor/{DekstopApp,DekstopAdminApp}`, bukan di
+Perintah itu hanya ada di dalam `app/Capacitor/{Application,DekstopAdminApp}`, bukan di
 root repo. Masuk ke foldernya lebih dulu.
 
 **`npx cap run android --watch` gagal.**

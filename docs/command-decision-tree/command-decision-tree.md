@@ -21,11 +21,11 @@ flowchart TD
 
     Q1 -- TIDAK --> Q2{Apakah ini aplikasi mobile\nCapacitor shell untuk\nAndroid atau iOS?}
 
-    Q2 -- YA --> MOB["Ya php artisan serve:mobile\n─────────────────────────\nMode Mobile (Capacitor)\nPlatformMode::Mobile\nPort: 8001 (konvensi)\nShell: app/Capacitor/DekstopApp atau DekstopAdminApp"]
+    Q2 -- YA --> MOB["Ya php artisan serve:mobile\n─────────────────────────\nMode Mobile (Capacitor)\nPlatformMode::Mobile\nPort: 8001 (konvensi)\nShell: app/Capacitor/Application atau DekstopAdminApp"]
 
     Q2 -- TIDAK --> Q3{Apakah ini aplikasi desktop\nCapacitor Electron untuk\nWindows atau macOS?}
 
-    Q3 -- YA --> DESK["Ya php artisan serve:desktop\n──────────────────────────\nMode Desktop (Capacitor Electron)\nPlatformMode::Desktop\nPort: 8002 (konvensi)\nShell: app/Capacitor/DekstopApp/electron atau app/Capacitor/DekstopAdminApp/electron"]
+    Q3 -- YA --> DESK["Ya php artisan serve:desktop\n──────────────────────────\nMode Desktop (Capacitor Electron)\nPlatformMode::Desktop\nPort: 8002 (konvensi)\nShell: app/Capacitor/Application/electron atau app/Capacitor/DekstopAdminApp/electron"]
 
     Q3 -- TIDAK --> UNSURE["? Tidak yakin?\nLihat 'Cara Memilih' di bawah\natau jalankan: php artisan platform:status"]
 
@@ -80,7 +80,7 @@ Tidak diperlukan paket Composer tambahan. Ini adalah alur kerja Laravel standar.
 
 ### Gunakan `php artisan serve:mobile` ketika…
 
-- Anda menjalankan shell Capacitor mobile (`app/Capacitor/DekstopApp` atau `app/Capacitor/DekstopAdminApp`) di Android/iOS.
+- Anda menjalankan shell Capacitor mobile (`app/Capacitor/Application` atau `app/Capacitor/DekstopAdminApp`) di Android/iOS.
 - Aplikasi akan dibangun sebagai **APK/AAB** (Google Play) atau **IPA** (App Store) via Capacitor.
 - Anda memerlukan kamera via input file tersembunyi (shell membuka `<input type="file" capture>`).
 - Anda memerlukan **Push Notifications** via FCM (saat app background).
@@ -91,7 +91,7 @@ php artisan serve:mobile --port=8001
 ```
 
 **Yang dibutuhkan di shell (bukan di server):**
-- `app/Capacitor/DekstopApp` atau `app/Capacitor/DekstopAdminApp` sudah `npm install` dan `cap sync`
+- `app/Capacitor/Application` atau `app/Capacitor/DekstopAdminApp` sudah `npm install` dan `cap sync`
 - `capacitor.config.json` → `server.url` menunjuk ke URL server ini
 - Android SDK / Xcode untuk build native
 
@@ -99,7 +99,7 @@ php artisan serve:mobile --port=8001
 
 ### Gunakan `php artisan serve:desktop` ketika…
 
-- Anda menjalankan shell Capacitor Electron (`app/Capacitor/DekstopApp/electron atau app/Capacitor/DekstopAdminApp/electron`) di Windows/macOS.
+- Anda menjalankan shell Capacitor Electron (`app/Capacitor/Application/electron atau app/Capacitor/DekstopAdminApp/electron`) di Windows/macOS.
 - Aplikasi akan dibangun sebagai **`.exe` NSIS** (Windows) atau **`.dmg`** (macOS) via `electron-builder`.
 - Anda memerlukan **Web Notifications API** (standar browser, tersedia di Electron).
 - Anda memerlukan kemampuan update desktop. Registry menyediakan capability flag, tetapi feed dan dependency updater harus dikonfigurasi sebelum fitur ini dipasarkan.
@@ -110,7 +110,7 @@ php artisan serve:desktop --port=8002
 ```
 
 **Yang dibutuhkan di shell (bukan di server):**
-- `app/Capacitor/DekstopApp/electron` atau `app/Capacitor/DekstopAdminApp/electron` sudah `npm install`
+- `app/Capacitor/Application/electron` atau `app/Capacitor/DekstopAdminApp/electron` sudah `npm install`
 - `electron-builder` dikonfigurasi di `electron/electron-builder.config.js`
 - Sertifikat Authenticode (Windows) / Developer ID (macOS) untuk distribusi
 
@@ -300,7 +300,7 @@ ls public/build/mobile/manifest.json
 ls public/build/desktop/manifest.json
 
 # 3. capacitor.config.json URL benar?
-cat app/Capacitor/DekstopApp/capacitor.config.json
+cat app/Capacitor/Application/capacitor.config.json
 # "server": { "url": "http://10.0.2.2:8001/home", ... }
 
 # 4. Cleartext diizinkan untuk http dev?
@@ -314,10 +314,10 @@ npm run build:mobile
 npm run build:desktop
 
 # Set URL shell ke server yang benar
-cd app/Capacitor/DekstopApp && npm run set:url -- http://10.0.2.2:8001/home
+cd app/Capacitor/Application && npm run set:url -- http://10.0.2.2:8001/home
 
 # Sync Capacitor
-cd app/Capacitor/DekstopApp && npm run sync
+cd app/Capacitor/Application && npm run sync
 ```
 
 ---
@@ -364,11 +364,11 @@ Build aset web                           npm run build:web
 Build aset mobile                        npm run build:mobile
 Build aset desktop                       npm run build:desktop
 Build semua platform                     npm run build:all
-Set URL shell mobile/user                cd app/Capacitor/DekstopApp && npm run set:url -- <URL>
+Set URL shell mobile/user                cd app/Capacitor/Application && npm run set:url -- <URL>
 Set URL shell admin                      cd app/Capacitor/DekstopAdminApp && npm run set:url -- <URL>
-Sync shell mobile (android/ios)          cd app/Capacitor/DekstopApp && npm run sync
-Build installer Windows (di shell)       cd app/Capacitor/DekstopApp && npx electron-builder --win
-Build DMG macOS (di shell)               cd app/Capacitor/DekstopApp && npx electron-builder --mac
+Sync shell mobile (android/ios)          cd app/Capacitor/Application && npm run sync
+Build installer Windows (di shell)       cd app/Capacitor/Application && npx electron-builder --win
+Build DMG macOS (di shell)               cd app/Capacitor/Application && npx electron-builder --mac
 ```
 
 ---

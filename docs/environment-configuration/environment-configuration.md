@@ -423,7 +423,7 @@ kebenaran sendiri: `capacitor.config.json` dan `src/js/launcher.js`. Skrip
 
 > Jika `CAPACITOR_*` dipelihara sebagai metadata, sinkronkan nilainya secara
 > manual dengan konfigurasi shell. Runtime shell tetap membaca file di folder
-> `app/Capacitor/DekstopApp` atau `app/Capacitor/DekstopAdminApp`.
+> `app/Capacitor/Application` atau `app/Capacitor/DekstopAdminApp`.
 
 ---
 

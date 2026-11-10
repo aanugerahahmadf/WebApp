@@ -13,11 +13,10 @@
     // `filament()->getRegistrationUrl()` yang null, `route()` di bawahnya
     // akan melempar RouteNotFoundException dan membuat seluruh halaman auth
     // 500.
-    $registerUrl       = filament()->getRegistrationUrl()
-        ?? \App\Filament\User\Auth\Auth\Auth::getUrl()
-        ?? filament()->getLoginUrl()
-        ?? route('filament.welcome.auth.login');
-    $loginUrl          = filament()->getLoginUrl() ?? route('filament.welcome.auth.login');
+    // SignIn/SignUp dinonaktifkan: gunakan Google Firebase Gateway (/auth).
+    $authUrl           = \App\Filament\User\Auth\Auth\Auth::getUrl();
+    $registerUrl       = filament()->getRegistrationUrl() ?? $authUrl;
+    $loginUrl          = filament()->getLoginUrl() ?? $authUrl;
     $hasParentData     = $hasParentData ?? false;
     $hideCheckboxes    = $hideCheckboxes ?? false;
     // Modal syarat (Perjanjian Pengguna / Kebijakan Privasi / Kebijakan

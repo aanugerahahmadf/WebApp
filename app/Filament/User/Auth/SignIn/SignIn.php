@@ -27,6 +27,12 @@ class SignIn extends BaseLogin
 {
     use HasAuthBreadcrumbs;
 
+    public function mount(): void
+    {
+        // Halaman Sign In dinonaktifkan; gunakan Google Firebase Gateway (/auth).
+        $this->redirect(Auth::getUrl(), navigate: false);
+    }
+
     public function getView(): string
     {
         return 'User.auth.sign-in.sign-in';

@@ -7,7 +7,7 @@ berada di server; APK/IPA hanya memuat URL server pada `capacitor.config.json`.
 
 | Shell | Panel | appId | URL produksi |
 |---|---|---|---|
-| `app/Capacitor/DekstopApp` | storefront + akun `welcome` | `id.dekorasi.pengantin.user` | `https://domain/home` |
+| `app/Capacitor/Application` | storefront + akun `welcome` | `id.dekorasi.pengantin.user` | `https://domain/home` |
 | `app/Capacitor/DekstopAdminApp` | admin | `id.dekorasi.pengantin.admin` | `https://domain/admin` |
 
 Nama folder `Dekstop` adalah nama aktual repository dan tidak boleh diganti tanpa
@@ -52,7 +52,7 @@ Android emulator memakai `10.0.2.2`; device fisik memakai IP LAN komputer.
 ## Set URL shell
 
 ```bash
-cd app/Capacitor/DekstopApp
+cd app/Capacitor/Application
 npm install
 npm run set:url -- https://dekorasi.example.com/home
 
@@ -68,7 +68,7 @@ mengaktifkan cleartext untuk development.
 ## Android development
 
 ```bash
-cd app/Capacitor/DekstopApp
+cd app/Capacitor/Application
 npm run build
 npx cap sync android
 npx cap run android
@@ -80,7 +80,7 @@ Untuk admin, jalankan dari `app/Capacitor/DekstopAdminApp`.
 ## Android release
 
 ```bash
-cd app/Capacitor/DekstopApp
+cd app/Capacitor/Application
 npm run build
 npx cap sync android
 cd android
@@ -98,7 +98,7 @@ dan jangan commit keystore atau `keystore.properties`.
 Hanya macOS:
 
 ```bash
-cd app/Capacitor/DekstopApp
+cd app/Capacitor/Application
 npm install
 npm run build
 npx cap sync ios
@@ -149,4 +149,4 @@ log WebView sebelum membangun ulang APK.
 - [Kompilasi aset](../../asset-compilation/asset-compilation.md)
 - [Environment](../../environment-configuration/environment-configuration.md)
 - [Dukungan platform](../../platform-support/platform-support.md)
-- `app/Capacitor/DekstopApp/README.md`
+- `app/Capacitor/Application/README.md`

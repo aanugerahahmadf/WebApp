@@ -7,7 +7,7 @@ Shell desktop adalah aplikasi Electron yang memuat server Laravel melalui
 
 | Folder | Panel | appId | URL produksi |
 |---|---|---|---|
-| `app/Capacitor/DekstopApp` | storefront/akun `welcome` | `id.dekorasi.pengantin.user` | `https://domain/home` |
+| `app/Capacitor/Application` | storefront/akun `welcome` | `id.dekorasi.pengantin.user` | `https://domain/home` |
 | `app/Capacitor/DekstopAdminApp` | admin | `id.dekorasi.pengantin.admin` | `https://domain/admin` |
 
 Setiap shell memiliki `electron/main.ts`, `electron/tsconfig.json`,
@@ -38,7 +38,7 @@ php artisan serve:desktop --host=127.0.0.1 --port=8002
 Di shell:
 
 ```bash
-cd app/Capacitor/DekstopApp
+cd app/Capacitor/Application
 npm install
 npm --prefix electron install
 npm run set:url -- https://dekorasi.example.com/home
@@ -51,7 +51,7 @@ Untuk admin, gunakan `app/Capacitor/DekstopAdminApp` dan URL `/admin`.
 ## Build Windows
 
 ```powershell
-cd app/Capacitor/DekstopApp
+cd app/Capacitor/Application
 npm run sync
 npm --prefix electron run build
 npx electron-builder --config electron/electron-builder.config.js --win
@@ -72,7 +72,7 @@ npx electron-builder --config electron/electron-builder.config.js --win --target
 ## Build macOS
 
 ```bash
-cd app/Capacitor/DekstopApp
+cd app/Capacitor/Application
 npm run sync
 npm --prefix electron run build
 npx electron-builder --config electron/electron-builder.config.js --mac
@@ -131,4 +131,4 @@ desktop membaca manifest `public/build/desktop`.
 - [Kompilasi aset](../../asset-compilation/asset-compilation.md)
 - [Environment](../../environment-configuration/environment-configuration.md)
 - [Deployment mobile](../mobile/mobile.md)
-- `app/Capacitor/DekstopApp/README.md`
+- `app/Capacitor/Application/README.md`

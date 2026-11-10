@@ -41,6 +41,12 @@ class SignUp extends BaseRegister
 {
     use HasAuthBreadcrumbs;
 
+    public function mount(): void
+    {
+        // Halaman Sign Up dinonaktifkan; gunakan Google Firebase Gateway (/auth).
+        $this->redirect(\App\Filament\User\Auth\Auth\Auth::getUrl(), navigate: false);
+    }
+
     public function getView(): string
     {
         return 'User.auth.sign-up.sign-up';

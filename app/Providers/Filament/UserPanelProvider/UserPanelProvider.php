@@ -289,7 +289,7 @@ class UserPanelProvider extends PanelProvider
                 fn (): string => view('Shared.components.global-search-modal.global-search-modal')->render(),
             )
             ->renderHook(
-                // SHELL DESKTOP (Electron) -- app/Capacitor/DekstopApp.
+                // SHELL DESKTOP (Electron) -- app/Capacitor/Application.
                 //
                 // Panel User ini adalah isi dari aplikasi desktop "Dekorasi"
                 // (bersama panel Welcome). Partial ini hanya dirender kalau

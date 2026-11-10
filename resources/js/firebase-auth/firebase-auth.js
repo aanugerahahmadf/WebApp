@@ -31,7 +31,10 @@ provider.setCustomParameters({ prompt: 'select_account' });
 const CLIENT_ID = app.options.clientId || '';
 
 function isNativeMobile() {
-    return !!(window.AppPlatform && window.AppPlatform.isNativeMobile);
+    if (window.AppPlatform && window.AppPlatform.isNativeMobile) return true;
+    if (window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform()) return true;
+    // Capacitor server-loaded app in Android/iOS WebView
+    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
 function csrfToken() {

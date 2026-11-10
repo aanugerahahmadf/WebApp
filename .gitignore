@@ -29,3 +29,9 @@ Thumbs.db
 # Capacitor / Electron
 # (kosong untuk sekarang, sesuai butuhan)
 
+
+# Capacitor Android build outputs
+app/Capacitor/Application/android/.gradle/
+app/Capacitor/Application/android/app/build/
+app/Capacitor/Application/android/build/
+app/Capacitor/Application/android/local.properties

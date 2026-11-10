@@ -17,9 +17,9 @@ flowchart TD
     START --> Q1{Apakah pengguna akan membuka aplikasi\ndalam browser web?}
     Q1 -- YA --> WEB["Ya php artisan serve:web\nMode Browser Web"]
     Q1 -- TIDAK --> Q2{Apakah ini aplikasi mobile\nCapacitor shell untuk\nAndroid atau iOS?}
-    Q2 -- YA --> MOB["Ya php artisan serve:mobile\nMode Mobile (Capacitor)\nShell: app/Capacitor/DekstopApp|DekstopAdminApp"]
+    Q2 -- YA --> MOB["Ya php artisan serve:mobile\nMode Mobile (Capacitor)\nShell: app/Capacitor/Application|DekstopAdminApp"]
     Q2 -- TIDAK --> Q3{Apakah ini aplikasi desktop\nCapacitor Electron untuk\nWindows atau macOS?}
-    Q3 -- YA --> DESK["Ya php artisan serve:desktop\nMode Desktop (Capacitor Electron)\nShell: app/Capacitor/DekstopApp/electron atau app/Capacitor/DekstopAdminApp/electron"]
+    Q3 -- YA --> DESK["Ya php artisan serve:desktop\nMode Desktop (Capacitor Electron)\nShell: app/Capacitor/Application/electron atau app/Capacitor/DekstopAdminApp/electron"]
     Q3 -- TIDAK --> HELP["? Jalankan: php artisan platform:status\natau lihat command-decision-tree.md"]
 
     style WEB fill:#d4edda,stroke:#28a745,color:#155724
@@ -90,7 +90,7 @@ Tidak diperlukan paket Composer tambahan di luar instalasi Laravel standar.
 ### `php artisan serve:mobile` — Mode Mobile (Capacitor Shell)
 
 Menjalankan server Laravel yang diload oleh shell Capacitor mobile
-(`app/Capacitor/DekstopApp` atau `app/Capacitor/DekstopAdminApp`) di Android/iOS.
+(`app/Capacitor/Application` atau `app/Capacitor/DekstopAdminApp`) di Android/iOS.
 
 ```bash
 php artisan serve:mobile --port=8001
@@ -118,7 +118,7 @@ php artisan serve:mobile --port=8001
 | Aset mobile dikompilasi | `npm run build:mobile` (atau `npm run dev:mobile` untuk HMR) |
 | `.env.mobile` | Override `APP_URL`, `SESSION_DRIVER=database`, `VITE_PLATFORM=mobile` |
 
-**Prasyarat (di SHELL — `app/Capacitor/DekstopApp` atau `app/Capacitor/DekstopAdminApp`):**
+**Prasyarat (di SHELL — `app/Capacitor/Application` atau `app/Capacitor/DekstopAdminApp`):**
 
 | Persyaratan | Detail |
 |-------------|---------| 
@@ -136,7 +136,7 @@ php artisan serve:mobile --port=8001
 ### `php artisan serve:desktop` — Mode Desktop (Capacitor Electron)
 
 Menjalankan server Laravel yang diload oleh shell Capacitor Electron
-(`app/Capacitor/DekstopApp/electron` atau `app/Capacitor/DekstopAdminApp/electron`) di Windows/macOS.
+(`app/Capacitor/Application/electron` atau `app/Capacitor/DekstopAdminApp/electron`) di Windows/macOS.
 
 ```bash
 php artisan serve:desktop --port=8002
@@ -168,7 +168,7 @@ php artisan serve:desktop --port=8002
 | Aset desktop dikompilasi | `npm run build:desktop` (atau `npm run dev:desktop` untuk HMR) |
 | `.env.desktop` | Override `APP_URL`, `SESSION_DRIVER=file`, `VITE_PLATFORM=desktop` |
 
-**Prasyarat (di SHELL — `app/Capacitor/DekstopApp/electron` atau `app/Capacitor/DekstopAdminApp/electron`):**
+**Prasyarat (di SHELL — `app/Capacitor/Application/electron` atau `app/Capacitor/DekstopAdminApp/electron`):**
 
 | Persyaratan | Detail |
 |-------------|---------| 
@@ -217,7 +217,7 @@ php artisan serve:web --port=8000
 npm run dev:mobile
 php artisan serve:mobile --port=8001
 # Di shell terpisah:
-cd app/Capacitor/DekstopApp && npm run android   # atau ios
+cd app/Capacitor/Application && npm run android   # atau ios
 ```
 
 ### Terminal 3 — Desktop (port 8002)
@@ -226,7 +226,7 @@ cd app/Capacitor/DekstopApp && npm run android   # atau ios
 npm run dev:desktop
 php artisan serve:desktop --port=8002
 # Di shell terpisah:
-cd app/Capacitor/DekstopApp
+cd app/Capacitor/Application
 npm run sync
 npm --prefix electron run build
 npx electron-builder --config electron/electron-builder.config.js --dir
@@ -295,7 +295,7 @@ public/
 ### Mobile (Android)
 
 ```bash
-cd app/Capacitor/DekstopApp
+cd app/Capacitor/Application
 npm run build              # Vite build → dist/
 npx cap sync android       # Copy dist + update native project
 npx cap run android        # Deploy ke emulator/device
@@ -305,7 +305,7 @@ npx cap run android -l      # live reload (dev); bukan --watch
 ### Mobile (iOS — hanya macOS)
 
 ```bash
-cd app/Capacitor/DekstopApp
+cd app/Capacitor/Application
 npm run build
 npx cap sync ios
 npx cap run ios
@@ -314,7 +314,7 @@ npx cap run ios
 ### Desktop (Windows)
 
 ```bash
-cd app/Capacitor/DekstopApp
+cd app/Capacitor/Application
 npm run sync
 npm --prefix electron run build
 npx electron-builder --config electron/electron-builder.config.js --win
@@ -324,7 +324,7 @@ npx electron-builder --config electron/electron-builder.config.js --win
 ### Desktop (macOS)
 
 ```bash
-cd app/Capacitor/DekstopApp
+cd app/Capacitor/Application
 npm run sync
 npm --prefix electron run build
 npx electron-builder --config electron/electron-builder.config.js --mac
@@ -334,7 +334,7 @@ npx electron-builder --config electron/electron-builder.config.js --mac
 ### Set URL Shell (wajib sebelum build produksi)
 
 ```bash
-cd app/Capacitor/DekstopApp
+cd app/Capacitor/Application
 npm run set:url -- https://dekorasi.example.com/home
 
 cd app/Capacitor/DekstopAdminApp
@@ -454,7 +454,7 @@ ls public/build/mobile/manifest.json
 ls public/build/desktop/manifest.json
 
 # 3. capacitor.config.json URL benar?
-cat app/Capacitor/DekstopApp/capacitor.config.json
+cat app/Capacitor/Application/capacitor.config.json
 # "server": { "url": "http://10.0.2.2:8001/home", "cleartext": true }
 
 # 4. Cleartext diizinkan untuk http dev?
@@ -467,10 +467,10 @@ npm run build:mobile
 npm run build:desktop
 
 # Set URL shell ke server yang benar
-cd app/Capacitor/DekstopApp && npm run set:url -- http://10.0.2.2:8001/home
+cd app/Capacitor/Application && npm run set:url -- http://10.0.2.2:8001/home
 
 # Sync Capacitor
-cd app/Capacitor/DekstopApp && npm run sync
+cd app/Capacitor/Application && npm run sync
 ```
 
 ---

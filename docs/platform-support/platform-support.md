@@ -42,7 +42,7 @@ php artisan serve:mobile
 ```
 
 Menjalankan server Laravel yang diload oleh shell Capacitor mobile (Android/iOS).
-Shell berada di `app/Capacitor/DekstopApp` dan `app/Capacitor/DekstopAdminApp`. Server
+Shell berada di `app/Capacitor/Application` dan `app/Capacitor/DekstopAdminApp`. Server
 harus dijangkau via jaringan (mis. `http://10.0.2.2:8001` untuk emulator).
 
 **Kasus RuntimePlatform yang dihasilkan:**
@@ -425,7 +425,7 @@ Setiap shell memiliki `capacitor.config.json` dan `src/js/launcher.js`. Jangan
 edit manual — gunakan skrip:
 
 ```bash
-cd app/Capacitor/DekstopApp
+cd app/Capacitor/Application
 npm run set:url -- https://dekorasi.example.com/home
 # atau untuk admin
 cd app/Capacitor/DekstopAdminApp

@@ -17,7 +17,7 @@ use Throwable;
  * di dalam jendela Electron:
  *
  *   - app/Capacitor/DekstopAdminApp  -> panel 'admin'            (Dekorasi Admin)
- *   - app/Capacitor/DekstopApp       -> panel 'welcome' + 'user' (Dekorasi)
+ *   - app/Capacitor/Application       -> panel 'welcome' + 'user' (Dekorasi)
  *
  * Karena server-nya sama, panel yang sedang dirender boleh berpindah ke
  * panel lain TANPA keluar dari jendela. Itulah yang dipakai helper ini:
