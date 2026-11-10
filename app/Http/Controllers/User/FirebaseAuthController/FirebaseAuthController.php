@@ -84,15 +84,15 @@ class FirebaseAuthController extends Controller
             session()->forget(['2fa_passed', 'trusted_device_validated']);
 
             return response()->json([
-                'redirect' => route('filament.welcome.pages.otp-verify'),
+                'redirect' => \App\Filament\User\Auth\Auth\Auth::getUrl(),
             ]);
         }
 
-        // KASUS 4 — Akun TERDAFTAR + 2FA Tidak Aktif → langsung Home.
+        // KASUS 4 — Akun TERDAFTAR + 2FA Tidak Aktif: Auth.php -> Home.
         session(['2fa_passed' => true]);
 
         return response()->json([
-            'redirect' => route('filament.welcome.pages.home'),
+            'redirect' => \App\Filament\User\Auth\Auth\Auth::getUrl(),
         ]);
     }
 
