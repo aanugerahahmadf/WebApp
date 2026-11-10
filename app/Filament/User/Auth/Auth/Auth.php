@@ -4,7 +4,6 @@ namespace App\Filament\User\Auth\Auth;
 
 use App\Filament\User\Auth\Concerns\HasAuthBreadcrumbs;
 use App\Filament\Welcome\Pages\Home\Home as WelcomeHome;
-use Filament\Facades\Filament;
 use Filament\Panel;
 use Filament\Pages\SimplePage;
 use Illuminate\Contracts\Support\Htmlable;
@@ -13,19 +12,14 @@ use Illuminate\Support\Facades\Route;
 /**
  * Halaman auth pertama yang ditemui tamu: `/auth`.
  *
- * Isinya sengaja dikecilkan -- logo, heading "Welcome Back", dan DUA tombol:
- * Sign In (ke form email/kata sandi) dan Masuk Dengan Google (en: "Continue
- * With Google"). Sebelumnya
- * tombol Google berdiri di Sign In DAN Sign Up, jadi ada dua tempat yang harus
- * dijaga sinkron dan keduanya men-YAML-kan alur OAuth untuk tamu yang belum
- * punya akun. Di sini Google menjadi pintu kedua yang setara dengan Sign In,
- * dan halaman Sign In / Sign Up kembali ke urusannya masing-masing.
+ * Isinya: logo, heading "Welcome Back", dan tombol masuk via Google Firebase
+ * Gateway (partial social-buttons). Tombol Sign In (email/kata sandi) dihapus
+ * dari halaman ini; alur masuk mengikuti gateway Google/Firebase sesuai
+ * kebutuhan.
  *
- * Centang "Ingat Saya" + persetujuan syarat TIDAK ikut di sini: dua tombol di
- * bawah adalah pintu masuk, bukan persetujuan, dan memaksakan centang di
- * halaman publik membuat tombol Google sia-sia (selalu nonaktif sampai dua
- * checkbox dicentang). Kewajiban centang itu tetap di Sign In / Sign Up,
- * tempat `authenticate()` / `handleRegistration()` memvalidasinya.
+ * Centang "Ingat Saya" + persetujuan syarat TIDAK ikut di sini: kewajiban
+ * centang itu tetap di Sign In / Sign Up, tempat `authenticate()` /
+ * `handleRegistration()` memvalidasinya.
  *
  * Halamannya publik, jadi route-nya didaftarkan lewat `->routes()`, bukan
  * `->pages()`: yang latter dibungkus `authMiddleware()` panel, yang akan
@@ -50,19 +44,14 @@ class Auth extends SimplePage
     protected ?string $maxWidth = 'md';
 
     /**
-     * Heading halaman ini: "Welcome Back" (id: "Selamat Datang Kembali"),
-     * bukan "Sign In".
+     * Heading halaman ini: "Welcome Back" (id: "Selamat Datang Kembali").
      *
-     * Halaman ini bukan form -- dia hanya menawarkan dua pintu (Sign In dan
-     * Google). Menamainya "Sign In" menyesatkan karena crumb terakhir, <title>
-     * tab browser, dan heading besar semuanya ikut mengulang nama form yang
-     * sudah ada di halaman lain (/signin), sehingga /auth dan
-     * /signin terlihat seperti halaman yang sama. "Welcome Back" cuma
-     * sapaan untuk orang yang kembali ke akunnya -- bukan nama halaman form,
-     * jadi tidak bentrok dengan heading Sign In yang tetap "Sign In".
+     * Halaman ini bukan form email/kata sandi; pintu masuk yang ditampilkan
+     * adalah Google Firebase Gateway. "Welcome Back" dipakai sebagai sapaan
+     * agar tidak bentrok dengan heading Sign In pada halaman /signin.
      *
      * `__()` dengan kunci "Welcome Back" yang ada di lang/en.json +
-     * lang/id.json, dua locale yang ditawarkan language switcher.
+     * lang/id.json.
      */
     public function getHeading(): string|Htmlable
     {
@@ -118,19 +107,58 @@ class Auth extends SimplePage
     }
 
     /**
-     * Tamu yang sudah punya akun tidak ada urusan di halaman login: topbar
-     * storefront untuk mereka sudah menampilkan "Beranda", bukan "Sign In".
-     * `url.intended` tidak disentuh di sini -- tidak ada penulisan session, jadi
-     * tujuan setelah login yang disimpan Laravel tetap utuh.
+     * Router gateway Google Firebase (sesuai spec alur):
+     *
+     * TERDAFTAR, 2FA Aktif  : Auth.php -> Otp Email Or Two Factory -> Home
+     * TERDAFTAR, 2FA Tidak Aktif: Auth.php -> Home
+     *
+     * BELUM TERDAFTAR (Menjawab Iya) selesai setup 2FA:
+     *   TwoFactorAuth (Berhasil) -> Auth.php -> Home (2fa_passed=true).
+     *
+     * `url.intended` tidak disentuh -- tidak ada penulisan session tujuan login.
      */
     public function mount(): void
     {
-        if (auth()->check()) {
-            // `panel: 'welcome'` wajib: tanpa itu Page::getUrl() mengambil panel dari
-            // getCurrentPanel(). Di sini kebetulan hasilnya sama, tapi begitu
-            // panel default berubah, halaman ini diam-diam melompat ke panel lain.
-            $this->redirect(WelcomeHome::getUrl(panel: 'welcome'), navigate: false);
+        if (! auth()->check()) {
+            return;
         }
+
+        $user = auth()->user();
+
+        // 2FA sudah disiapkan tapi belum diverifikasi di sesi ini -> minta OTP.
+        // (Belum Terdaftar/Iya pasca-setup menandai 2fa_passed=true, jadi lolos ke Home.)
+        $needsTwoFactor = method_exists($user, 'hasSetupTwoFactor')
+            && $user->hasSetupTwoFactor()
+            && ! $this->twoFactorPassed($user);
+
+        if ($needsTwoFactor) {
+            $this->redirect(route('filament.welcome.pages.otp-verify'), navigate: false);
+
+            return;
+        }
+
+        // `panel: 'welcome'` wajib: tanpa itu Page::getUrl() mengambil panel dari
+        // getCurrentPanel(). Di sini kebetulan hasilnya sama, tapi begitu panel
+        // default berubah, halaman ini diam-diam melompat ke panel lain.
+        $this->redirect(WelcomeHome::getUrl(panel: 'welcome'), navigate: false);
+    }
+
+    /**
+     * Cek apakah verifikasi 2FA sesi ini sudah lolos.
+     * Kompatibel dengan mix-code/filament-multi-2fa (isOtpPassed / session flag)
+     * dan fallback ke session('2fa_passed').
+     */
+    private function twoFactorPassed($user): bool
+    {
+        if (session('2fa_passed') === true) {
+            return true;
+        }
+
+        if (method_exists($user, 'isOtpPassed')) {
+            return (bool) $user->isOtpPassed();
+        }
+
+        return false;
     }
 
     /**
@@ -144,20 +172,12 @@ class Auth extends SimplePage
     }
 
     /**
-     * URL tujuan tombol Sign In dikirim lewat view data, bukan ditulis di Blade,
-     * supaya template tidak perlu tahu nama kelas maupun route.
-     *
-     * Diambil dari PANEL, bukan `SignIn::getUrl()`: SignIn extends
-     * Filament\Pages\Auth\Login, yang -- berbeda dari Page/SimplePage -- tidak
-     * punya helper getUrl() statis, jadi memanggilnya jatuh ke __callStatic dan
-     * melempar BadMethodCallException. `getLoginUrl()` panel-lah yang benar,
-     * dan otomatis ikut kalau `loginRouteSlug()` panel user diubah lagi.
+     * Data untuk view auth landing. Tidak ada tombol Sign In manual; pintu
+     * masuk menggunakan Google Firebase Gateway (partial social-buttons).
      */
     protected function getViewData(): array
     {
-        return [
-            'signInUrl' => Filament::getPanel('welcome')->getLoginUrl(),
-        ];
+        return [];
     }
 
     public static function registerRoutes(Panel $panel): void

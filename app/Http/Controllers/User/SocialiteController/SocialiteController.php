@@ -293,12 +293,12 @@ class SocialiteController extends Controller
         if (method_exists($user, 'hasSetupTwoFactor') && $user->hasSetupTwoFactor()) {
             session()->forget(['2fa_passed', 'trusted_device_validated']);
 
-            return redirect()->route('filament.welcome.pages.otp-verify');
+            return redirect(\App\Filament\User\Auth\Auth\Auth::getUrl());
         }
 
-        // KASUS 4: Akun TERDAFTAR + 2FA Tidak Aktif → langsung Home.
+        // KASUS 4: Akun TERDAFTAR + 2FA Tidak Aktif: Auth.php -> Home.
         session(['2fa_passed' => true]);
 
-        return redirect()->intended(route('filament.welcome.pages.home'));
+        return redirect()->intended(\App\Filament\User\Auth\Auth\Auth::getUrl());
     }
 }

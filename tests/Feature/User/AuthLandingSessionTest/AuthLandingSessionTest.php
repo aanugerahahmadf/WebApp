@@ -22,7 +22,7 @@
  */
 
 use App\Filament\User\Auth\Auth\Auth;
-use App\Filament\User\Pages\Home\Home;
+use App\Filament\Welcome\Pages\Home\Home as WelcomeHome;
 use App\Models\User\User;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -68,13 +68,12 @@ test('the session locale is left alone by the landing page', function (): void {
     expect(session('locale'))->toBe('id');
 });
 
-test('a signed in visitor is sent to the user panel home instead', function (): void {
-    // Guard di Auth::mount(). Tujuan harus home panel USER, bukan dashboard
-    // storefront: middleware panel sudah melempar siapa pun yang sudah login
-    // ke sana, dan halaman auth tidak boleh menjadi jalan mundur.
+test('a signed in visitor is sent to the storefront home instead', function (): void {
+    // Guard di Auth::mount() (router gateway). User terautentikasi tanpa
+    // 2FA pending -> Auth.php memantul ke Home.
     actingAs($this->customer, 'web');
 
-    $this->get(Auth::getUrl())->assertRedirect(Home::getUrl(panel: 'user'));
+    $this->get(Auth::getUrl())->assertRedirect(WelcomeHome::getUrl(panel: 'welcome'));
 });
 
 test('the redirect for a signed in visitor happens before anything is rendered', function (): void {
@@ -94,7 +93,7 @@ test('a signed in visitor keeps their session while being redirected', function 
     // diminta login lagi tepat setelah login.
     actingAs($this->customer, 'web');
 
-    $this->get(Auth::getUrl())->assertRedirect(Home::getUrl(panel: 'user'));
+    $this->get(Auth::getUrl())->assertRedirect(WelcomeHome::getUrl(panel: 'welcome'));
 
     expect(auth()->check())->toBeTrue()
         ->and(auth()->id())->toBe($this->customer->id);
