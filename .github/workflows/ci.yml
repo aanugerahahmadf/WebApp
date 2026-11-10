@@ -124,7 +124,7 @@ jobs:
         with:
           node-version: 20
       - name: Run node --test for the scan coach
-        run: node --test resources/js/ai-scan-coach/
+        run: node --test resources/js/ai-scan-coach/ai-scan-coach.test.js
 
   frontend:
     name: Build web assets
