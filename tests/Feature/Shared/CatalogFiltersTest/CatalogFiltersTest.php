@@ -36,18 +36,27 @@ function catalogFilterCatalog(array $attributes): Catalog
     $sequence++;
 
     $createdAt = $attributes['created_at'] ?? null;
-    unset($attributes['created_at']);
+    $tierPrice = $attributes['price'] ?? 1_000_000;
+    $tierDiscountPrice = $attributes['discount_price'] ?? null;
+    $tierStock = $attributes['stock'] ?? 10;
+    unset($attributes['created_at'], $attributes['price'], $attributes['discount_price'], $attributes['stock']);
 
     $catalog = Catalog::create(array_merge([
         'name' => 'Katalog '.$sequence,
         'slug' => 'katalog-'.$sequence,
         'description' => 'Deskripsi katalog '.$sequence,
-        'price' => 1_000_000,
-        'discount_price' => null,
-        'stock' => 10,
         'is_active' => true,
         'is_featured' => false,
     ], $attributes));
+
+    $catalog->tiers()->create([
+        'name' => 'Tier '.$sequence,
+        'slug' => 'tier-'.$sequence,
+        'price' => $tierPrice,
+        'discount_price' => $tierDiscountPrice,
+        'stock' => $tierStock,
+        'is_active' => true,
+    ]);
 
     if ($createdAt !== null) {
         $catalog->forceFill(['created_at' => $createdAt])->save();
