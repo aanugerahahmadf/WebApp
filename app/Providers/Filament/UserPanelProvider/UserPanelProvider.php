@@ -432,7 +432,7 @@ class UserPanelProvider extends PanelProvider
                 NavigationGroup::make()->label(fn () => __('Beranda')),
                 NavigationGroup::make()->label(fn () => __('Belanja & Jelajahi')),
                 NavigationGroup::make()->label(fn () => __('Transaksi & Aktivitas')),
-                NavigationGroup::make()->label(fn () => __('Pesan')),
+                NavigationGroup::make()->label(fn () => __('Chat')),
             ])
             ->userMenuItems([
                 'profile' => MenuItem::make()

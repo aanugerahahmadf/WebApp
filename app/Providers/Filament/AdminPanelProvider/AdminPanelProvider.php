@@ -313,7 +313,7 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make()->label(fn () => __('Data Master')),
                 NavigationGroup::make()->label(fn () => __('Transaksi')), 
                 NavigationGroup::make()->label(fn () => __('Pengaturan Sistem')),
-                NavigationGroup::make()->label(fn () => __('Pesan')),
+                NavigationGroup::make()->label(fn () => __('Chat')),
             ])
             // TIDAK ada ->navigationItems() manual di sini.
             //

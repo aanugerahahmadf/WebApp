@@ -186,19 +186,37 @@
 
     @guest
         {{--
-            Tamu: ikon user langsung mengarah ke pintu Google Gateway (/auth)
-            karena tombol Sign In dan Sign Up manual telah dinonaktifkan.
+            Tamu: ikon akun membuka dropdown berisi pintu masuk ke Sign In.
+            Dropdown terbuka/tertutup otomatis saat kursor masuk/keluar area.
         --}}
-        <a
-            href="{{ $loginUrl }}"
-            aria-label="{{ __('Masuk dengan Google') }}"
-            x-tooltip="{
-                content: @js(__('Masuk dengan Google')),
-                theme: $store.theme,
-            }"
-            class="{{ $accountButtonClass }}"
+        <x-filament::dropdown
+            placement="bottom-end"
+            x-on:mouseenter="open($event)"
+            x-on:mouseleave="close($event)"
         >
-            <x-filament::icon :icon="AppIcon::PROFILE" :class="$accountIconClass" />
-        </a>
+            <x-slot name="trigger">
+                <button
+                    type="button"
+                    aria-label="{{ __('Sign In To Account') }}"
+                    x-tooltip="{
+                        content: @js(__('Sign In To Account')),
+                        theme: $store.theme,
+                    }"
+                    class="{{ $accountButtonClass }}"
+                >
+                    <x-filament::icon :icon="AppIcon::PROFILE" :class="$accountIconClass" />
+                </button>
+            </x-slot>
+
+            <x-filament::dropdown.list>
+                <x-filament::dropdown.list.item
+                    :href="$loginUrl"
+                    tag="a"
+                    :icon="AppIcon::PROFILE"
+                >
+                    {{ __('Sign In To Account') }}
+                </x-filament::dropdown.list.item>
+            </x-filament::dropdown.list>
+        </x-filament::dropdown>
     @endguest
 </div>

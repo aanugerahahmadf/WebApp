@@ -38,7 +38,7 @@ class MessagesPage extends Page
 
     public static function getSlug(): string
     {
-        return config('messages.slug', 'messages').'/{id?}';
+        return 'inbox/chat/{id?}';
     }
 
     public static function shouldRegisterNavigation(): bool
@@ -53,7 +53,7 @@ class MessagesPage extends Page
 
     public static function getNavigationLabel(): string
     {
-        return __(config('messages.navigation.navigation_label', 'Messages'));
+        return __(config('messages.navigation.navigation_label', 'Chat'));
     }
 
     public static function getNavigationBadge(): ?string
@@ -96,7 +96,7 @@ class MessagesPage extends Page
 
     public static function getNavigationBadgeTooltip(): ?string
     {
-        return __('Pesan belum dibaca');
+        return __('Chat belum dibaca');
     }
 
     public static function getNavigationIcon(): string|Htmlable|null
@@ -141,7 +141,7 @@ class MessagesPage extends Page
 
     public function getTitle(): string
     {
-        return __(config('messages.navigation.navigation_label', 'Messages'));
+        return __(config('messages.navigation.navigation_label', 'Chat'));
     }
 
     public function getMaxContentWidth(): MaxWidth|string|null
@@ -151,7 +151,7 @@ class MessagesPage extends Page
 
     public function getHeading(): string|Htmlable
     {
-        return __('Messages');
+        return __('Chat');
     }
 
     /**
@@ -213,7 +213,7 @@ class MessagesPage extends Page
         $breadcrumbs[static::getUrl()] = static::getNavigationLabel();
 
         if ($this->selectedConversation) {
-            $breadcrumbs[] = $this->selectedConversation->inbox_title ?: __('Pesan');
+            $breadcrumbs[] = $this->selectedConversation->inbox_title ?: __('Chat');
         }
 
         return $breadcrumbs;

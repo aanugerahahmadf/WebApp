@@ -122,7 +122,7 @@ Route::get('/', function () {
     return redirect('/home');
 })->middleware(SetLocale::class);
 
-Route::redirect('/admin/inbox', '/admin/inbox/messages');
+Route::redirect('/admin/inbox', '/admin/inbox/chat');
 
 // -----------------------------------------------------------------------------
 // Alias URL katalog panel admin.

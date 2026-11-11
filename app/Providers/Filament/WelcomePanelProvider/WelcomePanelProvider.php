@@ -10,8 +10,8 @@ use App\Filament\User\Auth\LoginResponse\LoginResponse;
 use App\Filament\User\Auth\OtpEmailVerificationPrompt\OtpEmailVerificationPrompt;
 use App\Filament\User\Auth\OtpRequestPasswordReset\OtpRequestPasswordReset;
 use App\Filament\User\Auth\OtpResetPassword\OtpResetPassword;
-// SignIn/SignUp dinonaktifkan (gunakan Google Firebase Gateway via halaman Auth).
 use App\Filament\User\Auth\SecurityQuestion\SecurityQuestion;
+use App\Filament\User\Auth\SignIn\SignIn;
 use App\Filament\User\Auth\TwoFactorAuth\TwoFactorAuth;
 use App\Filament\User\Auth\VerifyOtp\VerifyOtp;
 use App\Filament\User\Pages\DeviceTrustPrompt\DeviceTrustPrompt;
@@ -158,9 +158,8 @@ class WelcomePanelProvider extends PanelProvider
             // lewat redirect legacy di web.php: /welcome/* -> root (blok
             // LEGACY WELCOME) dan /user/* -> root (blok LEGACY USER).
             ->path('/')
-            // SignIn/SignUp dinonaktifkan; auth menggunakan Google Firebase
-            // Gateway di halaman /auth. Password reset & verifikasi email tetap
-            // terdaftar untuk alur OTP/keamanan yang masih aktif.
+            ->login(SignIn::class)
+            ->loginRouteSlug('signin')
             ->passwordReset(OtpRequestPasswordReset::class, OtpResetPassword::class)
             // Parameter KEDUA `false` WAJIB, bukan default `true`.
             //
@@ -362,12 +361,8 @@ class WelcomePanelProvider extends PanelProvider
                 // (ikon link ke /home) karena satu kontrol paling personal
                 // sudah dipegang user menu.
                 fn (): View|string => view('Welcome.components.topbar-auth-actions.topbar-auth-actions', [
-                    // Tujuan auth tamu tetap pintu pertama /auth (heading
-                    // "Welcome Back" + Sign In To Account + Continue With
-                    // Google), bukan form email/kata sandi langsung --
-                    // di-pointing ke Auth::class (UserAuth::getUrl()) supaya
-                    // perubahan slug/path cuma perlu diubah di satu tempat.
-                    'loginUrl' => UserAuth::getUrl(),
+                    // Tujuan auth tamu diarahkan ke halaman Sign In.
+                    'loginUrl' => \Filament\Facades\Filament::getPanel('welcome')->getLoginUrl(),
                     // Pendaftaran dinonaktifkan.
                     'signUpUrl' => null,
                 ]),
@@ -519,7 +514,7 @@ class WelcomePanelProvider extends PanelProvider
                 NavigationGroup::make()->label(fn () => __('Beranda')),
                 NavigationGroup::make()->label(fn () => __('Belanja & Jelajahi')),
                 NavigationGroup::make()->label(fn () => __('Transaksi & Aktivitas')),
-                NavigationGroup::make()->label(fn () => __('Pesan')),
+                NavigationGroup::make()->label(fn () => __('Chat')),
             ])
             ->userMenuItems([
                 // SELURUH label harus CLOSURE, bukan string.

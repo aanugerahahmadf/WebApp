@@ -53,6 +53,10 @@ class AuthenticateWelcome extends Authenticate
         'welcome/home',
         'flowerdecorationscatalog',
         'flowerdecorationscatalog/*',
+        'inbox/chat',
+        'inbox/chat/*',
+        'chat',
+        'chat/*',
         'messages',
         'messages/*',
 

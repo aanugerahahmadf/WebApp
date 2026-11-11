@@ -28,7 +28,7 @@ return [
         |
         | This setting defines the navigation group displayed in the sidebar.
         */
-        'navigation_group' => 'Pesan',
+        'navigation_group' => 'Chat',
 
         /*
         |--------------------------------------------------------------------------
@@ -37,7 +37,7 @@ return [
         |
         | This setting defines the navigation label shown in the sidebar.
         */
-        'navigation_label' => 'Pesan',
+        'navigation_label' => 'Chat',
 
         /*
         |--------------------------------------------------------------------------
@@ -96,7 +96,7 @@ return [
     | allowing customization if your application uses a different one.
     |
     */
-    'slug' => 'messages',
+    'slug' => 'inbox/chat',
 
     /*
     |--------------------------------------------------------------------------

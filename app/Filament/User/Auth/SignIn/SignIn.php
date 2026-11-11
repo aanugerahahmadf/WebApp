@@ -29,8 +29,9 @@ class SignIn extends BaseLogin
 
     public function mount(): void
     {
-        // Halaman Sign In dinonaktifkan; gunakan Google Firebase Gateway (/auth).
-        $this->redirect(Auth::getUrl(), navigate: false);
+        if (auth()->check()) {
+            $this->redirect(\Filament\Facades\Filament::getUrl(panel: 'welcome'), navigate: false);
+        }
     }
 
     public function getView(): string
@@ -68,24 +69,12 @@ class SignIn extends BaseLogin
     }
 
     /**
-     * Parent crumb Sign-In adalah halaman auth (`/auth`), bukan Welcome
-     * Home.
-     *
-     * Alur auth bercabang dari satu halaman: `/auth` memegang dua pintu
-     * (Sign In + Masuk Dengan Google), dan halaman ini salah satu cabangnya.
-     * Jadi di sinilah "Beranda" DIHAPUS -- crumb-nya jadi "Masuk / Sign In",
-     * dan klik "Masuk" mengembalikan pengguna ke pemilih pintu, bukan melompat
-     * ke storefront dan mencari-cari tombol Sign In lagi.
-     *
-     * crumb parent memakai Auth::crumbLabel() ("Welcome Back"), bukan
-     * getHeading() halaman ini ("Sign In"), supaya crumb di halaman ini tetap
-     * "Welcome Back / Sign In" -- nama cabangnya sendiri, bukan nama halaman
-     * induknya.
+     * Parent crumb Sign-In adalah Beranda (Welcome Home), bukan halaman Auth.
      */
     public function getBreadcrumbs(): array
     {
         return [
-            Auth::getUrl() => Auth::crumbLabel(),
+            \App\Filament\Welcome\Pages\Home\Home::getUrl(panel: 'welcome') => __('Beranda'),
             $this->getAuthBreadcrumbsCurrentLabel(),
         ];
     }
@@ -160,20 +149,19 @@ class SignIn extends BaseLogin
     {
         return $form
             ->schema([
-                Section::make()
-                    ->schema([
-                        $this->getEmailFormComponent(),
-                        $this->getPasswordFormComponent(),
-                        $this->getCaptchaFormComponent(),
-                        // HANYA SEKALI. View ini memuat "Ingat Saya" +
-                        // persetujuan; dulu didaftarkan dua kali (baris
-                        // duplikat) sehingga kedua checkbox tampil dobel di
-                        // halaman Sign In.
-                        View::make('User.social-buttons.agreement-checkboxes.agreement-checkboxes'),
-                        View::make('User.social-buttons.auth-buttons.auth-buttons')
-                            ->viewData(['authMode' => 'login']),
-                    ])
-                    ->columns(1),
+                // Dinonaktifkan (bukan dihapus): field login manual.
+                // $this->getEmailFormComponent(),
+                // $this->getPasswordFormComponent(),
+
+                // Kode Keamanan (CAPTCHA) diaktifkan.
+                $this->getCaptchaFormComponent(),
+
+                // View::make('User.social-buttons.agreement-checkboxes.agreement-checkboxes'),
+                // View::make('User.social-buttons.auth-buttons.auth-buttons')
+                //     ->viewData([
+                //         'authMode' => 'login',
+                //         'showGoogleButton' => true,
+                //     ]),
                 Hidden::make('agreement'),
                 Hidden::make('remember'),
             ])

@@ -48,7 +48,7 @@
             'hideCheckboxes' => true,
             'showAgreementModal' => false,
             'authMode' => 'login',
-            'showGoogleButton' => true,
+            'showGoogleButton' => false,
             'showAuthSwitchLink' => false,
         ])
     </div>
