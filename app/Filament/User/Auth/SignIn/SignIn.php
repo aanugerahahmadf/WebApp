@@ -32,6 +32,11 @@ class SignIn extends BaseLogin
         if (auth()->check()) {
             $this->redirect(\Filament\Facades\Filament::getUrl(panel: 'welcome'), navigate: false);
         }
+
+        $this->form->fill([
+            'agreement' => false,
+            'remember' => false,
+        ]);
     }
 
     public function getView(): string
@@ -162,8 +167,8 @@ class SignIn extends BaseLogin
                 //         'authMode' => 'login',
                 //         'showGoogleButton' => true,
                 //     ]),
-                Hidden::make('agreement'),
-                Hidden::make('remember'),
+                Hidden::make('agreement')->default(false)->dehydrated(),
+                Hidden::make('remember')->default(false)->dehydrated(),
             ])
             ->statePath('data');
     }
