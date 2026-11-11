@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Widgets\StatsOverview;
 
 use App\Enums\OrderPaymentStatus\OrderPaymentStatus;
+use App\Filament\Admin\Pages\EditProfilePage\EditProfilePage;
 use App\Filament\Admin\Resources\AdminResource\AdminResource;
 use App\Filament\Admin\Resources\CatalogResource\CatalogResource;
 use App\Filament\Admin\Resources\DiscountResource\DiscountResource;
@@ -39,6 +40,7 @@ use App\Models\WeddingDecorationPolicy\WeddingDecorationPolicy;
 use App\Models\Favorite\Favorite;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -82,8 +84,23 @@ class StatsOverview extends StatsOverviewWidget
     protected function getStats(): array
     {
         $counts = $this->counts();
+        $admin = Auth::guard('admin')->user() ?? Auth::user();
+        $name = $admin?->full_name ?? $admin?->name ?? $admin?->username ?? __('Admin');
+        $avatarUrl = $admin?->getFilamentAvatarUrl() ?? $admin?->avatar_url ?? null;
+        $profileUrl = EditProfilePage::getUrl(panel: 'admin');
 
         return [
+            Stat::make(__('filament-panels::widgets/account-widget.welcome'), $name)
+                ->description(__('Make your special moment today'))
+                ->descriptionIcon(\App\Support\AppIcon\AppIcon::SPARKLES)
+                ->color('primary')
+                ->extraAttributes([
+                    'class' => 'home-stat-card home-stat-welcome stats-profile-card h-full col-span-2',
+                    'style' => 'grid-column: 1 / -1;',
+                    'data-avatar-url' => $avatarUrl,
+                    'data-avatar-href' => $profileUrl,
+                    'data-avatar-alt' => $name,
+                ]),
             // ── DATA MASTER ────────────────────────────────────────────
             Stat::make(__('Total Produk'), (string) $counts['catalogs'])
                 ->description(__('Produk aktif'))

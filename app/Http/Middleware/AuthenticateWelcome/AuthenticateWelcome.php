@@ -89,38 +89,9 @@ class AuthenticateWelcome extends Authenticate
     /**
      * Halaman auth yang menerima tamu dari panel Welcome.
      *
-     * SHOPEE-STYLE: panel user dilebur ke panel welcome, jadi route auth
-     * sekarang hidup di `filament.welcome.auth.index` (~FORM yang sama,
-     * path /auth) yang memegang dua pintu: tombol Sign In ke form, dan
-     * "Continue With Google".
-     *
-     * Namanya WAJIB 'welcome' sekarang: setelah UserPanelProvider keluar dari
-     * bootstrap/providers.php, tidak ada lagi route `filament.user.auth.*` --
-     * memanggil nama lama melempar RouteNotFoundException dan SELURUH halaman
-     * panel (public path pun) 500 sebelum halaman manapun dirender.
-     *
-     * Alasannya tetap dari dulu: panel Welcome punya banyak pintu akun yang
-     * hanya butuh satu
-     * aksi -- tambah keranjang, Favorite, checkout -- dan sebagian pengguna
-     * sudah punya pintu masuk yang tidak butuh email/kata sandi. Menugaskan
-     * tamu yang menekan "Masukkan ke Keranjang" ke form email/kata sandi
-     * menutup halaman itu tanpa Google, padahal tombolnya ada di halaman yang
-     * sekarang jadi tujuan. Menunjuk ke /auth membuat semua pintu masuk
-     * tamu punya pilihan yang sama: Sign In ATAU Google.
-     *
-     * Dipakai lewat `route(self::LOGIN_ROUTE)`, bukan `UserAuth::getUrl()`,
-     * supaya ada SATU nama yang benar di seluruh panel: enam kelas Welcome
-     * (CatalogResource, PackageResource, ManageCatalogs, ManagePackages,
-     * CheckoutCatalog, CheckoutPackage) memanggil konstanta ini, dan menulis
-     * URL langsung di sana berarti enam tempat harus dijaga sinkron. Satu
-     * konstanta yang salah = semua pintu masuk tamu meleset.
-     *
-     * Yang dipakai adalah NAMA route-nya, bukan slug: halaman Auth
-     * mendaftarkan routenya sendiri lewat `registerRoutes()`, jadi nama bawaan
-     * Filament (`filament.welcome.pages.auth`) tidak ada -- persis alasan
-     * `getUrl()`-nya menunjuk `filament.welcome.auth.index`.
+     * Route Sign In Filament pada panel welcome: /signin (slug 'signin').
      */
-    public const LOGIN_ROUTE = 'filament.welcome.auth.index';
+    public const LOGIN_ROUTE = 'filament.welcome.auth.login';
 
     /**
      * Filament guards every panel route with this, so a guest request either
@@ -157,12 +128,7 @@ class AuthenticateWelcome extends Authenticate
     }
 
     /**
-     * The welcome panel has no auth page of its own; the user panel owns them,
-     * and the whole reason this middleware exists is to end up there.
-     *
-     * Yang ditunjuk bukan form Sign In, tapi halaman auth pertama /auth --
-     * lihat LOGIN_ROUTE. Tamu yang ditolak di panel Welcome selalu diarahkan ke
-     * halaman yang bisa menawarkan Sign In dan Google sekaligus.
+     * Tamu yang ditolak di panel Welcome diarahkan ke halaman Sign In.
      */
     protected function redirectTo($request): ?string
     {

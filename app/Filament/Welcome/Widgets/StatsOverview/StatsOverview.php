@@ -2,9 +2,10 @@
 
 namespace App\Filament\Welcome\Widgets\StatsOverview;
 
+use App\Support\AppIcon\AppIcon;
+use Filament\Facades\Filament;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
-use App\Support\AppIcon\AppIcon;
 use Illuminate\Support\Facades\Auth;
 
 class StatsOverview extends BaseWidget
@@ -28,6 +29,10 @@ class StatsOverview extends BaseWidget
         // atau "Tamu" bila belum login.
         $user = Auth::user();
         $name = $user?->full_name ?? $user?->username ?? __('Tamu');
+        $avatarUrl = $user?->getFilamentAvatarUrl() ?? $user?->avatar_url ?? null;
+        $signInUrl = Filament::getPanel('welcome')?->getLoginUrl()
+            ?? Filament::getPanel('user')?->getLoginUrl()
+            ?? '/signin';
 
         return [
             Stat::make(__('filament-panels::widgets/account-widget.welcome'), $name)
@@ -35,8 +40,13 @@ class StatsOverview extends BaseWidget
                 ->descriptionIcon(AppIcon::SPARKLES)
                 ->color('primary')
                 ->extraAttributes([
-                    'class' => 'home-stat-card home-stat-welcome h-full col-span-2',
+                    'class' => 'home-stat-card home-stat-welcome stats-profile-card h-full col-span-2',
                     'style' => 'grid-column: 1 / -1;',
+                    'data-avatar-url' => $avatarUrl,
+                    'data-avatar-href' => $signInUrl,
+                    'data-avatar-alt' => $name,
+                    'data-action-label' => __('Sign In To Account'),
+                    'data-action-href' => $signInUrl,
                 ]),
         ];
     }

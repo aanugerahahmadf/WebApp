@@ -42,6 +42,13 @@
     $extraAttrs    = $getExtraAttributes();
     $extraClass    = $extraAttrs['class'] ?? '';
     $isProfileCard = str_contains($extraClass, 'profile-stat-card');
+    $isProfileOverview = str_contains($extraClass, 'stats-profile-card');
+
+    $avatarUrl = $extraAttrs['data-avatar-url'] ?? null;
+    $avatarHref = $extraAttrs['data-avatar-href'] ?? null;
+    $actionLabel = $extraAttrs['data-action-label'] ?? null;
+    $actionHref = $extraAttrs['data-action-href'] ?? null;
+    $avatarAlt = $extraAttrs['data-avatar-alt'] ?? (string) $getValue();
 
     $descriptionIconClasses = \Illuminate\Support\Arr::toCssClasses([
         'fi-wi-stats-overview-stat-description-icon h-5 w-5',
@@ -72,68 +79,215 @@
             ])
     }}
 >
-    <div @class(['grid gap-y-2', 'flex flex-col items-center justify-center text-center h-full' => $isProfileCard])>
-        <div @class(['flex items-center gap-x-2', 'flex-col gap-y-2 items-center justify-center' => $isProfileCard])>
-            @if ($icon = $getIcon())
-                <x-filament::icon
-                    :icon="$icon"
-                    @class(['fi-wi-stats-overview-stat-icon h-5 w-5', $iconClass])
-                />
-            @endif
+    @if ($isProfileOverview)
+        <div class="flex flex-row items-center justify-between gap-4">
+            <div class="flex min-w-0 flex-1 items-center gap-4">
+                <div class="shrink-0">
+                    @if ($avatarHref)
+                        <a href="{{ $avatarHref }}" class="block rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    @endif
+                    @if ($avatarUrl)
+                        <img
+                            src="{{ $avatarUrl }}"
+                            alt="{{ $avatarAlt }}"
+                            class="h-16 w-16 rounded-full object-cover ring-1 ring-gray-950/10 dark:ring-white/10"
+                        />
+                    @else
+                        <div class="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 text-lg font-semibold text-gray-600 ring-1 ring-gray-950/10 dark:bg-gray-800 dark:text-gray-200 dark:ring-white/10">
+                            {{ \Illuminate\Support\Str::of((string) $getValue())->trim()->substr(0, 1)->upper() }}
+                        </div>
+                    @endif
+                    @if ($avatarHref)
+                        </a>
+                    @endif
+                </div>
 
-            <span
-                @class(['fi-wi-stats-overview-stat-label text-sm font-medium', $labelClass])
-            >
-                {{ $getLabel() }}
-            </span>
-        </div>
+                <div class="min-w-0 flex-1 text-left" style="text-align: justify; text-justify: inter-word;">
+                    <div class="grid gap-y-1">
+                        <span @class(['fi-wi-stats-overview-stat-label text-sm font-medium', $labelClass]) style="text-align:left;">
+                            {{ $getLabel() }}
+                        </span>
 
-        <div
-            class="fi-wi-stats-overview-stat-value text-3xl font-semibold tracking-tight text-gray-950 dark:text-white"
-        >
-            {{ $getValue() }}
-        </div>
+                        <div class="fi-wi-stats-overview-stat-value text-2xl sm:text-3xl font-semibold tracking-tight text-gray-950 dark:text-white" style="text-align:left;">
+                            {{ $getValue() }}
+                        </div>
 
-        @if ($description = $getDescription())
-            <div class="flex items-center gap-x-1">
-                @if ($descriptionIcon && in_array($descriptionIconPosition, [IconPosition::Before, 'before']))
-                    <x-filament::icon
-                        :icon="$descriptionIcon"
-                        :class="$descriptionIconClasses"
-                        :style="$descriptionIconStyles"
-                    />
-                @endif
+                        @if ($description = $getDescription())
+                            <div class="flex items-start gap-x-1">
+                                @if ($descriptionIcon && in_array($descriptionIconPosition, [IconPosition::Before, 'before']))
+                                    <x-filament::icon
+                                        :icon="$descriptionIcon"
+                                        :class="$descriptionIconClasses"
+                                        :style="$descriptionIconStyles"
+                                    />
+                                @endif
 
-                <span
-                    @class([
-                        'fi-wi-stats-overview-stat-description text-sm',
-                        match ($descriptionColor) {
-                            'gray' => 'text-gray-500 dark:text-gray-400',
-                            default => 'fi-color-custom text-custom-600 dark:text-custom-400',
-                        },
-                        is_string($descriptionColor) ? "fi-color-{$descriptionColor}" : null,
-                    ])
-                    @style([
-                        \Filament\Support\get_color_css_variables(
-                            $descriptionColor,
-                            shades: [400, 600],
-                            alias: 'widgets::stats-overview-widget.stat.description',
-                        ) => $descriptionColor !== 'gray',
-                    ])
-                >
-                    {{ $description }}
-                </span>
+                                <span
+                                    @class([
+                                        'fi-wi-stats-overview-stat-description text-sm',
+                                        match ($descriptionColor) {
+                                            'gray' => 'text-gray-500 dark:text-gray-400',
+                                            default => 'fi-color-custom text-custom-600 dark:text-custom-400',
+                                        },
+                                        is_string($descriptionColor) ? "fi-color-{$descriptionColor}" : null,
+                                    ])
+                                    @style([
+                                        \Filament\Support\get_color_css_variables(
+                                            $descriptionColor,
+                                            shades: [400, 600],
+                                            alias: 'widgets::stats-overview-widget.stat.description',
+                                        ) => $descriptionColor !== 'gray',
+                                        'text-align: justify; text-justify: inter-word;' => true,
+                                    ])
+                                >
+                                    {{ $description }}
+                                </span>
 
-                @if ($descriptionIcon && in_array($descriptionIconPosition, [IconPosition::After, 'after']))
-                    <x-filament::icon
-                        :icon="$descriptionIcon"
-                        :class="$descriptionIconClasses"
-                        :style="$descriptionIconStyles"
-                    />
-                @endif
+                                @if ($descriptionIcon && in_array($descriptionIconPosition, [IconPosition::After, 'after']))
+                                    <x-filament::icon
+                                        :icon="$descriptionIcon"
+                                        :class="$descriptionIconClasses"
+                                        :style="$descriptionIconStyles"
+                                    />
+                                @endif
+                            </div>
+                        @endif
+                    </div>
+                </div>
             </div>
-        @endif
-    </div>
+
+            @if ($actionLabel && $actionHref)
+                <div class="flex shrink-0 items-center self-center" style="text-align:left;">
+                    <x-filament::button
+                        tag="a"
+                        :href="$actionHref"
+                        color="primary"
+                        size="sm"
+                    >
+                        {{ $actionLabel }}
+                    </x-filament::button>
+                </div>
+            @endif
+        </div>
+    @elseif ($isProfileCard)
+        <div @class(['grid gap-y-2', 'flex flex-col items-center justify-center text-center h-full'])>
+            <div @class(['flex items-center gap-x-2', 'flex-col gap-y-2 items-center justify-center'])>
+                @if ($icon = $getIcon())
+                    <x-filament::icon
+                        :icon="$icon"
+                        @class(['fi-wi-stats-overview-stat-icon h-5 w-5', $iconClass])
+                    />
+                @endif
+
+                <span @class(['fi-wi-stats-overview-stat-label text-sm font-medium', $labelClass])>
+                    {{ $getLabel() }}
+                </span>
+            </div>
+
+            <div class="fi-wi-stats-overview-stat-value text-3xl font-semibold tracking-tight text-gray-950 dark:text-white">
+                {{ $getValue() }}
+            </div>
+
+            @if ($description = $getDescription())
+                <div class="flex items-center gap-x-1">
+                    @if ($descriptionIcon && in_array($descriptionIconPosition, [IconPosition::Before, 'before']))
+                        <x-filament::icon
+                            :icon="$descriptionIcon"
+                            :class="$descriptionIconClasses"
+                            :style="$descriptionIconStyles"
+                        />
+                    @endif
+
+                    <span
+                        @class([
+                            'fi-wi-stats-overview-stat-description text-sm',
+                            match ($descriptionColor) {
+                                'gray' => 'text-gray-500 dark:text-gray-400',
+                                default => 'fi-color-custom text-custom-600 dark:text-custom-400',
+                            },
+                            is_string($descriptionColor) ? "fi-color-{$descriptionColor}" : null,
+                        ])
+                        @style([
+                            \Filament\Support\get_color_css_variables(
+                                $descriptionColor,
+                                shades: [400, 600],
+                                alias: 'widgets::stats-overview-widget.stat.description',
+                            ) => $descriptionColor !== 'gray',
+                        ])
+                    >
+                        {{ $description }}
+                    </span>
+
+                    @if ($descriptionIcon && in_array($descriptionIconPosition, [IconPosition::After, 'after']))
+                        <x-filament::icon
+                            :icon="$descriptionIcon"
+                            :class="$descriptionIconClasses"
+                            :style="$descriptionIconStyles"
+                        />
+                    @endif
+                </div>
+            @endif
+        </div>
+    @else
+        <div @class(['grid gap-y-2'])>
+            <div @class(['flex items-center gap-x-2'])>
+                @if ($icon = $getIcon())
+                    <x-filament::icon
+                        :icon="$icon"
+                        @class(['fi-wi-stats-overview-stat-icon h-5 w-5', $iconClass])
+                    />
+                @endif
+
+                <span @class(['fi-wi-stats-overview-stat-label text-sm font-medium', $labelClass])>
+                    {{ $getLabel() }}
+                </span>
+            </div>
+
+            <div class="fi-wi-stats-overview-stat-value text-3xl font-semibold tracking-tight text-gray-950 dark:text-white">
+                {{ $getValue() }}
+            </div>
+
+            @if ($description = $getDescription())
+                <div class="flex items-center gap-x-1">
+                    @if ($descriptionIcon && in_array($descriptionIconPosition, [IconPosition::Before, 'before']))
+                        <x-filament::icon
+                            :icon="$descriptionIcon"
+                            :class="$descriptionIconClasses"
+                            :style="$descriptionIconStyles"
+                        />
+                    @endif
+
+                    <span
+                        @class([
+                            'fi-wi-stats-overview-stat-description text-sm',
+                            match ($descriptionColor) {
+                                'gray' => 'text-gray-500 dark:text-gray-400',
+                                default => 'fi-color-custom text-custom-600 dark:text-custom-400',
+                            },
+                            is_string($descriptionColor) ? "fi-color-{$descriptionColor}" : null,
+                        ])
+                        @style([
+                            \Filament\Support\get_color_css_variables(
+                                $descriptionColor,
+                                shades: [400, 600],
+                                alias: 'widgets::stats-overview-widget.stat.description',
+                            ) => $descriptionColor !== 'gray',
+                        ])
+                    >
+                        {{ $description }}
+                    </span>
+
+                    @if ($descriptionIcon && in_array($descriptionIconPosition, [IconPosition::After, 'after']))
+                        <x-filament::icon
+                            :icon="$descriptionIcon"
+                            :class="$descriptionIconClasses"
+                            :style="$descriptionIconStyles"
+                        />
+                    @endif
+                </div>
+            @endif
+        </div>
+    @endif
 
     @if ($chart = $getChart())
         {{-- An empty function to initialize the Alpine component with until it's loaded with `x-load`. This removes the need for `x-ignore`, allowing the chart to be updated via Livewire polling. --}}

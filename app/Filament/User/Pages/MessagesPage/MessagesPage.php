@@ -146,7 +146,7 @@ class MessagesPage extends Page
 
     public function getMaxContentWidth(): MaxWidth|string|null
     {
-        return config('messages.max_content_width', MaxWidth::Full);
+        return config('messages.max_content_width');
     }
 
     public function getHeading(): string|Htmlable

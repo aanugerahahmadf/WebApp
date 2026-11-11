@@ -69,7 +69,7 @@
     --}}
         <div
             class="messages-page-head w-full"
-            style="box-sizing: border-box; padding-inline: 200px;"
+            style="box-sizing: border-box;"
         >
         <div class="messages-page-crumbs-row">
             @if (filled($messagesBreadcrumbs))

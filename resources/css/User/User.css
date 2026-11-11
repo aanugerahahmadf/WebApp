@@ -601,17 +601,28 @@
 
 
 /*
- * Hapus background & shadow dari fi-simple-main dan wizard container
+ * Hapus background, garis/border, ring, dan shadow dari layout section
+ * pada halaman auth/simple (Sign In, dll).
  */
 .fi-panel-user .fi-simple-main,
 .fi-panel-user main.fi-simple-main,
+.fi-panel-user .fi-simple-main section.fi-section,
+.fi-panel-user .fi-simple-main .fi-section,
+.fi-panel-user .fi-simple-page section.fi-section,
+.fi-panel-user .fi-simple-main .fi-section-content-ctn,
+.fi-panel-user .fi-simple-main .fi-section-header,
+.fi-panel-user .fi-simple-main .fi-section-content,
 .fi-panel-user .fi-fo-wizard.fi-contained {
     background-color: transparent !important;
     background: transparent !important;
+    background-image: none !important;
     box-shadow: none !important;
     --tw-shadow: 0 0 #0000 !important;
+    --tw-shadow-colored: 0 0 #0000 !important;
+    --tw-ring-offset-shadow: 0 0 #0000 !important;
     --tw-ring-shadow: 0 0 #0000 !important;
     border: none !important;
+    outline: none !important;
 }
 
 

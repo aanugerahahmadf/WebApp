@@ -185,18 +185,17 @@ class WelcomePanelProvider extends PanelProvider
             // Verifikasi akun baru tetap diurus flow OTP sendiri
             // (VerifyOtp + OtpEmailVerificationPrompt), bukan oleh semua route.
             ->emailVerification(OtpEmailVerificationPrompt::class, false)
-            // LOGO (topbar + sidebar) untuk tamu harus mendarat di HALAMAN
-            // AUTH LANDING (/auth), bukan langsung ke form sign in.
-            //
-            // Tanpa ini, Filament memakai `Panel::getUrl()`, yang untuk tamu
-            // mengembalikan login URL -- jadi tamu yang klik logo masuk ke
-            // form /signin dan melewatkan "/auth" yang di situ ada dua pintu
-            // (Sign In + Masuk Dengan Google).
-            //
+            // LOGO (topbar + sidebar) untuk tamu mendarat ke halaman Sign In.
             // Untuk yang sudah login, logo kembali ke Beranda.
+            //
+            // JANGAN pakai SignIn::getUrl(): halaman login Filament meng-extend
+            // SimplePage, yang tidak punya method getUrl() (hanya Page yang
+            // punya). Memanggilnya melempar BadMethodCallException dan seluruh
+            // panel -- termasuk /flowerdecorationscatalog/{id} -- jadi 500.
+            // Pakai nama route yang didaftarkan ->loginRouteSlug('signin').
             ->homeUrl(fn (): string => auth()->check()
                 ? Home::getUrl(panel: 'welcome')
-                : UserAuth::getUrl())
+                : route('filament.welcome.auth.login'))
             ->brandName(fn () => AppFont::brandName())
             ->brandLogo(fn () => AppFont::brandLogo())
             ->brandLogoHeight('5rem')

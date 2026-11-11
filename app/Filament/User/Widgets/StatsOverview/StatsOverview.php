@@ -2,9 +2,10 @@
 
 namespace App\Filament\User\Widgets\StatsOverview;
 
+use App\Filament\User\Pages\EditProfilePage\EditProfilePage;
+use App\Support\AppIcon\AppIcon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
-use App\Support\AppIcon\AppIcon;
 use Illuminate\Support\Facades\Auth;
 
 class StatsOverview extends BaseWidget
@@ -25,7 +26,9 @@ class StatsOverview extends BaseWidget
     protected function getStats(): array
     {
         $user = Auth::user();
-        $name = $user->full_name ?? $user->username ?? __('User');
+        $name = $user?->full_name ?? $user?->username ?? __('User');
+        $avatarUrl = $user?->getFilamentAvatarUrl() ?? $user?->avatar_url ?? null;
+        $profileUrl = EditProfilePage::getUrl(panel: 'user');
 
         return [
             Stat::make(__('filament-panels::widgets/account-widget.welcome'), $name)
@@ -33,8 +36,11 @@ class StatsOverview extends BaseWidget
                 ->descriptionIcon(AppIcon::SPARKLES)
                 ->color('primary')
                 ->extraAttributes([
-                    'class' => 'home-stat-card home-stat-welcome h-full col-span-2',
+                    'class' => 'home-stat-card home-stat-welcome stats-profile-card h-full col-span-2',
                     'style' => 'grid-column: 1 / -1;',
+                    'data-avatar-url' => $avatarUrl,
+                    'data-avatar-href' => $profileUrl,
+                    'data-avatar-alt' => $name,
                 ]),
         ];
     }

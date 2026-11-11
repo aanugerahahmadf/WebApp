@@ -108,7 +108,7 @@ return [
     | You can use any enum value from \Filament\Support\Enums\MaxWidth.
     |
     */
-    'max_content_width' => MaxWidth::Full,
+    'max_content_width' => null,
 
     /*
     |--------------------------------------------------------------------------

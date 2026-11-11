@@ -105,8 +105,8 @@
             x-on:click="
                 if (!agreed || !remembered) {
                     new FilamentNotification()
-                        .title('Perhatian')
-                        .body('Silakan centang opsi Ingat Saya dan Setujui Syarat & Ketentuan untuk melanjutkan.')
+                        .title(@js(__('Perhatian')))
+                        .body(@js(__('Silakan centang opsi Ingat Saya dan Setujui Syarat & Ketentuan untuk melanjutkan.')))
                         .warning()
                         .send();
                     return;

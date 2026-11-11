@@ -109,7 +109,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
             'api/*',
         ]);
 
-        $middleware->redirectGuestsTo(fn () => route('filament.welcome.auth.index'));
+        $middleware->redirectGuestsTo(fn () => route('filament.welcome.auth.login'));
 
         // Trust proxies for production deployments or edge/CDN hosting.
         // Domain yang dikenali: Cloudflare Quick Tunnel (trycloudflare.com),
