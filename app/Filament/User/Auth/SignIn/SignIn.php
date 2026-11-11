@@ -158,8 +158,8 @@ class SignIn extends BaseLogin
                 // $this->getEmailFormComponent(),
                 // $this->getPasswordFormComponent(),
 
-                // Kode Keamanan (CAPTCHA) diaktifkan.
-                $this->getCaptchaFormComponent(),
+                // Dinonaktifkan (bukan dihapus): Kode Keamanan (CAPTCHA).
+                // $this->getCaptchaFormComponent(),
 
                 // View::make('User.social-buttons.agreement-checkboxes.agreement-checkboxes'),
                 // View::make('User.social-buttons.auth-buttons.auth-buttons')

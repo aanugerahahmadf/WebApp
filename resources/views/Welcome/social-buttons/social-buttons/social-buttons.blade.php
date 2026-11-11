@@ -108,7 +108,8 @@
                 }
             "
             x-bind:disabled="loading"
-            class="flex items-center justify-center gap-3 w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm font-semibold shadow-sm transition-all duration-100">
+            class="flex items-center justify-center gap-3 w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-semibold shadow-sm transition-all duration-100"
+            style="font-family: 'Instrument Sans', sans-serif; font-weight: 600; font-size: 13px;">
             {{-- x-show dipakai bukan x-if/template — template tag tidak render di Android WebView lama --}}
             <x-filament::icon icon="/images/icons/refresh.svg" x-show="loading" style="display:none" class="animate-spin h-5 w-5 text-gray-500" />
             <svg x-show="!loading" class="h-5 w-5" viewBox="0 0 48 48">
@@ -121,7 +122,7 @@
                 <path fill="#34A853"
                     d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
             </svg>
-            <span x-text="loading ? '{{ __('Menghubungkan...') }}' : '{{ __('Masuk Dengan Google') }}'">{{ __('Masuk Dengan Google') }}</span>
+            <span style="font-family: 'Instrument Sans', sans-serif; font-weight: 600; font-size: 13px;" x-text="loading ? '{{ __('Menghubungkan...') }}' : '{{ __('Masuk Dengan Google') }}'">{{ __('Masuk Dengan Google') }}</span>
         </button>
     </div>
 

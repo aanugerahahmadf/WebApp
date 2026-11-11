@@ -4,7 +4,7 @@
             class="fi-checkbox rounded border-gray-300 text-primary-500 shadow-sm focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:checked:bg-primary-500 transition duration-75 cursor-pointer" />
         <label for="remember-me-checkbox"
             class="font-semibold text-gray-500 dark:text-gray-400 leading-relaxed cursor-pointer select-none"
-            style="font-family: 'Instrument Sans', sans-serif; font-weight: 600; font-size: 12px;">
+            style="font-family: 'Instrument Sans', sans-serif; font-weight: 600; font-size: 13px;">
             {{ __('Ingat Saya') }}
         </label>
     </div>
@@ -16,21 +16,21 @@
                 class="fi-checkbox rounded border-gray-300 text-primary-500 shadow-sm focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:checked:bg-primary-500 transition duration-75 cursor-pointer" />
         </div>
         <div class="font-semibold text-justify leading-relaxed text-gray-500 dark:text-gray-400 select-none"
-            style="font-family: 'Instrument Sans', sans-serif; font-weight: 600; font-size: 12px; text-justify: inter-word; -webkit-hyphens: auto; hyphens: auto;">
+            style="font-family: 'Instrument Sans', sans-serif; font-weight: 600; font-size: 13px; text-justify: inter-word; -webkit-hyphens: auto; hyphens: auto;">
             <label for="agreement-checkbox"
                 class="cursor-pointer">{{ __('Dengan mencentang Setuju & Bergabung atau Lanjutkan, Anda menyetujui') }}</label>
             <x-filament::link color="primary" tag="button" type="button"
                 class="font-semibold hover:underline focus:underline active:underline"
-                style="font-size: 12px;"
+                style="font-size: 13px;"
                 @click.stop="$dispatch('open-agreement', { mode: 'terms' })">{{ __('Perjanjian Pengguna') }}</x-filament::link>,
             <x-filament::link color="primary" tag="button" type="button"
                 class="font-semibold hover:underline focus:underline active:underline"
-                style="font-size: 12px;"
+                style="font-size: 13px;"
                 @click.stop="$dispatch('open-agreement', { mode: 'privacy' })">{{ __('Kebijakan Privasi') }}</x-filament::link>
             <span>{{ __('dan') }}</span>
             <x-filament::link color="primary" tag="button" type="button"
                 class="font-semibold hover:underline focus:underline active:underline"
-                style="font-size: 12px;"
+                style="font-size: 13px;"
                 @click.stop="$dispatch('open-agreement', { mode: 'wedding_policy' })">{{ __('Kebijakan Aplikasi') }}</x-filament::link>.
         </div>
     </div>
