@@ -124,6 +124,10 @@ Route::get('/', function () {
 
 Route::redirect('/admin/inbox', '/admin/inbox/chat');
 
+// Backward compatibility: old inbox/chat URL -> messages page.
+Route::redirect('/inbox/chat', '/messages');
+Route::get('/inbox/chat/{id}', fn (string $id) => redirect('/messages/' . $id))->where('id', '.*');
+
 // -----------------------------------------------------------------------------
 // Alias URL katalog panel admin.
 //

@@ -38,7 +38,7 @@ class MessagesPage extends Page
 
     public static function getSlug(): string
     {
-        return 'inbox/chat/{id?}';
+        return 'messages/{id?}';
     }
 
     public static function shouldRegisterNavigation(): bool
