@@ -3,7 +3,6 @@
 namespace App\Filament\User\Auth\OtpRequestPasswordReset;
 use App\Filament\User\Auth\VerifyOtp\VerifyOtp;
 
-use App\Filament\User\Auth\Concerns\HasAuthBreadcrumbs;
 use App\Models\User\User;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Component;
@@ -20,8 +19,6 @@ use Illuminate\Support\Facades\Mail;
 
 class OtpRequestPasswordReset extends BaseRequestPasswordReset
 {
-    use HasAuthBreadcrumbs;
-
     public function getView(): string
     {
         return 'User.auth.otp-request-password-reset.otp-request-password-reset';

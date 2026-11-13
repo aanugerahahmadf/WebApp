@@ -2,7 +2,6 @@
 
 namespace App\Filament\User\Auth\Auth;
 
-use App\Filament\User\Auth\Concerns\HasAuthBreadcrumbs;
 use App\Filament\Welcome\Pages\Home\Home as WelcomeHome;
 use Filament\Panel;
 use Filament\Pages\SimplePage;
@@ -30,8 +29,6 @@ use Illuminate\Support\Facades\Route;
  */
 class Auth extends SimplePage
 {
-    use HasAuthBreadcrumbs;
-
     protected static string $view = 'User.auth.auth.auth';
 
     // Gaya auth: layout simple fullscreen seperti SignIn/VerifyOtp.
@@ -68,42 +65,15 @@ class Auth extends SimplePage
     }
 
     /**
-     * Label untuk crumb halaman ini, dipakai OLEH Sign In dan Sign Up sebagai
-     * parent-nya. Sengaja sama dengan getHeading(): crumb harus memakai nama
-     * halaman yang ditunjuk, jadi "Sign In / Welcome Back" tetap menunjuk ke
-     * /auth yang bergelar "Welcome Back".
+     * Label halaman ini untuk pemakaian eksternal/kompatibilitas.
      *
-     * Dulu labelnya "Masuk" (id) / "Log in" (en) -- key "Masuk" sudah jadi
-     * "Log in" di en.json, jadi crumb di browser English terbaca "Log in / Sign
-     * In": orang dikira sudah berada di halaman login padahal masih di halaman
-     * kedatangan. Sekarang satu sumber: getHeading().
-     *
-     * Tetap harus berbeda dari heading Sign In / Sign Up supaya tidak tampil dua
-     * kali ("Welcome Back / Sign In", bukan "Sign In / Sign In").
+     * Breadcrumb halaman Auth SENGAJA tidak dirender (trait
+     * HasAuthBreadcrumbs dilepas); halaman Sign In tetap punya breadcrumb
+     * sendiri dan tidak memakai label ini.
      */
     public static function crumbLabel(): string
     {
         return __('Welcome Back');
-    }
-
-    /**
-     * Parent crumb selalu Welcome Home, bukan halaman asal klik.
-     *
-     * Alasan yang sama seperti SignIn: halaman ini adalah pintu masuk auth dari
-     * storefront publik, jadi parent crumb yang "mengikuti asal klik" dari trait
-     * HasAuthBreadcrumbs hanya menghasilkan label generik "Kembali" atau
-     * ditolak. "Beranda" selalu benar dan selalu mengembalikan tamu ke storefront.
-     *
-     * Sign In dan Sign Up tidak memakai ini: mereka sudah menunjuk ke halaman
-     * ini sebagai parent, jadi mengarahkan dua-duanya ke Home lewat takhta
-     * sendiri hanya membuat crumb terlewat.
-     */
-    public function getBreadcrumbs(): array
-    {
-        return [
-            WelcomeHome::getUrl(panel: 'welcome') => __('Beranda'),
-            $this->getAuthBreadcrumbsCurrentLabel(),
-        ];
     }
 
     /**
@@ -124,6 +94,13 @@ class Auth extends SimplePage
         }
 
         $user = auth()->user();
+
+        // Akun admin/superadmin selalu langsung ke user home.
+        if ($user && method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['super_admin', 'admin'])) {
+            $this->redirect(WelcomeHome::getUrl(panel: 'welcome'), navigate: false);
+
+            return;
+        }
 
         // 2FA sudah disiapkan tapi belum diverifikasi di sesi ini -> minta OTP.
         // (Belum Terdaftar/Iya pasca-setup menandai 2fa_passed=true, jadi lolos ke Home.)

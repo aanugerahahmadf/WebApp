@@ -12,7 +12,7 @@
         class="px-6 py-2 text-[11px] font-semibold text-center text-gray-900 dark:text-gray-100"
         style="pointer-events: auto;">
         &copy; {{ date('Y') }}
-        <span class="text-primary-600 dark:text-primary-400">{{ __('Dekorasi Bunga Pernikahan') }}</span>.
+        <span class="text-primary-600 dark:text-primary-400">{{ __('Timeless Florals') }}</span>.
         {{ __('Seluruh hak cipta dilindungi undang-undang.') }}
     </div>
 </footer>

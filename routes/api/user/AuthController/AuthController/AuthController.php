@@ -18,8 +18,6 @@ Route::post('/auth/two-factor/verify', [AuthController::class, 'verifyTwoFactor'
 Route::post('/auth/two-factor/resend', [AuthController::class, 'resendTwoFactorCode'])->middleware('throttle:auth');
 Route::post('/auth/clerk-sync', [AuthController::class, 'clerkSync']);
 Route::post('/auth/google', [AuthController::class, 'googleLogin']);
-Route::post('/auth/facebook', [AuthController::class, 'facebookLogin']);
-Route::post('/auth/apple', [AuthController::class, 'appleLogin']);
 Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
 
 Route::middleware('auth:sanctum')->group(function (): void {

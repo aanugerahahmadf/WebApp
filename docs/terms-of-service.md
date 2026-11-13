@@ -1,6 +1,6 @@
 # Ketentuan Layanan
 
-**Wedding Flower Decorations**  
+**Timeless Florals**  
 Versi: 1.0  
 Tanggal berlaku: 24 Oktober 2026
 
@@ -13,7 +13,7 @@ Jika Anda tidak menyetujui Ketentuan ini, jangan gunakan Layanan.
 
 ## 1. Definisi
 
-- **Kami** berarti pengelola Wedding Flower Decorations.
+- **Kami** berarti pengelola Timeless Florals.
 - **Anda** berarti orang atau badan yang mengakses atau menggunakan Layanan.
 - **Konten** berarti teks, foto, video, dokumen, ulasan, data katalog, dan
   materi lain yang tersedia atau dikirim melalui Layanan.
@@ -128,7 +128,7 @@ Ketentuan atau diwajibkan oleh hukum.
 ## 11. Kekayaan intelektual
 
 Nama, logo, desain, kode, database, katalog, tata letak, dan materi milik
-Wedding Flower Decorations dilindungi oleh hak kekayaan intelektual yang
+Timeless Florals dilindungi oleh hak kekayaan intelektual yang
 berlaku. Kecuali diizinkan tertulis, Anda tidak boleh menyalin, menjual,
 mendistribusikan, melakukan reverse engineering, scraping, atau membuat karya
 turunan dari bagian Layanan.

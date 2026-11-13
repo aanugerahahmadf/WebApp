@@ -12,9 +12,12 @@ use App\Models\Order\Order;
 use App\Models\Package\Package;
 use App\Models\PaymentMethod\PaymentMethod;
 use App\Models\Catalog\Catalog;
+use App\Models\Review\Review;
 use App\Models\Transaction\Transaction;
 use App\Models\User\User;
 use App\Models\Voucher\Voucher;
+use App\Support\ShippingTracking\ShippingTracking;
+use App\Services\CourierTracking\OrderShippingSyncService;
 use App\Services\BriService\BriService;
 use App\Services\ChatService\ChatService;
 use App\Services\FaceService\FaceService;
@@ -75,6 +78,27 @@ class OrderController extends Controller
                 });
             }
 
+            $reviewStatus = $request->input('review_status');
+            if (in_array($reviewStatus, ['unreviewed', 'reviewed'], true)) {
+                $userId = (int) Auth::id();
+                $reviewedConstraint = function ($q) use ($userId): void {
+                    $q->where(function ($inner) use ($userId): void {
+                        $inner->whereNotNull('catalog_id')
+                            ->whereHas('catalog.reviews', fn ($r) => $r->where('user_id', $userId));
+                    })->orWhere(function ($inner) use ($userId): void {
+                        $inner->whereNotNull('package_id')
+                            ->whereHas('package.reviews', fn ($r) => $r->where('user_id', $userId));
+                    });
+                };
+
+                if ($reviewStatus === 'unreviewed') {
+                    $query->where('status', OrderStatus::COMPLETED->value)
+                        ->whereNot($reviewedConstraint);
+                } else {
+                    $query->where($reviewedConstraint);
+                }
+            }
+
             $query->when(
                 in_array($request->input('sort'), ['oldest', 'newest'], true),
                 fn ($q): mixed => $q->orderBy('created_at', $request->input('sort') === 'oldest' ? 'asc' : 'desc'),
@@ -84,7 +108,9 @@ class OrderController extends Controller
             $orders = $query->paginate($request->get('per_page', 10));
             $catalogs = $orders->items();
 
-            $data = collect($catalogs)->map(function (Order $order) use ($locale) {
+            $reviewIndex = $this->reviewIndexForOrders($catalogs, (int) Auth::id());
+
+            $data = collect($catalogs)->map(function (Order $order) use ($locale, $reviewIndex) {
                 $pkg = $order->package;
 
                 return [
@@ -141,7 +167,7 @@ class OrderController extends Controller
                     'created_at' => $order->created_at?->toIso8601String(),
                     'booking_time' => $this->eventTimeFor($order),
                     'quantity' => (int) ($order->quantity ?? 1),
-                ] + $this->checkoutHistoryFields($order);
+                ] + $this->checkoutHistoryFields($order, $reviewIndex[$order->id] ?? null);
             })->all();
 
             return response()->json([
@@ -1092,12 +1118,12 @@ class OrderController extends Controller
         try {
             $order = Order::where('order_number', $orderNumber)
                 ->where('user_id', Auth::id())
-                ->with(['package.media', 'catalog.media'])
+                ->with(['package.media', 'catalog.media', 'latestTransaction', 'timelines'])
                 ->firstOrFail(['*']);
 
             return response()->json([
                 'status' => 'success',
-                'data' => $order,
+                'data' => $this->orderDetailPayload($order),
             ]);
         } catch (ModelNotFoundException $e) {
             return response()->json([
@@ -1122,7 +1148,7 @@ class OrderController extends Controller
         try {
             $order = Order::where('id', $id)
                 ->where('user_id', Auth::id())
-                ->with(['package.media', 'catalog.media', 'latestTransaction'])
+                ->with(['package.media', 'catalog.media', 'latestTransaction', 'timelines'])
                 ->firstOrFail(['*']);
 
             $paymentMethods = $this->paymentMethodsForResponse();
@@ -1392,9 +1418,10 @@ class OrderController extends Controller
 
     /**
      * Field riwayat pembayaran yang dibutuhkan daftar dan detail order mobile:
-     * metode yang dipakai, nomor VA / payload QRIS, nominal, dan deadline.
+     * metode yang dipakai, nomor VA / payload QRIS, nominal, deadline, dan
+     * status ulasan (mengikuti flow marketplace: nilai setelah pesanan selesai).
      */
-    private function checkoutHistoryFields(Order $order): array
+    private function checkoutHistoryFields(Order $order, ?array $reviewInfo = null): array
     {
         $transaction = $order->latestTransaction;
         $type = $transaction?->checkout_payment_type;
@@ -1412,6 +1439,8 @@ class OrderController extends Controller
                 default => null,
             };
         }
+
+        $reviewInfo ??= $this->reviewInfoForOrder($order, (int) Auth::id());
 
         return [
             'payment_type' => $type,
@@ -1452,6 +1481,139 @@ class OrderController extends Controller
             'can_delete' => $this->canDeleteOrder($order),
             'can_pay' => ! in_array($status, ['paid', 'refunded'], true)
                 && ! in_array($order->status, [OrderStatus::COMPLETED, OrderStatus::CANCELLED], true),
+            'can_confirm_received' => $this->canConfirmReceived($order, $status),
+            'review' => $reviewInfo,
+            'has_review' => (bool) ($reviewInfo['is_reviewed'] ?? false),
+            'can_review' => (bool) ($reviewInfo['can_review'] ?? false),
+            'review_id' => $reviewInfo['review_id'] ?? null,
+            'shipping' => $this->shippingPayload($order),
+        ];
+    }
+
+    /**
+     * Index ulasan milik user untuk sekumpulan order (menghindari N+1).
+     *
+     * Review di sistem ini unik per package_id/catalog_id per user, bukan per
+     * order, sehingga satu ulasan menandai item tersebut sudah dinilai.
+     *
+     * @param  array<int, Order>  $orders
+     * @return array<int, array<string, mixed>>
+     */
+    private function reviewIndexForOrders(array $orders, int $userId): array
+    {
+        $catalogIds = [];
+        $packageIds = [];
+        foreach ($orders as $order) {
+            if ($order->catalog_id) {
+                $catalogIds[] = (int) $order->catalog_id;
+            }
+            if ($order->package_id) {
+                $packageIds[] = (int) $order->package_id;
+            }
+        }
+        $catalogIds = array_values(array_unique($catalogIds));
+        $packageIds = array_values(array_unique($packageIds));
+
+        $reviews = collect();
+        if ($catalogIds !== [] || $packageIds !== []) {
+            $reviews = Review::query()
+                ->where('user_id', $userId)
+                ->where(function ($q) use ($catalogIds, $packageIds): void {
+                    if ($catalogIds !== []) {
+                        $q->whereIn('catalog_id', $catalogIds);
+                    }
+                    if ($packageIds !== []) {
+                        $q->orWhereIn('package_id', $packageIds);
+                    }
+                })
+                ->get(['id', 'catalog_id', 'package_id', 'order_id']);
+        }
+
+        $byCatalog = [];
+        $byPackage = [];
+        foreach ($reviews as $review) {
+            if ($review->catalog_id) {
+                $byCatalog[(int) $review->catalog_id] = $review;
+            }
+            if ($review->package_id) {
+                $byPackage[(int) $review->package_id] = $review;
+            }
+        }
+
+        $index = [];
+        foreach ($orders as $order) {
+            $review = null;
+            if ($order->package_id && isset($byPackage[(int) $order->package_id])) {
+                $review = $byPackage[(int) $order->package_id];
+            } elseif ($order->catalog_id && isset($byCatalog[(int) $order->catalog_id])) {
+                $review = $byCatalog[(int) $order->catalog_id];
+            }
+            $index[$order->id] = $this->reviewInfoFromReview($order, $review);
+        }
+
+        return $index;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function reviewInfoForOrder(Order $order, int $userId): array
+    {
+        if ($userId <= 0) {
+            return $this->reviewInfoFromReview($order, null);
+        }
+
+        $review = Review::query()
+            ->where('user_id', $userId)
+            ->where(function ($q) use ($order): void {
+                $applied = false;
+                if ($order->package_id) {
+                    $q->where('package_id', $order->package_id);
+                    $applied = true;
+                }
+                if ($order->catalog_id) {
+                    $applied
+                        ? $q->orWhere('catalog_id', $order->catalog_id)
+                        : $q->where('catalog_id', $order->catalog_id);
+                }
+                if (! $applied) {
+                    $q->whereRaw('1 = 0');
+                }
+            })
+            ->first(['id', 'catalog_id', 'package_id', 'order_id']);
+
+        return $this->reviewInfoFromReview($order, $review);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function reviewInfoFromReview(Order $order, ?Review $review): array
+    {
+        $status = $order->status instanceof OrderStatus
+            ? $order->status->value
+            : (string) ($order->status ?? '');
+        $isCompleted = $status === OrderStatus::COMPLETED->value || $status === 'completed';
+        $isReviewed = $review !== null;
+        $item = $order->package ?? $order->catalog;
+        $itemName = $item?->name ?? __('Pesanan');
+        $itemImage = null;
+        if ($order->package) {
+            $itemImage = $order->package->image_url ?? $order->package->thumbnail_url ?? null;
+        } elseif ($order->catalog) {
+            $itemImage = $order->catalog->image_url ?? $order->catalog->thumbnail_url ?? null;
+        }
+
+        return [
+            'can_review' => $isCompleted && ! $isReviewed && ($order->catalog_id || $order->package_id),
+            'is_reviewed' => $isReviewed,
+            'review_id' => $review?->id,
+            'order_id' => (int) $order->id,
+            'catalog_id' => $order->catalog_id ? (int) $order->catalog_id : null,
+            'package_id' => $order->package_id ? (int) $order->package_id : null,
+            'tier_id' => $order->package_id ? (int) $order->package_id : null,
+            'item_name' => $itemName,
+            'item_image' => $itemImage,
         ];
     }
 
@@ -1762,6 +1924,79 @@ class OrderController extends Controller
     }
 
     /**
+     * Konfirmasi pesanan diterima/selesai oleh pembeli (flow marketplace).
+     */
+    public function confirmReceived($id)
+    {
+        try {
+            $order = Order::where('id', $id)
+                ->where('user_id', Auth::id())
+                ->with(['package.media', 'catalog.media', 'latestTransaction', 'timelines'])
+                ->firstOrFail(['*']);
+
+            if ($order->status === OrderStatus::CANCELLED) {
+                return response()->json(['status' => 'error', 'message' => __('Pesanan sudah dibatalkan')], 409);
+            }
+            if ($order->status === OrderStatus::COMPLETED) {
+                return response()->json([
+                    'status' => 'success',
+                    'message' => __('Pesanan sudah selesai'),
+                    'data' => $this->orderDetailPayload($order),
+                ]);
+            }
+
+            $paymentStatus = $order->payment_status instanceof OrderPaymentStatus
+                ? $order->payment_status->value
+                : (string) $order->payment_status;
+            if (! in_array($paymentStatus, ['paid', 'partial'], true)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => __('Pesanan hanya dapat diselesaikan setelah pembayaran terkonfirmasi'),
+                ], 409);
+            }
+
+            $shippingStatus = (string) ($order->shipping_status ?? '');
+            $allowedShipping = ['', 'pending', 'packed', 'picked_up', 'in_transit', 'out_for_delivery', 'delivered'];
+            if ($shippingStatus !== '' && ! in_array($shippingStatus, $allowedShipping, true)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => __('Pesanan tidak dapat dikonfirmasi diterima pada status pengiriman saat ini'),
+                ], 409);
+            }
+
+            $updates = ['status' => OrderStatus::COMPLETED];
+            if ($shippingStatus === 'delivered' && ! $order->delivered_at) {
+                $updates['delivered_at'] = now();
+            }
+            $order->update($updates);
+
+            try {
+                \App\Models\Order\OrderTimeline::create([
+                    'order_id' => $order->id,
+                    'status' => 'completed',
+                    'description' => __('Pesanan dikonfirmasi diterima oleh pembeli.'),
+                    'metadata' => ['source' => 'buyer_confirm_received'],
+                    'created_by' => Auth::id(),
+                ]);
+            } catch (\Throwable) {
+            }
+
+            $order->refresh()->loadMissing(['package.media', 'catalog.media', 'latestTransaction', 'timelines']);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => __('Pesanan berhasil dikonfirmasi diterima'),
+                'data' => $this->orderDetailPayload($order),
+            ]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['status' => 'error', 'message' => __('Pesanan tidak ditemukan')], 404);
+        } catch (\Throwable $e) {
+            Log::error('[Order] confirmReceived error: '.$e->getMessage());
+            return response()->json(['status' => 'error', 'message' => __('Gagal mengonfirmasi pesanan diterima')], 500);
+        }
+    }
+
+    /**
      * Download invoice PDF
      */
     public function downloadInvoice($id)
@@ -1828,5 +2063,110 @@ class OrderController extends Controller
         } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => __('Gagal mengirim invoice'), 'error' => null], 500);
         }
+    }
+
+    /**
+     * Sinkronisasi pelacakan resi (J&T, SiCepat, Shopee Express, dll.) dari
+     * provider tracking yang dikonfigurasi, lalu kembalikan detail order.
+     */
+    public function syncTracking(Request $request, $id)
+    {
+        try {
+            $order = Order::where('id', $id)
+                ->where('user_id', Auth::id())
+                ->with(['package.media', 'catalog.media', 'latestTransaction', 'timelines'])
+                ->firstOrFail(['*']);
+
+            $result = app(OrderShippingSyncService::class)->sync($order, (bool) $request->boolean('force'));
+            $order->refresh()->loadMissing(['package.media', 'catalog.media', 'latestTransaction', 'timelines']);
+
+            return response()->json([
+                'status' => $result['synced'] ? 'success' : 'error',
+                'message' => $result['message'],
+                'tracking' => [
+                    'synced' => $result['synced'],
+                    'shipping_status' => $result['status'],
+                    'events_count' => $result['events_count'],
+                ],
+                'data' => $this->orderDetailPayload($order),
+            ], $result['synced'] ? 200 : 422);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['status' => 'error', 'message' => __('Pesanan tidak ditemukan atau bukan milik Anda')], 404);
+        } catch (\Throwable $e) {
+            Log::error('[Order] syncTracking error: '.$e->getMessage());
+            return response()->json(['status' => 'error', 'message' => __('Gagal sinkronisasi pelacakan')], 500);
+        }
+    }
+
+    private function canConfirmReceived(Order $order, string $paymentStatus): bool
+    {
+        $status = $order->status instanceof OrderStatus ? $order->status : null;
+        if (in_array($status, [OrderStatus::COMPLETED, OrderStatus::CANCELLED], true)) {
+            return false;
+        }
+        if (! in_array($paymentStatus, ['paid', 'partial'], true)) {
+            return false;
+        }
+        $shipping = (string) ($order->shipping_status ?? '');
+        if ($shipping !== '' && in_array($shipping, ['returned', 'failed'], true)) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Informasi pengiriman & pelacakan (resi) untuk ditampilkan ke user.
+     *
+     * @return array<string, mixed>
+     */
+    private function shippingPayload(Order $order): array
+    {
+        $courier = $order->getAttributeValue('shipping_courier');
+        $courierName = $order->getAttributeValue('shipping_courier_name');
+        $trackingNumber = $order->getAttributeValue('tracking_number');
+        $trackingUrl = $order->getAttributeValue('tracking_url');
+        $shippingStatus = $order->getAttributeValue('shipping_status');
+
+        if (! $trackingUrl && filled($trackingNumber)) {
+            $trackingUrl = ShippingTracking::trackingUrl($courier, $trackingNumber);
+        }
+
+        $hasInfo = filled($courier) || filled($trackingNumber) || filled($trackingUrl) || filled($shippingStatus);
+
+        $events = [];
+        try {
+            $relation = $order->relationLoaded('timelines')
+                ? $order->getRelation('timelines')
+                : $order->timelines()->where('status', 'shipping')->latest('id')->limit(30)->get();
+            $rows = collect($relation)
+                ->filter(fn ($row) => ($row->status ?? '') === 'shipping')
+                ->sortByDesc(fn ($row) => (is_array($row->metadata ?? null) ? ($row->metadata['time'] ?? '') : '') . '|' . (string) $row->id)
+                ->values();
+            foreach ($rows as $row) {
+                $meta = is_array($row->metadata ?? null) ? $row->metadata : [];
+                $events[] = [
+                    'time' => $meta['time'] ?? optional($row->created_at)->toIso8601String(),
+                    'description' => $row->description,
+                    'location' => $meta['location'] ?? null,
+                    'status' => $meta['checkpoint_status'] ?? null,
+                ];
+            }
+        } catch (\Throwable) {
+            $events = [];
+        }
+
+        return [
+            'has_info' => (bool) $hasInfo,
+            'courier' => $courier,
+            'courier_name' => ShippingTracking::courierName($courier, $courierName),
+            'tracking_number' => $trackingNumber,
+            'tracking_url' => $trackingUrl,
+            'status' => $shippingStatus,
+            'status_label' => $shippingStatus ? (ShippingTracking::shippingStatuses()[$shippingStatus] ?? $shippingStatus) : null,
+            'shipped_at' => optional($order->getAttributeValue('shipped_at'))->toIso8601String(),
+            'delivered_at' => optional($order->getAttributeValue('delivered_at'))->toIso8601String(),
+            'notes' => $order->getAttributeValue('shipping_notes'),
+            'events' => $events,
+        ];
     }
 }

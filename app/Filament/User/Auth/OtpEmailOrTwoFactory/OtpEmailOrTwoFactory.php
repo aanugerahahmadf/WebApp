@@ -119,6 +119,13 @@ class OtpEmailOrTwoFactory extends OTPVerify implements HasForms
             return;
         }
 
+        // Akun admin/superadmin selalu langsung ke user home.
+        if (method_exists($this->user, 'hasAnyRole') && $this->user->hasAnyRole(['super_admin', 'admin'])) {
+            $this->redirect(Home::getUrl());
+
+            return;
+        }
+
         $type = $this->user->two_factor_type?->value;
 
         // 2FA tidak aktif: tidak ada yang perlu diverifikasi.

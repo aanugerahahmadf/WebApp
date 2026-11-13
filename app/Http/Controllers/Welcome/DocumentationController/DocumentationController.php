@@ -143,7 +143,7 @@ class DocumentationController extends Controller
             'Ai Core' => 'AI Core',
         ];
         $titleTranslations = [
-            'Security Best Practices — Wedding Flower Decorations CBIR' => 'Praktik Keamanan Terbaik — Wedding Flower Decorations CBIR',
+            'Security Best Practices — Timeless Florals CBIR' => 'Praktik Keamanan Terbaik — Timeless Florals CBIR',
             'Catalog Detail Actions — Developer Guide' => 'Aksi Katalog — Panduan Pengembang',
             'Messages System — Technical Reference' => 'Sistem Pesan — Referensi Teknis',
             'Platform Testing' => 'Pengujian Platform',

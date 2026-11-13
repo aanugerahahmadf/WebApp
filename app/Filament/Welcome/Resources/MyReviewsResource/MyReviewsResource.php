@@ -2,18 +2,23 @@
 
 namespace App\Filament\Welcome\Resources\MyReviewsResource;
 
+use App\Filament\Welcome\Resources\MyReviewsResource\Pages\CreateMyReview\CreateMyReview;
+use App\Filament\Welcome\Resources\MyReviewsResource\Pages\EditMyReview\EditMyReview;
 use App\Filament\Welcome\Resources\MyReviewsResource\Pages\ManageMyReviews\ManageMyReviews;
+use App\Filament\Welcome\Resources\MyReviewsResource\Pages\ViewMyReview\ViewMyReview;
 
 use App\Filament\Welcome\Resources\CatalogResource\CatalogResource;
 use App\Forms\Components\StarRating\StarRating;
 use App\Models\Catalog\Catalog;
-use App\Models\Review\Review;
+use App\Models\MyReview\MyReview;
 use App\Models\Order\Order;
 use App\Support\AppIcon\AppIcon;
 use emmanpbarrameda\FilamentTakePictureField\Forms\Components\TakePicture;
 use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
@@ -28,7 +33,7 @@ use Illuminate\Support\Str;
 
 class MyReviewsResource extends Resource
 {
-    protected static ?string $model = Review::class;
+    protected static ?string $model = MyReview::class;
 
     protected static ?string $slug = 'my-reviews';
 
@@ -124,17 +129,17 @@ class MyReviewsResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return __('Komentar Penilaian Katalog Saya');
+        return __('Ulasan Saya');
     }
 
     public static function getPluralModelLabel(): string
     {
-        return __('Komentar Penilaian Katalog Saya');
+        return __('Ulasan Saya');
     }
 
     public static function getModelLabel(): string
     {
-        return __('Komentar Penilaian Katalog Saya');
+        return __('Ulasan Saya');
     }
 
     public static function getEloquentQuery(): Builder
@@ -210,6 +215,42 @@ class MyReviewsResource extends Resource
                             ->itemLabel(fn (array $state): ?string => $state['photo'] ? __('Foto') : null)
                             ->helperText(__('Opsional — tambah beberapa foto. Setiap foto bisa diambil dari kamera, video, galeri, atau file.')),
                     ]),
+            ]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Infolists\Components\Section::make(__('Detail Ulasan'))
+                    ->schema([
+                        Infolists\Components\TextEntry::make('catalog.name')
+                            ->label(__('Katalog'))
+                            ->placeholder('-'),
+                        Infolists\Components\TextEntry::make('rating')
+                            ->label(__('Rating'))
+                            ->formatStateUsing(fn ($state): HtmlString => new HtmlString(self::ratingStarsHtml((int) $state)))
+                            ->html(),
+                        Infolists\Components\TextEntry::make('title')
+                            ->label(__('Judul Ulasan'))
+                            ->placeholder('-')
+                            ->columnSpanFull(),
+                        Infolists\Components\TextEntry::make('comment')
+                            ->label(__('Komentar Anda'))
+                            ->placeholder('-')
+                            ->columnSpanFull(),
+                        Infolists\Components\ImageEntry::make('photo_url')
+                            ->label(__('Foto Ulasan'))
+                            ->state(fn ($record) => $record->photo_url)
+                            ->visible(fn ($record) => ! empty($record->photo_url))
+                            ->columnSpanFull(),
+                        Infolists\Components\TextEntry::make('created_at')
+                            ->label(__('Dibuat'))
+                            ->dateTime('d M Y, H:i'),
+                        Infolists\Components\TextEntry::make('updated_at')
+                            ->label(__('Diperbarui'))
+                            ->dateTime('d M Y, H:i'),
+                    ])->columns(2),
             ]);
     }
 
@@ -347,20 +388,18 @@ class MyReviewsResource extends Resource
                 ])->space(3)->extraAttributes(['class' => 'p-4 bg-white dark:bg-gray-950 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800']),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make()
+                    ->label(__('Lihat'))
+                    ->button()
+                    ->color('gray')
+                    ->size('sm')
+                    ->extraAttributes(['class' => 'flex-1 justify-center rounded-lg shadow-sm font-bold']),
                 Tables\Actions\EditAction::make()
                     ->label(__('Ubah'))
                     ->button()
                     ->color('warning')
                     ->size('sm')
-                    ->extraAttributes(['class' => 'flex-1 justify-center rounded-lg shadow-sm font-bold'])
-                    ->slideOver()
-                    ->after(function () {
-                        \Filament\Notifications\Notification::make()
-                            ->title(__('Berhasil!'))
-                            ->body(__('Ulasan berhasil diperbarui.'))
-                            ->success()
-                            ->send();
-                    }),
+                    ->extraAttributes(['class' => 'flex-1 justify-center rounded-lg shadow-sm font-bold']),
                 Tables\Actions\DeleteAction::make()
                     ->label(__('Hapus'))
                     ->button()
@@ -417,34 +456,13 @@ class MyReviewsResource extends Resource
                     ->badge(fn ($livewire) => count($livewire->getTable()->getFilterIndicators()) > 0 ? count($livewire->getTable()->getFilterIndicators()) : null)
             )
             ->headerActions([
-                // Ulasan ditulis di HALAMAN PENUH (CreateReviews), bukan
-                // slideOver, dan bukan MODAL.
-                //
-                // Kenapa bukan modal: tombol ini sekarang tautan biasa ke
-                // halaman CreateReviews (mode "pilih katalog", route
-                // /flowerdecorationscatalog/reviews). User mendarat di
-                // halaman penuh, memilih katalog, lalu FORM-nya yang terbuka
-                // ada di halaman CreateReviews milik katalog itu.
-                //
-                // Kenapa tombolnya jadi halaman pilih katalog dulu: halaman
-                // CreateReviews milik SATU katalog (route /{record}/reviews),
-                // jadi dari daftar ulasan -- yang tidak punya satu katalog
-                // tunggal -- harus ada langkah memilih katalog.
-                //
-                // Daftar pilihannya TIDAK dibatasi ke katalog yang sudah
-                // dipesan: tombol yang tidak bisa dipakai sama sekali
-                // (daftar kosong) lebih buruk daripada bolehnya mengulas
-                // katalog yang belum dibeli -- halaman detail katalog memang
-                // sudah menawarkan hal yang sama.
-                Tables\Actions\Action::make('write_review')
+                Tables\Actions\Action::make('create_review')
                     ->label(__('Tulis Komentar Penilaian'))
                     ->button()
                     ->color('primary')
                     ->size('lg')
                     ->icon('/images/icons/pencil.svg')
-                    // Tautan biasa ke halaman CreateReviews (mode "pilih
-                    // katalog"), BUKAN action yang membuka modal.
-                    ->url(fn (): string => CatalogResource::getUrl('write-review'))
+                    ->url(fn (): string => static::getUrl('create'))
                     ->visible(fn (): bool => static::reviewableCatalogOptions() !== []),
             ]);
     }
@@ -516,7 +534,7 @@ class MyReviewsResource extends Resource
             return null;
         }
 
-        $reviewed = Review::query()
+        $reviewed = MyReview::query()
             ->where('user_id', $userId)
             ->pluck('catalog_id')
             ->all();
@@ -545,6 +563,9 @@ class MyReviewsResource extends Resource
     {
         return [
             'index' => ManageMyReviews::route('/'),
+            'create' => CreateMyReview::route('/create'),
+            'view' => ViewMyReview::route('/{record}'),
+            'edit' => EditMyReview::route('/{record}/edit'),
         ];
     }
 }

@@ -130,8 +130,8 @@ class LegalService
         $proto = new \Weddingapp\Legal\AboutPage();
 
         if (!$about) {
-            $proto->setTitle('About WeddingApp');
-            $proto->setContent('Wedding Flower Decorations is your ultimate companion.');
+            $proto->setTitle('About Timeless Florals');
+            $proto->setContent('Timeless Florals is your ultimate companion.');
             $proto->setOwner(config('app.name'));
             return $proto;
         }
@@ -139,7 +139,7 @@ class LegalService
         $aboutTitle = $about->trans('title', $this->locale());
         $aboutContent = $about->trans('content', $this->locale());
 
-        $proto->setTitle($aboutTitle ?? 'About WeddingApp');
+        $proto->setTitle($aboutTitle ?? 'About Timeless Florals');
         $proto->setContent(is_array($aboutContent) ? ($aboutContent['text'] ?? $aboutContent) : $aboutContent);
         $proto->setMission(is_array($aboutContent) ? ($aboutContent['mission'] ?? '') : '');
         $proto->setOwner(config('app.name'));

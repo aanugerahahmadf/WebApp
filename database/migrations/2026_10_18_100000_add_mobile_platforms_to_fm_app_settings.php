@@ -40,7 +40,7 @@ return new class extends Migration {
                 'http_status' => 503,
             ],
             'mobile_flutter' => [
-                'app_name' => 'Dekorasi Bunga Pernikahan',
+                'app_name' => 'Timeless Florals',
                 'tagline' => 'Pemesanan & Rekomendasi Dekorasi Bunga Berbasis AI',
                 'primary_color' => '#6366f1',
                 'splash_tagline' => 'Wujudkan Dekorasi Impian Anda',

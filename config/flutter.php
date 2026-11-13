@@ -13,7 +13,7 @@ return [
     */
 
     'app' => [
-        'name' => env('FLUTTER_APP_NAME', env('APP_NAME', 'Wedding Flower Decorations')),
+        'name' => env('FLUTTER_APP_NAME', env('APP_NAME', 'Timeless Florals')),
         'path' => env('FLUTTER_APP_PATH', 'D:\\WeddingFlowersDecorationApp\\mobile_app'),
     ],
 

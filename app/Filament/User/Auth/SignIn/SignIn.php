@@ -30,7 +30,13 @@ class SignIn extends BaseLogin
     public function mount(): void
     {
         if (auth()->check()) {
-            $this->redirect(\Filament\Facades\Filament::getUrl(panel: 'welcome'), navigate: false);
+            // Filament::getUrl() hanya menerima $tenant, BUKAN named parameter
+            // `panel`. Memakai panel: 'welcome' melempar
+            // "Unknown named parameter $panel" dan membuat /signin 500 untuk
+            // user yang sudah login. Arahkan langsung ke Beranda panel welcome.
+            $this->redirect(route('filament.welcome.pages.home'), navigate: false);
+
+            return;
         }
 
         $this->form->fill([
@@ -59,14 +65,14 @@ class SignIn extends BaseLogin
 
     public function getHeading(): string|Htmlable
     {
-        return __('Sign In');
+        return __('Selamat Datang di Timeless Florals');
     }
 
     /**
      * Judul halaman ini juga jadi `<title>` di tab browser. Base class Filament
      * mengembalikan `filament-panels::pages/auth/login.title` ("Login"), jadi
-     * tanpa override ini heading kartu sudah "Sign In" tapi tabnya tetap
-     * "Login". Ikut getHeading() supaya keduanya tidak bisa berbeda.
+     * tanpa override ini heading kartu dan tab browser bisa berbeda. Ikut
+     * getHeading() supaya keduanya tidak bisa berbeda.
      */
     public function getTitle(): string|Htmlable
     {
@@ -331,7 +337,7 @@ class SignIn extends BaseLogin
 
         Notification::make()
             ->title(__('Selamat Datang Kembali!'))
-            ->body(__('Anda telah berhasil masuk ke sistem Dekorasi Bunga Pernikahan pada :time.', ['time' => now()->format('H:i:s')]))
+            ->body(__('Anda telah berhasil masuk ke sistem Timeless Florals pada :time.', ['time' => now()->format('H:i:s')]))
             ->success()
             ->send();
 

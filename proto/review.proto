@@ -9,7 +9,7 @@ import "proto/order.proto";
 
 option php_namespace = "App\\Grpc\\Review";
 option java_package = "com.weddingapp.review";
-option csharp_namespace = "WeddingApp.Review";
+option csharp_namespace = "TimelessFlorals.Review";
 option go_package = "github.com/weddingapp/grpc/review";
 
 service ReviewService {

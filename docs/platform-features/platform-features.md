@@ -2,7 +2,7 @@
 
 Dokumen ini menjelaskan fitur-fitur aplikasi yang tersedia di masing-masing dari delapan
 runtime platform yang didukung, menjelaskan apa yang diaktifkan setiap fitur dalam
-aplikasi Wedding Flower Decorations CBIR, dan menampilkan tiga cara untuk memeriksa
+aplikasi Timeless Florals CBIR, dan menampilkan tiga cara untuk memeriksa
 ketersediaan fitur dari kode PHP.
 
 > **Catatan:** Semua shell Capacitor hanyalah *WebView loader* — tidak ada PHP

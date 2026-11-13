@@ -39,7 +39,7 @@ kredensial database, konfigurasi mail, API key pihak ketiga, serta nilai
 default untuk driver session, cache, dan queue.
 
 ```dotenv
-APP_NAME="Wedding Flower Decorations"
+APP_NAME="Timeless Florals"
 APP_ENV=local
 APP_KEY=
 APP_DEBUG=true

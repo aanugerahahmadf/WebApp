@@ -67,7 +67,7 @@ seperti kode aplikasi:
    karena slug resource bisa berubah (pernah menjadi `flowerdecorations*`).
    Selalu pakai `Resource::getUrl()`.
 3. Beberapa test lama masih memakai path lama dan merah karena perubahan slug
-   di atas (`WeddingAppTest`, `WelcomeStorefrontGuestAccessTest`,
+   di atas (`Timeless FloralsTest`, `WelcomeStorefrontGuestAccessTest`,
    `WelcomePanelTest`, bagian `WelcomeCatalogDetailParityTest`) — perlu
    migrasi ke `Resource::getUrl()`.
 

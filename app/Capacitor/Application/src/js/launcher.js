@@ -7,7 +7,7 @@
  * forwards the WebView to the panel or shows a retry UI.
  *
  * Keep PANEL_URL in sync with capacitor.config.json:
- *   npm run set:url -- http://10.0.2.2:8000/welcome
+ *   npm run set:url -- http://10.0.2.2:8000/home
  */
 
 /** @type {string} Panel root, i.e. `server.url` from capacitor.config.json. */
@@ -77,7 +77,7 @@ retryEl?.addEventListener('click', () => {
     probe();
 });
 
-if (titleEl) titleEl.textContent = 'Dekorasi';
+if (titleEl) titleEl.textContent = 'Timeless Florals';
 
 // Never leave the splash screen spinning forever.
 setTimeout(() => {

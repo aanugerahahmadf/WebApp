@@ -50,7 +50,7 @@
          panel saudara, jangan lempar ke browser".
       3. Mendahulukan judul aplikasi pada <title>. Electron memakai
          <title> sebagai judul jendela, jadi tanpa ini dua jendela ini
-         sama-sama bernama "Dekorasi Bunga Pernikahan" dan tidak bisa
+         sama-sama bernama "Timeless Florals" dan tidak bisa
          dibedakan di taskbar.
       4. Mendaftarkan hotkey F1..F12 -- lihat `window.__dekorasiHotkey`.
 

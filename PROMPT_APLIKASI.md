@@ -1,12 +1,12 @@
-# PROMPT APLIKASI: Dekorasi Bunga Pernikahan - Wedding Flower Decorations CBIR
+# PROMPT APLIKASI: Timeless Florals - Timeless Florals CBIR
 
 ## 📋 OVERVIEW APLIKASI
 
-**Nama Aplikasi:** Dekorasi Bunga Pernikahan (Wedding Flower Decorations CBIR)
+**Nama Aplikasi:** Timeless Florals (Timeless Florals CBIR)
 **Penulis:** Anugerah Ahmad Fachrurochim
-**Deskripsi:** Toko dekorasi bunga pernikahan berbasis AI dengan Content-Based Image Retrieval (CBIR) yang membantu calon pengantin merencanakan pernikahan. Pengguna bisa upload foto referensi untuk menemukan dekorasi yang cocok, mengelola anggaran, dan booking layanan langsung bersama tim dekorasi internal kami.
+**Deskripsi:** Toko Timeless Florals berbasis AI dengan Content-Based Image Retrieval (CBIR) yang membantu calon pengantin merencanakan pernikahan. Pengguna bisa upload foto referensi untuk menemukan dekorasi yang cocok, mengelola anggaran, dan booking layanan langsung bersama tim dekorasi internal kami.
 
-**Tipe:** Single-vendor (khusus untuk satu perusahaan: Dekorasi Bunga Pernikahan)
+**Tipe:** Single-vendor (khusus untuk satu perusahaan: Timeless Florals)
 **Bahasa:** Indonesian (default), English, Arabic, +30 bahasa via auto-translation
 **Lisensi:** Proprietary
 
@@ -388,7 +388,7 @@
 - Dashboard (stats overview, revenue chart, orders chart, recent orders)
 - User management
 - Category management
-- Profil toko dekorasi bunga pernikahan
+- Profil toko Timeless Florals
 - Package management
 - Product management
 - Order management (CRUD + status tracking)
@@ -731,7 +731,7 @@ Sync to Firebase Realtime Database:
 **Queue**: Sync driver
 
 **Test Files:**
-- `tests/Feature/WeddingAppTest.php` - User access tests
+- `tests/Feature/Timeless FloralsTest.php` - User access tests
 - `tests/Feature/AdminAccessTest.php` - Admin RBAC tests
 - `tests/Unit/UserTest.php` - User model tests
 

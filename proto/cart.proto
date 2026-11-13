@@ -9,7 +9,7 @@ import "proto/voucher.proto";
 
 option php_namespace = "App\\Grpc\\Cart";
 option java_package = "com.weddingapp.cart";
-option csharp_namespace = "WeddingApp.Cart";
+option csharp_namespace = "TimelessFlorals.Cart";
 option go_package = "github.com/weddingapp/grpc/cart";
 
 service CartService {

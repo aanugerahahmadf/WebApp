@@ -1,4 +1,4 @@
-# Dekorasi Bunga Pernikahan — Wedding Flower Decorations
+# Timeless Florals — Timeless Florals
 
 Aplikasi multi-platform untuk perencanaan pernikahan dan perdagangan dekorasi.
 Menggabungkan katalog pelanggan, pesanan, pembayaran, obrolan, notifikasi,

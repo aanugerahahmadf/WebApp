@@ -8,7 +8,7 @@ import "proto/package.proto";
 
 option php_namespace = "App\\Grpc\\Cbir";
 option java_package = "com.weddingapp.cbir";
-option csharp_namespace = "WeddingApp.Cbir";
+option csharp_namespace = "TimelessFlorals.Cbir";
 option go_package = "github.com/weddingapp/grpc/cbir";
 
 service CbirService {

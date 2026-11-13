@@ -8,7 +8,7 @@ import "proto/package.proto";
 
 option php_namespace = "App\\Grpc\\Home";
 option java_package = "com.weddingapp.home";
-option csharp_namespace = "WeddingApp.Home";
+option csharp_namespace = "TimelessFlorals.Home";
 option go_package = "github.com/weddingapp/grpc/home";
 
 service HomeService {

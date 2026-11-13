@@ -4,7 +4,7 @@ package weddingapp.auth;
 
 option php_namespace = "App\\Grpc\\Auth";
 option java_package = "com.weddingapp.auth";
-option csharp_namespace = "WeddingApp.Auth";
+option csharp_namespace = "TimelessFlorals.Auth";
 option go_package = "github.com/weddingapp/grpc/auth";
 
 service AuthService {

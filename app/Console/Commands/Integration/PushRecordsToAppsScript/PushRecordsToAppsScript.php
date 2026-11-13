@@ -31,16 +31,28 @@ use Throwable;
 class PushRecordsToAppsScript extends Command
 {
     protected $signature = 'apps-script:sync
-                            {module=orders : orders|reviews|catalog|kyc|cbir|leads|health|all}
+                            {module=orders : orders|reviews|catalog|kyc|cbir|db.<table>|all|all-db|health}
                             {--since= : Hanya record dibuat/ubah sejak tanggal ini (Y-m-d)}
                             {--limit=1000 : Jumlah baris maksimum per modul}
                             {--chunk=200 : Baris per permintaan Apps Script}
                             {--dry-run : Cetak payload, jangan kirim}';
 
-    protected $description = 'Sinkronkan salinan data (order, review, katalog, KYC, log CBIR) ke Google Apps Script';
+    protected $description = 'Sinkronkan salinan data ke Google Apps Script (modul utama + seluruh tabel DB yang aman)';
 
-    /** Modul => [aksi registry, query builder]. */
+    /** Modul inti registry khusus. */
     protected const MODULES = ['orders', 'reviews', 'catalog', 'kyc', 'cbir'];
+
+    /** Tabel yang tidak pernah disinkron (secret/ephemeral/internal). */
+    protected const EXCLUDED_TABLES = [
+        'admin_password_reset_tokens', 'password_reset_tokens', 'personal_access_tokens',
+        'backup_codes', 'sessions', 'breezy_sessions', 'user_sessions', 'whatsapp_otps',
+        'device_tokens', 'trusted_devices', 'trust_devices', 'cache', 'cache_locks',
+        'jobs', 'job_batches', 'failed_jobs', 'migrations', 'fm_messages', 'fm_inboxes',
+        'chat_calls',
+    ];
+
+    /** Kolom sensitif yang dibuang dari sinkron tabel mentah. */
+    protected const SENSITIVE_COLUMN_PATTERN = '/(password|remember_token|^token$|_token$|two_factor_secret|two_factor_recovery_codes|otp_code|otp_purpose|otp_expires_at|fcm_token|pin_hash)/i';
 
     public function handle(): int
     {
@@ -62,10 +74,18 @@ class PushRecordsToAppsScript extends Command
             return self::FAILURE;
         }
 
-        $modules = $module === 'all' ? self::MODULES : [$module];
+        if ($module === 'all') {
+            $modules = array_merge(self::MODULES, $this->allDbModules());
+        } elseif ($module === 'all-db') {
+            $modules = $this->allDbModules();
+        } elseif (str_starts_with($module, 'db.')) {
+            $modules = [$module];
+        } else {
+            $modules = [$module];
+        }
 
-        if ($module !== 'all' && ! in_array($module, self::MODULES, true)) {
-            $this->components->error("Modul `$module` tidak dikenal. Pilihan: ".implode(', ', self::MODULES).', health, all.');
+        if ($module !== 'all' && $module !== 'all-db' && ! str_starts_with($module, 'db.') && ! in_array($module, self::MODULES, true)) {
+            $this->components->error("Modul `$module` tidak dikenal. Pilihan: ".implode(', ', self::MODULES).', db.<table>, health, all, all-db.');
 
             return self::FAILURE;
         }
@@ -114,6 +134,7 @@ class PushRecordsToAppsScript extends Command
             'catalog' => 'catalog.rows',
             'kyc' => 'kyc.events',
             'cbir' => 'cbir.searches',
+            default => str_starts_with($module, 'db.') ? $module : $module,
         };
 
         $this->components->info("[$module] {$rows->count()} baris -> $action");
@@ -171,6 +192,36 @@ class PushRecordsToAppsScript extends Command
     }
 
     /**
+     * @return array<int,string>
+     */
+    protected function allDbModules(): array
+    {
+        try {
+            $tables = Schema::getTableListing();
+        } catch (Throwable) {
+            return [];
+        }
+
+        $modules = [];
+
+        foreach ($tables as $table) {
+            $name = is_array($table) ? (string) ($table['name'] ?? reset($table)) : (string) $table;
+            // Schema::getTableListing() may return schema-qualified names on some drivers.
+            if (str_contains($name, '.')) {
+                $name = (string) substr($name, strrpos($name, '.') + 1);
+            }
+            if ($name === '' || in_array($name, self::EXCLUDED_TABLES, true)) {
+                continue;
+            }
+            $modules[] = 'db.'.$name;
+        }
+
+        sort($modules);
+
+        return $modules;
+    }
+
+    /**
      * @return Collection<int,array<string,mixed>>
      */
     protected function records(string $module): Collection
@@ -178,13 +229,80 @@ class PushRecordsToAppsScript extends Command
         $limit = max(1, (int) $this->option('limit'));
         $since = $this->option('since') ? (string) $this->option('since') : null;
 
+        if (str_starts_with($module, 'db.')) {
+            return $this->genericTableRecords(substr($module, 3), $limit, $since);
+        }
+
         return match ($module) {
             'orders' => $this->orderRecords($limit, $since),
             'reviews' => $this->reviewRecords($limit, $since),
             'catalog' => $this->catalogRecords($limit, $since),
             'kyc' => $this->kycRecords($limit, $since),
             'cbir' => $this->cbirRecords($limit, $since),
+            default => new Collection,
         };
+    }
+
+    /**
+     * Sync generik untuk tabel DB -> tab `db.<table>`.
+     *
+     * @return Collection<int,array<string,mixed>>
+     */
+    protected function genericTableRecords(string $table, int $limit, ?string $since): Collection
+    {
+        if (in_array($table, self::EXCLUDED_TABLES, true) || ! Schema::hasTable($table)) {
+            return new Collection;
+        }
+
+        $columns = array_values(array_filter(
+            Schema::getColumnListing($table),
+            fn (string $column) => ! (bool) preg_match(self::SENSITIVE_COLUMN_PATTERN, $column),
+        ));
+
+        if ($columns === []) {
+            return new Collection;
+        }
+
+        $query = DB::table($table)->select($columns);
+
+        if ($since !== null) {
+            $dateCol = in_array('updated_at', $columns, true) ? 'updated_at'
+                : (in_array('created_at', $columns, true) ? 'created_at' : null);
+            if ($dateCol !== null) {
+                $query->where($dateCol, '>=', $since);
+            }
+        }
+
+        $orderCol = in_array('id', $columns, true) ? 'id'
+            : (in_array('created_at', $columns, true) ? 'created_at' : null);
+        if ($orderCol !== null) {
+            $query->orderByDesc($orderCol);
+        }
+
+        $rows = $query->limit($limit)->get();
+
+        return $rows->map(function ($row) use ($columns) {
+            $record = [];
+            foreach ($columns as $column) {
+                $value = $row->{$column} ?? null;
+                if ($value === null) {
+                    continue;
+                }
+                if (is_bool($value)) {
+                    $record[$column] = $value ? '1' : '0';
+                } elseif (is_array($value) || is_object($value)) {
+                    $record[$column] = json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                } else {
+                    $record[$column] = (string) $value;
+                }
+            }
+            $record['source'] = GoogleAppsScriptClient::SOURCE;
+            if (! array_key_exists('observed_at', $record) || $record['observed_at'] === '') {
+                $record['observed_at'] = (string) ($row->updated_at ?? $row->created_at ?? now()->toISOString());
+            }
+
+            return $record;
+        });
     }
 
     protected function orderRecords(int $limit, ?string $since): Collection

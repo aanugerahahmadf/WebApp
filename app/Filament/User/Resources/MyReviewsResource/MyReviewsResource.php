@@ -1,23 +1,25 @@
 <?php
 
-namespace App\Filament\User\Resources\ReviewResource;
+namespace App\Filament\User\Resources\MyReviewsResource;
 
-use App\Filament\User\Resources\ReviewResource\Pages\ManageReviews\ManageReviews;
-
-use App\Filament\User\Resources\CatalogResource\CatalogResource;
-use App\Filament\Welcome\Resources\MyReviewsResource\MyReviewsResource;
+use App\Filament\User\Resources\MyReviewsResource\Pages\CreateMyReview\CreateMyReview;
+use App\Filament\User\Resources\MyReviewsResource\Pages\EditMyReview\EditMyReview;
+use App\Filament\User\Resources\MyReviewsResource\Pages\ManageMyReviews\ManageMyReviews;
+use App\Filament\User\Resources\MyReviewsResource\Pages\ViewMyReview\ViewMyReview;
+use App\Filament\Welcome\Resources\CatalogResource\CatalogResource;
 use App\Forms\Components\StarRating\StarRating;
-use App\Helpers\NativeNotificationHelper\NativeNotificationHelper;
 use App\Models\Catalog\Catalog;
-use App\Models\Review\Review;
+use App\Models\MyReview\MyReview;
 use App\Models\Order\Order;
 use App\Support\AppIcon\AppIcon;
+use emmanpbarrameda\FilamentTakePictureField\Forms\Components\TakePicture;
 use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\FontWeight;
-use emmanpbarrameda\FilamentTakePictureField\Forms\Components\TakePicture;
 use Filament\Tables;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\SelectFilter;
@@ -28,11 +30,11 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 
-class ReviewResource extends Resource
+class MyReviewsResource extends Resource
 {
-    protected static ?string $model = Review::class;
+    protected static ?string $model = MyReview::class;
 
-    protected static ?string $slug = 'reviews';
+    protected static ?string $slug = 'my-reviews';
 
     protected static ?string $navigationIcon = AppIcon::REVIEW;
 
@@ -40,12 +42,12 @@ class ReviewResource extends Resource
 
     public static function getGloballySearchableAttributes(): array
     {
-        return ['package.name', 'catalog.name', 'comment'];
+        return ['catalog.name', 'comment'];
     }
 
     public static function getGlobalSearchResultTitle(Model $record): string
     {
-        return $record->package?->name ?? $record->catalog?->name ?? __('Ulasan');
+        return $record->catalog?->name ?? __('Ulasan');
     }
 
     public static function getGlobalSearchResultDetails(Model $record): array
@@ -106,13 +108,7 @@ class ReviewResource extends Resource
 
     public static function getGlobalSearchResultUrl(Model $record): ?string
     {
-        // `static::getUrl('index')` di sini menunjuk route
-        // `filament.welcome.resources.reviews.index`, dan route itu TIDAK
-        // ADA: sumber daya legacy ini tidak ikut didaftarkan di
-        // WelcomePanelProvider setelah panel 'user' dilebur ke 'welcome'.
-        // Hasil pencarian global harus mendarat di halaman yang benar-benar
-        // hidup -- "Komentar Penilaian Katalog Saya" (`/my-reviews`).
-        return MyReviewsResource::getUrl('index');
+        return static::getUrl('index');
     }
 
     public static function getNavigationGroup(): ?string
@@ -182,16 +178,67 @@ class ReviewResource extends Resource
                             ->required()
                             ->rows(5)
                             ->columnSpanFull(),
-                        Forms\Components\FileUpload::make('photo')
+                        Forms\Components\Repeater::make('photos')
                             ->label(__('Foto Ulasan'))
-                            ->image()
-                            ->directory('review-photos')
-                            ->disk('public')
-                            ->visibility('public')
-                            ->maxSize(5120)
-                            ->helperText(__('Opsional — unggah foto hasil dekorasi Anda.'))
-                            ->columnSpanFull(),
+                            ->schema([
+                                TakePicture::make('photo')
+                                    ->label(__('Foto'))
+                                    ->disk('public')
+                                    ->directory('review-photos')
+                                    ->visibility('public')
+                                    ->imageQuality(90)
+                                    ->aspect('3:4')
+                                    ->useModal(true)
+                                    ->showCameraSelector(true)
+                                    ->captureMaxDimensions(1280, 720)
+                                    ->autoStart(false)
+                                    ->helperText(__('Ambil foto dengan kamera, rekam video, atau pilih dari galeri/file.')),
+                            ])
+                            ->columns(1)
+                            ->defaultItems(0)
+                            ->minItems(0)
+                            ->maxItems(10)
+                            ->addActionLabel(__('Tambah Foto'))
+                            ->itemNumbers(true)
+                            ->itemLabel(fn (array $state): ?string => $state['photo'] ? __('Foto') : null)
+                            ->helperText(__('Opsional — tambah beberapa foto. Setiap foto bisa diambil dari kamera, video, galeri, atau file.')),
                     ]),
+            ]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Infolists\Components\Section::make(__('Detail Ulasan'))
+                    ->schema([
+                        Infolists\Components\TextEntry::make('catalog.name')
+                            ->label(__('Katalog'))
+                            ->placeholder('-'),
+                        Infolists\Components\TextEntry::make('rating')
+                            ->label(__('Rating'))
+                            ->formatStateUsing(fn ($state): HtmlString => new HtmlString(self::ratingStarsHtml((int) $state)))
+                            ->html(),
+                        Infolists\Components\TextEntry::make('title')
+                            ->label(__('Judul Ulasan'))
+                            ->placeholder('-')
+                            ->columnSpanFull(),
+                        Infolists\Components\TextEntry::make('comment')
+                            ->label(__('Komentar Anda'))
+                            ->placeholder('-')
+                            ->columnSpanFull(),
+                        Infolists\Components\ImageEntry::make('photo_url')
+                            ->label(__('Foto Ulasan'))
+                            ->state(fn ($record) => $record->photo_url)
+                            ->visible(fn ($record) => ! empty($record->photo_url))
+                            ->columnSpanFull(),
+                        Infolists\Components\TextEntry::make('created_at')
+                            ->label(__('Dibuat'))
+                            ->dateTime('d M Y, H:i'),
+                        Infolists\Components\TextEntry::make('updated_at')
+                            ->label(__('Diperbarui'))
+                            ->dateTime('d M Y, H:i'),
+                    ])->columns(2),
             ]);
     }
 
@@ -230,28 +277,12 @@ class ReviewResource extends Resource
                         ->helperText(__('Ambil foto dengan kamera, rekam video, atau pilih dari galeri/file.')),
                 ])
                 ->columns(1)
-                // SATU baris foto selalu ada di halaman tulis ulasan.
-                //
-                // Dulu `defaultItems(0)`, jadi repeater-nya KOSONG dan field
-                // TakePicture-nya tidak pernah dirender: tidak ada tombol
-                // kamera, tidak ada galeri, tidak ada file.
                 ->defaultItems(1)
                 ->minItems(0)
                 ->maxItems(10)
                 ->addActionLabel(__('Tambah Foto'))
                 ->itemNumbers(true)
-                            // Nomor urutnya dibuat repeater sendiri (itemNumbers),
-                            // bukan dihitung di sini.
-                            //
-                            // Versi lama: `array_search($state, $get('photos')) + 1`.
-                            // Dua masalah: (1) `Get` TIDAK bisa di-inject ke
-                            // closure label repeater -- yang tersedia cuma
-                            // state/uuid/container; (2) kuncinya UUID, bukan
-                            // angka, jadi `string + 1` meledak.
-                            //
-                            // Closure ini tadinya tidak pernah jalan karena
-                            // repeater-nya selalu kosong.
-                            ->itemLabel(fn (array $state): ?string => $state['photo'] ? __('Foto') : null)
+                ->itemLabel(fn (array $state): ?string => $state['photo'] ? __('Foto') : null)
                 ->helperText(__('Opsional — tambah beberapa foto. Setiap foto bisa diambil dari kamera, video, galeri, atau file.')),
         ];
     }
@@ -263,10 +294,6 @@ class ReviewResource extends Resource
             ->emptyStateHeading(__('Belum ada ulasan'))
             ->emptyStateDescription(__('Bagikan pengalamanmu dengan kami!'))
             ->emptyStateActions([
-                // CUMA satu aksi: ke katalog. Dulu ada dua tombol
-                // ("Belanja Bunga" dan "Pesan Paket Dekorasi") dan KEDUANYA
-                // menuju ke URL yang sama persis -- jadi yang kedua cuma
-                // tombol yang lebih besar, bukan pintu baru.
                 Tables\Actions\Action::make('shop_catalogs')
                     ->label(__('Belanja Bunga'))
                     ->url(CatalogResource::getUrl())
@@ -283,14 +310,13 @@ class ReviewResource extends Resource
             ])
             ->columns([
                 Tables\Columns\Layout\Stack::make([
-                    // Header (Package info & Rating)
                     Tables\Columns\Layout\Split::make([
                         Tables\Columns\TextColumn::make('item_name')
-                            ->getStateUsing(fn ($record) => $record->package?->name ?? $record->catalog?->name ?? '-')
+                            ->getStateUsing(fn ($record) => $record->catalog?->name ?? '-')
                             ->formatStateUsing(fn ($state) => __($state))
                             ->weight(FontWeight::Bold)
                             ->size('md')
-                            ->icon(fn ($record) => $record->package_id ? '/images/icons/briefcase.svg' : '/images/icons/bag.svg')
+                            ->icon('/images/icons/bag.svg')
                             ->color('gray')
                             ->grow(false),
                         Tables\Columns\TextColumn::make('rating')
@@ -299,7 +325,6 @@ class ReviewResource extends Resource
                             ->alignEnd(),
                     ])->extraAttributes(['class' => 'mb-2 border-b border-gray-100 dark:border-gray-800 pb-2']),
 
-                    // Middle Box (The Review Content)
                     Tables\Columns\Layout\Stack::make([
                         Tables\Columns\ImageColumn::make('photo')
                             ->label('')
@@ -311,10 +336,8 @@ class ReviewResource extends Resource
                         Tables\Columns\TextColumn::make('comment')
                             ->formatStateUsing(fn ($state) => __($state))
                             ->size('sm'),
-
                     ])->extraAttributes(['class' => 'bg-gray-50 dark:bg-gray-900 rounded-xl p-3']),
 
-                    // Footer (Date & Meta)
                     Tables\Columns\Layout\Split::make([
                         Tables\Columns\TextColumn::make('created_at')
                             ->date('d M Y, H:i')
@@ -322,25 +345,34 @@ class ReviewResource extends Resource
                             ->color('gray')
                             ->icon('/images/icons/clock.svg'),
                     ])->extraAttributes(['class' => 'mt-2 pt-2']),
-
                 ])->space(3)->extraAttributes(['class' => 'p-4 bg-white dark:bg-gray-950 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800']),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make()
+                    ->label(__('Lihat'))
+                    ->button()
+                    ->color('gray')
+                    ->size('sm')
+                    ->extraAttributes(['class' => 'flex-1 justify-center rounded-lg shadow-sm font-bold']),
                 Tables\Actions\EditAction::make()
                     ->label(__('Ubah'))
                     ->button()
                     ->color('warning')
                     ->size('sm')
-                    ->extraAttributes(['class' => 'flex-1 justify-center rounded-lg shadow-sm font-bold'])
-                    ->slideOver()
-                    ->after(fn () => NativeNotificationHelper::success(__('Ulasan berhasil diperbarui.'))),
+                    ->extraAttributes(['class' => 'flex-1 justify-center rounded-lg shadow-sm font-bold']),
                 Tables\Actions\DeleteAction::make()
                     ->label(__('Hapus'))
                     ->button()
                     ->color('danger')
                     ->size('sm')
                     ->extraAttributes(['class' => 'flex-1 justify-center rounded-lg shadow-sm font-bold'])
-                    ->after(fn () => NativeNotificationHelper::info(__('Dihapus'), __('Ulasan Anda telah dihapus.'))),
+                    ->after(function () {
+                        \Filament\Notifications\Notification::make()
+                            ->title(__('Dihapus'))
+                            ->body(__('Ulasan Anda telah dihapus.'))
+                            ->info()
+                            ->send();
+                    }),
             ])
             ->actionsAlignment('center')
             ->extraAttributes([
@@ -351,14 +383,12 @@ class ReviewResource extends Resource
                     ->searchable()
                     ->label(__('Rating'))
                     ->options([
-                        // Ikon ★☆ murni hardcoded — bukan teks, tanpa angka, jangan dimasukkan ke language.
                         5 => '★★★★★',
                         4 => '★★★★☆',
                         3 => '★★★☆☆',
                         2 => '★★☆☆☆',
                         1 => '★☆☆☆☆',
                     ]),
-
                 SelectFilter::make('sort_by')
                     ->searchable()
                     ->label(__('Urutkan'))
@@ -384,52 +414,17 @@ class ReviewResource extends Resource
                     ->badge(fn ($livewire) => count($livewire->getTable()->getFilterIndicators()) > 0 ? count($livewire->getTable()->getFilterIndicators()) : null)
             )
             ->headerActions([
-                // Ulasan ditulis di HALAMAN PENUH (CreateReviews), bukan
-                // slideOver, dan bukan MODAL.
-                //
-                // Kenapa bukan modal: tombol ini sekarang tautan biasa ke
-                // halaman CreateReviews (mode "pilih katalog", route
-                // /flowerdecorationscatalog/reviews). User mendarat di
-                // halaman penuh, memilih katalog, lalu FORM-nya yang terbuka
-                // ada di halaman CreateReviews milik katalog itu.
-                //
-                // Kenapa tombolnya jadi halaman pilih katalog dulu: halaman
-                // CreateReviews milik SATU katalog (route /{record}/reviews),
-                // jadi dari daftar ulasan -- yang tidak punya satu katalog
-                // tunggal -- harus ada langkah memilih katalog.
-                //
-                // Daftar pilihannya TIDAK dibatasi ke katalog yang sudah
-                // dipesan: tombol yang tidak bisa dipakai sama sekali
-                // (daftar kosong) lebih buruk daripada bolehnya mengulas
-                // katalog yang belum dibeli -- halaman detail katalog memang
-                // sudah menawarkan hal yang sama.
-                Tables\Actions\Action::make('write_review')
+                Tables\Actions\Action::make('create_review')
                     ->label(__('Tulis Komentar Penilaian'))
                     ->button()
                     ->color('primary')
                     ->size('lg')
                     ->icon('/images/icons/pencil.svg')
-                    // Tautan biasa ke halaman CreateReviews (mode "pilih
-                    // katalog"), BUKAN action yang membuka modal.
-                    ->url(fn (): string => CatalogResource::getUrl('write-review'))
+                    ->url(fn (): string => static::getUrl('create'))
                     ->visible(fn (): bool => static::reviewableCatalogOptions() !== []),
             ]);
     }
 
-    /**
-     * Katalog yang bisa diulas oleh user yang sedang login.
-     *
-     * Semua katalog aktif yang BELUM diulas user ini. Katalog yang sudah
-     * diulas disembunyikan: CreateReviews akan memantulkan user dengan
-     * "Anda sudah menulis ulasan untuk katalog ini", jadi menawarkan lagi
-     * hanya membuang klik.
-     *
-     * Katalog yang SUDAH pernah dipesan user didahulukan -- itu kandidat
-     * paling mungkin mau diulas -- tapi TIDAK jadi syarat: user yang belum
-     * pernah memesan pun harus bisa menulis ulasan, lewat tombol yang sama.
-     *
-     * @return array<int|string, string>
-     */
     public static function reviewableCatalogOptions(): array
     {
         $query = static::reviewableCatalogQuery();
@@ -445,17 +440,6 @@ class ReviewResource extends Resource
             ->all();
     }
 
-    /**
-     * Katalog aktif yang BELUM diulas user yang sedang login -- versi MODEL.
-     *
-     * Dipakai halaman CreateReviews (mode "pilih katalog") untuk menampilkan
-     * kartu katalog. Bedanya dengan `reviewableCatalogOptions()`: yang ini
-     * memuat media (buat thumbnail) dan mengembalikan modelnya, sedangkan
-     * yang itu cuma id => nama (dipakai untuk pengecekan "ada tidaknya katalog
-     * yang bisa diulas" -- dipanggil tiap render, jadi harus ringan).
-     *
-     * @return Collection<int, Catalog>
-     */
     public static function reviewableCatalogs(): Collection
     {
         $query = static::reviewableCatalogQuery();
@@ -469,12 +453,6 @@ class ReviewResource extends Resource
         )->values();
     }
 
-    /**
-     * Query katalog aktif yang BELUM diulas user yang sedang login.
-     *
-     * Null kalau tidak ada user yang login (tamu) -- pemanggil wajib
-     * mengembalikannya sebagai daftar kosong.
-     */
     protected static function reviewableCatalogQuery(): ?Builder
     {
         $userId = Filament::auth()->id();
@@ -483,7 +461,7 @@ class ReviewResource extends Resource
             return null;
         }
 
-        $reviewed = Review::query()
+        $reviewed = MyReview::query()
             ->where('user_id', $userId)
             ->pluck('catalog_id')
             ->all();
@@ -493,11 +471,6 @@ class ReviewResource extends Resource
             ->when($reviewed !== [], fn (Builder $query) => $query->whereNotIn('id', $reviewed));
     }
 
-    /**
-     * Katalog yang SUDAH pernah dipesan user didahulukan.
-     *
-     * Urutannya: kandidat yang paling mungkin mau diulas di depan.
-     */
     protected static function orderReviewedFirst(Collection $catalogs): Collection
     {
         $ordered = Order::query()
@@ -511,7 +484,10 @@ class ReviewResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ManageReviews::route('/'),
+            'index' => ManageMyReviews::route('/'),
+            'create' => CreateMyReview::route('/create'),
+            'view' => ViewMyReview::route('/{record}'),
+            'edit' => EditMyReview::route('/{record}/edit'),
         ];
     }
 }

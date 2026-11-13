@@ -19,7 +19,7 @@
 </head>
 <body>
     <div class="header">
-        <div class="brand">Dekorasi Bunga Pernikahan</div>
+        <div class="brand">Timeless Florals</div>
         <h1>Formulir Kebutuhan Acara</h1>
         <div class="muted">Ringkasan konsultasi untuk {{ $inbox->inbox_title }}</div>
     </div>

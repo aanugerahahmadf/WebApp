@@ -64,7 +64,7 @@ class CheckWebsiteMaintenance
 
         // 6. Render halaman maintenance jika aktif
         $message = $config['message'] ?? __('Website sedang dalam pemeliharaan berkala.');
-        $brandName = config('app-font.brand_name', 'Dekorasi Bunga Pernikahan');
+        $brandName = config('app-font.brand_name', 'Timeless Florals');
         $httpStatus = (int) ($config['http_status'] ?? 503);
 
         return response()->view('Shared.maintenance.maintenance', [

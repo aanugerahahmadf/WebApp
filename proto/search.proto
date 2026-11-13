@@ -8,7 +8,7 @@ import "proto/package.proto";
 
 option php_namespace = "App\\Grpc\\Search";
 option java_package = "com.weddingapp.search";
-option csharp_namespace = "WeddingApp.Search";
+option csharp_namespace = "TimelessFlorals.Search";
 option go_package = "github.com/weddingapp/grpc/search";
 
 service SearchService {

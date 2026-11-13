@@ -17,10 +17,10 @@
     @if(!$isMobile)
         <a href="{{ \App\Support\AppPlatform\AppPlatform::normalizeUrl(url('/')) }}"
             class="flex items-center shrink-0 {{ (isset($hideLogo) && $hideLogo) ? 'hidden' : '' }}">
-            <img src="{{ asset('favicon.ico') }}" alt="{{ __('Dekorasi Bunga Pernikahan Logo') }}"
+            <img src="{{ asset('favicon.ico') }}" alt="{{ __('Timeless Florals Logo') }}"
                 class="w-8 h-8 rounded shrink-0">
             <span class="ml-3 text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100 hidden sm:block">
-                {{ __('Dekorasi Bunga Pernikahan') }}
+                {{ __('Timeless Florals') }}
             </span>
         </a>
     @else

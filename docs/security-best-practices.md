@@ -1,8 +1,8 @@
-# Security Best Practices — Wedding Flower Decorations CBIR
+# Security Best Practices — Timeless Florals CBIR
 
 Dokumen ini menyumutikan praktik terbaik keamanan yang harus diimplementasikan
 dan diikuti selama pengembangan, deployment, dan maintenance aplikasi
-**Wedding Flower Decorations CBIR**.
+**Timeless Florals CBIR**.
 
 > **Catatan:** Dokumen ini harus dibaca bersama dengan
 > `docs/environment-configuration/environment-configuration.md` dan
@@ -25,7 +25,7 @@ dan diikuti selama pengembangan, deployment, dan maintenance aplikasi
 
 ```dotenv
 # .env.example — hanya nama variabel, nilai placeholder
-APP_NAME=Wedding Flower Decorations
+APP_NAME=Timeless Florals
 APP_ENV=local
 APP_KEY=base64:CHANGE_THIS_TO_A_UNIQUE_KEY
 APP_DEBUG=true
@@ -287,4 +287,4 @@ Jika Anda menemukan kerentanan keamanan atau ingin menambahkan praktik terbaik,
 buat issue di repositori atau kirim pull request dengan pembaruan dokumentasi ini.
 
 **Hak Cipta (c) 2026 Anugerah Ahmad Fachrurochim.**
-Bagian dari dokumentasi lengkap aplikasi Wedding Flower Decorations CBIR.
+Bagian dari dokumentasi lengkap aplikasi Timeless Florals CBIR.

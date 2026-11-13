@@ -8,6 +8,7 @@ use App\Models\Package\Package;
 use App\Models\Catalog\Catalog;
 use App\Models\Transaction\Transaction;
 use App\Models\User\User;
+use App\Models\Order\OrderTimeline;
 
 use App\Enums\OrderPaymentStatus\OrderPaymentStatus;
 use App\Enums\OrderStatus\OrderStatus;
@@ -94,6 +95,14 @@ class Order extends Model
         'quantity',
         'notes',
         'cancelled_at',
+        'shipping_courier',
+        'shipping_courier_name',
+        'tracking_number',
+        'tracking_url',
+        'shipping_status',
+        'shipped_at',
+        'delivered_at',
+        'shipping_notes',
     ];
 
     protected $casts = [
@@ -102,6 +111,8 @@ class Order extends Model
         'status' => OrderStatus::class,
         'payment_status' => OrderPaymentStatus::class,
         'cancelled_at' => 'datetime',
+        'shipped_at' => 'datetime',
+        'delivered_at' => 'datetime',
     ];
 
     protected $appends = ['event_date'];
@@ -134,6 +145,11 @@ class Order extends Model
     public function transactions()
     {
         return $this->hasMany(Transaction::class);
+    }
+
+    public function timelines()
+    {
+        return $this->hasMany(OrderTimeline::class, 'order_id');
     }
 
     public function latestTransaction()

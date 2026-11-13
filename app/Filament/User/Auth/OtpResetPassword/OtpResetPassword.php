@@ -3,7 +3,6 @@
 namespace App\Filament\User\Auth\OtpResetPassword;
 use App\Filament\User\Auth\VerifyOtp\VerifyOtp;
 
-use App\Filament\User\Auth\Concerns\HasAuthBreadcrumbs;
 use App\Models\User\User;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -21,8 +20,6 @@ use Illuminate\Support\Facades\Hash;
 
 class OtpResetPassword extends BaseResetPassword
 {
-    use HasAuthBreadcrumbs;
-
     public function getView(): string
     {
         return 'User.auth.otp-reset-password.otp-reset-password';

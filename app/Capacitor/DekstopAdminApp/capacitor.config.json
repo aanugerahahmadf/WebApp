@@ -1,6 +1,6 @@
 {
   "appId": "id.dekorasi.pengantin.admin",
-  "appName": "Dekorasi Admin",
+  "appName": "Timeless Florals Admin",
   "webDir": "dist",
   "server": {
     "url": "http://127.0.0.1:8000/admin",

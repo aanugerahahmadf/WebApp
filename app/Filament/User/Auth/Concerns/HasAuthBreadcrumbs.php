@@ -9,6 +9,10 @@ use App\Support\StorefrontUrls\StorefrontUrls;
  * Breadcrumb dinamis untuk halaman Auth (layout simple tidak render
  * breadcrumbs bawaan Filament, jadi view me-render manual via partial).
  *
+ * SAAT INI HANYA SignIn YANG MEMAKAI TRAIT INI. Halaman auth lain
+ * (Auth, SignUp, OTP, Complete Profile, Security Question, Two Factor)
+ * sengaja tidak menampilkan breadcrumb, jadi trait-nya tidak dipasang di sana.
+ *
  * Parent crumb mengikuti halaman asal klik (`url()->previous()` +
  * `url.intended`), bukan hardcode Home. Tanpa asal valid, hanya
  * judul halaman saat ini yang tampil.

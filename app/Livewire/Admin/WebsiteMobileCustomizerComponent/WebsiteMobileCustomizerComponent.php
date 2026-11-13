@@ -161,7 +161,7 @@ class WebsiteMobileCustomizerComponent extends Component implements \Filament\Fo
                 Section::make(__('Mobile Android (Flutter)'))
                     ->description(__('Pengaturan aplikasi mobile Flutter untuk Android.'))
                     ->schema([
-                        TextInput::make('mobile_flutter.app_name')->label(__('Nama Aplikasi'))->default($this->data['mobile_flutter']['app_name'] ?? 'Dekorasi Bunga Pernikahan'),
+                        TextInput::make('mobile_flutter.app_name')->label(__('Nama Aplikasi'))->default($this->data['mobile_flutter']['app_name'] ?? 'Timeless Florals'),
                         TextInput::make('mobile_flutter.tagline')->label(__('Tagline'))->default($this->data['mobile_flutter']['tagline'] ?? ''),
                         ColorPicker::make('mobile_flutter.primary_color')->label(__('Warna Utama'))->default($this->data['mobile_flutter']['primary_color'] ?? '#6366f1'),
                         TextInput::make('mobile_flutter.splash_tagline')->label(__('Tagline Splash Screen'))->default($this->data['mobile_flutter']['splash_tagline'] ?? ''),

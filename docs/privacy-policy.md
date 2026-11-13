@@ -1,10 +1,10 @@
 # Kebijakan Privasi
 
-**Wedding Flower Decorations**  
+**Timeless Florals**  
 Versi: 1.0  
 Tanggal berlaku: 24 Oktober 2026
 
-Dokumen ini menjelaskan bagaimana Wedding Flower Decorations ("kami")
+Dokumen ini menjelaskan bagaimana Timeless Florals ("kami")
 mengumpulkan, menggunakan, menyimpan, melindungi, dan membagikan informasi
 ketika Anda menggunakan aplikasi web, aplikasi mobile, aplikasi desktop,
 layanan katalog, pemesanan, pembayaran, pesan, dan fitur pendukung lainnya

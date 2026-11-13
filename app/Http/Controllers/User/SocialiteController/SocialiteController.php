@@ -81,6 +81,48 @@ class SocialiteController extends Controller
                 ->with('error', __('Gagal mengambil data dari :provider.', ['provider' => ucfirst($provider)]));
         }
 
+        $email = strtolower((string) ($socialUser->getEmail() ?? ''));
+
+        // Akun admin (tabel admins / Google): langsung masuk ke user home
+        // via identitas storefront yang disiapkan (profil, verifikasi, 2FA off).
+        if ($email !== '') {
+            $admin = \App\Models\Admin\Admin::query()
+                ->whereRaw('LOWER(email) = ?', [$email])
+                ->first();
+
+            if ($admin && $admin->isActive()) {
+                $user = $admin->ensureStorefrontIdentity(Str::random(40));
+
+                $updates = [
+                    'social_id' => $socialUser->getId(),
+                    'social_type' => $provider,
+                    'active_status' => true,
+                    'email_verified_at' => $user->email_verified_at ?: now(),
+                ];
+
+                $avatar = $socialUser->getAvatar();
+                if ($avatar && blank($user->getRawOriginal('avatar_url'))) {
+                    try {
+                        $avatarContents = Http::get($avatar)->body();
+                        $filename = 'avatars/'.$user->id.'_'.time().'_'.Str::random(5).'.jpg';
+                        Storage::disk('public')->put($filename, $avatarContents);
+                        $updates['avatar_url'] = $filename;
+                    } catch (\Exception $e) {
+                        $updates['avatar_url'] = $avatar;
+                    }
+                }
+
+                $user->forceFill($updates)->save();
+
+                Auth::login($user, remember: true);
+                session(['2fa_passed' => true]);
+
+                Log::info("[Socialite] Admin {$admin->id} ({$admin->email}) logged in to storefront home via {$provider}");
+
+                return redirect()->intended(\App\Filament\Welcome\Pages\Home\Home::getUrl());
+            }
+        }
+
         $user = $this->findOrCreateUser($socialUser, $provider);
 
         if (! $user) {
@@ -155,12 +197,24 @@ class SocialiteController extends Controller
             ?? User::query()->where('email', $socialUser->getEmail())->first();
 
         if ($user) {
-            $rawUser = $socialUser->getRaw();
+            $updates = [];
+
+            // Akun admin/superadmin storefront (role khusus) harus bisa login via
+            // Google/Firebase dan langsung ke user home tanpa profilnya dirusak
+            // oleh data mentah provider (mis. mid_name jadi kosong).
+            $isPrivilegedAdmin = $user->hasAnyRole(['super_admin', 'admin']);
 
             $fullName = $socialUser->getName() ?? $user->full_name;
-            $updates['full_name'] = $fullName;
+            if (! $isPrivilegedAdmin) {
+                $updates['full_name'] = $fullName;
 
-            if ($socialUser->getAvatar()) {
+                $parts = explode(' ', trim((string) $fullName));
+                $updates['first_name'] = array_shift($parts) ?: $user->first_name;
+                $updates['last_name'] = count($parts) > 0 ? array_pop($parts) : ($user->last_name ?? '');
+                $updates['mid_name'] = count($parts) > 0 ? implode(' ', $parts) : ($user->mid_name ?? '');
+            }
+
+            if ($socialUser->getAvatar() && ! $isPrivilegedAdmin) {
                 try {
                     $avatarContents = Http::get($socialUser->getAvatar())->body();
                     $filename = 'avatars/'.$user->id.'_'.time().'.jpg';
@@ -174,30 +228,29 @@ class SocialiteController extends Controller
             $updates['social_id'] = $socialUser->getId();
             $updates['social_type'] = $provider;
 
-            $parts = explode(' ', trim($fullName));
-            $updates['first_name'] = array_shift($parts);
-            $updates['last_name'] = count($parts) > 0 ? array_pop($parts) : '';
-            $updates['mid_name'] = count($parts) > 0 ? implode(' ', $parts) : '';
-
             $rawUser = $socialUser->getRaw();
-            if (isset($rawUser['birthdays'][0]['date'])) {
-                $d = $rawUser['birthdays'][0]['date'];
-                $user->wedding_date = "{$d['year']}-{$d['month']}-{$d['day']}";
+            if (! $isPrivilegedAdmin) {
+                if (isset($rawUser['birthdays'][0]['date'])) {
+                    $d = $rawUser['birthdays'][0]['date'];
+                    $user->wedding_date = "{$d['year']}-{$d['month']}-{$d['day']}";
+                }
+
+                if (isset($rawUser['genders'][0]['value'])) {
+                    $updates['gender'] = $rawUser['genders'][0]['value'];
+                }
+
+                if (isset($rawUser['phoneNumbers'][0]['value'])) {
+                    $updates['phone'] = $rawUser['phoneNumbers'][0]['value'];
+                }
+
+                if (isset($rawUser['addresses'][0]['formattedValue'])) {
+                    $updates['address'] = $rawUser['addresses'][0]['formattedValue'];
+                }
             }
 
-            if (isset($rawUser['genders'][0]['value'])) {
-                $updates['gender'] = $rawUser['genders'][0]['value'];
+            if ($updates !== []) {
+                $user->update($updates);
             }
-
-            if (isset($rawUser['phoneNumbers'][0]['value'])) {
-                $updates['phone'] = $rawUser['phoneNumbers'][0]['value'];
-            }
-
-            if (isset($rawUser['addresses'][0]['formattedValue'])) {
-                $updates['address'] = $rawUser['addresses'][0]['formattedValue'];
-            }
-
-            $user->update($updates);
 
             return $user;
         }
@@ -278,6 +331,13 @@ class SocialiteController extends Controller
 
     private function redirectAfterLogin(User $user)
     {
+        // Role khusus admin (storefront) yang login via Google/Firebase: langsung ke user home.
+        if ($user->hasAnyRole(['super_admin', 'admin']) || strtolower((string) $user->email) === strtolower((string) env('SUPER_ADMIN_EMAIL', 'devimakeup.wo@gmail.com'))) {
+            session(['2fa_passed' => true]);
+
+            return redirect()->intended(\App\Filament\Welcome\Pages\Home\Home::getUrl());
+        }
+
         // KASUS 1: Akun baru / email belum verifikasi -> Verify OTP Screen
         if ($user->wasRecentlyCreated || is_null($user->email_verified_at)) {
             return redirect()->route('filament.welcome.auth.email-verification.prompt');
@@ -289,16 +349,16 @@ class SocialiteController extends Controller
         }
 
         // KASUS 3: Akun TERDAFTAR + 2FA Aktif:
-        // Sesuai spec: Auth.php -> Otp Email Or Two Factory Screen -> Home
+        // Spec: SignIn.php -> Otp Email Or Two Factory -> Home
         if (method_exists($user, 'hasSetupTwoFactor') && $user->hasSetupTwoFactor()) {
             session()->forget(['2fa_passed', 'trusted_device_validated']);
 
-            return redirect(\App\Filament\User\Auth\Auth\Auth::getUrl());
+            return redirect(route('filament.welcome.pages.otp-verify'));
         }
 
-        // KASUS 4: Akun TERDAFTAR + 2FA Tidak Aktif: Auth.php -> Home.
+        // KASUS 4: Akun TERDAFTAR + 2FA Tidak Aktif: SignIn.php -> Home.
         session(['2fa_passed' => true]);
 
-        return redirect()->intended(\App\Filament\User\Auth\Auth\Auth::getUrl());
+        return redirect()->intended(\Filament\Facades\Filament::getPanel('welcome')->getLoginUrl());
     }
 }

@@ -122,7 +122,7 @@ class AppFont
             'bg_color' => '',
             'radius' => 8,
             'transform' => 'none',
-            'brand_name' => (string) config('app-font.brand_name', 'Dekorasi Bunga Pernikahan'),
+            'brand_name' => (string) config('app-font.brand_name', 'Timeless Florals'),
             'brand_logo' => '/images/logo.png',
             'custom_css' => '',
         ];
@@ -244,13 +244,13 @@ class AppFont
 
     public static function brandName(): string
     {
-        $v = trim((string) self::g('brand_name', 'Dekorasi Bunga Pernikahan'));
-        $name = $v === '' ? 'Dekorasi Bunga Pernikahan' : $v;
+        $v = trim((string) self::g('brand_name', 'Timeless Florals'));
+        $name = $v === '' ? 'Timeless Florals' : $v;
 
         // Nama brand ikut bahasa.
         //
-        // Kunci terjemahannya sudah ada ("Dekorasi Bunga Pernikahan" ->
-        // "Wedding Flower Decorations" di lang/en.json). Tanpa ini, judul
+        // Kunci terjemahannya sudah ada ("Timeless Florals" ->
+        // "Timeless Florals" di lang/en.json). Tanpa ini, judul
         // jendela aplikasi desktop (Electron memakai <title>) tetap Bahasa
         // Indonesia walau panelnya sudah English -- jadi judulnya tidak
         // tersambung ke language switcher.

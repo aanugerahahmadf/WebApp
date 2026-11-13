@@ -38,13 +38,13 @@ function resolveServer(): { origin: string; panelPath: string } {
     // `CAPACITOR_ELECTRON_PANEL_PATH` menimpa panel yang dibuka pertama,
     // tanpa mengubah `server.url` (yang dipakai Android dan iOS juga).
     const override = process.env.CAPACITOR_ELECTRON_PANEL_PATH;
+    const panelPath = typeof override === 'string' && override !== ''
+        ? override
+        : `${url.pathname}${url.search}` || '/home';
 
     return {
         origin: url.origin,
-        panelPath: (typeof override === 'string' && override !== ''
-            ? override
-            : url.pathname
-        ).replace(/\/+$/, ''),
+        panelPath: panelPath.replace(/\/+$/, '') || '/home',
     };
 }
 

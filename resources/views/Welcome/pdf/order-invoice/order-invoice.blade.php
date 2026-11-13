@@ -165,7 +165,7 @@ if ($item) {
     }
 }
 
-$appName = config('app.name', 'Wedding Floral Decorations');
+$appName = config('app.name', 'Timeless Florals');
 $now     = now()->format('d M Y, H:i');
 @endphp
 

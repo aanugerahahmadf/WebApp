@@ -2,8 +2,6 @@
 
 namespace App\Filament\User\Auth\SignUp;
 
-use App\Filament\User\Auth\Concerns\HasAuthBreadcrumbs;
-use App\Filament\Welcome\Pages\Home\Home as WelcomeHome;
 use App\Forms\Components\BirthPlaceDatePicker\BirthPlaceDatePicker;
 use App\Models\User\User;
 use App\Services\GeoLocationService\GeoLocationService;
@@ -39,8 +37,6 @@ use Spatie\Permission\Models\Role;
 
 class SignUp extends BaseRegister
 {
-    use HasAuthBreadcrumbs;
-
     public function mount(): void
     {
         // Halaman Sign Up dinonaktifkan; gunakan Google Firebase Gateway (/auth).
@@ -66,32 +62,6 @@ class SignUp extends BaseRegister
     public function getTitle(): string|Htmlable
     {
         return $this->getHeading();
-    }
-
-    /**
-     * Parent crumb Sign Up adalah Welcome Home (`/home`), bukan halaman
-     * auth (`/auth`) dan bukan "asal klik".
-     *
-     * Kenapa tidak `Auth::getUrl()` seperti sebelumnya: `/auth` berheading
-     * "Welcome Back" dan isinya cuma dua tombol (Sign In + Google). Menunjuk
-     * crumb ke sana berarti rantai crumb-nya berbunyi "Welcome Back / Sign Up",
-     * dan "Welcome Back" bukan induk pendaftaran -- tidak ada apa pun di halaman
-     * itu yang membuat orang berniat MEMBUAT akun. Tamu yang datang di Sign Up
-     * datang dari storefront publik, jadi Beranda yang benar; ini persis yang
-     * sudah dilakukan halaman `Auth\Auth` (lihat getBreadcrumbs() di sana).
-     *
-     * Perilaku default trait HasAuthBreadcrumbs (menebak parent dari
-     * `url()->previous()`) sengaja tidak dipakai di sini. Tebakan itu benar
-     * untuk halaman OTP, tapi untuk Sign Up hasilnya "Kembali" atau crumb
-     * kosong tergantung referer, sehingga rantai crumb-nya tidak konsisten --
-     * crumb yang berbeda untuk halaman yang sama.
-     */
-    public function getBreadcrumbs(): array
-    {
-        return [
-            WelcomeHome::getUrl(panel: 'welcome') => __('Beranda'),
-            $this->getAuthBreadcrumbsCurrentLabel(),
-        ];
     }
 
     protected function getEmailFormComponent(): Component

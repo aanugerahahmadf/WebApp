@@ -1,6 +1,6 @@
 # Indeks Dokumentasi
 
-Dokumen teknis aplikasi Dekorasi Bunga Pernikahan / Wedding Flower Decorations (Mobile & Backend).
+Dokumen teknis aplikasi Timeless Florals (Mobile & Backend).
 Seluruh dokumen memakai Bahasa Indonesia.
 
 ## Daftar Lengkap Dokumen

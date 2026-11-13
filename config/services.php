@@ -164,4 +164,25 @@ return [
     'firebase' => [
         'server_key' => env('FIREBASE_SERVER_KEY', ''),
     ],
+
+    /*
+     * Sinkronisasi pelacakan resi kurir (J&T, SiCepat, Shopee Express, dll).
+     *
+     * Driver `binderbyte` mendukung jnt/sicepat/spx dan banyak kurir lain
+     * via https://api.binderbyte.com (butuh BINDERBYTE_API_KEY).
+     * Driver `biteship` memakai https://api.biteship.com/v1/trackings.
+     * Driver `manual` hanya memakai data resi/URL yang diinput admin.
+     */
+    'courier_tracking' => [
+        'driver' => env('COURIER_TRACKING_DRIVER', 'binderbyte'),
+        'timeout' => (int) env('COURIER_TRACKING_TIMEOUT', 15),
+        'binderbyte' => [
+            'api_key' => env('BINDERBYTE_API_KEY', ''),
+            'base_url' => env('BINDERBYTE_TRACK_URL', 'https://api.binderbyte.com/v1/track'),
+        ],
+        'biteship' => [
+            'api_key' => env('BITESHIP_API_KEY', ''),
+            'base_url' => env('BITESHIP_TRACK_URL', 'https://api.biteship.com/v1'),
+        ],
+    ],
 ];

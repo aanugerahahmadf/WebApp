@@ -450,6 +450,65 @@ class OrderResource extends Resource
                         ->slideOver()
                         ->modalWidth('full'),
 
+                    // Lacak Paket (resi/kurir)
+                    Tables\Actions\Action::make('track_package')
+                        ->label(__('Lacak Paket'))
+                        ->icon('/images/icons/truck.svg')
+                        ->color('info')
+                        ->visible(fn ($record) => filled($record?->tracking_number) || filled($record?->tracking_url) || filled($record?->shipping_courier))
+                        ->url(function ($record): ?string {
+                            $url = $record?->tracking_url;
+                            if (! filled($url) && filled($record?->tracking_number)) {
+                                $url = \App\Support\ShippingTracking\ShippingTracking::trackingUrl($record?->shipping_courier, $record?->tracking_number);
+                            }
+
+                            return filled($url) ? $url : null;
+                        }, shouldOpenInNewTab: true)
+                        ->disabled(fn ($record): bool => blank($record?->tracking_url) && blank(\App\Support\ShippingTracking\ShippingTracking::trackingUrl($record?->shipping_courier, $record?->tracking_number)))
+                        ->tooltip(fn ($record) => filled($record?->tracking_number) ? __('Resi: :resi', ['resi' => $record->tracking_number]) : __('Lacak pengiriman')),
+
+                    // Pesanan Diterima (selesai)
+                    Tables\Actions\Action::make('confirm_received')
+                        ->label(__('Pesanan Diterima'))
+                        ->icon('/images/icons/check_badge.svg')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalHeading(__('Pesanan Diterima'))
+                        ->modalDescription(__('Konfirmasi bahwa pesanan sudah diterima dan selesai?'))
+                        ->visible(function ($record): bool {
+                            if (! $record) return false;
+                            if (in_array($record->status, [OrderStatus::COMPLETED, OrderStatus::CANCELLED], true)) return false;
+                            $pay = $record->payment_status instanceof OrderPaymentStatus ? $record->payment_status->value : (string) $record->payment_status;
+                            if (! in_array($pay, ['paid', 'partial'], true)) return false;
+                            $ship = (string) ($record->shipping_status ?? '');
+                            return ! in_array($ship, ['returned', 'failed'], true);
+                        })
+                        ->action(function ($record) {
+                            $updates = ['status' => OrderStatus::COMPLETED];
+                            if (($record->shipping_status ?? null) === 'delivered' && ! $record->delivered_at) {
+                                $updates['delivered_at'] = now();
+                            }
+                            $record->update($updates);
+                            try {
+                                \App\Models\Order\OrderTimeline::create([
+                                    'order_id' => $record->id,
+                                    'status' => 'completed',
+                                    'description' => __('Pesanan dikonfirmasi diterima oleh pembeli.'),
+                                    'metadata' => ['source' => 'buyer_confirm_received_panel'],
+                                    'created_by' => auth()->id(),
+                                ]);
+                            } catch (\Throwable) {}
+                            Notification::make()->title(__('Pesanan selesai'))->body(__('Pesanan dikonfirmasi diterima.'))->success()->send();
+                        }),
+
+                    // Beli Lagi
+                    Tables\Actions\Action::make('buy_again')
+                        ->label(__('Beli Lagi'))
+                        ->icon('/images/icons/bag.svg')
+                        ->color('primary')
+                        ->visible(fn ($record) => filled($record?->catalog_id))
+                        ->url(fn ($record) => CatalogResource::getUrl('view', ['record' => $record->catalog_id])),
+
                     // Edit
                     Tables\Actions\EditAction::make()
                         ->label(__('Ubah Pesanan'))
@@ -611,7 +670,7 @@ class OrderResource extends Resource
                 // Alert/Status Box
                 Infolists\Components\Section::make()
                     ->schema([
-                        Infolists\Components\Grid::make(3)->schema([
+                        Infolists\Components\Grid::make(4)->schema([
                             Infolists\Components\TextEntry::make('status')
                                 ->label(__('Status Pesanan'))
                                 ->badge()
@@ -620,6 +679,17 @@ class OrderResource extends Resource
                                 ->label(__('Status Pembayaran'))
                                 ->badge()
                                 ->size(Infolists\Components\TextEntry\TextEntrySize::Large),
+                            Infolists\Components\TextEntry::make('shipping_status')
+                                ->label(__('Status Pengiriman'))
+                                ->formatStateUsing(fn ($state) => $state ? (\App\Support\ShippingTracking\ShippingTracking::shippingStatuses()[$state] ?? $state) : __('Belum Ada Resi'))
+                                ->badge()
+                                ->color(fn ($state) => match ($state) {
+                                    'delivered' => 'success',
+                                    'in_transit', 'out_for_delivery', 'picked_up', 'packed' => 'info',
+                                    'returned', 'failed' => 'danger',
+                                    default => 'gray',
+                                })
+                                ->placeholder(__('Belum Ada Resi')),
                             Infolists\Components\TextEntry::make('order_number')
                                 ->label(__('No. Pesanan'))
                                 ->weight(FontWeight::Bold)
@@ -697,6 +767,17 @@ class OrderResource extends Resource
                             ->hiddenLabel()
 
                             ->columnSpanFull(),
+                    ]),
+
+                // Pengiriman & Pelacakan
+                Infolists\Components\Section::make(__('Pengiriman & Pelacakan'))
+                    ->icon('/images/icons/truck.svg')
+                    ->iconColor('info')
+                    ->compact()
+                    ->schema([
+                        Infolists\Components\ViewEntry::make('shipping_tracking')
+                            ->hiddenLabel()
+                            ->view('Shared.components.order-shipping-tracking.order-shipping-tracking'),
                     ]),
 
                 // Metode Pembayaran & Countdown

@@ -2,7 +2,6 @@
 
 namespace App\Filament\User\Auth\SecurityQuestion;
 
-use App\Filament\User\Auth\Concerns\HasAuthBreadcrumbs;
 use App\Filament\User\Auth\TwoFactorAuth\TwoFactorAuth;
 use App\Filament\Welcome\Pages\Home\Home;
 use Filament\Actions\Action;
@@ -29,8 +28,6 @@ use Illuminate\Contracts\Support\Htmlable;
  */
 class SecurityQuestion extends Page
 {
-    use HasAuthBreadcrumbs;
-
     protected static string $view = 'User.auth.security-question.security-question';
 
     // Gaya Auth: layout simple fullscreen seperti SignIn/VerifyOtp,
@@ -44,6 +41,15 @@ class SecurityQuestion extends Page
 
     public function mount(): void
     {
+        $user = auth()->user();
+
+        // Akun admin/superadmin selalu langsung ke user home.
+        if ($user && method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['super_admin', 'admin'])) {
+            $this->redirect(Home::getUrl());
+
+            return;
+        }
+
         // Sudah menjawab di alur ini sebelumnya (mis. refresh, atau kembali
         // dari TwoFactorAuth) -- jangan tanya lagi.
         if (session()->pull('security_question_answered', false)) {

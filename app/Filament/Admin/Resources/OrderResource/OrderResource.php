@@ -14,6 +14,12 @@ use App\Filament\Shared\Concerns\HasStandardActions\HasStandardActions;
 use App\Forms\Components\CheckoutCalendarPicker\CheckoutCalendarPicker;
 use App\Models\Order\Order;
 use App\Support\AppIcon\AppIcon;
+use App\Support\ShippingTracking\ShippingTracking;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
@@ -84,6 +90,45 @@ class OrderResource extends Resource
                     ->required();
             }
         }
+
+        $schema[] = Section::make(__('Pengiriman & Pelacakan'))
+            ->description(__('Isi kurir dan nomor resi (J&T, SiCepat, Shopee Express, atau kurir lainnya) agar pelanggan dapat melacak pesanan.'))
+            ->columns(2)
+            ->schema([
+                Select::make('shipping_courier')
+                    ->label(__('Kurir'))
+                    ->options(ShippingTracking::couriers())
+                    ->searchable()
+                    ->native(false)
+                    ->live(),
+                TextInput::make('shipping_courier_name')
+                    ->label(__('Nama Kurir (Lainnya)'))
+                    ->placeholder(__('Contoh: Kurir Toko / Kurir Lokal'))
+                    ->visible(fn ($get): bool => $get('shipping_courier') === 'other'),
+                TextInput::make('tracking_number')
+                    ->label(__('Nomor Resi'))
+                    ->placeholder(__('Masukkan nomor resi pengiriman'))
+                    ->maxLength(255),
+                TextInput::make('tracking_url')
+                    ->label(__('Tautan Pelacakan'))
+                    ->url()
+                    ->placeholder(__('Opsional, otomatis dari kurir & resi jika kosong'))
+                    ->maxLength(2048),
+                Select::make('shipping_status')
+                    ->label(__('Status Pengiriman'))
+                    ->options(ShippingTracking::shippingStatuses())
+                    ->native(false),
+                DateTimePicker::make('shipped_at')
+                    ->label(__('Waktu Dikirim'))
+                    ->seconds(false),
+                DateTimePicker::make('delivered_at')
+                    ->label(__('Waktu Diterima'))
+                    ->seconds(false),
+                Textarea::make('shipping_notes')
+                    ->label(__('Catatan Pengiriman'))
+                    ->rows(2)
+                    ->columnSpanFull(),
+            ]);
 
         return $form->schema($schema);
     }

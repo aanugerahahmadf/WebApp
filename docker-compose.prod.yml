@@ -12,7 +12,7 @@ services:
         ports:
             - '${APP_PORT:-8000}:80'
         environment:
-            APP_NAME: ${APP_NAME:-Wedding Flower Decorations}
+            APP_NAME: ${APP_NAME:-Timeless Florals}
             APP_ENV: production
             APP_DEBUG: ${APP_DEBUG:-false}
             APP_URL: ${APP_URL}

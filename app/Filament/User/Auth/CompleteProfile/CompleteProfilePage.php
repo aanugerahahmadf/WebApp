@@ -2,14 +2,12 @@
 
 namespace App\Filament\User\Auth\CompleteProfile;
 
-use App\Filament\User\Auth\Concerns\HasAuthBreadcrumbs;
 use App\Filament\Welcome\Pages\Home\Home;
 use Filament\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
 
 class CompleteProfilePage extends Page
 {
-    use HasAuthBreadcrumbs;
     protected static string $view = 'User.auth.complete-profile.complete-profile';
 
     // Gaya Auth: layout simple fullscreen seperti SignIn/VerifyOtp,
@@ -25,9 +23,16 @@ class CompleteProfilePage extends Page
     {
         $user = auth()->user();
 
-        // Sudah lengkap -> langsung ke home, jangan stuck di form.
-        if ($user && method_exists($user, 'isProfileComplete') && $user->isProfileComplete()) {
+        // Role admin khusus: langsung ke user home.
+        if ($user && method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['super_admin', 'admin'])) {
             $this->redirect(Home::getUrl());
+
+            return;
+        }
+
+        // Sudah lengkap -> lanjut ke Security Question (alur Google Gateway).
+        if ($user && method_exists($user, 'isProfileComplete') && $user->isProfileComplete()) {
+            $this->redirect(\App\Filament\User\Auth\SecurityQuestion\SecurityQuestion::getUrl());
         }
     }
 

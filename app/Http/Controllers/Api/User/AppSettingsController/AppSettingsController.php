@@ -80,7 +80,7 @@ class AppSettingsController extends Controller
                 'app_name' => $mobile['app_name'] ?? $appearance['brand_name'] ?? $config['app_name'] ?? config('app.name'),
                 'owner_name' => $config['owner_name'] ?? config('app.name'),
                 'demo_video_url' => $config['demo_video_url'] ?? '',
-                'brand_name' => $appearance['brand_name'] ?? 'Dekorasi Bunga Pernikahan',
+                'brand_name' => $appearance['brand_name'] ?? 'Timeless Florals',
                 'brand_logo' => $appearance['brand_logo'] ?? '/images/logo.png',
                 'tagline' => $mobile['tagline'] ?? $appearance['tagline'] ?? 'Wujudkan Momen Pernikahan Impian Anda',
                 'accent_color' => $mobile['primary_color'] ?? $appearance['accent_color'] ?? '#6366f1',

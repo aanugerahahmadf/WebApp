@@ -134,10 +134,13 @@ function resolveServer() {
 
     const panelIndex = process.argv.indexOf('--panel');
     const override = panelIndex !== -1 ? process.argv[panelIndex + 1] : undefined;
+    const panelPath = typeof override === 'string' && override !== ''
+        ? override
+        : `${url.pathname}${url.search}` || '/home';
 
     return {
         origin: url.origin,
-        panelPath: (typeof override === 'string' && override !== '' ? override : url.pathname).replace(/\/+$/, ''),
+        panelPath: panelPath.replace(/\/+$/, '') || '/home',
     };
 }
 

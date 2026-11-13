@@ -106,8 +106,8 @@ class LegalController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'title' => 'About WeddingApp',
-                    'content' => 'Wedding Flower Decorations is your ultimate companion.',
+                    'title' => 'About Timeless Florals',
+                    'content' => 'Timeless Florals is your ultimate companion.',
                     'mission' => null,
                     'owner' => config('app.name'),
                 ],
@@ -120,7 +120,7 @@ class LegalController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'title' => $aboutTitle ?? 'About WeddingApp',
+                'title' => $aboutTitle ?? 'About Timeless Florals',
                 'content' => is_array($aboutContent) ? ($aboutContent['text'] ?? $aboutContent) : $aboutContent,
                 'mission' => is_array($aboutContent) ? ($aboutContent['mission'] ?? null) : null,
                 'owner' => config('app.name'),

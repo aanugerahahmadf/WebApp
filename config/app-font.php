@@ -61,6 +61,6 @@ return [
      * nama brand ke database bisa ikut timeout, jadi halaman error membaca
      * nilai ini (tanpa DB) supaya tidak pernah menggantung.
      */
-    'brand_name' => env('APP_FONT_BRAND_NAME', 'Dekorasi Bunga Pernikahan'),
+    'brand_name' => env('APP_FONT_BRAND_NAME', 'Timeless Florals'),
 
 ];

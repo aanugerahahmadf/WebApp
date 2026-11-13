@@ -3,8 +3,8 @@
 namespace App\Filament\User\Auth\OtpEmailVerificationPrompt;
 
 use App\Filament\User\Auth\CompleteProfile\CompleteProfilePage;
-use App\Filament\User\Auth\Concerns\HasAuthBreadcrumbs;
 use App\Filament\User\Auth\SecurityQuestion\SecurityQuestion;
+use App\Filament\Welcome\Pages\Home\Home;
 use App\Models\User\User;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -23,7 +23,6 @@ use Illuminate\Support\Facades\Mail;
 
 class OtpEmailVerificationPrompt extends EmailVerificationPrompt
 {
-    use HasAuthBreadcrumbs;
     use InteractsWithFormActions;
 
     protected static string $view = 'User.pages.auth.otp-email-verification-prompt.otp-email-verification-prompt';
@@ -34,20 +33,29 @@ class OtpEmailVerificationPrompt extends EmailVerificationPrompt
 
     public function mount(): void
     {
-        if (Filament::auth()->check() && $this->getVerifiable()->hasVerifiedEmail()) {
+        if (Filament::auth()->check()) {
             $user = Filament::auth()->user();
 
-            // Hanya akun Google (social) yang belum lengkap -> Complete Profile.
-            // Akun form (Sign Up) datanya sudah sama -> langsung home.
-            if ($user && method_exists($user, 'shouldCompleteProfile') && $user->shouldCompleteProfile()) {
-                $this->redirect(CompleteProfilePage::getUrl());
+            // Akun admin/superadmin selalu langsung ke user home.
+            if ($user && method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['super_admin', 'admin'])) {
+                $this->redirect(Home::getUrl());
 
                 return;
             }
 
-            $this->redirect(Filament::getUrl());
+            if ($this->getVerifiable()->hasVerifiedEmail()) {
+                // Akun Google (social) yang belum lengkap -> Complete Profile.
+                // Akun form (Sign Up) datanya sudah sama -> Security Question.
+                if ($user && method_exists($user, 'shouldCompleteProfile') && $user->shouldCompleteProfile()) {
+                    $this->redirect(CompleteProfilePage::getUrl());
 
-            return;
+                    return;
+                }
+
+                $this->redirect(SecurityQuestion::getUrl());
+
+                return;
+            }
         }
 
         $this->form->fill();
@@ -107,12 +115,14 @@ class OtpEmailVerificationPrompt extends EmailVerificationPrompt
 
             Notification::make()->title(__('Email berhasil diverifikasi!'))->success()->send();
 
-            // Setelah OTP valid:
-            // - Akun Google yang belum lengkap -> Complete Profile
-            // - Akun form (Sign Up) -> SecurityQuestion untuk memilih 2FA
-            if (method_exists($user, 'shouldCompleteProfile') && $user->shouldCompleteProfile()) {
+            // Setelah OTP valid: admin/superadmin langsung ke user home.
+            if (method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['super_admin', 'admin'])) {
+                $this->redirect(Home::getUrl());
+            } elseif (method_exists($user, 'shouldCompleteProfile') && $user->shouldCompleteProfile()) {
+                // Akun Google yang belum lengkap -> Complete Profile
                 $this->redirect(CompleteProfilePage::getUrl());
             } else {
+                // Akun form (Sign Up) -> SecurityQuestion untuk memilih 2FA
                 $this->redirect(SecurityQuestion::getUrl());
             }
         } else {

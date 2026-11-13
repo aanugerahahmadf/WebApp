@@ -8,7 +8,7 @@ services:
         ports:
             - '8000:80'
         environment:
-            - APP_NAME="Wedding Flower Decorations"
+            - APP_NAME="Timeless Florals"
             - APP_ENV=local
             - APP_DEBUG=true
             - 'APP_URL=http://localhost:8000'

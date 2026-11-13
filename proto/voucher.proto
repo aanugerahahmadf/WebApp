@@ -8,7 +8,7 @@ import "proto/package.proto";
 
 option php_namespace = "App\\Grpc\\Voucher";
 option java_package = "com.weddingapp.voucher";
-option csharp_namespace = "WeddingApp.Voucher";
+option csharp_namespace = "TimelessFlorals.Voucher";
 option go_package = "github.com/weddingapp/grpc/voucher";
 
 service VoucherService {

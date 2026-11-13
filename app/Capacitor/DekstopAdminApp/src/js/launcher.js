@@ -77,7 +77,7 @@ retryEl?.addEventListener('click', () => {
     probe();
 });
 
-if (titleEl) titleEl.textContent = 'Dekorasi Admin';
+if (titleEl) titleEl.textContent = 'Timeless Florals Admin';
 
 // Never leave the splash screen spinning forever.
 setTimeout(() => {

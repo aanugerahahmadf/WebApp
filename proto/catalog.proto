@@ -6,7 +6,7 @@ import "proto/auth.proto";
 
 option php_namespace = "App\\Grpc\\Catalog";
 option java_package = "com.weddingapp.catalog";
-option csharp_namespace = "WeddingApp.Catalog";
+option csharp_namespace = "TimelessFlorals.Catalog";
 option go_package = "github.com/weddingapp/grpc/catalog";
 
 service CatalogService {

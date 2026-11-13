@@ -175,7 +175,7 @@
         <main class="docs-main">
             <a class="back" href="{{ url('/home') }}">← Kembali ke aplikasi</a>
         <div class="eyebrow-row">
-            <div class="eyebrow">Wedding Flower Decorations</div>
+            <div class="eyebrow">Timeless Florals</div>
         </div>
         <article class="markdown" data-doc-key="{{ $selected }}">{!! $document !!}</article>
     </main>

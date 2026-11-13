@@ -24,7 +24,7 @@ class FmAppSetting extends Model
             'bg_color'     => '',          // background body, kosong = bawaan glass
             'radius'       => 8,           // border-radius (px)
             'custom_css'   => '',          // CSS tambahan dari admin
-            'brand_name'   => 'Dekorasi Bunga Pernikahan',
+            'brand_name'   => 'Timeless Florals',
             'brand_logo'   => '/images/logo.png',
         ];
     }
@@ -83,7 +83,7 @@ class FmAppSetting extends Model
         $merged['bg_color']     = ($bg === '' || preg_match('/^#[0-9a-fA-F]{6}$/', $bg)) ? $bg : '';
         $merged['radius']       = max(0, min(32, (int) ($merged['radius'] ?? 8)));
         $merged['custom_css']   = (string) ($merged['custom_css'] ?? '');
-        $merged['brand_name']    = trim((string) ($merged['brand_name'] ?? 'Dekorasi Bunga Pernikahan'));
+        $merged['brand_name']    = trim((string) ($merged['brand_name'] ?? 'Timeless Florals'));
         $merged['brand_logo']    = trim((string) ($merged['brand_logo'] ?? '/images/logo.png'));
 
         $setting = self::firstOrNew(['key' => 'appearance']);

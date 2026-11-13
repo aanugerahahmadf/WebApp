@@ -22,7 +22,7 @@
     <div class="wrapper">
         <div class="content">
             <div class="header">
-                <h1>{{ config('app.name', __('Wedding Floral Decorations')) }}</h1>
+                <h1>{{ config('app.name', __('Timeless Florals')) }}</h1>
             </div>
             
             <div class="body">

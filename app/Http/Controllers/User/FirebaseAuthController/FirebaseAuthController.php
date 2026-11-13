@@ -34,6 +34,45 @@ class FirebaseAuthController extends Controller
             return response()->json(['message' => __('Token Firebase tidak valid.')], 401);
         }
 
+        $email = strtolower((string) ($profile['email'] ?? ''));
+
+        // Akun admin (tabel admins / Google Firebase): langsung masuk ke user home
+        // via identitas storefront yang disiapkan penuh (profil, verifikasi, KYC,
+        // 2FA off), tanpa template/teks perantara.
+        if ($email !== '') {
+            $admin = \App\Models\Admin\Admin::query()
+                ->whereRaw('LOWER(email) = ?', [$email])
+                ->first();
+
+            if ($admin && $admin->isActive()) {
+                $user = $admin->ensureStorefrontIdentity(Str::random(40));
+
+                $localId = $profile['localId'] ?? null;
+                $updates = [
+                    'social_id' => $localId,
+                    'social_type' => 'firebase',
+                    'active_status' => true,
+                    'email_verified_at' => $user->email_verified_at ?: now(),
+                ];
+
+                $photoUrl = $profile['photoUrl'] ?? null;
+                if ($photoUrl && blank($user->getRawOriginal('avatar_url'))) {
+                    $updates['avatar_url'] = $this->downloadAvatar($photoUrl, $user->id);
+                }
+
+                $user->forceFill($updates)->save();
+
+                Auth::login($user, remember: true);
+                session(['2fa_passed' => true]);
+
+                Log::info("[FirebaseAuth] Admin {$admin->id} ({$admin->email}) logged in to storefront home via Firebase");
+
+                return response()->json([
+                    'redirect' => \App\Filament\Welcome\Pages\Home\Home::getUrl(),
+                ]);
+            }
+        }
+
         $user = $this->findOrCreateUser($profile);
 
         if (! $user) {
@@ -43,6 +82,15 @@ class FirebaseAuthController extends Controller
         Auth::login($user, remember: true);
 
         Log::info("[FirebaseAuth] User {$user->id} ({$user->email}) logged in | new={$user->wasRecentlyCreated}");
+
+        // Role khusus admin (storefront) via Google/Firebase: langsung ke user home.
+        if ($user->hasAnyRole(['super_admin', 'admin']) || $email === strtolower((string) env('SUPER_ADMIN_EMAIL', 'devimakeup.wo@gmail.com'))) {
+            session(['2fa_passed' => true]);
+
+            return response()->json([
+                'redirect' => \App\Filament\Welcome\Pages\Home\Home::getUrl(),
+            ]);
+        }
 
         // ── Alur Google Gateway ─────────────────────────────────────────────
         //
@@ -79,20 +127,20 @@ class FirebaseAuthController extends Controller
         // Home (Auth::mount memantul). Jadi di sini tidak ada flag khusus.
 
         // KASUS 3 — Akun TERDAFTAR + 2FA Aktif:
-        // Auth.php -> Otp Email Or Two Factory Screen -> Home
+        // Spec: SignIn.php -> Otp Email Or Two Factory -> Home
         if (method_exists($user, 'hasSetupTwoFactor') && $user->hasSetupTwoFactor()) {
             session()->forget(['2fa_passed', 'trusted_device_validated']);
 
             return response()->json([
-                'redirect' => \App\Filament\User\Auth\Auth\Auth::getUrl(),
+                'redirect' => route('filament.welcome.pages.otp-verify'),
             ]);
         }
 
-        // KASUS 4 — Akun TERDAFTAR + 2FA Tidak Aktif: Auth.php -> Home.
+        // KASUS 4 — Akun TERDAFTAR + 2FA Tidak Aktif: SignIn.php -> Home.
         session(['2fa_passed' => true]);
 
         return response()->json([
-            'redirect' => \App\Filament\User\Auth\Auth\Auth::getUrl(),
+            'redirect' => \Filament\Facades\Filament::getPanel('welcome')->getLoginUrl(),
         ]);
     }
 
@@ -150,12 +198,14 @@ class FirebaseAuthController extends Controller
             ?? ($email ? User::query()->where('email', $email)->first() : null);
 
         if ($user) {
+            $isPrivilegedAdmin = $user->hasAnyRole(['super_admin', 'admin']);
+
             $updates = [
                 'social_id' => $localId,
                 'social_type' => 'firebase',
             ];
 
-            if ($fullName) {
+            if ($fullName && ! $isPrivilegedAdmin) {
                 $updates['full_name'] = $fullName;
                 $parts = explode(' ', trim($fullName));
                 $updates['first_name'] = array_shift($parts);
@@ -163,7 +213,7 @@ class FirebaseAuthController extends Controller
                 $updates['mid_name'] = count($parts) > 0 ? implode(' ', $parts) : '';
             }
 
-            if ($photoUrl) {
+            if ($photoUrl && ! $isPrivilegedAdmin) {
                 $updates['avatar_url'] = $this->downloadAvatar($photoUrl, $user->id);
             }
 

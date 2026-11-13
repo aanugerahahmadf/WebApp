@@ -4,6 +4,6 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="{{ __('Dekorasi Bunga Pernikahan') }}">
+    <meta name="apple-mobile-web-app-title" content="{{ __('Timeless Florals') }}">
     <link rel="apple-touch-icon" href="/images/logo.png">
 @endif

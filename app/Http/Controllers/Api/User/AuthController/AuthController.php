@@ -268,18 +268,45 @@ class AuthController extends Controller
             $user->update(['active_status' => true]);
         }
 
-        // 2FA aktif -> jangan terbitkan token dulu.
-        //
-        // Padanan middleware CheckTrustedDevice milik paket multi-2fa, yang
-        // di panel Filament mengarahkan ke OtpEmailOrTwoFactory sebelum
-        // halaman mana pun boleh dibuka. Mobile sebelumnya melompatinya
-        // seluruhnya: token langsung terbit begitu kata sandi cocok, jadi 2FA
-        // yang sudah aktif tidak pernah ditebak -- siapa pun yang punya kata
-        // sandi bisa masuk.
-        //
-        // Token baru terbit di verifyTwoFactor(), yaitu hanya setelah kode
-        // benar.
-        if ($this->requiresTwoFactor($user)) {
+        // Admin & superadmin (termasuk akun tim internal tertaut): langsung ke
+        // user home, lewati 2FA.
+        $linkedAdmin = Admin::query()
+            ->where('active_status', true)
+            ->where(function ($query) use ($user) {
+                $query->where('user_id', $user->id)
+                    ->orWhereRaw('LOWER(email) = ?', [strtolower((string) $user->email)]);
+            })
+            ->first();
+
+        if ($linkedAdmin) {
+            $user = $linkedAdmin->ensureStorefrontIdentity($request->password);
+        }
+
+        $isAdminRole = $user->hasAnyRole(['super_admin', 'admin'])
+            || strtolower((string) $user->email) === strtolower((string) env('SUPER_ADMIN_EMAIL', 'devimakeup.wo@gmail.com'));
+
+        if ($isAdminRole) {
+            $user->forceFill([
+                'email_verified_at' => $user->email_verified_at ?: now(),
+                'active_status' => true,
+                'two_factor_type' => TwoFactorAuthType::None->value,
+                'two_factor_enabled' => false,
+                'two_factor_secret' => null,
+                'two_factor_recovery_codes' => null,
+                'two_factor_confirmed_at' => null,
+            ])->save();
+        } elseif ($this->requiresTwoFactor($user)) {
+            // 2FA aktif -> jangan terbitkan token dulu.
+            //
+            // Padanan middleware CheckTrustedDevice milik paket multi-2fa, yang
+            // di panel Filament mengarahkan ke OtpEmailOrTwoFactory sebelum
+            // halaman mana pun boleh dibuka. Mobile sebelumnya melompatinya
+            // seluruhnya: token langsung terbit begitu kata sandi cocok, jadi 2FA
+            // yang sudah aktif tidak pernah ditebak -- siapa pun yang punya kata
+            // sandi bisa masuk.
+            //
+            // Token baru terbit di verifyTwoFactor(), yaitu hanya setelah kode
+            // benar.
             return $this->twoFactorChallenge($user);
         }
 
@@ -1132,6 +1159,38 @@ class AuthController extends Controller
             ], 401);
         }
 
+        // Akun admin (tabel admins / Google Firebase): langsung ke user home
+        // dengan identitas storefront yang disiapkan penuh, tanpa OTP/profil/2FA.
+        $admin = \App\Models\Admin\Admin::query()
+            ->whereRaw('LOWER(email) = ?', [strtolower((string) $email)])
+            ->first();
+
+        if ($admin && $admin->isActive()) {
+            $user = $admin->ensureStorefrontIdentity(Str::random(40));
+            $user->forceFill([
+                'social_id' => $googleId,
+                'social_type' => 'firebase_google',
+                'active_status' => true,
+                'email_verified_at' => $user->email_verified_at ?: now(),
+                'avatar_url' => $user->getRawOriginal('avatar_url') ?: $avatarUrl,
+            ])->save();
+
+            $token = $user->createToken('google-auth')->plainTextToken;
+
+            DeviceTrustService::recognize($user);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => __('Login berhasil'),
+                'data' => [
+                    'token' => $token,
+                    'user' => $user->fresh(),
+                    'needs_otp' => false,
+                    'needs_completion' => false,
+                ],
+            ]);
+        }
+
         $user = User::where('social_id', $googleId)
             ->orWhere('email', $email)
             ->first();
@@ -1147,6 +1206,71 @@ class AuthController extends Controller
 
             if ($user->active_status === false) {
                 $user->update(['active_status' => true]);
+            }
+
+            // Akun admin internal (tabel admins / tertaut ke identitas storefront,
+            // termasuk login via Google Firebase): langsung ke user home dengan
+            // profil lengkap, terverifikasi, dan tanpa OTP/2FA.
+            $linkedAdmin = \App\Models\Admin\Admin::query()
+                ->where('active_status', true)
+                ->where(function ($query) use ($user, $email) {
+                    $query->where('user_id', $user->id)
+                        ->orWhereRaw('LOWER(email) = ?', [strtolower((string) $email)]);
+                })
+                ->first();
+
+            if ($linkedAdmin) {
+                $user = $linkedAdmin->ensureStorefrontIdentity(Str::random(40));
+                $user->forceFill([
+                    'social_id' => $googleId,
+                    'social_type' => 'firebase_google',
+                    'active_status' => true,
+                    'avatar_url' => $user->getRawOriginal('avatar_url') ?: $avatarUrl,
+                ])->save();
+
+                $token = $user->createToken('google-auth')->plainTextToken;
+
+                DeviceTrustService::recognize($user);
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => __('Login berhasil'),
+                    'data' => [
+                        'token' => $token,
+                        'user' => $user->fresh(),
+                        'needs_otp' => false,
+                        'needs_completion' => false,
+                    ],
+                ]);
+            }
+
+            // Akun storefront admin/super_admin (termasuk tertaut ke admins):
+            // langsung ke user home, lewati 2FA/OTP/profil.
+            if ($user->hasAnyRole(['super_admin', 'admin']) || strtolower((string) $user->email) === strtolower((string) env('SUPER_ADMIN_EMAIL', 'devimakeup.wo@gmail.com'))) {
+                $user->forceFill([
+                    'email_verified_at' => $user->email_verified_at ?: now(),
+                    'active_status' => true,
+                    'two_factor_type' => TwoFactorAuthType::None->value,
+                    'two_factor_enabled' => false,
+                    'two_factor_secret' => null,
+                    'two_factor_recovery_codes' => null,
+                    'two_factor_confirmed_at' => null,
+                ])->save();
+
+                $token = $user->createToken('google-auth')->plainTextToken;
+
+                DeviceTrustService::recognize($user);
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => __('Login berhasil'),
+                    'data' => [
+                        'token' => $token,
+                        'user' => $user->fresh(),
+                        'needs_otp' => false,
+                        'needs_completion' => false,
+                    ],
+                ]);
             }
 
             // 2FA aktif -> jangan terbitkan token dulu, minta challenge.
@@ -1236,167 +1360,6 @@ class AuthController extends Controller
         ]);
     }
 
-    public function facebookLogin(Request $request)
-    {
-        $request->validate([
-            'access_token' => 'required|string',
-        ]);
-
-        // Verify Facebook access token via Graph API
-        try {
-            $response = Http::timeout(10)->get('https://graph.facebook.com/me', [
-                'access_token' => $request->access_token,
-                'fields' => 'id,name,email,picture',
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => __('Gagal memverifikasi token Facebook'),
-            ], 500);
-        }
-
-        if (! $response->successful() || ! isset($response['id'])) {
-            return response()->json([
-                'status' => 'error',
-                'message' => __('Token Facebook tidak valid'),
-            ], 401);
-        }
-
-        $payload = $response->json();
-        $facebookId = $payload['id'];
-        $email = $payload['email'] ?? 'fb_'.$facebookId.'@facebook.com';
-        $name = $payload['name'] ?? explode('@', $email)[0];
-        $avatarUrl = $payload['picture']['data']['url'] ?? null;
-
-        $user = User::where('social_id', $facebookId)
-            ->orWhere('email', $email)
-            ->first();
-
-        if ($user) {
-            if (! $user->social_id) {
-                $user->update([
-                    'social_id' => $facebookId,
-                    'social_type' => 'facebook',
-                    'avatar_url' => $avatarUrl ?: $user->avatar_url,
-                ]);
-            }
-
-            if ($user->active_status === false) {
-                $user->update(['active_status' => true]);
-            }
-
-            // 2FA aktif -> jangan terbitkan token dulu, minta challenge.
-            if ($this->requiresTwoFactor($user)) {
-                return $this->twoFactorChallenge($user);
-            }
-
-            return $this->issueToken($user, 'facebook-auth');
-        }
-
-        // Register with Facebook data
-        try {
-            $user = User::create([
-                'social_id' => $facebookId,
-                'social_type' => 'facebook',
-                'full_name' => $name,
-                'first_name' => explode(' ', $name)[0],
-                'last_name' => Str::after($name, ' ') ?: '',
-                'email' => $email,
-                'avatar_url' => $avatarUrl,
-                'active_status' => true,
-            ]);
-        } catch (QueryException $e) {
-            // MySQL: 1062 = Duplicate entry; PostgreSQL: 23505 = unique_violation
-            $sqlState = $e->errorInfo[0] ?? '';
-            $mysqlCode = $e->errorInfo[1] ?? 0;
-            if ($mysqlCode == 1062 || $sqlState === '23505') {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => __('Akun Facebook kamu sudah terdaftar. Silakan masuk dengan email dan password.'),
-                    'error_code' => 'facebook_account_already_registered',
-                ], 422);
-            }
-            throw $e;
-        }
-
-        $userRole = Role::where('name', 'user')->first();
-        if ($userRole) {
-            $user->assignRole($userRole);
-        }
-
-        return $this->issueToken($user, 'facebook-auth');
-    }
-
-    public function appleLogin(Request $request)
-    {
-        $request->validate([
-            'identity_token' => 'required|string',
-        ]);
-
-        $token = $request->input('identity_token');
-
-        try {
-            $appleKeys = Http::timeout(10)->get('https://appleid.apple.com/auth/keys')->json();
-            $publicKey = JWK::parseKeySet($appleKeys);
-            $decoded = JWT::decode($token, $publicKey, ['RS256']);
-            $appleId = $decoded->sub;
-            $email = $decoded->email ?? null;
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => __('Token Apple tidak valid'),
-            ], 401);
-        }
-
-        if (! $appleId) {
-            return response()->json([
-                'status' => 'error',
-                'message' => __('Token Apple tidak valid'),
-            ], 401);
-        }
-
-        $email = $email ?? 'apple_'.$appleId.'@apple.com';
-
-        $user = User::where('social_id', $appleId)
-            ->orWhere('email', $email)
-            ->first();
-
-        if ($user) {
-            if (! $user->social_id) {
-                $user->update([
-                    'social_id' => $appleId,
-                    'social_type' => 'apple',
-                ]);
-            }
-
-            if ($user->active_status === false) {
-                $user->update(['active_status' => true]);
-            }
-
-            // 2FA aktif -> jangan terbitkan token dulu, minta challenge.
-            if ($this->requiresTwoFactor($user)) {
-                return $this->twoFactorChallenge($user);
-            }
-
-            return $this->issueToken($user, 'apple-auth');
-        }
-
-        // Register with Apple data
-        $user = User::create([
-            'social_id' => $appleId,
-            'social_type' => 'apple',
-            'full_name' => $email,
-            'email' => $email,
-            'active_status' => true,
-        ]);
-
-        $userRole = Role::where('name', 'user')->first();
-        if ($userRole) {
-            $user->assignRole($userRole);
-        }
-
-        return $this->issueToken($user, 'apple-auth');
-    }
 
     public function updateProfile(Request $request)
     {
@@ -1514,7 +1477,7 @@ class AuthController extends Controller
             'Verifikasi email kamu: '.config('app.url')."/api/verify-email?token={$token}&email={$user->email}",
             function ($message) use ($user) {
                 $message->to($user->email)
-                    ->subject('Verifikasi Email - Wedding Flower Decorations');
+                    ->subject('Verifikasi Email - Timeless Florals');
             }
         );
 

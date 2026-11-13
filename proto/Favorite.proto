@@ -8,7 +8,7 @@ import "proto/package.proto";
 
 option php_namespace = "App\\Grpc\\Favorite";
 option java_package = "com.weddingapp.Favorite";
-option csharp_namespace = "WeddingApp.Favorite";
+option csharp_namespace = "TimelessFlorals.Favorite";
 option go_package = "github.com/weddingapp/grpc/Favorite";
 
 service Favoriteservice {

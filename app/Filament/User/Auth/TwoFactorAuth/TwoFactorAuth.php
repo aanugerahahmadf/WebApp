@@ -6,7 +6,6 @@ use App\Filament\Shared\Pages\TwoFactorAuthenticatorPage\TwoFactorAuthenticatorP
 use App\Filament\Welcome\Pages\Home\Home;
 use Filament\Facades\Filament;
 use Illuminate\Contracts\Support\Htmlable;
-use Illuminate\Support\HtmlString;
 use MixCode\FilamentMulti2fa\Enums\TwoFactorAuthType;
 
 /**
@@ -23,16 +22,12 @@ use MixCode\FilamentMulti2fa\Enums\TwoFactorAuthType;
  * perangkat tepercaya. Semuanya diwarisi dari mix-code/filament-multi-2fa lewat
  * TwoFactorAuthenticatorPage, jadi keduanya tidak mungkin terlihat berbeda.
  *
- * Yang berbeda hanya tiga hal, dan ketiganya memang harus:
+ * Yang berbeda hanya dua hal, dan keduanya memang harus:
  *
  *   - URL: dua-factor-auth, bukan di subtree Keamanan.
  *
- *   - Breadcrumb: halaman ini adalah satu langkah di tengah alur, bukan
- *     tempat yang punya induk. Menempelkannya di Pengaturan akan menyesatkan
- *     -- pengguna tidak datang dari sana.
- *
- *   - Setelah 2FA aktif (Menjawab Iya): tetap login, redirect ke Auth.php,
- *     lalu Auth::mount() memantul ke Home. Tanpa logout, tanpa OTP kedua.
+ *   - Setelah 2FA aktif (Menjawab Iya): tetap login, redirect ke SignIn.php,
+ *     lalu SignIn::mount() memantul ke Home. Tanpa logout, tanpa OTP kedua.
  *
  * Opsi "None" tetap tersedia di sini seperti di halaman Pengaturan: pengguna
  * boleh memutuskan tidak memakai 2FA, dan halaman ini tidak memaksanya.
@@ -47,6 +42,13 @@ class TwoFactorAuth extends TwoFactorAuthenticatorPage
     public function mount(): void
     {
         $user = auth()->user();
+
+        // Akun admin/superadmin selalu langsung ke user home.
+        if ($user && method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['super_admin', 'admin'])) {
+            $this->redirect(Home::getUrl());
+
+            return;
+        }
 
         // Sudah aktif: tidak perlu setup lagi, dan halaman paket akan
         // menolak tipe yang sudah dipakai ("You have already verified your
@@ -71,29 +73,17 @@ class TwoFactorAuth extends TwoFactorAuthenticatorPage
     }
 
     /**
-     * @return array<string|HtmlString, string|HtmlString>
-     */
-    public function getBreadcrumbs(): array
-    {
-        // Satu langkah di tengah alur: tidak ada induk untuk dituju. Crumb
-        // "Pengaturan" akan berbohong -- pengguna tidak datang dari sana.
-        return [
-            $this->getTitle(),
-        ];
-    }
-
-    /**
      * Redirect setelah setup berhasil.
      *
      * Alur Google Gateway Belum Terdaftar (Menjawab Iya):
      *   Verify OTP -> Complete Profile -> Security Question (Iya)
-     *     -> Two Factor Auth (Berhasil) -> Auth.php -> Home.
+     *     -> Two Factor Auth (Berhasil) -> SignIn.php -> Home.
      *
      * Paket menandai `2fa_passed=true` di dalam transaksi sukses, lalu
      * memanggil global `redirect()` yang TIDAK melakukan redirect Livewire
      * (return value dibuang). Karena itu di sini call `$this->redirect()`
      * eksplisit setelah parent sukses -- user TETAP login, tanpa logout,
-     * tanpa OTP kedua. Auth.php (mount: sudah login) memantul ke Home.
+     * tanpa OTP kedua. SignIn.php (mount: sudah login) memantul ke Home.
      *
      * Kalau kode salah, paket berhenti tanpa menandai `2fa_passed`,
      * dan method ini tidak redirect (user tetap di form).
@@ -102,8 +92,8 @@ class TwoFactorAuth extends TwoFactorAuthenticatorPage
     {
         parent::setup();
 
-        // Sukses -> redirect ke Auth.php (Menjawab Iya: TwoFactorAuth ->
-        // Auth.php -> Home). Gagal -> parent sudah berhenti tanpa
+        // Sukses -> redirect ke SignIn.php (Menjawab Iya: TwoFactorAuth ->
+        // SignIn.php -> Home). Gagal -> parent sudah berhenti tanpa
         // menandai 2fa_passed, jadi tidak redirect di sini.
         if (session('2fa_passed') === true
             || ($this->data['two_factor_type'] ?? null) === TwoFactorAuthType::None->value) {
@@ -131,6 +121,7 @@ class TwoFactorAuth extends TwoFactorAuthenticatorPage
 
     protected function getRedirectUrl(): string
     {
-        return \App\Filament\User\Auth\Auth\Auth::getUrl();
+        // Alur: Two Factor Auth (Berhasil) -> SignIn.php -> Home
+        return \Filament\Facades\Filament::getPanel('welcome')->getLoginUrl();
     }
 }

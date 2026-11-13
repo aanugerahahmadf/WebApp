@@ -135,8 +135,8 @@ class LegalResolver
 
         if (!$about) {
             return [
-                'title' => 'About WeddingApp',
-                'content' => 'Wedding Flower Decorations is your ultimate companion.',
+                'title' => 'About Timeless Florals',
+                'content' => 'Timeless Florals is your ultimate companion.',
                 'mission' => null,
                 'owner' => config('app.name'),
             ];
@@ -146,7 +146,7 @@ class LegalResolver
         $aboutContent = $about->trans('content', $this->locale());
 
         return [
-            'title' => $aboutTitle ?? 'About WeddingApp',
+            'title' => $aboutTitle ?? 'About Timeless Florals',
             'content' => is_array($aboutContent) ? ($aboutContent['text'] ?? $aboutContent) : $aboutContent,
             'mission' => is_array($aboutContent) ? ($aboutContent['mission'] ?? null) : null,
             'owner' => config('app.name'),

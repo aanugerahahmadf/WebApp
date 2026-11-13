@@ -7,7 +7,9 @@ use App\Enums\OrderStatus\OrderStatus;
 use App\Filament\User\Pages\Home\Home;
 use App\Filament\User\Pages\MessagesPage\MessagesPage;
 use App\Filament\User\Resources\OrderResource\OrderResource;
+use App\Services\CourierTracking\OrderShippingSyncService;
 use Filament\Actions;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 
 class ViewOrder extends ViewRecord
@@ -48,6 +50,20 @@ class ViewOrder extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('sync_tracking')
+                ->label(__('Sinkronkan Pelacakan'))
+                ->icon('/images/icons/refresh.svg')
+                ->color('info')
+                ->visible(fn () => filled($this->record->tracking_number) && filled($this->record->shipping_courier))
+                ->action(function () {
+                    $result = app(OrderShippingSyncService::class)->sync($this->record);
+                    $this->record->refresh();
+                    Notification::make()
+                        ->title($result['synced'] ? __('Pelacakan disinkronkan') : __('Gagal sinkron pelacakan'))
+                        ->body($result['message'] ?? null)
+                        ->color($result['synced'] ? 'success' : 'danger')
+                        ->send();
+                }),
             Actions\EditAction::make()
                 ->label(__('Edit Pesanan'))
                 ->icon('/images/icons/pencil.svg')
