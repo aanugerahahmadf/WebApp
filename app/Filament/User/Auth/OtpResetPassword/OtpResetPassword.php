@@ -20,6 +20,8 @@ use Illuminate\Support\Facades\Hash;
 
 class OtpResetPassword extends BaseResetPassword
 {
+    protected ?string $maxWidth = 'md';
+
     public function getView(): string
     {
         return 'User.auth.otp-reset-password.otp-reset-password';

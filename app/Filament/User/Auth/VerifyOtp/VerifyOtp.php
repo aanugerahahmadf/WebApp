@@ -25,6 +25,8 @@ class VerifyOtp extends SimplePage
 
     protected static string $layout = 'filament-panels::components.layout.simple';
 
+    protected ?string $maxWidth = 'md';
+
     public $email = '';
 
     public $otp = '';

@@ -27,6 +27,8 @@ class OtpEmailVerificationPrompt extends EmailVerificationPrompt
 
     protected static string $view = 'User.pages.auth.otp-email-verification-prompt.otp-email-verification-prompt';
 
+    protected ?string $maxWidth = 'md';
+
     public ?array $data = [];
 
     public int $resendCooldown = 0;

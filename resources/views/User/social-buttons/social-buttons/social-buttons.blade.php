@@ -66,7 +66,7 @@
                             
                             new FilamentNotification()
                                 .title('{{ __('Perhatian') }}')
-                                .body('{{ __('Silakan centang opsi Ingat Saya dan Setujui Syarat & Ketentuan untuk melanjutkan.') }}')
+                                .body(@js(__('Silakan setujui Syarat & Ketentuan untuk melanjutkan.')))
                                 .warning()
                                 .send();
                         }
@@ -106,7 +106,7 @@
                 if (!agreed || !remembered) {
                     new FilamentNotification()
                         .title(@js(__('Perhatian')))
-                        .body(@js(__('Silakan centang opsi Ingat Saya dan Setujui Syarat & Ketentuan untuk melanjutkan.')))
+                        .body(@js(__('Silakan setujui Syarat & Ketentuan untuk melanjutkan.')))
                         .warning()
                         .send();
                     return;

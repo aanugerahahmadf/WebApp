@@ -37,6 +37,8 @@ use Spatie\Permission\Models\Role;
 
 class SignUp extends BaseRegister
 {
+    protected ?string $maxWidth = 'md';
+
     public function mount(): void
     {
         // Halaman Sign Up dinonaktifkan; gunakan Google Firebase Gateway (/auth).

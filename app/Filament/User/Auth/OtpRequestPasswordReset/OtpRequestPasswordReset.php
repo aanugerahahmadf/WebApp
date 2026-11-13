@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Mail;
 
 class OtpRequestPasswordReset extends BaseRequestPasswordReset
 {
+    protected ?string $maxWidth = 'md';
+
     public function getView(): string
     {
         return 'User.auth.otp-request-password-reset.otp-request-password-reset';

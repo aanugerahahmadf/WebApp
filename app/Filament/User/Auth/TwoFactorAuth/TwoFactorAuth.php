@@ -34,6 +34,8 @@ use MixCode\FilamentMulti2fa\Enums\TwoFactorAuthType;
  */
 class TwoFactorAuth extends TwoFactorAuthenticatorPage
 {
+    protected ?string $maxWidth = 'md';
+
     public static function getSlug(): string
     {
         return 'two-factor-auth';

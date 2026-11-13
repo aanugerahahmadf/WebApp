@@ -27,6 +27,8 @@ class SignIn extends BaseLogin
 {
     use HasAuthBreadcrumbs;
 
+    protected ?string $maxWidth = 'md';
+
     public function mount(): void
     {
         if (auth()->check()) {
@@ -59,8 +61,7 @@ class SignIn extends BaseLogin
     protected function getRememberFormComponent(): Component
     {
         return parent::getRememberFormComponent()
-            ->label(__('Ingat Saya'))
-            ->required();
+            ->label(__('Ingat Saya'));
     }
 
     public function getHeading(): string|Htmlable
